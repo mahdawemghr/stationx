@@ -6,6 +6,41 @@ class LandingPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'StationX',
+                style: TextStyle(color: Color(0xFFBFFF00)),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.grey[800],
+                  borderRadius: BorderRadius.circular(100),
+                ),
+                child: Row(
+                  children: const [
+                    Icon(Icons.circle, color: Color(0xFFBFFF00), size: 10),
+                    SizedBox(width: 5),
+                    Text(
+                      'calculateED',
+                      style: TextStyle(color: Color(0xFFBFFF00), fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        backgroundColor: Colors.black,
+      ),
       backgroundColor: Colors.black,
       body: Center(
         child: Container(
@@ -25,7 +60,7 @@ class LandingPage extends StatelessWidget {
                       children: [
                         Icon(
                           Icons.calendar_month,
-                          color: Colors.green,
+                          color: Color(0xFFBFFF00),
                           size: 20,
                         ),
                         SizedBox(width: 10),
@@ -51,10 +86,11 @@ class LandingPage extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
+                    SizedBox(height: 10),
                     Container(
                       decoration: BoxDecoration(
                         color: Colors.grey[800],
-                        borderRadius: BorderRadius.circular(5),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -66,7 +102,11 @@ class LandingPage extends StatelessWidget {
                               fontSize: 12,
                             ),
                           ),
-                          Icon(Icons.check_circle_sharp, color: Colors.green, size: 20),
+                          Icon(
+                            Icons.calculate_sharp,
+                            color: Color(0xFFBFFF00),
+                            size: 20,
+                          ),
                         ],
                       ),
                     ),
@@ -88,6 +128,142 @@ class LandingPage extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 10),
+              Column(
+                children: [
+                  Container(
+                    margin: const EdgeInsets.symmetric(vertical: 10),
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[900],
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Icon(
+                          Icons.calculate,
+                          color: Color(0xFFBFFF00),
+                          size: 20,
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'STRENGTH',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                              ),
+                            ),
+                            SizedBox(height: 5),
+                            Text(
+                              'Track sets, barbell velocity & target RIR',
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 10,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Icon(
+                          Icons.calculate,
+                          color: Color(0xFFBFFF00),
+                          size: 20,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 10),
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[900],
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Icon(
+                          Icons.calculate,
+                          color: Color(0xFFBFFF00),
+                          size: 20,
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'STRENGTH',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                              ),
+                            ),
+                            SizedBox(height: 5),
+                            Text(
+                              'Track sets, barbell velocity & target RIR',
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 10,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Icon(
+                          Icons.calculate,
+                          color: Color(0xFFBFFF00),
+                          size: 20,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 10),
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[900],
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Icon(
+                          Icons.calculate,
+                          color: Color(0xFFBFFF00),
+                          size: 20,
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'STRENGTH',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                              ),
+                            ),
+                            SizedBox(height: 5),
+                            Text(
+                              'Track sets, barbell velocity & target RIR',
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 10,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Icon(
+                          Icons.calculate,
+                          color: Color(0xFFBFFF00),
+                          size: 20,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
@@ -100,35 +276,61 @@ class LandingPage extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'MODULE 1',
+                          'TODAY\'S BENCHMARK POD',
                           style: TextStyle(color: Colors.white, fontSize: 12),
                         ),
-                        Icon(Icons.check_circle, color: Colors.green, size: 20),
+                        Text(
+                          '10,480 KG MOVED',
+                          style: TextStyle(color: Colors.white, fontSize: 12),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 10),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'MODULE 2',
-                          style: TextStyle(color: Colors.white, fontSize: 12),
-                        ),
-                        Icon(Icons.check_circle, color: Colors.green, size: 20),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'MODULE 3',
-                          style: TextStyle(color: Colors.white, fontSize: 12),
-                        ),
-                        Icon(Icons.check_circle, color: Colors.green, size: 20),
-                      ],
+                    Text(
+                      'Your benchmark pod is a summary of your training performance for the day, including total weight lifted, sets completed, and average barbell velocity.',
+                      style: TextStyle(color: Colors.white70, fontSize: 10),
                     ),
                   ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    // Navigate to the next page
+                  },
+                  style: TextButton.styleFrom(
+                    backgroundColor: Color(0xFFBFFF00),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 25),
+                  ),
+                  child: const Text(
+                    'CREATE ACCOUNT',
+                    style: TextStyle(color: Colors.black),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    // Navigate to the next page
+                  },
+                  style: TextButton.styleFrom(
+                    backgroundColor: Colors.grey[800],
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 25),
+                  ),
+                  child: const Text(
+                    'LOGIN',
+                    style: TextStyle(color: Colors.black),
+                  ),
                 ),
               ),
             ],
