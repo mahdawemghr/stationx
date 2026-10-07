@@ -33,38 +33,54 @@ class SxBottomNav extends StatelessWidget {
       ),
       child: SafeArea(
         top: false,
-        child: SizedBox(
-          height: 64,
-          child: Row(
-            children: [
-              for (var i = 0; i < sxTabs.length; i++)
-                Expanded(
-                  child: Semantics(
-                    button: true,
-                    selected: i == index,
-                    label: sxTabs[i].label,
-                    child: InkWell(
+        // Fixed-height bar: labels are capped at 1.3× (as Material's NavigationBar does).
+        child: MediaQuery.withClampedTextScaling(
+          maxScaleFactor: 1.3,
+          child: SizedBox(
+            height: 64,
+            child: Row(
+              children: [
+                for (var i = 0; i < sxTabs.length; i++)
+                  Expanded(
+                    child: Semantics(
+                      container: true,
+                      button: true,
+                      selected: i == index,
+                      label: sxTabs[i].label,
+                      excludeSemantics: true,
                       onTap: () => onChanged(i),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          AnimatedScale(
-                            scale: i == index ? 1.08 : 1,
-                            duration: const Duration(milliseconds: 150),
-                            child: Icon(sxTabs[i].icon, size: 24, color: i == index ? c.primary : c.textBody),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(sxTabs[i].label.toUpperCase(),
+                      child: InkWell(
+                        onTap: () => onChanged(i),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            AnimatedScale(
+                              scale: i == index ? 1.08 : 1,
+                              duration: const Duration(milliseconds: 150),
+                              child: Icon(
+                                sxTabs[i].icon,
+                                size: 24,
+                                color: i == index ? c.primary : c.textBody,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              sxTabs[i].label.toUpperCase(),
                               style: SxText.labelCaps.copyWith(
-                                  fontSize: 10,
-                                  color: i == index ? c.primary : c.textBody,
-                                  fontWeight: i == index ? FontWeight.w700 : FontWeight.w500)),
-                        ],
+                                fontSize: 10,
+                                color: i == index ? c.primary : c.textBody,
+                                fontWeight: i == index
+                                    ? FontWeight.w700
+                                    : FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

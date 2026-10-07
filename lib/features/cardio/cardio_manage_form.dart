@@ -195,15 +195,15 @@ class CardioUnitToggle extends StatelessWidget {
           behavior: HitTestBehavior.opaque,
           onTap: () => onChanged(value),
           child: Container(
-            constraints: const BoxConstraints(minWidth: 44, minHeight: 32),
+            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
             alignment: Alignment.center,
             padding: const EdgeInsets.symmetric(horizontal: 10),
             decoration: BoxDecoration(color: km == value ? c.primary : Colors.transparent, borderRadius: BorderRadius.circular(SxRadius.sm)),
-            child: Text(label, style: SxText.labelCaps.copyWith(color: km == value ? const Color(0xFF101214) : c.textBody, fontWeight: FontWeight.w700)),
+            child: Text(label, style: SxText.labelCaps.copyWith(color: km == value ? c.onAccent : c.textBody, fontWeight: FontWeight.w700)),
           ),
         );
     return Container(
-      padding: const EdgeInsets.all(2),
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(color: c.surface2, borderRadius: BorderRadius.circular(SxRadius.base), border: Border.all(color: c.hairline)),
       child: Row(mainAxisSize: MainAxisSize.min, children: [seg('KM', true), seg('MI', false)]),
     );
@@ -337,7 +337,7 @@ class CardioBiometricsSection extends StatelessWidget {
     return CardioFormCard(
       title: 'Biometrics & Effort',
       icon: Icons.monitor_heart_outlined,
-      trailing: const StatusPill('Optional', color: Color(0xFFA6B0BA)),
+      trailing: StatusPill('Optional', color: context.sx.textBody),
       children: [
         Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Expanded(

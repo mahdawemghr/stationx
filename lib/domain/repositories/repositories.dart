@@ -67,3 +67,35 @@ abstract class ProfileRepository implements Listenable {
   UserProfile get profile;
   Future<void> update(UserProfile p);
 }
+
+/// Optional, opt-in, read-only wearable data (Health Connect on Android).
+/// Everything is on-device; failures degrade to "no data", never to errors in UI.
+abstract class HealthRepository implements Listenable {
+  /// Health Connect (Android), Apple Health (iOS) or none.
+  HealthProvider get provider;
+
+  HealthStatus get status;
+
+  /// Latest successful read, or null if not connected / never read.
+  HealthSnapshot? get snapshot;
+
+  /// True while a connect/refresh is in flight.
+  bool get busy;
+
+  /// Detects availability and, when already granted, loads data. Safe to call repeatedly.
+  Future<void> init();
+
+  /// Asks the system for read permission. Returns true when granted.
+  Future<bool> connect();
+
+  /// Re-reads data. No-op unless connected; throttled unless [force].
+  Future<void> refresh({bool force = false});
+
+  /// Clears cached data and forgets consent. Android: also revokes the
+  /// permission (needs an app restart to fully apply). iOS cannot revoke
+  /// programmatically — the user removes access in Settings › Health.
+  Future<void> disconnect();
+
+  /// Opens the Play Store page for Health Connect (when [HealthStatus.notInstalled]).
+  Future<void> installProvider();
+}

@@ -5,6 +5,7 @@ export 'sx_card.dart';
 export 'sx_charts.dart';
 export 'sx_chips.dart';
 export 'sx_labels.dart';
+export 'muscle_map.dart';
 export 'sx_logo.dart';
 export 'sx_progress.dart';
 export 'sx_scaffold.dart';

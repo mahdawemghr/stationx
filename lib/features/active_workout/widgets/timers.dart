@@ -130,50 +130,68 @@ class RestTile extends StatelessWidget {
       builder: (context, rest, _) {
         if (rest == null && compactWhenIdle) return const SizedBox.shrink();
         final active = rest != null;
-        return Container(
-          constraints: const BoxConstraints(minHeight: 72),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: BoxDecoration(
-            color: c.surface3,
-            borderRadius: BorderRadius.circular(SxRadius.lg),
-            border: Border.all(color: active ? c.primaryBorder : c.hairline),
-          ),
-          child: Row(children: [
-            Icon(Icons.snooze, color: active ? c.primary : c.textMuted, size: 24),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-                Text('REST', style: SxText.labelCaps.copyWith(color: active ? c.primary : c.textBody, fontSize: 10)),
-                if (!active)
-                  Text('--:--', style: SxText.metricLg.copyWith(color: c.textMuted, fontSize: 28))
-                else
-                  SecondTicker(
-                    builder: (_, now) {
-                      final left = rest.endsAt.difference(now).inSeconds;
-                      final frac = rest.totalSeconds == 0 ? 0.0 : (left / rest.totalSeconds).clamp(0.0, 1.0);
-                      return Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-                        FittedBox(
-                          fit: BoxFit.scaleDown,
-                          alignment: Alignment.centerLeft,
-                          child: Text(left > 0 ? Fmt.clock(left) : 'GO',
-                              style: SxText.metricLg.copyWith(color: left > 0 ? c.primary : c.positive, fontSize: 28)),
-                        ),
-                        const SizedBox(height: 4),
-                        SizedBox(height: 3, child: SxLinearMeter(value: frac, height: 3)),
-                      ]);
-                    },
-                  ),
-              ]),
+        return AnimatedSize(
+          duration: SxMotion.of(context, SxMotion.base),
+          alignment: Alignment.topCenter,
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 72),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: c.surface3,
+              borderRadius: BorderRadius.circular(SxRadius.lg),
+              border: Border.all(color: active ? c.primaryBorder : c.hairline),
             ),
-            if (active) ...[
-              const SizedBox(width: 8),
-              Column(mainAxisSize: MainAxisSize.min, children: [
-                _MiniAction(label: '+30s', onTap: () => controller.addRest(30)),
-                const SizedBox(height: 4),
-                _MiniAction(label: 'SKIP', onTap: controller.skipRest),
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              Row(children: [
+                Icon(Icons.snooze, color: active ? c.primary : c.textMuted, size: 24),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+                    Text('REST', style: SxText.labelCaps.copyWith(color: active ? c.primary : c.textBody, fontSize: 10)),
+                    if (!active)
+                      Text('--:--', style: SxText.metricLg.copyWith(color: c.textMuted, fontSize: 28))
+                    else
+                      SecondTicker(
+                        builder: (_, now) {
+                          final left = rest.endsAt.difference(now).inSeconds;
+                          final frac = rest.totalSeconds == 0 ? 0.0 : (left / rest.totalSeconds).clamp(0.0, 1.0);
+                          return Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+                            // Spoken on focus only; a once-only live region announces the end (below).
+                            Semantics(
+                              label: left > 0 ? 'Rest remaining ${Fmt.clock(left)}' : 'Rest over',
+                              excludeSemantics: true,
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.centerLeft,
+                                child: Text(left > 0 ? Fmt.clock(left) : 'GO',
+                                    style: SxText.metricLg.copyWith(color: left > 0 ? c.primary : c.positive, fontSize: 28)),
+                              ),
+                            ),
+                            // Live region: empty while resting, becomes text exactly once when the rest
+                            // ends, so TalkBack announces it once instead of every second.
+                            Semantics(
+                              liveRegion: true,
+                              label: left <= 0 ? 'Rest over. Start your next set.' : '',
+                              child: const SizedBox.shrink(),
+                            ),
+                            const SizedBox(height: 4),
+                            SizedBox(height: 3, child: SxLinearMeter(value: frac, height: 3, semanticLabel: 'Rest')),
+                          ]);
+                        },
+                      ),
+                  ]),
+                ),
               ]),
-            ],
-          ]),
+              if (active) ...[
+                const SizedBox(height: 6),
+                Row(children: [
+                  Expanded(child: _MiniAction(label: '+30s', semanticLabel: 'Add 30 seconds', onTap: () => controller.addRest(30))),
+                  const SizedBox(width: 8),
+                  Expanded(child: _MiniAction(label: 'SKIP', semanticLabel: 'Skip rest', onTap: controller.skipRest)),
+                ]),
+              ],
+            ]),
+          ),
         );
       },
     );
@@ -181,21 +199,25 @@ class RestTile extends StatelessWidget {
 }
 
 class _MiniAction extends StatelessWidget {
-  const _MiniAction({required this.label, required this.onTap});
+  const _MiniAction({required this.label, required this.onTap, this.semanticLabel});
   final String label;
+  final String? semanticLabel;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final c = context.sx;
     return Semantics(
+      container: true,
       button: true,
-      label: label,
+      label: semanticLabel ?? label,
+      excludeSemantics: true,
+      onTap: onTap,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(SxRadius.base),
         child: Container(
-          constraints: const BoxConstraints(minWidth: 52, minHeight: 28),
+          constraints: const BoxConstraints(minWidth: 52, minHeight: 48),
           alignment: Alignment.center,
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(color: c.surface2, borderRadius: BorderRadius.circular(SxRadius.base), border: Border.all(color: c.hairline)),

@@ -134,7 +134,7 @@ class _Milestones extends StatelessWidget {
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
           Expanded(child: Text('KEY MILESTONES', style: SxText.labelCaps.copyWith(color: c.textBody))),
-          if (bestWeight != null) StatusPill('All-time PR: ${Fmt.weight(bestWeight!.value, unit)} $u', icon: Icons.emoji_events_outlined),
+          if (bestWeight != null) Flexible(child: StatusPill('All-time PR: ${Fmt.weight(bestWeight!.value, unit)} $u', icon: Icons.emoji_events_outlined)),
         ]),
         const SizedBox(height: 12),
         StretchRow(children: [

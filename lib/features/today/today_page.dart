@@ -8,6 +8,7 @@ import '../../core/theme/sx_typography.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/widgets/widgets.dart';
 import '../../domain/domain.dart';
+import '../health/health_actions.dart';
 
 /// Today tab (Stitch: today_home). The hero is the *next workout in the
 /// rotation* (index based, never date based).
@@ -18,7 +19,7 @@ class TodayPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final app = context.app;
     return ListenableBuilder(
-      listenable: Listenable.merge([app.workouts, app.sessions, app.exercises, app.profile]),
+      listenable: Listenable.merge([app.workouts, app.sessions, app.exercises, app.profile, app.health]),
       builder: (context, _) {
         final profile = app.profile.profile;
         final now = DateTime.now();
@@ -68,7 +69,8 @@ class TodayPage extends StatelessWidget {
               const SectionHeader('Up next', trailingText: 'In rotation'),
               _UpNext(workout: next, rotation: rotation, onTap: () => AppNav.workoutPreview(context, next.id)),
             ],
-            _RecoveryCard(onTap: () => AppNav.switchTab(context, 3)),
+            // Only where Health Connect can exist (Android); hidden elsewhere.
+            if (app.health.status != HealthStatus.unsupported) const _RecoveryCard(),
           ],
         );
       },
@@ -155,6 +157,10 @@ class _HeroCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.sx;
     final (day, total) = RotationService.dayOf(rotation);
+    final catalog = context.app.exercises;
+    final workoutMuscles = <MuscleGroup>{
+      for (final re in workout.exercises) ?catalog.byId(re.exerciseId)?.primaryMuscle,
+    };
     return Container(
       decoration: BoxDecoration(
         color: c.surface1,
@@ -180,7 +186,7 @@ class _HeroCard extends StatelessWidget {
             height: 64,
             decoration: BoxDecoration(color: c.surface3, borderRadius: BorderRadius.circular(SxRadius.lg)),
             child: Stack(alignment: Alignment.center, children: [
-              Icon(Icons.accessibility_new, size: 36, color: c.primary.withValues(alpha: 0.9)),
+              MuscleMap(primary: workoutMuscles, height: 46, view: MuscleView.both),
               Positioned(right: 8, bottom: 8, child: Container(width: 8, height: 8, decoration: BoxDecoration(color: c.primary, shape: BoxShape.circle))),
             ]),
           ),
@@ -343,29 +349,71 @@ class _UpNext extends StatelessWidget {
   }
 }
 
-/// Honest placeholder: Health Connect is not integrated yet, so no sleep /
-/// heart-rate / readiness numbers are shown.
+/// Recovery summary from Health Connect (read-only, opt-in): last night's sleep
+/// and resting heart rate vs the 7-day average. No invented "score": only values
+/// that were actually read are shown.
 class _RecoveryCard extends StatelessWidget {
-  const _RecoveryCard({required this.onTap});
-  final VoidCallback onTap;
+  const _RecoveryCard();
 
   @override
   Widget build(BuildContext context) {
+    final health = context.app.health;
+    return ListenableBuilder(listenable: health, builder: (context, _) => _content(context, health));
+  }
+
+  Widget _content(BuildContext context, HealthRepository health) {
     final c = context.sx;
+    final snap = health.snapshot;
+    final status = health.status;
+
+    late final String body;
+    Widget? trailing;
+    VoidCallback? onTap;
+    var accent = false;
+    switch (status) {
+      case HealthStatus.connected:
+        accent = snap?.hasData == true;
+        if (snap == null) {
+          body = 'Reading ${health.provider.label}…';
+        } else if (!snap.hasData) {
+          body = health.provider == HealthProvider.appleHealth
+              ? 'Connected · no sleep or heart-rate data found. If you denied access, enable it in $iosHealthAccessPath.'
+              : 'Connected · no sleep or heart-rate data recorded yet.';
+        } else {
+          final parts = [
+            if (snap.sleepMinutes != null) 'Sleep ${sleepLabel(snap.sleepMinutes!)}',
+            if (snap.restingHr != null) 'Resting HR ${snap.restingHr} bpm',
+          ];
+          body = parts.join(' · ');
+          final d = snap.restingHrDelta;
+          if (d != null && d != 0) trailing = DeltaBadge('${d.abs()} bpm', positive: d < 0);
+        }
+      case HealthStatus.notInstalled:
+        body = '${health.provider.label} is not installed. Install it to see sleep and resting heart rate.';
+        trailing = const StatusPill('Install');
+        onTap = () => connectHealthConnect(context);
+      case HealthStatus.notConnected:
+        body = 'Connect ${health.provider.label} to see sleep and resting heart rate.';
+        trailing = const StatusPill('Connect');
+        onTap = () => connectHealthConnect(context);
+      case HealthStatus.unsupported:
+        body = '';
+    }
     return SxCard(
       onTap: onTap,
       padding: const EdgeInsets.all(12),
       child: Row(children: [
-        Icon(Icons.bedtime_outlined, color: c.textMuted),
+        Icon(Icons.bedtime_outlined, color: accent ? c.positive : c.textMuted),
         const SizedBox(width: 12),
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text('Recovery', style: SxText.bodyLg.copyWith(color: c.textHigh, fontWeight: FontWeight.w600)),
-            Text('Connect Health Connect to see sleep and resting heart rate.', style: SxText.bodySm.copyWith(color: c.textBody)),
+            Text(body, style: SxText.bodySm.copyWith(color: c.textBody)),
+            if (status == HealthStatus.connected && snap?.restingHrAvg7d != null && snap?.restingHr != null)
+              Text('vs 7-day average ${snap!.restingHrAvg7d} bpm', style: SxText.bodySm.copyWith(color: c.textMuted)),
           ]),
         ),
-        const SizedBox(width: 8),
-        Flexible(child: StatusPill('Not connected', color: c.textMuted)),
+        if (trailing != null) ...[const SizedBox(width: 8), Flexible(child: trailing)],
       ]),
     );
   }
@@ -396,12 +444,22 @@ class _TodayBar extends StatelessWidget implements PreferredSizeWidget {
             child: LayoutBuilder(builder: (context, box) {
               final showPill = box.maxWidth / MediaQuery.textScalerOf(context).scale(1) >= 340;
               return Row(children: [
-                const SxLogo(size: 40),
+                const SxLogo(size: 40, decorative: true),
                 const SizedBox(width: 12),
-                Flexible(child: Text('StationX', maxLines: 1, overflow: TextOverflow.ellipsis, style: SxText.headlineMd.copyWith(color: c.textHigh, fontWeight: FontWeight.w700))),
+                Flexible(flex: 1000, child: Text('StationX', maxLines: 1, overflow: TextOverflow.ellipsis, style: SxText.headlineMd.copyWith(color: c.textHigh, fontWeight: FontWeight.w700))),
                 if (showPill) ...[const SizedBox(width: 10), const StatusPill('Local', dot: true)],
                 const Spacer(),
-                GestureDetector(onTap: onAvatarTap, child: SxAvatar(name, size: 40)),
+                Semantics(
+                  button: true,
+                  label: 'Profile, $name',
+                  excludeSemantics: true,
+                  onTap: onAvatarTap,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: onAvatarTap,
+                    child: SizedBox(width: 48, height: 48, child: Center(child: SxAvatar(name, size: 40))),
+                  ),
+                ),
               ]);
             }),
           ),

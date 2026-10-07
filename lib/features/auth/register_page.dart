@@ -58,12 +58,17 @@ class _RegisterPageState extends State<RegisterPage> {
     return n / 4;
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     setState(() => _submitted = true);
     if (_nameError != null || _emailError != null || _level < 3 || !_matches) return;
-    context.app.startFresh(name: _name.text.trim(), email: _email.text.trim());
+    final error = await context.app.register(name: _name.text.trim(), email: _email.text.trim());
     _password.clear();
     _confirm.clear();
+    if (!mounted) return;
+    if (error != null) {
+      showSxSnack(context, error, icon: Icons.error_outline);
+      return;
+    }
     AppNav.enterApp(context);
   }
 

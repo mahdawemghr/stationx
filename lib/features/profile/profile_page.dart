@@ -2,16 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../app/app_scope.dart';
+import '../../app/app_version.dart';
 import '../../core/theme/sx_spacing.dart';
 import '../../core/theme/sx_theme.dart';
 import '../../core/theme/sx_typography.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/widgets/widgets.dart';
 import '../../domain/domain.dart';
+import '../health/health_actions.dart';
 import '../landing/landing_page.dart';
+import 'privacy_page.dart';
 import 'export_builder.dart';
 
-const _appVersion = 'v1.0.0';
 
 /// Profile & settings tab (Stitch: profile_app_settings). Every control is
 /// persisted through [ProfileRepository.update].
@@ -47,8 +49,9 @@ class ProfilePage extends StatelessWidget {
               onExport: () => _showExport(context, app.profile.profile, app.sessions.sessions, app.cardio.sessions),
             ),
             const SizedBox(height: SxSpace.sm),
-            const SectionHeader('App & safety', icon: Icons.terminal, trailingText: _appVersion),
+            SectionHeader('App & safety', icon: Icons.terminal, trailing: const _VersionLabel()),
             _Safety(
+              onPrivacy: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const PrivacyPage())),
               onWipe: () async {
                 final ok = await showSxConfirm(
                   context,
@@ -59,12 +62,27 @@ class ProfilePage extends StatelessWidget {
                   icon: Icons.delete_forever,
                 );
                 if (ok && context.mounted) {
-                  app.wipeAllData();
-                  showSxSnack(context, 'All local data deleted');
+                  await app.wipeAllData();
+                  if (context.mounted) showSxSnack(context, 'All local data deleted');
                 }
               },
-              onSignOut: () {
-                app.signOut();
+              onLoadDemo: () async {
+                final ok = await showSxConfirm(
+                  context,
+                  title: 'Load demo data?',
+                  message: 'Replaces ALL data on this device with about 8 weeks of sample workouts and cardio, so you can explore the app. Your profile is kept. This cannot be undone.',
+                  confirmLabel: 'Replace with demo data',
+                  destructive: true,
+                  icon: Icons.science_outlined,
+                );
+                if (ok && context.mounted) {
+                  await app.loadDemoData();
+                  if (context.mounted) showSxSnack(context, 'Demo data loaded');
+                }
+              },
+              onSignOut: () async {
+                await app.signOut();
+                if (!context.mounted) return;
                 Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute<void>(builder: (_) => const LandingPage()), (_) => false);
               },
             ),
@@ -390,7 +408,7 @@ class _Step extends StatelessWidget {
         child: InkWell(
           borderRadius: BorderRadius.circular(SxRadius.base),
           onTap: onTap,
-          child: SizedBox(width: 44, height: 44, child: Icon(icon, size: 20, color: onTap == null ? c.textMuted : c.textHigh)),
+          child: SizedBox(width: 48, height: 48, child: Icon(icon, size: 20, color: onTap == null ? c.textMuted : c.textHigh)),
         ),
       ),
     );
@@ -473,16 +491,7 @@ class _Integrations extends StatelessWidget {
     return SxCard(
       padding: const EdgeInsets.all(SxSpace.md),
       child: Column(children: [
-        Row(children: [
-          _IconBox(Icons.monitor_heart_outlined, c.textMuted),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('Health Connect', style: SxText.bodyLg.copyWith(color: c.textHigh, fontWeight: FontWeight.w600)),
-              Text('Not connected · sleep & heart-rate data unavailable', style: SxText.bodySm.copyWith(color: c.textBody)),
-            ]),
-          ),
-        ]),
+        const _HealthRow(),
         const SizedBox(height: SxSpace.md),
         Row(children: [
           _IconBox(Icons.offline_bolt_outlined, c.primary),
@@ -490,13 +499,59 @@ class _Integrations extends StatelessWidget {
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text('Local-first engine', style: SxText.bodyLg.copyWith(color: c.textHigh, fontWeight: FontWeight.w600)),
-              Text('Offline ready • on-device storage (prototype: resets on restart)', style: SxText.bodySm.copyWith(color: c.textBody)),
+              Text('Offline ready • Isar database stored on this device', style: SxText.bodySm.copyWith(color: c.textBody)),
             ]),
           ),
         ]),
         const SizedBox(height: SxSpace.md),
         SxButton(label: 'Export CSV / JSON', icon: Icons.file_download_outlined, variant: SxButtonVariant.secondary, height: 48, onPressed: onExport),
       ]),
+    );
+  }
+}
+
+/// Health Connect status + connect/disconnect (read-only sleep & resting HR).
+class _HealthRow extends StatelessWidget {
+  const _HealthRow();
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.sx;
+    final health = context.app.health;
+    return ListenableBuilder(
+      listenable: health,
+      builder: (context, _) {
+        final (String subtitle, String? action, VoidCallback? onTap) = switch (health.status) {
+          HealthStatus.unsupported => ('Not available on this device', null, null),
+          HealthStatus.notInstalled => ('${health.provider.label} is not installed', 'Install', () => connectHealthConnect(context)),
+          HealthStatus.notConnected => ('Not connected · reads sleep & resting heart rate (read-only)', 'Connect', () => connectHealthConnect(context)),
+          HealthStatus.connected => (
+              'Connected · read-only${health.snapshot?.hasData == true ? '' : ' · no data recorded yet'}',
+              'Disconnect',
+              () => disconnectHealthConnect(context)
+            ),
+        };
+        return Row(children: [
+          _IconBox(Icons.monitor_heart_outlined, health.status == HealthStatus.connected ? c.primary : c.textMuted),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(health.provider.label, style: SxText.bodyLg.copyWith(color: c.textHigh, fontWeight: FontWeight.w600)),
+              Text(subtitle, style: SxText.bodySm.copyWith(color: c.textBody)),
+            ]),
+          ),
+          if (action != null) ...[
+            const SizedBox(width: 8),
+            SxButton(
+              label: action,
+              onPressed: health.busy ? null : onTap,
+              variant: health.status == HealthStatus.connected ? SxButtonVariant.ghost : SxButtonVariant.secondary,
+              expanded: false,
+              height: 40,
+            ),
+          ],
+        ]);
+      },
     );
   }
 }
@@ -516,9 +571,11 @@ class _IconBox extends StatelessWidget {
 }
 
 class _Safety extends StatelessWidget {
-  const _Safety({required this.onWipe, required this.onSignOut});
+  const _Safety({required this.onWipe, required this.onSignOut, required this.onLoadDemo, required this.onPrivacy});
   final VoidCallback onWipe;
   final VoidCallback onSignOut;
+  final VoidCallback onLoadDemo;
+  final VoidCallback onPrivacy;
 
   @override
   Widget build(BuildContext context) {
@@ -527,10 +584,24 @@ class _Safety extends StatelessWidget {
       padding: EdgeInsets.zero,
       child: Column(children: [
         _Row(
+          title: 'Privacy',
+          subtitle: 'What StationX stores and what it never sends',
+          onTap: onPrivacy,
+          trailing: Icon(Icons.privacy_tip_outlined, color: c.textBody),
+        ),
+        Divider(height: 1, color: c.hairline),
+        _Row(
           title: 'Sign out',
           subtitle: 'Return to the welcome screen',
           onTap: onSignOut,
           trailing: Icon(Icons.logout, color: c.textBody),
+        ),
+        Divider(height: 1, color: c.hairline),
+        _Row(
+          title: 'Load demo data',
+          subtitle: 'Fills the app with sample history to explore (replaces data)',
+          onTap: onLoadDemo,
+          trailing: Icon(Icons.science_outlined, color: c.textBody),
         ),
         Divider(height: 1, color: c.hairline),
         _Row(
@@ -602,4 +673,16 @@ class _ExportSheetState extends State<_ExportSheet> {
       ]),
     );
   }
+}
+
+/// Installed app version (from the platform package info), shown in the section header.
+class _VersionLabel extends StatelessWidget {
+  const _VersionLabel();
+
+  @override
+  Widget build(BuildContext context) => FutureBuilder<String>(
+        future: appVersionLabel(),
+        builder: (context, snap) => Text(snap.data ?? '',
+            style: SxText.bodySm.copyWith(color: context.sx.textBody)),
+      );
 }

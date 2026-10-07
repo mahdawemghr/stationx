@@ -242,7 +242,7 @@ class _ObjectiveTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.sx;
-    final fg = selected ? const Color(0xFF101214) : c.textBody;
+    final fg = selected ? c.onAccent : c.textBody;
     return Semantics(
       button: true,
       selected: selected,

@@ -319,7 +319,7 @@ class _DayRow extends StatelessWidget {
                   ),
                   child: state == _DayState.done
                       ? Icon(Icons.check, size: 18, color: c.primary)
-                      : Text(num2, style: SxText.metricSm.copyWith(color: isNext ? const Color(0xFF101214) : c.textBody, fontWeight: FontWeight.w700)),
+                      : Text(num2, style: SxText.metricSm.copyWith(color: isNext ? c.onAccent : c.textBody, fontWeight: FontWeight.w700)),
                 ),
                 const SizedBox(width: 12),
                 Expanded(

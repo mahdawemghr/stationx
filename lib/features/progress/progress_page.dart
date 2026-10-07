@@ -94,6 +94,8 @@ class _PeriodMenu extends StatelessWidget {
       onSelected: onChanged,
       itemBuilder: (_) => [for (final p in ProgressPeriod.values) PopupMenuItem(value: p, child: Text(p.label))],
       child: Container(
+        constraints: const BoxConstraints(minHeight: 48),
+        alignment: Alignment.center,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(color: c.surface2, borderRadius: BorderRadius.circular(SxRadius.base), border: Border.all(color: c.hairline)),
         child: Row(mainAxisSize: MainAxisSize.min, children: [

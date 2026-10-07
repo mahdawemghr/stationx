@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../theme/sx_spacing.dart';
 import '../theme/sx_theme.dart';
 import '../theme/sx_typography.dart';
 
@@ -15,7 +16,11 @@ class SxLineChart extends StatelessWidget {
     this.highlightLast = true,
     this.minY,
     this.maxY,
+    this.semanticLabel,
   });
+
+  /// Spoken summary; a generated one (point count, first/last/min/max) is used when null.
+  final String? semanticLabel;
   final List<double> values;
   final List<String>? labels;
   final double height;
@@ -27,12 +32,17 @@ class SxLineChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.sx;
-    return RepaintBoundary(
-      child: SizedBox(
-        height: height,
-        width: double.infinity,
-        child: CustomPaint(
-          painter: _LinePainter(values, labels, color ?? c.primary, c.hairline, c.textMuted, highlightLast, minY, maxY),
+    return Semantics(
+      label: semanticLabel ?? _summary(values),
+      image: true,
+      excludeSemantics: true,
+      child: RepaintBoundary(
+        child: SizedBox(
+          height: height,
+          width: double.infinity,
+          child: CustomPaint(
+            painter: _LinePainter(values, labels, color ?? c.primary, c.hairline, c.textMuted, highlightLast, minY, maxY),
+          ),
         ),
       ),
     );
@@ -123,7 +133,9 @@ class SxBarChart extends StatelessWidget {
     this.highlightIndex,
     this.valueLabels,
     this.color,
+    this.semanticLabel,
   });
+  final String? semanticLabel;
   final List<double> values;
   final List<String> labels;
   final double height;
@@ -136,7 +148,14 @@ class SxBarChart extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.sx;
     final maxV = [...values, target ?? 0, 1.0].reduce((a, b) => a > b ? a : b);
-    return RepaintBoundary(
+    final spoken = semanticLabel ??
+        'Bar chart. ${[for (var i = 0; i < values.length; i++) '${labels[i]} ${_n(values[i])}'].join(', ')}'
+            '${target == null ? '' : '. Target ${_n(target!)}'}';
+    return Semantics(
+      label: spoken,
+      image: true,
+      excludeSemantics: true,
+      child: RepaintBoundary(
       child: SizedBox(
         height: height,
         child: Stack(children: [
@@ -160,7 +179,7 @@ class SxBarChart extends StatelessWidget {
                       child: LayoutBuilder(
                         builder: (_, cons) => TweenAnimationBuilder<double>(
                           tween: Tween(end: values[i] / maxV),
-                          duration: const Duration(milliseconds: 320),
+                          duration: SxMotion.of(context, const Duration(milliseconds: 320)),
                           curve: Curves.easeOut,
                           builder: (_, f, _) => Container(
                             height: (cons.maxHeight * f).clamp(values[i] > 0 ? 4.0 : 2.0, double.infinity),
@@ -182,8 +201,16 @@ class SxBarChart extends StatelessWidget {
           ]),
         ]),
       ),
-    );
+    ));
   }
+}
+
+String _n(num v) => v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toStringAsFixed(1);
+
+String _summary(List<double> v) {
+  if (v.isEmpty) return 'Line chart with no data';
+  final lo = v.reduce((a, b) => a < b ? a : b), hi = v.reduce((a, b) => a > b ? a : b);
+  return 'Line chart, ${v.length} points, from ${_n(v.first)} to ${_n(v.last)}, low ${_n(lo)}, high ${_n(hi)}';
 }
 
 class _TargetLine extends CustomPainter {

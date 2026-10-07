@@ -147,7 +147,7 @@ class _PrimaryCard extends StatelessWidget {
         Wrap(crossAxisAlignment: WrapCrossAlignment.end, spacing: 10, runSpacing: 8, children: [
           Row(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
             Text(goalNumber(goal.metric, value), style: SxText.metricXl.copyWith(color: c.textHigh)),
-            Text(' / ${goalNumber(goal.metric, goal.target)} ${goalMetricUnit(goal.metric)}', style: SxText.metricMd.copyWith(color: c.textBody)),
+            Flexible(child: Text(' / ${goalNumber(goal.metric, goal.target)} ${goalMetricUnit(goal.metric)}', overflow: TextOverflow.ellipsis, style: SxText.metricMd.copyWith(color: c.textBody))),
           ]),
           DeltaBadge('${(frac * 100).round()}% completed', positive: true),
         ]),
@@ -180,7 +180,12 @@ class _Ticks extends StatelessWidget {
     final suffix = goal.metric == GoalMetric.durationMinutes ? 'm' : '';
     return Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
       for (var i = 0; i <= 5; i++)
-        Text('${goalNumber(goal.metric, goal.target * i / 5)}$suffix', style: SxText.labelCaps.copyWith(color: c.textMuted, fontSize: 9)),
+        Flexible(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text('${goalNumber(goal.metric, goal.target * i / 5)}$suffix', style: SxText.labelCaps.copyWith(color: c.textMuted, fontSize: 9)),
+          ),
+        ),
     ]);
   }
 }

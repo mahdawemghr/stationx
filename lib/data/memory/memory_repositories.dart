@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../../domain/domain.dart';
+import '../data_store.dart';
 import '../seed/seed_data.dart';
 
 /// In-memory implementations of the repository contracts.
@@ -12,6 +13,17 @@ class MemoryExerciseRepository extends ChangeNotifier implements ExerciseReposit
         _index = {for (final e in seed) e.id: e};
   final List<Exercise> _items;
   final Map<String, Exercise> _index;
+
+  /// Replace the whole catalogue (used by DataStore.replaceAll).
+  void reset(List<Exercise> seed) {
+    _items
+      ..clear()
+      ..addAll(seed);
+    _index
+      ..clear()
+      ..addAll({for (final e in seed) e.id: e});
+    notifyListeners();
+  }
 
   @override
   List<Exercise> get all => List.unmodifiable(_items);
@@ -29,6 +41,14 @@ class MemoryWorkoutRepository extends ChangeNotifier implements WorkoutRepositor
   MemoryWorkoutRepository(List<Workout> workouts, this._rotation) : _items = [...workouts];
   final List<Workout> _items;
   Rotation _rotation;
+
+  void reset(List<Workout> workouts, Rotation rotation) {
+    _items
+      ..clear()
+      ..addAll(workouts);
+    _rotation = rotation;
+    notifyListeners();
+  }
 
   @override
   List<Workout> get workouts => List.unmodifiable(_items);
@@ -87,6 +107,14 @@ class MemorySessionRepository extends ChangeNotifier implements SessionRepositor
   final List<WorkoutSession> _items;
   void _sort() => _items.sort((a, b) => b.workoutDate.compareTo(a.workoutDate));
 
+  void reset(List<WorkoutSession> seed) {
+    _items
+      ..clear()
+      ..addAll(seed);
+    _sort();
+    notifyListeners();
+  }
+
   @override
   List<WorkoutSession> get sessions => List.unmodifiable(_items);
   @override
@@ -142,6 +170,20 @@ class MemoryCardioRepository extends ChangeNotifier implements CardioRepository 
   final List<CardioGoal> _goals;
   final List<CustomCardioActivity> _custom = [];
   void _sort() => _items.sort((a, b) => b.workoutDate.compareTo(a.workoutDate));
+
+  void reset(List<CardioSession> sessions, List<CardioGoal> goals, List<CustomCardioActivity> custom) {
+    _items
+      ..clear()
+      ..addAll(sessions);
+    _goals
+      ..clear()
+      ..addAll(goals);
+    _custom
+      ..clear()
+      ..addAll(custom);
+    _sort();
+    notifyListeners();
+  }
 
   @override
   List<CardioSession> get sessions => List.unmodifiable(_items);
@@ -209,6 +251,11 @@ class MemoryCardioRepository extends ChangeNotifier implements CardioRepository 
 class MemoryProfileRepository extends ChangeNotifier implements ProfileRepository {
   MemoryProfileRepository([this._profile = const UserProfile()]);
   UserProfile _profile;
+  void reset(UserProfile p) {
+    _profile = p;
+    notifyListeners();
+  }
+
   @override
   UserProfile get profile => _profile;
   @override
@@ -218,8 +265,8 @@ class MemoryProfileRepository extends ChangeNotifier implements ProfileRepositor
   }
 }
 
-/// Builds a full set of repositories from a seed.
-class MemoryStore {
+/// Volatile store (tests / previews). Production uses IsarStore.
+class MemoryStore implements DataStore {
   MemoryStore(SeedData seed, {UserProfile profile = const UserProfile()})
       : exercises = MemoryExerciseRepository(seed.exercises),
         workouts = MemoryWorkoutRepository(seed.workouts, seed.rotation),
@@ -227,9 +274,32 @@ class MemoryStore {
         cardio = MemoryCardioRepository(seed.cardio, seed.goals),
         profile = MemoryProfileRepository(profile);
 
+  @override
   final MemoryExerciseRepository exercises;
+  @override
   final MemoryWorkoutRepository workouts;
+  @override
   final MemorySessionRepository sessions;
+  @override
   final MemoryCardioRepository cardio;
+  @override
   final MemoryProfileRepository profile;
+
+  bool _signedIn = false;
+  @override
+  bool get signedIn => _signedIn;
+  @override
+  Future<void> setSignedIn(bool v) async => _signedIn = v;
+
+  @override
+  Future<void> replaceAll(SeedData seed, UserProfile profile) async {
+    exercises.reset(seed.exercises);
+    workouts.reset(seed.workouts, seed.rotation);
+    sessions.reset(seed.sessions);
+    cardio.reset(seed.cardio, seed.goals, const []);
+    this.profile.reset(profile);
+  }
+
+  @override
+  Future<void> close() async {}
 }

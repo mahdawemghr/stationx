@@ -71,6 +71,7 @@ void main() {
     expect(find.text('SKIP'), findsOneWidget);
     expect(find.text('+30S'), findsNothing); // label is "+30s"
     expect(find.text('+30s'), findsOneWidget);
+    await t.pump(const Duration(milliseconds: 300)); // rest tile grows to show its 48dp actions
     await t.tap(find.text('SKIP'));
     await t.pump(const Duration(milliseconds: 100));
     expect(find.text('SKIP'), findsNothing);

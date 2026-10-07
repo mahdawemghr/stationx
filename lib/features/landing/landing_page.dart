@@ -52,9 +52,9 @@ class LandingPage extends StatelessWidget {
           height: 48,
           onPressed: () => AppNav.login(context),
         ),
-        _GuestLink(onTap: () {
-          context.app.startDemo();
-          AppNav.enterApp(context);
+        _GuestLink(onTap: () async {
+          await context.app.startGuest();
+          if (context.mounted) AppNav.enterApp(context);
         }),
         const _Footer(),
       ],

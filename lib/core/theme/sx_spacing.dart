@@ -1,3 +1,5 @@
+import 'package:flutter/widgets.dart';
+
 /// 4-pt spacing + radius scale (Stitch tokens).
 abstract final class SxSpace {
   static const double xs = 4;
@@ -21,6 +23,10 @@ abstract final class SxRadius {
 }
 
 abstract final class SxMotion {
+  /// Zero when the user turned animations off in system accessibility settings.
+  static Duration of(BuildContext context, Duration d) =>
+      MediaQuery.disableAnimationsOf(context) ? Duration.zero : d;
+
   static const Duration fast = Duration(milliseconds: 150);
   static const Duration base = Duration(milliseconds: 220);
   static const Duration slow = Duration(milliseconds: 320);

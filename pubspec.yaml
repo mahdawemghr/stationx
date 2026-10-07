@@ -35,6 +35,16 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
 
+  # Local-first database. `isar_community` is the maintained fork of Isar 3
+  # (original `isar` 3.1.0 is unmaintained and incompatible with current analyzer).
+  isar_community: ^3.3.2
+  isar_community_flutter_libs: ^3.3.2
+  path_provider: ^2.1.5
+  package_info_plus: ^10.2.2
+
+  # Health Connect (Android) read access: sleep + resting heart rate. Optional, opt-in.
+  health: ^13.3.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -45,6 +55,9 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  build_runner: ^2.4.0
+  isar_community_generator: ^3.3.2
+  flutter_launcher_icons: ^0.14.4
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -63,3 +76,13 @@ flutter:
     - family: JetBrainsMono
       fonts:
         - asset: assets/fonts/JetBrainsMono.ttf
+
+# Launcher icon from design_reference/kinetic_app_icon_oled_cyan_purple.
+# Regenerate with: dart run flutter_launcher_icons
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: assets/icon/app_icon.png
+  remove_alpha_ios: true
+  adaptive_icon_background: "#0B0C10"
+  adaptive_icon_foreground: assets/icon/app_icon_foreground.png

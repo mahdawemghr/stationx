@@ -6,7 +6,7 @@ import '../../core/theme/sx_theme.dart';
 import '../../core/theme/sx_typography.dart';
 import '../../core/widgets/widgets.dart';
 import '../../domain/domain.dart';
-import 'equipment_icons.dart';
+import '../../core/utils/equipment_icons.dart';
 
 /// Smart Swap bottom sheet. Alternatives are ranked by [SmartSwapService]
 /// (primary muscle, movement pattern, secondary overlap, equipment) and the
@@ -297,7 +297,7 @@ class _AltCard extends StatelessWidget {
                 color: selected ? c.primary : c.surface3,
                 shape: BoxShape.circle,
               ),
-              child: selected ? const Icon(Icons.check, size: 18, color: Color(0xFF101214)) : null,
+              child: selected ? Icon(Icons.check, size: 18, color: c.onAccent) : null,
             ),
           ],
         ),

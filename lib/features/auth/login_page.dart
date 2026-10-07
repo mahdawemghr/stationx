@@ -40,12 +40,16 @@ class _LoginPageState extends State<LoginPage> {
 
   String? get _pwError => _submitted && _password.text.isEmpty ? 'Required field' : null;
 
-  void _submit() {
+  Future<void> _submit() async {
     setState(() => _submitted = true);
     if (_emailError != null || _pwError != null) return;
-    final app = context.app;
-    app.signInLocal(email: _email.text.trim());
+    final error = await context.app.signInLocal(email: _email.text.trim());
     _password.clear();
+    if (!mounted) return;
+    if (error != null) {
+      showSxSnack(context, error, icon: Icons.error_outline);
+      return;
+    }
     AppNav.enterApp(context);
   }
 
@@ -136,9 +140,9 @@ class _LoginPageState extends State<LoginPage> {
           icon: Icons.cloud_off_outlined,
           variant: SxButtonVariant.secondary,
           height: 48,
-          onPressed: () {
-            context.app.startDemo();
-            AppNav.enterApp(context);
+          onPressed: () async {
+            await context.app.startGuest();
+            if (context.mounted) AppNav.enterApp(context);
           },
         ),
         Center(

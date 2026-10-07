@@ -169,12 +169,14 @@ class _ActiveWorkoutPageState extends State<ActiveWorkoutPage> {
               ),
             );
           }
+          // Narrow phones (≤ ~375dp): drop the logo + avatar so the title never truncates.
+          final wide = MediaQuery.sizeOf(context).width >= 400;
           return SxScaffold(
             topBar: SxTopBar(
               title: mixed ? 'Active Session' : 'Active Workout',
-              showLogo: true,
+              showLogo: wide,
               pill: const StatusPill('Live', dot: true),
-              actions: [Padding(padding: const EdgeInsets.only(right: 4), child: SxAvatar(app.profile.profile.name, size: 32))],
+              actions: [if (wide) Padding(padding: const EdgeInsets.only(right: 4), child: SxAvatar(app.profile.profile.name, size: 32))],
             ),
             bottom: _Footer(
               controller: ctl,

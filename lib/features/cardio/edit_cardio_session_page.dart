@@ -95,10 +95,10 @@ class _EditFormState extends State<_EditForm> {
           subtitle: 'SESSION #$n',
           actions: [TextButton(onPressed: _save, child: Text('Save', style: SxText.headlineSm.copyWith(color: c.primary)))],
         ),
-        bottom: Column(mainAxisSize: MainAxisSize.min, children: [
-          SxButton(label: 'Save changes', icon: Icons.save_outlined, onPressed: _busy ? null : _save),
-          const SizedBox(height: 8),
-          SxButton(label: 'Delete cardio session', icon: Icons.delete_outline, variant: SxButtonVariant.secondary, height: 44, onPressed: _delete),
+        bottom: Row(children: [
+          Expanded(child: SxButton(label: 'Save changes', icon: Icons.save_outlined, onPressed: _busy ? null : _save)),
+          const SizedBox(width: 8),
+          SxIconButton(icon: Icons.delete_outline, tooltip: 'Delete cardio session', iconColor: c.danger, size: 52, onPressed: _delete),
         ]),
         children: [
           SxCard(

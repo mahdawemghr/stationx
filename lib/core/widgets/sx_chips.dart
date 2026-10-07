@@ -15,25 +15,35 @@ class SxChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.sx;
-    final fg = selected ? const Color(0xFF101214) : c.textBody;
+    final fg = selected ? c.onAccent : c.textBody;
+    // 36dp visual pill inside a 48dp touch target.
     return Semantics(
+      container: true,
       button: true,
       selected: selected,
       label: label,
-      child: Material(
-        color: selected ? c.primary : c.surface2,
-        shape: StadiumBorder(side: BorderSide(color: selected ? c.primary : c.hairline)),
-        child: InkWell(
-          customBorder: const StadiumBorder(),
-          onTap: onTap,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 36),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              child: Row(mainAxisSize: MainAxisSize.min, children: [
-                if (icon != null) ...[Icon(icon, size: 16, color: fg), const SizedBox(width: 6)],
-                Text(label, style: SxText.labelUi.copyWith(color: fg, fontWeight: FontWeight.w600)),
-              ]),
+      excludeSemantics: true,
+      onTap: onTap,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 48),
+          child: Center(
+            widthFactor: 1,
+            child: Material(
+              color: selected ? c.primary : c.surface2,
+              shape: StadiumBorder(side: BorderSide(color: selected ? c.primary : c.hairline)),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 36),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  child: Row(mainAxisSize: MainAxisSize.min, children: [
+                    if (icon != null) ...[Icon(icon, size: 16, color: fg), const SizedBox(width: 6)],
+                    Text(label, style: SxText.labelUi.copyWith(color: fg, fontWeight: FontWeight.w600)),
+                  ]),
+                ),
+              ),
             ),
           ),
         ),
@@ -59,7 +69,7 @@ class SxChipRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 40,
+      height: 48,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: padding,
@@ -88,8 +98,8 @@ class SxSegmented extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.sx;
+    // Outer 48dp row = touch target; the 40dp pill is drawn inside it with a 4dp gap.
     return Container(
-      padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: c.surface2,
         borderRadius: BorderRadius.circular(SxRadius.md),
@@ -100,35 +110,40 @@ class SxSegmented extends StatelessWidget {
           for (var i = 0; i < labels.length; i++)
             Expanded(
               child: Semantics(
+                container: true,
                 button: true,
                 selected: i == index,
                 label: labels[i],
+                excludeSemantics: true,
+                onTap: () => onChanged(i),
                 child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
                   onTap: () => onChanged(i),
-                  child: AnimatedContainer(
-                    duration: SxMotion.base,
-                    curve: Curves.easeOut,
-                    constraints: const BoxConstraints(minHeight: 40),
-                    alignment: Alignment.center,
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    decoration: BoxDecoration(
-                      color: i == index ? c.primary : Colors.transparent,
-                      borderRadius: BorderRadius.circular(SxRadius.base),
-                    ),
-                    child: Row(mainAxisSize: MainAxisSize.min, children: [
-                      if (icons != null) ...[
-                        Icon(icons![i], size: 16, color: i == index ? const Color(0xFF101214) : c.textBody),
-                        const SizedBox(width: 6),
-                      ],
-                      Flexible(
-                        child: Text(labels[i].toUpperCase(),
-                            overflow: TextOverflow.ellipsis,
-                            style: SxText.labelCaps.copyWith(
-                                color: i == index ? const Color(0xFF101214) : c.textBody,
-                                fontWeight: FontWeight.w700)),
+                  child: Padding(
+                    padding: const EdgeInsets.all(4),
+                    child: AnimatedContainer(
+                      duration: SxMotion.of(context, SxMotion.base),
+                      curve: Curves.easeOut,
+                      constraints: const BoxConstraints(minHeight: 40),
+                      alignment: Alignment.center,
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      decoration: BoxDecoration(
+                        color: i == index ? c.primary : Colors.transparent,
+                        borderRadius: BorderRadius.circular(SxRadius.base),
                       ),
-                    ]),
+                      child: Row(mainAxisSize: MainAxisSize.min, children: [
+                        if (icons != null) ...[
+                          Icon(icons![i], size: 16, color: i == index ? c.onAccent : c.textBody),
+                          const SizedBox(width: 6),
+                        ],
+                        Flexible(
+                          child: Text(labels[i].toUpperCase(),
+                              overflow: TextOverflow.ellipsis,
+                              style: SxText.labelCaps.copyWith(
+                                  color: i == index ? c.onAccent : c.textBody, fontWeight: FontWeight.w700)),
+                        ),
+                      ]),
+                    ),
                   ),
                 ),
               ),

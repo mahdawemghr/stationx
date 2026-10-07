@@ -22,9 +22,12 @@ class SectionHeader extends StatelessWidget {
         children: [
           if (icon != null) ...[Icon(icon, size: 18, color: c.textBody), const SizedBox(width: 8)],
           Expanded(
-            child: Text(title.toUpperCase(),
-                overflow: TextOverflow.ellipsis,
-                style: SxText.labelCaps.copyWith(color: c.textBody, letterSpacing: 1.2)),
+            child: Semantics(
+              header: true,
+              child: Text(title.toUpperCase(),
+                  overflow: TextOverflow.ellipsis,
+                  style: SxText.labelCaps.copyWith(color: c.textBody, letterSpacing: 1.2)),
+            ),
           ),
           ?trailing,
           if (trailingText != null)
@@ -32,7 +35,7 @@ class SectionHeader extends StatelessWidget {
               onTap: onTrailingTap,
               borderRadius: BorderRadius.circular(SxRadius.base),
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                padding: EdgeInsets.symmetric(vertical: onTrailingTap == null ? 8 : 14, horizontal: 4),
                 child: Text(trailingText!,
                     style: SxText.bodySm.copyWith(
                         color: onTrailingTap == null ? c.textBody : c.primary,
@@ -69,7 +72,11 @@ class StatTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.sx;
     final valueColor = accent ? c.primary : c.textHigh;
-    return Container(
+    return Semantics(
+      container: true,
+      label: '$label: $value${unit == null ? '' : ' $unit'}${caption == null ? '' : '. $caption'}',
+      excludeSemantics: true,
+      child: Container(
       constraints: BoxConstraints(minHeight: height ?? 0),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -114,7 +121,7 @@ class StatTile extends StatelessWidget {
             ),
         ],
       ),
-    );
+    ));
   }
 }
 
@@ -140,15 +147,15 @@ class StatusPill extends StatelessWidget {
       ),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
         if (dot) ...[
-          Container(width: 6, height: 6, decoration: BoxDecoration(color: filled ? const Color(0xFF101214) : col, shape: BoxShape.circle)),
+          Container(width: 6, height: 6, decoration: BoxDecoration(color: filled ? c.onAccent : col, shape: BoxShape.circle)),
           const SizedBox(width: 6),
         ],
-        if (icon != null) ...[Icon(icon, size: 12, color: filled ? const Color(0xFF101214) : col), const SizedBox(width: 4)],
+        if (icon != null) ...[Icon(icon, size: 12, color: filled ? c.onAccent : col), const SizedBox(width: 4)],
         Flexible(
           child: Text(label.toUpperCase(),
               overflow: TextOverflow.ellipsis,
               style: SxText.labelCaps.copyWith(
-                  color: filled ? const Color(0xFF101214) : col, fontSize: 10, fontWeight: FontWeight.w700)),
+                  color: filled ? c.onAccent : col, fontSize: 10, fontWeight: FontWeight.w700)),
         ),
       ]),
     );

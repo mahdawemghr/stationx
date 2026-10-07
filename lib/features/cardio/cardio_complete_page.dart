@@ -87,7 +87,7 @@ class _Header extends StatelessWidget {
             width: 56,
             height: 56,
             decoration: BoxDecoration(color: c.primary, borderRadius: BorderRadius.circular(SxRadius.md)),
-            child: const Icon(Icons.done_all, color: Color(0xFF101214), size: 30),
+            child: Icon(Icons.done_all, color: c.onAccent, size: 30),
           ),
           const SizedBox(width: 14),
           Expanded(

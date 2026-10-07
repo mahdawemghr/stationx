@@ -217,7 +217,7 @@ class _Dropdown extends StatelessWidget {
     final c = context.sx;
     return SxInset(
       onTap: onTap,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       child: Row(children: [
         Flexible(
           child: Text.rich(

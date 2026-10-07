@@ -628,15 +628,18 @@ class _LockRowState extends State<_LockRow> with SingleTickerProviderStateMixin 
   @override
   Widget build(BuildContext context) {
     final c = context.sx;
+    // Hold-to-unlock exists to stop accidental sweaty touches. A screen-reader user must
+    // double-tap to activate anything, so accidents can't happen: one activation unlocks.
+    final screenReader = MediaQuery.accessibleNavigationOf(context);
     return GestureDetector(
       key: const Key('cardio-lock'),
       behavior: HitTestBehavior.opaque,
-      onTap: widget.locked ? null : widget.onLock,
+      onTap: widget.locked ? (screenReader ? widget.onUnlock : null) : widget.onLock,
       onTapDown: widget.locked ? (_) => _hold.forward() : null,
       onTapUp: widget.locked ? (_) => _hold.reverse() : null,
       onTapCancel: widget.locked ? () => _hold.reverse() : null,
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6),
+        padding: const EdgeInsets.symmetric(vertical: 14),
         child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
           AnimatedBuilder(
             animation: _hold,

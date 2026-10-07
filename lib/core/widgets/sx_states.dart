@@ -146,7 +146,8 @@ Future<bool> showSxConfirm(
     context: context,
     builder: (ctx) => Dialog(
       insetPadding: const EdgeInsets.all(SxSpace.lg),
-      child: Padding(
+      // Scrolls when text is large or the screen is short, instead of overflowing.
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(SxSpace.lg),
         child: Column(
           mainAxisSize: MainAxisSize.min,

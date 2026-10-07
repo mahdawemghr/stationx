@@ -99,12 +99,12 @@ void main() {
       final app = await pumpPage(t, _onTop(const EditCardioSessionPage(sessionId: 'seed_c1')), size: const Size(390, 1600));
       await _open(t);
       final n = app.cardio.sessions.length;
-      await t.tap(find.text('DELETE CARDIO SESSION'));
+      await t.tap(find.byIcon(Icons.delete_outline).last);
       await t.pumpAndSettle();
       await t.tap(find.text('CANCEL'));
       await t.pumpAndSettle();
       expect(app.cardio.sessions.length, n);
-      await t.tap(find.text('DELETE CARDIO SESSION'));
+      await t.tap(find.byIcon(Icons.delete_outline).last);
       await t.pumpAndSettle();
       await t.tap(find.text('DELETE SESSION'));
       await t.pumpAndSettle();

@@ -3,16 +3,10 @@ import 'package:flutter/material.dart';
 import '../../core/theme/sx_spacing.dart';
 import '../../core/theme/sx_theme.dart';
 import '../../core/theme/sx_typography.dart';
+import '../../core/widgets/muscle_map.dart';
 import '../../domain/domain.dart';
 
 /// Icon used as the exercise "thumbnail" (no photo assets in the project).
-IconData equipmentIcon(Equipment e) => switch (e) {
-      Equipment.cable => Icons.cable,
-      Equipment.dumbbell => Icons.fitness_center,
-      Equipment.barbell => Icons.horizontal_rule,
-      Equipment.machine => Icons.precision_manufacturing_outlined,
-      Equipment.bodyweight => Icons.accessibility_new,
-    };
 
 /// "Lats • Biceps" style label.
 String muscleLine(Exercise e) {
@@ -40,7 +34,7 @@ class ExerciseThumb extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(equipmentIcon(exercise.equipment), color: c.primary, size: size * 0.38),
+          MuscleMap.exercise(exercise, height: size * 0.58),
           const SizedBox(height: 4),
           Text(exercise.equipment.label.toUpperCase(),
               maxLines: 1,

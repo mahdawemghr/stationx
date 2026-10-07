@@ -47,7 +47,7 @@ class _SxButtonState extends State<SxButton> {
     switch (widget.variant) {
       case SxButtonVariant.primary:
         bg = _down ? c.primaryPressed : c.primary;
-        fg = const Color(0xFF101214);
+        fg = c.onAccent;
       case SxButtonVariant.secondary:
         bg = c.surface2;
         fg = c.textHigh;
@@ -88,10 +88,15 @@ class _SxButtonState extends State<SxButton> {
         ],
       ],
     );
+    // Minimum 48dp touch target (Material/WCAG), whatever height the call site asks for.
+    final h = widget.height < 48 ? 48.0 : widget.height;
     return Semantics(
+      container: true,
       button: true,
       enabled: enabled,
       label: widget.label,
+      excludeSemantics: true, // the visible text is the label; don't announce it twice
+      onTap: enabled ? widget.onPressed : null,
       child: GestureDetector(
         onTapDown: enabled ? (_) => setState(() => _down = true) : null,
         onTapCancel: () => setState(() => _down = false),
@@ -102,7 +107,7 @@ class _SxButtonState extends State<SxButton> {
           duration: SxMotion.fast,
           child: AnimatedContainer(
             duration: SxMotion.fast,
-            height: widget.height,
+            height: h,
             padding: const EdgeInsets.symmetric(horizontal: SxSpace.md),
             decoration: BoxDecoration(
               color: bg,
@@ -139,8 +144,15 @@ class SxIconButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.sx;
-    return Tooltip(
+    return Semantics(
+      container: true,
+      button: true,
+      label: tooltip,
+      excludeSemantics: true,
+      onTap: onPressed,
+      child: Tooltip(
       message: tooltip ?? '',
+      excludeFromSemantics: true,
       child: Material(
         color: filled ? c.surface2 : Colors.transparent,
         borderRadius: BorderRadius.circular(SxRadius.md),
@@ -154,6 +166,6 @@ class SxIconButton extends StatelessWidget {
           ),
         ),
       ),
-    );
+    ));
   }
 }

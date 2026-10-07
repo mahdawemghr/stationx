@@ -10,6 +10,7 @@ import 'package:stationx/app/app_controller.dart';
 import 'package:stationx/app/app_scope.dart';
 import 'package:stationx/core/theme/sx_colors.dart';
 import 'package:stationx/core/theme/sx_theme.dart';
+import 'package:stationx/domain/domain.dart';
 
 /// Where [shot] writes PNGs (a scratch dir outside the repo).
 const shotDir = '/tmp/claude-1000/-home-mahdi-Desktop-projects-stationx/339cc30e-0371-4279-bf5e-c9a94eeb7cc4/scratchpad/shots';
@@ -44,11 +45,13 @@ Future<AppController> pumpPage(
   double textScale = 1.0,
   bool demo = true,
   SxColors colors = SxColors.obsidian,
+  HealthRepository? health,
+  bool screenReader = false,
 }) async {
   tester.view.physicalSize = size * 2;
   tester.view.devicePixelRatio = 2;
   addTearDown(tester.view.reset);
-  final app = AppController();
+  final app = AppController(health: health);
   if (demo) app.startDemo();
   await tester.pumpWidget(AppScope(
     controller: app,
@@ -56,7 +59,7 @@ Future<AppController> pumpPage(
       debugShowCheckedModeBanner: false,
       theme: buildStationXTheme(colors),
       builder: (c, child) => MediaQuery(
-        data: MediaQuery.of(c).copyWith(textScaler: TextScaler.linear(textScale)),
+        data: MediaQuery.of(c).copyWith(textScaler: TextScaler.linear(textScale), accessibleNavigation: screenReader),
         child: RepaintBoundary(key: _boundary, child: child),
       ),
       home: page,
@@ -70,12 +73,13 @@ final _boundary = GlobalKey();
 
 /// Writes a PNG of the current frame to [shotDir]/[name].png for visual
 /// comparison with design_reference/SCREEN/screen.png (view it with Read).
-Future<void> shot(WidgetTester tester, String name) async {
+Future<void> shot(WidgetTester tester, String name, {double pixelRatio = 2, String? dir}) async {
   await tester.runAsync(() async {
     final b = _boundary.currentContext!.findRenderObject() as RenderRepaintBoundary;
-    final img = await b.toImage(pixelRatio: 2);
+    final img = await b.toImage(pixelRatio: pixelRatio);
     final data = await img.toByteData(format: ui.ImageByteFormat.png);
-    Directory(shotDir).createSync(recursive: true);
-    File('$shotDir/$name.png').writeAsBytesSync(data!.buffer.asUint8List());
+    final out = dir ?? shotDir;
+    Directory(out).createSync(recursive: true);
+    File('$out/$name.png').writeAsBytesSync(data!.buffer.asUint8List());
   });
 }

@@ -4,6 +4,7 @@ import '../core/theme/sx_colors.dart';
 import '../core/theme/sx_theme.dart';
 import '../domain/domain.dart';
 import '../features/landing/landing_page.dart';
+import '../features/shell/main_shell.dart';
 import 'app_controller.dart';
 import 'app_scope.dart';
 
@@ -15,11 +16,28 @@ class StationXApp extends StatefulWidget {
   State<StationXApp> createState() => _StationXAppState();
 }
 
-class _StationXAppState extends State<StationXApp> {
+class _StationXAppState extends State<StationXApp> with WidgetsBindingObserver {
   late final AppController _controller = widget.controller ?? AppController();
+
+  /// Resolved once: returning users go straight to the app, new/signed-out
+  /// users to the landing screen. (Changing `home` later would not re-route.)
+  late final Widget _home = _controller.signedIn ? const MainShell() : const LandingPage();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  /// Pull fresh wearable data when returning to the app (throttled in the repository).
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _controller.health.refresh();
+  }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     if (widget.controller == null) _controller.dispose();
     super.dispose();
   }
@@ -37,7 +55,7 @@ class _StationXAppState extends State<StationXApp> {
             title: 'StationX',
             debugShowCheckedModeBanner: false,
             theme: buildStationXTheme(_colors(app.profile.profile.themeMode)),
-            home: const LandingPage(),
+            home: _home,
           ),
         );
       }),

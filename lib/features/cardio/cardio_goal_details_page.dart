@@ -112,7 +112,7 @@ class _Body extends StatelessWidget {
             Wrap(crossAxisAlignment: WrapCrossAlignment.end, spacing: 12, runSpacing: 8, children: [
               Row(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
                 Text(goalNumber(g.metric, value), style: SxText.displayHero.copyWith(color: c.primary)),
-                Text(' / ${goalNumber(g.metric, g.target)} $unit', style: SxText.metricMd.copyWith(color: c.textBody)),
+                Flexible(child: Text(' / ${goalNumber(g.metric, g.target)} $unit', overflow: TextOverflow.ellipsis, style: SxText.metricMd.copyWith(color: c.textBody))),
               ]),
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text('${(frac * 100).round()}%', style: SxText.metricLg.copyWith(color: c.primary)),

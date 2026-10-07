@@ -14,7 +14,7 @@ void main() {
   setUpAll(loadAppFonts);
 
   group('Landing', () {
-    testWidgets('guest enters the app with demo data', (t) async {
+    testWidgets('guest enters the app with an empty local profile', (t) async {
       final app = await pumpPage(t, const LandingPage(), demo: false);
       expect(app.signedIn, isFalse);
       await t.scrollUntilVisible(find.text('Continue as Guest (Offline Mode)'), 200, scrollable: find.byType(Scrollable).first);
@@ -22,7 +22,8 @@ void main() {
       await t.pumpAndSettle();
       expect(app.signedIn, isTrue);
       expect(find.byType(MainShell), findsOneWidget);
-      expect(app.sessions.sessions, isNotEmpty);
+      expect(app.sessions.sessions, isEmpty);
+      expect(app.profile.profile.isGuest, isTrue);
     });
 
     testWidgets('create account and log in open their forms', (t) async {
@@ -35,7 +36,7 @@ void main() {
   });
 
   group('Login', () {
-    testWidgets('validates then opens a local profile', (t) async {
+    testWidgets('validates; rejects unknown email; restores the local account', (t) async {
       final app = await pumpPage(t, const LoginPage(), demo: false);
       await t.tap(find.text('LOG IN').first);
       await t.pump();
@@ -43,13 +44,22 @@ void main() {
       await t.enterText(find.byType(TextField).first, 'nope');
       await t.pump();
       expect(find.text('INVALID FORMAT'), findsOneWidget);
+      // No local account exists yet: there is no server, so sign-in is refused.
       await t.enterText(find.byType(TextField).first, 'sam@mail.com');
+      await t.enterText(find.byType(TextField).last, 'secret');
+      await t.tap(find.text('LOG IN').first);
+      await t.pump();
+      await t.pump(const Duration(milliseconds: 300));
+      expect(app.signedIn, isFalse);
+      expect(find.textContaining('No local account'), findsOneWidget);
+      // After an account exists locally (and the user signed out), sign-in restores it.
+      await app.register(name: 'Sam', email: 'sam@mail.com');
+      await app.signOut();
       await t.enterText(find.byType(TextField).last, 'secret');
       await t.tap(find.text('LOG IN').first);
       await t.pumpAndSettle();
       expect(app.signedIn, isTrue);
       expect(app.profile.profile.email, 'sam@mail.com');
-      expect(app.sessions.sessions, isEmpty);
     });
   });
 
@@ -95,7 +105,8 @@ void main() {
       await pumpPage(t, const TodayPage(), demo: false);
       expect(find.text('Chest + Biceps'), findsOneWidget);
       expect(find.textContaining("Complete a workout", skipOffstage: false), findsOneWidget);
-      expect(find.text("NOT CONNECTED", skipOffstage: false), findsOneWidget);
+      // Default test platform has no Health Connect: no recovery card, and never any made-up score.
+      expect(find.text('Recovery', skipOffstage: false), findsNothing);
       expect(find.textContaining('88%'), findsNothing);
     });
 

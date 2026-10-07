@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/utils/equipment_icons.dart';
+
 import '../../app/app_scope.dart';
 import '../../app/nav.dart';
 import '../../core/theme/sx_spacing.dart';
@@ -177,7 +179,7 @@ class _Hero extends StatelessWidget {
       padding: const EdgeInsets.all(SxSpace.md),
       child: Column(children: [
         Container(
-          height: 120,
+          height: 132,
           width: double.infinity,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(SxRadius.md),
@@ -185,8 +187,8 @@ class _Hero extends StatelessWidget {
             border: Border.all(color: c.hairline),
           ),
           child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-            Icon(equipmentIcon(exercise.equipment), size: 44, color: c.primary),
-            const SizedBox(height: 8),
+            MuscleMap.exercise(exercise, height: 84, view: MuscleView.both),
+            const SizedBox(height: 6),
             Text(exercise.primaryMuscle.label.toUpperCase(), style: SxText.labelCaps.copyWith(color: c.primary, letterSpacing: 2)),
           ]),
         ),

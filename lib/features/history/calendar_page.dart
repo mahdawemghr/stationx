@@ -150,7 +150,10 @@ class _CalendarPageState extends State<CalendarPage> {
 
         return SxScaffold(
           topBar: const SxTopBar(title: 'Training Log', showLogo: true),
-          children: [
+          // 8dp page margin so the 7 day cells reach the 48dp touch target on 360dp phones;
+          // every other section is re-inset to the usual 16dp.
+          padding: const EdgeInsets.fromLTRB(8, SxSpace.md, 8, SxSpace.lg),
+          children: _insetExceptGrid([
             _MonthHeader(month: _month, showToday: !isCurrentMonth || _selected != today, onPrev: () => _shiftMonth(-1), onNext: () => _shiftMonth(1), onToday: _goToday),
             _FilterRow(index: _filter, counts: counts, onChanged: (i) => setState(() => _filter = i)),
             _MonthGrid(month: _month, selected: _selected, today: today, data: data, filter: _filter, onSelect: (d) => setState(() => _selected = d)),
@@ -197,12 +200,16 @@ class _CalendarPageState extends State<CalendarPage> {
               Expanded(child: SxButton(label: 'Backdate cardio', icon: Icons.directions_run, variant: SxButtonVariant.secondary, height: 52, onPressed: isFuture ? null : () => AppNav.backdateCardio(context, date: _selected))),
             ]),
             if (isFuture) Text('Pick today or an earlier date to log past activity.', textAlign: TextAlign.center, style: SxText.bodySm.copyWith(color: c.textMuted)),
-          ],
+          ]),
         );
       },
     );
   }
 }
+
+List<Widget> _insetExceptGrid(List<Widget> kids) => [
+      for (final w in kids) w is _MonthGrid ? w : Padding(padding: const EdgeInsets.symmetric(horizontal: 8), child: w),
+    ];
 
 class _MonthHeader extends StatelessWidget {
   const _MonthHeader({required this.month, required this.showToday, required this.onPrev, required this.onNext, required this.onToday});
@@ -261,9 +268,9 @@ class _FilterRow extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 14),
                 child: Row(mainAxisSize: MainAxisSize.min, children: [
-                  Text(labels[i], style: SxText.labelUi.copyWith(color: sel ? const Color(0xFF101214) : c.textBody, fontWeight: FontWeight.w600)),
+                  Text(labels[i], style: SxText.labelUi.copyWith(color: sel ? c.onAccent : c.textBody, fontWeight: FontWeight.w600)),
                   const SizedBox(width: 8),
-                  Text('${counts[i]}', style: SxText.metricSm.copyWith(color: sel ? const Color(0xFF101214) : c.textMuted, fontSize: 12)),
+                  Text('${counts[i]}', style: SxText.metricSm.copyWith(color: sel ? c.onAccent : c.textMuted, fontSize: 12)),
                 ]),
               ),
             ),
@@ -291,7 +298,7 @@ class _MonthGrid extends StatelessWidget {
     final dim = DateTime(month.year, month.month + 1, 0).day;
     final rows = ((offset + dim) / 7).ceil();
     return SxCard(
-      padding: const EdgeInsets.fromLTRB(8, 12, 8, 12),
+      padding: const EdgeInsets.fromLTRB(0, 12, 0, 12),
       child: Column(children: [
         Row(children: [
           for (var i = 1; i <= 7; i++)

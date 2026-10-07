@@ -13,6 +13,7 @@ class SxColors {
     required this.primary,
     required this.onPrimary,
     required this.primaryPressed,
+    required this.onAccent,
     required this.positive,
     required this.danger,
     required this.dangerContainer,
@@ -29,6 +30,9 @@ class SxColors {
   final Color primary;
   final Color onPrimary;
   final Color primaryPressed;
+
+  /// Text/icon colour on top of the lime accent fill ("rich black" per Stitch).
+  final Color onAccent;
   final Color positive;
   final Color danger;
   final Color dangerContainer;
@@ -49,12 +53,14 @@ class SxColors {
     primary: Color(0xFFB8F000),
     onPrimary: Color(0xFF273500),
     primaryPressed: Color(0xFFA2D400),
+    onAccent: Color(0xFF101214),
     positive: Color(0xFF7BF1A8),
     danger: Color(0xFFFFB4AB),
     dangerContainer: Color(0xFF93000A),
     textHigh: Color(0xFFFFFFFF),
     textBody: Color(0xFFA6B0BA),
-    textMuted: Color(0xFF606A74),
+    // Lightened from Stitch's #606A74 (3.3:1) to meet WCAG AA 4.5:1 on every surface tier.
+    textMuted: Color(0xFF8B959F),
   );
 
   /// True-black variant for OLED panels (Profile › Interface Theme › OLED).
@@ -67,11 +73,13 @@ class SxColors {
     primary: Color(0xFFB8F000),
     onPrimary: Color(0xFF273500),
     primaryPressed: Color(0xFFA2D400),
+    onAccent: Color(0xFF101214),
     positive: Color(0xFF7BF1A8),
     danger: Color(0xFFFFB4AB),
     dangerContainer: Color(0xFF93000A),
     textHigh: Color(0xFFFFFFFF),
     textBody: Color(0xFFA6B0BA),
-    textMuted: Color(0xFF606A74),
+    // Lightened from Stitch's #606A74 (3.3:1) to meet WCAG AA 4.5:1 on every surface tier.
+    textMuted: Color(0xFF8B959F),
   );
 }

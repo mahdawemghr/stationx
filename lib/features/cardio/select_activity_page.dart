@@ -118,7 +118,7 @@ class _SelectCardioActivityPageState extends State<SelectCardioActivityPage> {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(color: c.primary, borderRadius: BorderRadius.circular(SxRadius.md)),
-                  child: const Icon(Icons.add_circle_outline, color: Color(0xFF101214)),
+                  child: Icon(Icons.add_circle_outline, color: c.onAccent),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
