@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500;600;700&amp;family=Space+Grotesk:wght@600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100%;margin:0;padding:0;background-color:#121416;color:#e2e2e5;}body{overscroll-behavior:none;-webkit-tap-highlight-color:transparent;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "surface-bright": "#38393c", "inverse-on-surface": "#2f3133", "on-surface": "#e2e2e5", "inverse-primary": "#4d6700", "primary-fixed-dim": "#a5d700", "on-primary-fixed-variant": "#394d00", "surface-container-highest": "#333537", "error-container": "#93000a", "outline-variant": "#434933", "secondary-fixed": "#dee3ea", "on-secondary-container": "#b1b5bc", "on-background": "#e2e2e5", "tertiary-fixed-dim": "#67dd96", "tertiary-fixed": "#84fab0", "primary": "#f4ffd3", "on-secondary-fixed-variant": "#42474d", "surface-tint": "#a5d700", "error": "#ffb4ab", "on-tertiary": "#00391d", "tertiary-container": "#7ff5ac", "on-error-container": "#ffdad6", "on-secondary": "#2c3136", "secondary": "#c2c7cd", "on-primary-fixed": "#151f00", "on-error": "#690005", "surface-container-lowest": "#0c0e10", "on-primary": "#273500", "on-tertiary-container": "#007040", "secondary-container": "#42474d", "on-secondary-fixed": "#171c21", "on-primary-container": "#506a00", "secondary-fixed-dim": "#c2c7cd", "surface-variant": "#333537", "on-surface-variant": "#c3caad", "tertiary": "#edffee", "outline": "#8d947a", "on-tertiary-fixed-variant": "#00522d", "inverse-surface": "#e2e2e5", "on-tertiary-fixed": "#00210f", "primary-fixed": "#bdf510", "surface-dim": "#121416", "background": "#121416", "surface-container-high": "#282a2c", "surface-container-low": "#1a1c1e", "primary-container": "#b8f000", "surface-container": "#1e2022", "surface": "#121416" }, borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, spacing: { "space-md": "1rem", "gutter": "1rem", "space-xs": "0.25rem", "space-lg": "1.5rem", "gutter-desktop": "2rem", "margin": "1rem", "space-xl": "2.5rem", "space-sm": "0.5rem", "gutter-tablet": "1.5rem", "margin-tablet": "2rem", "margin-desktop": "3rem" }, fontFamily: { "metric-md": ["JetBrains Mono"], "body-sm": ["Geist"], "headline-md": ["Space Grotesk"], "display-hero": ["Space Grotesk"], "metric-xl": ["JetBrains Mono"], "body-lg": ["Geist"], "body-md": ["Geist"], "display-hero-mobile": ["Space Grotesk"], "label-caps": ["JetBrains Mono"], "label-ui": ["Geist"], "headline-lg-mobile": ["Space Grotesk"], "metric-lg": ["JetBrains Mono"], "headline-lg": ["Space Grotesk"], "headline-sm": ["Space Grotesk"] }, fontSize: { "metric-md": ["20px", { "lineHeight": "24px", "letterSpacing": "-0.02em", "fontWeight": "600" }], "body-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "400" }], "headline-md": ["22px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "display-hero": ["56px", { "lineHeight": "60px", "letterSpacing": "-0.03em", "fontWeight": "700" }], "metric-xl": ["48px", { "lineHeight": "48px", "letterSpacing": "-0.04em", "fontWeight": "700" }], "body-lg": ["16px", { "lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "400" }], "body-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "400" }], "display-hero-mobile": ["40px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "label-caps": ["11px", { "lineHeight": "14px", "letterSpacing": "0.08em", "fontWeight": "500" }], "label-ui": ["13px", { "lineHeight": "16px", "letterSpacing": "0em", "fontWeight": "500" }], "headline-lg-mobile": ["26px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "metric-lg": ["32px", { "lineHeight": "34px", "letterSpacing": "-0.03em", "fontWeight": "600" }], "headline-lg": ["32px", { "lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "600" }], "headline-sm": ["18px", { "lineHeight": "24px", "letterSpacing": "0em", "fontWeight": "600" }] } } } }</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface font-body-md text-body-md text-on-surface flex flex-col min-h-screen selection:bg-primary-container selection:text-on-primary-container"><header class="fixed top-0 inset-x-0 z-50 bg-surface/85 backdrop-blur-xl pt-safe"><div class="h-16 px-gutter flex items-center justify-between"><div class="flex items-center gap-space-sm"><span class="font-headline-md text-headline-md tracking-tight font-bold text-on-surface">KINETIC</span><span class="font-label-caps text-label-caps text-on-surface-variant uppercase hidden xs:inline tracking-wider">/</span><span class="font-headline-sm text-headline-sm text-on-surface tracking-tight truncate max-w-[120px]">Workouts</span></div><div class="flex items-center gap-space-md"><div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-high/60 backdrop-blur-md"><span class="w-1.5 h-1.5 rounded-full bg-tertiary-fixed shadow-[0_0_8px_rgba(132,250,176,0.8)] animate-pulse"></span><span class="font-label-caps text-label-caps text-tertiary-fixed tracking-wider uppercase">Synced ✓</span></div><a class="min-w-[44px] min-h-[44px] flex items-center justify-center" data-path="profile" href="#"><img alt="Profile" class="w-8 h-8 rounded-full object-cover ring-1 ring-outline-variant/30" src="https://lh3.googleusercontent.com/aida/AEtjO1VS1u4GcVYp98aXFrkmekBQcdAvUt6cQ-JMF5yEI6tQhxhhqZeo4qV_P2VI2X369r4zDESSzqSVUOktP1t5r5Y90_DD5p4JbY3IJM8xnja8Uc7lW52ifgFNgC9vzX0uPHRHy1e30eglQqWMU6a3v6n46Cf0JGudY381rx4UFZvJq2rm1pusKTvzOdTVrhMG5RPL5uvn7UD6nDp05cEZ2zCCGDO4bQUEMurSygtQ_6eer7Z_VfZN-dCkS9c"/></a></div></div></header><main class="flex flex-col relative w-full pt-16 pb-24 bg-surface min-h-screen"><div class="flex flex-col w-full px-margin pb-space-xl space-y-space-md">
+<!-- Month Navigator & Global Metrics Card -->
+<div class="flex flex-col bg-surface-container rounded-xl p-space-md shadow-md">
+<!-- Month Navigation Bar -->
+<div class="flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Session Log</span>
+<div class="flex items-center gap-space-sm mt-0.5">
+<button aria-label="Previous Month" class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center text-on-surface active:scale-95 transition-transform" id="prev-month-btn" type="button">
+<span class="material-symbols-outlined text-[18px]">chevron_left</span>
+</button>
+<span class="font-headline-sm text-headline-sm text-on-surface tracking-tight">September 2026</span>
+<button aria-label="Next Month" class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center text-on-surface active:scale-95 transition-transform" id="next-month-btn" type="button">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+</div>
+</div>
+<div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container-high">
+<span class="material-symbols-outlined text-[14px] text-primary-container" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="font-label-caps text-label-caps text-on-surface font-semibold">16 LOGGED</span>
+</div>
+</div>
+<!-- Calendar Grid -->
+<div class="mt-space-md flex flex-col">
+<!-- Days of Week Header -->
+<div class="grid grid-cols-7 text-center pb-2">
+<span class="font-label-caps text-label-caps text-on-surface-variant">MO</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">TU</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">WE</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">TH</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">FR</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">SA</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">SU</span>
+</div>
+<!-- Days Grid (September 1, 2026 is a Tuesday: 1 leading empty slot) -->
+<div class="grid grid-cols-7 gap-y-1.5 text-center items-center" id="calendar-grid">
+<!-- Offset for Tuesday start: 1 blank slot -->
+<div class="h-11"></div>
+<!-- Days 1 to 30 -->
+<!-- Day 1: Trained -->
+<button class="day-cell flex flex-col items-center justify-center h-11 rounded-lg transition-colors text-on-surface" data-day="1" type="button">
+<span class="font-metric-md text-body-md font-medium">1</span>
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container mt-0.5 shadow-sm"></span>
+</button>
+<!-- Day 2: Trained -->
+<button class="day-cell flex flex-col items-center justify-center h-11 rounded-lg transition-colors text-on-surface" data-day="2" type="button">
+<span class="font-metric-md text-body-md font-medium">2</span>
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container mt-0.5 shadow-sm"></span>
+</button>
+<!-- Day 3: Rest -->
+<button class="day-cell flex flex-col items-center justify-center h-11 rounded-lg transition-colors text-on-surface-variant" data-day="3" type="button">
+<span class="font-metric-md text-body-md">3</span>
+<span class="w-1.5 h-1.5 rounded-full bg-transparent mt-0.5"></span>
+</button>
+<!-- Day 4: Trained -->
+<button class="day-cell flex flex-col items-center justify-center h-11 rounded-lg transition-colors text-on-surface" data-day="4" type="button">
+<span class="font-metric-md text-body-md font-medium">4</span>
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container mt-0.5 shadow-sm"></span>
+</button>
+<!-- Day 5: Rest -->
+<button class="day-cell flex flex-col items-center justify-center h-11 rounded-lg transition-colors text-on-surface-variant" data-day="5" type="button">
+<span class="font-metric-md text-body-md">5</span>
+<span class="w-1.5 h-1.5 rounded-full bg-transparent mt-0.5"></span>
+</button>
+<!-- Day 6: Rest -->
+<button class="day-cell flex flex-col items-center justify-center h-11 rounded-lg transition-colors text-on-surface-variant" data-day="6" type="button">
+<span class="font-metric-md text-body-md">6</span>
+<span class="w-1.5 h-1.5 rounded-full bg-transparent mt-0.5"></span>
+</button>
+<!-- Day 7: Trained -->
+<button class="day-cell flex flex-col items-center justify-center h-11 rounded-lg transition-colors text-on-surface" data-day="7" type="button">
+<span class="font-metric-md text-body-md font-medium">7</span>
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container mt-0.5 shadow-sm"></span>
+</button>
+<!-- Day 8: Trained -->
+<button class="day-cell flex flex-col items-center justify-center h-11 rounded-lg transition-colors text-on-surface" data-day="8" type="button">
+<span class="font-metric-md text-body-md font-medium">8</span>
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container mt-0.5 shadow-sm"></span>
+</button>
+<!-- Day 9: Trained -->
+<button class="day-cell flex flex-col items-center justify-center h-11 rounded-lg transition-colors text-on-surface" data-day="9" type="button">
+<span class="font-metric-md text-body-md font-medium">9</span>
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container mt-0.5 shadow-sm"></span>
+</button>
+<!-- Day 10: Rest -->
+<button class="day-cell flex flex-col items-center justify-center h-11 rounded-lg transition-colors text-on-surface-variant" data-day="10" type="button">
+<span class="font-metric-md text-body-md">10</span>
+<span class="w-1.5 h-1.5 rounded-full bg-transparent mt-0.5"></span>
+</button>
+<!-- Day 11: Trained -->
+<button class="day-cell flex flex-col items-center justify-center h-11 rounded-lg transition-colors text-on-surface" data-day="11" type="button">
+<span class="font-metric-md text-body-md font-medium">11</span>
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container mt-0.5 shadow-sm"></span>
+</button>
+<!-- Day 12: Rest -->
+<button class="day-cell flex flex-col items-center justify-center h-11 rounded-lg transition-colors text-on-surface-variant" data-day="12" type="button">
+<span class="font-metric-md text-body-md">12</span>
+<span class="w-1.5 h-1.5 rounded-full bg-transparent mt-0.5"></span>
+</button>
+<!-- Day 13: Rest -->
+<button class="day-cell flex flex-col items-center justify-center h-11 rounded-lg transition-colors text-on-surface-variant" data-day="13" type="button">
+<span class="font-metric-md text-body-md">13</span>
+<span class="w-1.5 h-1.5 rounded-full bg-transparent mt-0.5"></span>
+</button>
+<!-- Day 14: Selected Active Day -->
+<button class="day-cell flex flex-col items-center justify-center h-11 rounded-xl bg-surface-container-highest shadow-sm relative text-primary" data-day="14" type="button">
+<span class="absolute inset-0 rounded-xl bg-primary-container/15"></span>
+<span class="font-metric-md text-body-md font-bold text-primary-container relative z-10">14</span>
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container mt-0.5 relative z-10 shadow-[0_0_6px_rgba(184,240,0,0.8)]"></span>
+</button>
+<!-- Day 15: Rest -->
+<button class="day-cell flex flex-col items-center justify-center h-11 rounded-lg transition-colors text-on-surface-variant" data-day="15" type="button">
+<span class="font-metric-md text-body-md">15</span>
+<span class="w-1.5 h-1.5 rounded-full bg-transparent mt-0.5"></span>
+</button>
+<!-- Day 16: Trained -->
+<button class="day-cell flex flex-col items-center justify-center h-11 rounded-lg transition-colors text-on-surface" data-day="16" type="button">
+<span class="font-metric-md text-body-md font-medium">16</span>
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container mt-0.5 shadow-sm"></span>
+</button>
+<!-- Day 17: Rest -->
+<button class="day-cell flex flex-col items-center justify-center h-11 rounded-lg transition-colors text-on-surface-variant" data-day="17" type="button">
+<span class="font-metric-md text-body-md">17</span>
+<span class="w-1.5 h-1.5 rounded-full bg-transparent mt-0.5"></span>
+</button>
+<!-- Day 18: Trained -->
+<button class="day-cell flex flex-col items-center justify-center h-11 rounded-lg transition-colors text-on-surface" data-day="18" type="button">
+<span class="font-metric-md text-body-md font-medium">18</span>
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container mt-0.5 shadow-sm"></span>
+</button>
+<!-- Day 19: Rest -->
+<button class="day-cell flex flex-col items-center justify-center h-11 rounded-lg transition-colors text-on-surface-variant" data-day="19" type="button">
+<span class="font-metric-md text-body-md">19</span>
+<span class="w-1.5 h-1.5 rounded-full bg-transparent mt-0.5"></span>
+</button>
+<!-- Day 20: Trained -->
+<button class="day-cell flex flex-col items-center justify-center h-11 rounded-lg transition-colors text-on-surface" data-day="20" type="button">
+<span class="font-metric-md text-body-md font-medium">20</span>
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container mt-0.5 shadow-sm"></span>
+</button>
+<!-- Day 21: Rest -->
+<button class="day-cell flex flex-col items-center justify-center h-11 rounded-lg transition-colors text-on-surface-variant" data-day="21" type="button">
+<span class="font-metric-md text-body-md">21</span>
+<span class="w-1.5 h-1.5 rounded-full bg-transparent mt-0.5"></span>
+</button>
+<!-- Day 22: Trained -->
+<button class="day-cell flex flex-col items-center justify-center h-11 rounded-lg transition-colors text-on-surface" data-day="22" type="button">
+<span class="font-metric-md text-body-md font-medium">22</span>
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container mt-0.5 shadow-sm"></span>
+</button>
+<!-- Day 23: Rest -->
+<button class="day-cell flex flex-col items-center justify-center h-11 rounded-lg transition-colors text-on-surface-variant" data-day="23" type="button">
+<span class="font-metric-md text-body-md">23</span>
+<span class="w-1.5 h-1.5 rounded-full bg-transparent mt-0.5"></span>
+</button>
+<!-- Day 24: Rest -->
+<button class="day-cell flex flex-col items-center justify-center h-11 rounded-lg transition-colors text-on-surface-variant" data-day="24" type="button">
+<span class="font-metric-md text-body-md">24</span>
+<span class="w-1.5 h-1.5 rounded-full bg-transparent mt-0.5"></span>
+</button>
+<!-- Day 25: Trained -->
+<button class="day-cell flex flex-col items-center justify-center h-11 rounded-lg transition-colors text-on-surface" data-day="25" type="button">
+<span class="font-metric-md text-body-md font-medium">25</span>
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container mt-0.5 shadow-sm"></span>
+</button>
+<!-- Day 26: Rest -->
+<button class="day-cell flex flex-col items-center justify-center h-11 rounded-lg transition-colors text-on-surface-variant" data-day="26" type="button">
+<span class="font-metric-md text-body-md">26</span>
+<span class="w-1.5 h-1.5 rounded-full bg-transparent mt-0.5"></span>
+</button>
+<!-- Day 27: Rest -->
+<button class="day-cell flex flex-col items-center justify-center h-11 rounded-lg transition-colors text-on-surface-variant" data-day="27" type="button">
+<span class="font-metric-md text-body-md">27</span>
+<span class="w-1.5 h-1.5 rounded-full bg-transparent mt-0.5"></span>
+</button>
+<!-- Day 28: Rest -->
+<button class="day-cell flex flex-col items-center justify-center h-11 rounded-lg transition-colors text-on-surface-variant" data-day="28" type="button">
+<span class="font-metric-md text-body-md">28</span>
+<span class="w-1.5 h-1.5 rounded-full bg-transparent mt-0.5"></span>
+</button>
+<!-- Day 29: Rest -->
+<button class="day-cell flex flex-col items-center justify-center h-11 rounded-lg transition-colors text-on-surface-variant" data-day="29" type="button">
+<span class="font-metric-md text-body-md">29</span>
+<span class="w-1.5 h-1.5 rounded-full bg-transparent mt-0.5"></span>
+</button>
+<!-- Day 30: Rest -->
+<button class="day-cell flex flex-col items-center justify-center h-11 rounded-lg transition-colors text-on-surface-variant" data-day="30" type="button">
+<span class="font-metric-md text-body-md">30</span>
+<span class="w-1.5 h-1.5 rounded-full bg-transparent mt-0.5"></span>
+</button>
+</div>
+</div>
+</div>
+<!-- Add Past Workout (Backdate shortcut) -->
+<button class="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-surface-container-high hover:bg-surface-bright active:scale-[0.99] transition-all text-on-surface font-headline-sm text-headline-sm" data-path="screen-21" type="button">
+<span class="material-symbols-outlined text-[20px] text-primary-container">edit_calendar</span>
+<span>+ Add Past Workout (Backdate)</span>
+</button>
+<!-- Selected Day Session Card Breakdown -->
+<div class="flex flex-col bg-surface-container rounded-xl p-space-md shadow-md space-y-space-md">
+<!-- Header Details -->
+<div class="flex flex-col space-y-1">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-tertiary-fixed"></span>
+<span class="font-label-caps text-label-caps text-tertiary-fixed tracking-wider uppercase">Monday, Sep 14 • 10:45 AM</span>
+</div>
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Mesocycle W4</span>
+</div>
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface font-bold tracking-tight">Back + Triceps</h2>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Day 2 of 3-Day Hypertrophy Rotation</span>
+</div>
+<!-- Telemetry Metric Quad -->
+<div class="grid grid-cols-2 gap-2">
+<!-- Duration -->
+<div class="flex flex-col p-3 rounded-lg bg-surface-container-low">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Duration</span>
+<div class="flex items-baseline gap-1 mt-1">
+<span class="font-metric-md text-metric-md text-on-surface font-semibold">58</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">min</span>
+</div>
+</div>
+<!-- Total Volume -->
+<div class="flex flex-col p-3 rounded-lg bg-surface-container-low">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Total Volume</span>
+<div class="flex items-baseline gap-1 mt-1">
+<span class="font-metric-md text-metric-md text-on-surface font-semibold">4,250</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">kg</span>
+</div>
+</div>
+<!-- Sets Completed -->
+<div class="flex flex-col p-3 rounded-lg bg-surface-container-low">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Sets Hit</span>
+<div class="flex items-baseline gap-1 mt-1">
+<span class="font-metric-md text-metric-md text-primary-container font-semibold">18</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">/ 18</span>
+</div>
+</div>
+<!-- Personal Records -->
+<div class="flex flex-col p-3 rounded-lg bg-surface-container-low">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">PRs Achieved</span>
+<div class="flex items-center gap-1.5 mt-1">
+<span class="material-symbols-outlined text-[18px] text-primary-container" style="font-variation-settings: 'FILL' 1;">workspace_premium</span>
+<span class="font-metric-md text-metric-md text-primary-container font-semibold">2</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">New</span>
+</div>
+</div>
+</div>
+<!-- Visual Divider Accent Line -->
+<div class="w-full h-px bg-surface-container-highest"></div>
+<!-- Exercise Telemetry Feed -->
+<div class="flex flex-col space-y-2.5">
+<div class="flex items-center justify-between">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Exercise Telemetry (6)</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Total Load</span>
+</div>
+<!-- Exercise 1 -->
+<div class="flex items-center justify-between p-3 rounded-lg bg-surface-container-low">
+<div class="flex flex-col min-w-0 pr-2">
+<div class="flex items-center gap-2">
+<span class="font-headline-sm text-body-md font-semibold text-on-surface truncate">1. Lat Pulldown</span>
+<span class="flex items-center px-1.5 py-0.5 rounded bg-surface-container-highest text-primary-container font-label-caps text-label-caps font-semibold uppercase">
+              PR
+            </span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">3 sets • 50 kg × 8 reps</span>
+</div>
+<div class="flex flex-col items-end shrink-0">
+<span class="font-metric-md text-body-md font-medium text-on-surface">1,275 <span class="text-body-sm font-normal text-on-surface-variant">kg</span></span>
+<span class="font-label-caps text-label-caps text-tertiary-fixed font-medium">+15 kg vs LW</span>
+</div>
+</div>
+<!-- Exercise 2 -->
+<div class="flex items-center justify-between p-3 rounded-lg bg-surface-container-low">
+<div class="flex flex-col min-w-0 pr-2">
+<span class="font-headline-sm text-body-md font-semibold text-on-surface truncate">2. Seated Cable Row</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">3 sets • 60 kg × 10 reps</span>
+</div>
+<div class="flex flex-col items-end shrink-0">
+<span class="font-metric-md text-body-md font-medium text-on-surface">1,800 <span class="text-body-sm font-normal text-on-surface-variant">kg</span></span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">Target met</span>
+</div>
+</div>
+<!-- Exercise 3 -->
+<div class="flex items-center justify-between p-3 rounded-lg bg-surface-container-low">
+<div class="flex flex-col min-w-0 pr-2">
+<span class="font-headline-sm text-body-md font-semibold text-on-surface truncate">3. One Arm Cable Row</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">3 sets • 25 kg × 12 reps</span>
+</div>
+<div class="flex flex-col items-end shrink-0">
+<span class="font-metric-md text-body-md font-medium text-on-surface">900 <span class="text-body-sm font-normal text-on-surface-variant">kg</span></span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">Matched</span>
+</div>
+</div>
+<!-- Exercise 4 -->
+<div class="flex items-center justify-between p-3 rounded-lg bg-surface-container-low">
+<div class="flex flex-col min-w-0 pr-2">
+<div class="flex items-center gap-2">
+<span class="font-headline-sm text-body-md font-semibold text-on-surface truncate">4. Tricep Pushdown</span>
+<span class="flex items-center px-1.5 py-0.5 rounded bg-surface-container-highest text-primary-container font-label-caps text-label-caps font-semibold uppercase">
+              PR
+            </span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">3 sets • 32.5 kg × 10 reps</span>
+</div>
+<div class="flex flex-col items-end shrink-0">
+<span class="font-metric-md text-body-md font-medium text-on-surface">975 <span class="text-body-sm font-normal text-on-surface-variant">kg</span></span>
+<span class="font-label-caps text-label-caps text-tertiary-fixed font-medium">+2.5 kg</span>
+</div>
+</div>
+<!-- Exercise 5 -->
+<div class="flex items-center justify-between p-3 rounded-lg bg-surface-container-low">
+<div class="flex flex-col min-w-0 pr-2">
+<span class="font-headline-sm text-body-md font-semibold text-on-surface truncate">5. Overhead Triceps Extension</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">3 sets • 22.5 kg × 10 reps</span>
+</div>
+<div class="flex flex-col items-end shrink-0">
+<span class="font-metric-md text-body-md font-medium text-on-surface">675 <span class="text-body-sm font-normal text-on-surface-variant">kg</span></span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">Steady</span>
+</div>
+</div>
+<!-- Exercise 6 -->
+<div class="flex items-center justify-between p-3 rounded-lg bg-surface-container-low">
+<div class="flex flex-col min-w-0 pr-2">
+<span class="font-headline-sm text-body-md font-semibold text-on-surface truncate">6. Face Pull</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">3 sets • 20 kg × 15 reps</span>
+</div>
+<div class="flex flex-col items-end shrink-0">
+<span class="font-metric-md text-body-md font-medium text-on-surface">900 <span class="text-body-sm font-normal text-on-surface-variant">kg</span></span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">Form focus</span>
+</div>
+</div>
+</div>
+<!-- Quick Export / Share Row -->
+<div class="pt-2 flex items-center justify-between">
+<button class="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-surface-container-high text-on-surface font-body-sm text-body-sm active:scale-95 transition-transform" type="button">
+<span class="material-symbols-outlined text-[16px]">share</span>
+<span>Share Session</span>
+</button>
+<button class="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-surface-container-high text-on-surface font-body-sm text-body-sm active:scale-95 transition-transform" type="button">
+<span class="material-symbols-outlined text-[16px]">repeat</span>
+<span>Replay Template</span>
+</button>
+</div>
+</div>
+</div>
+<script>
+  // Dynamic day selection micro-interaction
+  document.querySelectorAll('.day-cell').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.day-cell').forEach(c => {
+        c.classList.remove('bg-surface-container-highest', 'text-primary-container');
+        c.querySelector('.relative.z-10')?.classList.remove('font-bold');
+      });
+      btn.classList.add('bg-surface-container-highest');
+    });
+  });
+</script></main><nav class="fixed bottom-0 inset-x-0 z-50 pb-safe bg-surface/90 backdrop-blur-xl shadow-[0_-8px_24px_rgba(0,0,0,0.6)]" data-active-classes="text-primary-container font-semibold drop-shadow-[0_0_12px_rgba(184,240,0,0.4)]"><div class="flex justify-around items-center h-16 px-space-sm"><a class="flex flex-col items-center justify-center gap-1 min-w-[56px] min-h-[44px] text-on-surface-variant transition-all" data-path="today" href="#"><span class="material-symbols-outlined text-[22px]">bolt</span><span class="font-label-caps text-label-caps tracking-widest uppercase">Today</span></a><a aria-current="page" class="flex flex-col items-center justify-center gap-1 min-w-[56px] min-h-[44px] transition-all text-primary-container font-semibold drop-shadow-[0_0_12px_rgba(184,240,0,0.4)]" data-path="workouts" href="#"><span class="material-symbols-outlined text-[22px]">fitness_center</span><span class="font-label-caps text-label-caps tracking-widest uppercase">Workouts</span></a><a class="flex flex-col items-center justify-center gap-1 min-w-[56px] min-h-[44px] text-on-surface-variant transition-all" data-path="progress" href="#"><span class="material-symbols-outlined text-[22px]">monitoring</span><span class="font-label-caps text-label-caps tracking-widest uppercase">Progress</span></a><a class="flex flex-col items-center justify-center gap-1 min-w-[56px] min-h-[44px] text-on-surface-variant transition-all" data-path="profile" href="#"><span class="material-symbols-outlined text-[22px]">person</span><span class="font-label-caps text-label-caps tracking-widest uppercase">Profile</span></a></div></nav></body></html>

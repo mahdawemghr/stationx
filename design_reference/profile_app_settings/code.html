@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500;600;700&amp;family=Space+Grotesk:wght@600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100%;margin:0;padding:0;background-color:#121416;color:#e2e2e5;}body{overscroll-behavior:none;-webkit-tap-highlight-color:transparent;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "surface-bright": "#38393c", "inverse-on-surface": "#2f3133", "on-surface": "#e2e2e5", "inverse-primary": "#4d6700", "primary-fixed-dim": "#a5d700", "on-primary-fixed-variant": "#394d00", "surface-container-highest": "#333537", "error-container": "#93000a", "outline-variant": "#434933", "secondary-fixed": "#dee3ea", "on-secondary-container": "#b1b5bc", "on-background": "#e2e2e5", "tertiary-fixed-dim": "#67dd96", "tertiary-fixed": "#84fab0", "primary": "#f4ffd3", "on-secondary-fixed-variant": "#42474d", "surface-tint": "#a5d700", "error": "#ffb4ab", "on-tertiary": "#00391d", "tertiary-container": "#7ff5ac", "on-error-container": "#ffdad6", "on-secondary": "#2c3136", "secondary": "#c2c7cd", "on-primary-fixed": "#151f00", "on-error": "#690005", "surface-container-lowest": "#0c0e10", "on-primary": "#273500", "on-tertiary-container": "#007040", "secondary-container": "#42474d", "on-secondary-fixed": "#171c21", "on-primary-container": "#506a00", "secondary-fixed-dim": "#c2c7cd", "surface-variant": "#333537", "on-surface-variant": "#c3caad", "tertiary": "#edffee", "outline": "#8d947a", "on-tertiary-fixed-variant": "#00522d", "inverse-surface": "#e2e2e5", "on-tertiary-fixed": "#00210f", "primary-fixed": "#bdf510", "surface-dim": "#121416", "background": "#121416", "surface-container-high": "#282a2c", "surface-container-low": "#1a1c1e", "primary-container": "#b8f000", "surface-container": "#1e2022", "surface": "#121416" }, borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, spacing: { "space-md": "1rem", "gutter": "1rem", "space-xs": "0.25rem", "space-lg": "1.5rem", "gutter-desktop": "2rem", "margin": "1rem", "space-xl": "2.5rem", "space-sm": "0.5rem", "gutter-tablet": "1.5rem", "margin-tablet": "2rem", "margin-desktop": "3rem" }, fontFamily: { "metric-md": ["JetBrains Mono"], "body-sm": ["Geist"], "headline-md": ["Space Grotesk"], "display-hero": ["Space Grotesk"], "metric-xl": ["JetBrains Mono"], "body-lg": ["Geist"], "body-md": ["Geist"], "display-hero-mobile": ["Space Grotesk"], "label-caps": ["JetBrains Mono"], "label-ui": ["Geist"], "headline-lg-mobile": ["Space Grotesk"], "metric-lg": ["JetBrains Mono"], "headline-lg": ["Space Grotesk"], "headline-sm": ["Space Grotesk"] }, fontSize: { "metric-md": ["20px", { "lineHeight": "24px", "letterSpacing": "-0.02em", "fontWeight": "600" }], "body-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "400" }], "headline-md": ["22px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "display-hero": ["56px", { "lineHeight": "60px", "letterSpacing": "-0.03em", "fontWeight": "700" }], "metric-xl": ["48px", { "lineHeight": "48px", "letterSpacing": "-0.04em", "fontWeight": "700" }], "body-lg": ["16px", { "lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "400" }], "body-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "400" }], "display-hero-mobile": ["40px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "label-caps": ["11px", { "lineHeight": "14px", "letterSpacing": "0.08em", "fontWeight": "500" }], "label-ui": ["13px", { "lineHeight": "16px", "letterSpacing": "0em", "fontWeight": "500" }], "headline-lg-mobile": ["26px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "metric-lg": ["32px", { "lineHeight": "34px", "letterSpacing": "-0.03em", "fontWeight": "600" }], "headline-lg": ["32px", { "lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "600" }], "headline-sm": ["18px", { "lineHeight": "24px", "letterSpacing": "0em", "fontWeight": "600" }] } } } }</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface font-body-md text-body-md text-on-surface flex flex-col min-h-screen selection:bg-primary-container selection:text-on-primary-container"><header class="fixed top-0 inset-x-0 z-50 bg-surface/85 backdrop-blur-xl pt-safe"><div class="h-16 px-gutter flex items-center justify-between"><div class="flex items-center gap-space-sm"><span class="font-headline-md text-headline-md tracking-tight font-bold text-on-surface">KINETIC</span><span class="font-label-caps text-label-caps text-on-surface-variant uppercase hidden xs:inline tracking-wider">/</span><span class="font-headline-sm text-headline-sm text-on-surface tracking-tight truncate max-w-[120px]">Profile</span></div><div class="flex items-center gap-space-md"><div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-high/60 backdrop-blur-md"><span class="w-1.5 h-1.5 rounded-full bg-tertiary-fixed shadow-[0_0_8px_rgba(132,250,176,0.8)] animate-pulse"></span><span class="font-label-caps text-label-caps text-tertiary-fixed tracking-wider uppercase">Synced ✓</span></div><a class="min-w-[44px] min-h-[44px] flex items-center justify-center" data-path="profile" href="#"><img alt="Profile" class="w-8 h-8 rounded-full object-cover ring-1 ring-outline-variant/30" src="https://lh3.googleusercontent.com/aida/AEtjO1VS1u4GcVYp98aXFrkmekBQcdAvUt6cQ-JMF5yEI6tQhxhhqZeo4qV_P2VI2X369r4zDESSzqSVUOktP1t5r5Y90_DD5p4JbY3IJM8xnja8Uc7lW52ifgFNgC9vzX0uPHRHy1e30eglQqWMU6a3v6n46Cf0JGudY381rx4UFZvJq2rm1pusKTvzOdTVrhMG5RPL5uvn7UD6nDp05cEZ2zCCGDO4bQUEMurSygtQ_6eer7Z_VfZN-dCkS9c"/></a></div></div></header><main class="flex flex-col relative w-full pt-16 pb-24 bg-surface min-h-screen"><div class="flex flex-col w-full px-margin pb-space-xl gap-y-space-lg">
+<!-- Profile Header Card -->
+<section class="flex flex-col bg-surface-container-high rounded-xl p-space-md shadow-md">
+<div class="flex items-center gap-space-md">
+<div class="relative w-16 h-16 shrink-0">
+<img class="w-full h-full rounded-full object-cover shadow-sm" data-alt="High-contrast editorial close-up portrait of athletic user Alex Vance in a dim high-performance strength facility, subtle electric lime rim lighting on skin, intense focused gaze, dark atmospheric technical gym background, 8k resolution" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCvbgpRBIBIRlV-IDqOnMOLzWLzsjyldoLSJkA1lqhAFXt8KLBNRkcgVKnZb7g5LovneBlBa5V5PdMh0pOnfzu6Nj76EAdUSkvyYTldVHJ__uZzQksMgOAtSz-wmLn45pA5kPvcE2_9NerzYE9gLww57a-snY0n_p__u3AB_kgfjlS5nHYXewLsuJp1Y4wGdj1_KS8UASjzuIQp3nuS06rmNv_8k3szrydsYiv0b1facNhS8Vly8GPP"/>
+<span class="absolute -bottom-1 -right-1 flex items-center justify-center w-6 h-6 rounded-full bg-primary-container text-on-primary-container shadow-sm">
+<span class="material-symbols-outlined text-[15px]" style="font-variation-settings: 'FILL' 1;">verified</span>
+</span>
+</div>
+<div class="flex flex-col min-w-0 flex-1">
+<div class="flex items-center gap-space-xs">
+<h1 class="font-headline-md text-headline-md tracking-tight text-on-surface truncate">Alex Vance</h1>
+<span class="font-label-caps text-label-caps px-1.5 py-0.5 rounded bg-primary-container/20 text-primary-container">PRO</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-1.5 mt-0.5">
+<span>Pro Strength Athlete</span>
+<span class="w-1 h-1 rounded-full bg-outline"></span>
+<span class="font-label-caps text-label-caps text-tertiary-fixed">KINETIC LABS</span>
+</p>
+</div>
+<button aria-label="Edit Profile" class="w-10 h-10 rounded-lg bg-surface-container-highest flex items-center justify-center text-on-surface active:scale-95 transition-transform" type="button">
+<span class="material-symbols-outlined text-[20px]">edit</span>
+</button>
+</div>
+<!-- Sub-status pill row -->
+<div class="mt-space-md grid grid-cols-2 gap-space-sm bg-surface-container rounded-lg p-space-xs">
+<div class="flex items-center gap-2 px-space-sm py-1">
+<span class="material-symbols-outlined text-[16px] text-tertiary-fixed">battery_charging_full</span>
+<div class="flex flex-col">
+<span class="font-label-caps text-[10px] uppercase text-on-surface-variant">Strain Capacity</span>
+<span class="font-metric-md text-[14px] leading-tight text-on-surface">94% Optimal</span>
+</div>
+</div>
+<div class="flex items-center gap-2 px-space-sm py-1 bg-surface-container-high rounded">
+<span class="material-symbols-outlined text-[16px] text-primary-container">timer</span>
+<div class="flex flex-col">
+<span class="font-label-caps text-[10px] uppercase text-on-surface-variant">Volume Period</span>
+<span class="font-metric-md text-[14px] leading-tight text-on-surface">M3 W2 Peak</span>
+</div>
+</div>
+</div>
+</section>
+<!-- SECTION 1: YOUR DATA (Biometrics) -->
+<section class="flex flex-col gap-space-sm">
+<div class="flex items-center justify-between px-space-xs">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[18px] text-primary-container">straighten</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Your Data</h2>
+</div>
+<button class="flex items-center gap-1 font-label-caps text-label-caps text-primary-container uppercase active:opacity-75" id="biometricsEditBtn" type="button">
+<span>Edit Metrics</span>
+<span class="material-symbols-outlined text-[14px]">tune</span>
+</button>
+</div>
+<div class="grid grid-cols-3 gap-space-sm">
+<!-- Weight -->
+<div class="flex flex-col bg-surface-container-high p-space-md rounded-xl shadow-sm">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Weight</span>
+<div class="flex items-baseline gap-1 mt-1">
+<span class="font-metric-lg text-metric-lg text-on-surface" id="valWeight">74</span>
+<span class="font-metric-md text-[14px] text-on-surface-variant font-medium">kg</span>
+</div>
+<div class="flex items-center gap-1 mt-1 text-tertiary-fixed">
+<span class="material-symbols-outlined text-[13px]">trending_up</span>
+<span class="font-metric-md text-[11px]">+0.4kg/wk</span>
+</div>
+</div>
+<!-- Height -->
+<div class="flex flex-col bg-surface-container-high p-space-md rounded-xl shadow-sm">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Height</span>
+<div class="flex items-baseline gap-1 mt-1">
+<span class="font-metric-lg text-metric-lg text-on-surface">168</span>
+<span class="font-metric-md text-[14px] text-on-surface-variant font-medium">cm</span>
+</div>
+<span class="font-metric-md text-[11px] text-on-surface-variant mt-1">5'6" cal</span>
+</div>
+<!-- Age -->
+<div class="flex flex-col bg-surface-container-high p-space-md rounded-xl shadow-sm">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Age</span>
+<div class="flex items-baseline gap-1 mt-1">
+<span class="font-metric-lg text-metric-lg text-on-surface">23</span>
+<span class="font-metric-md text-[14px] text-on-surface-variant font-medium">y/o</span>
+</div>
+<span class="font-metric-md text-[11px] text-tertiary-fixed mt-1">Prime Cat</span>
+</div>
+</div>
+</section>
+<!-- SECTION 2: WORKOUT CONFIGURATION -->
+<section class="flex flex-col gap-space-sm">
+<div class="flex items-center gap-1.5 px-space-xs">
+<span class="material-symbols-outlined text-[18px] text-primary-container">tune</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Workout Configuration</h2>
+</div>
+<div class="flex flex-col bg-surface-container-high rounded-xl p-space-md gap-y-space-md shadow-sm">
+<!-- Default Sets Stepper -->
+<div class="flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-body-md text-body-md text-on-surface font-medium">Default Working Sets</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Baseline target per primary exercise</span>
+</div>
+<div class="flex items-center bg-surface-container-highest rounded-lg p-1">
+<button aria-label="Decrease sets" class="w-8 h-8 rounded-md bg-surface-container flex items-center justify-center text-on-surface active:bg-primary-container active:text-on-primary-container" onclick="decrementSets()" type="button">
+<span class="material-symbols-outlined text-[16px]">remove</span>
+</button>
+<span class="w-10 text-center font-metric-md text-metric-md text-primary-container" id="setCounter">3</span>
+<button aria-label="Increase sets" class="w-8 h-8 rounded-md bg-surface-container flex items-center justify-center text-on-surface active:bg-primary-container active:text-on-primary-container" onclick="incrementSets()" type="button">
+<span class="material-symbols-outlined text-[16px]">add</span>
+</button>
+</div>
+</div>
+<div class="h-[1px] w-full bg-surface-container-highest"></div>
+<!-- Rep Range -->
+<div class="flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-body-md text-body-md text-on-surface font-medium">Default Rep Window</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Hypertrophy strength target</span>
+</div>
+<div class="flex items-center gap-1.5 bg-surface-container-highest px-3 py-1.5 rounded-lg">
+<span class="font-metric-md text-[14px] text-on-surface">8 – 12</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">reps</span>
+</div>
+</div>
+<div class="h-[1px] w-full bg-surface-container-highest"></div>
+<!-- Progression Engine Toggle -->
+<div class="flex items-center justify-between">
+<div class="flex flex-col pr-4">
+<div class="flex items-center gap-1.5">
+<span class="font-body-md text-body-md text-on-surface font-medium">Progression Engine</span>
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container animate-ping"></span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Auto-recommends weight &amp; RPE updates</span>
+</div>
+<label class="relative inline-flex items-center cursor-pointer shrink-0">
+<input checked="" class="sr-only peer" id="progressionToggle" type="checkbox"/>
+<div class="w-12 h-7 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-surface after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-container peer-checked:after:bg-on-primary-container shadow-inner"></div>
+</label>
+</div>
+<div class="h-[1px] w-full bg-surface-container-highest"></div>
+<!-- Rest Timer -->
+<div class="flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-body-md text-body-md text-on-surface font-medium">Auto Rest Timer</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Starts immediately after logging set</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="font-metric-md text-[15px] text-primary-container bg-surface-container-highest px-2.5 py-1 rounded-lg">90s</span>
+<button class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-on-surface" type="button">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- SECTION 3: PREFERENCES & APPEARANCE -->
+<section class="flex flex-col gap-space-sm">
+<div class="flex items-center gap-1.5 px-space-xs">
+<span class="material-symbols-outlined text-[18px] text-primary-container">palette</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Preferences &amp; Styling</h2>
+</div>
+<div class="flex flex-col bg-surface-container-high rounded-xl p-space-md gap-y-space-md shadow-sm">
+<!-- Weight Units Segmented Control -->
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-body-md text-body-md text-on-surface font-medium">Measurement Unit</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">METRIC / IMPERIAL</span>
+</div>
+<div class="grid grid-cols-2 p-1 bg-surface-container rounded-lg gap-1">
+<button class="py-2 rounded-md font-label-caps text-label-caps uppercase text-center transition-all bg-primary-container text-on-primary-container font-semibold shadow-sm" id="unitKgBtn" onclick="setUnit('kg')" type="button">
+            kg (Kilograms)
+          </button>
+<button class="py-2 rounded-md font-label-caps text-label-caps uppercase text-center transition-all text-on-surface-variant hover:text-on-surface" id="unitLbBtn" onclick="setUnit('lb')" type="button">
+            lb (Pounds)
+          </button>
+</div>
+</div>
+<!-- Theme Segmented Control -->
+<div class="flex flex-col gap-space-xs">
+<span class="font-body-md text-body-md text-on-surface font-medium">Interface Theme</span>
+<div class="grid grid-cols-3 p-1 bg-surface-container rounded-lg gap-1">
+<button class="py-2 rounded-md font-label-caps text-label-caps uppercase text-center transition-all bg-surface-container-highest text-primary-container font-semibold shadow-sm" id="themeDarkBtn" onclick="setTheme('dark')" type="button">
+            Dark
+          </button>
+<button class="py-2 rounded-md font-label-caps text-label-caps uppercase text-center transition-all text-on-surface-variant hover:text-on-surface" id="themeOledBtn" onclick="setTheme('oled')" type="button">
+            OLED
+          </button>
+<button class="py-2 rounded-md font-label-caps text-label-caps uppercase text-center transition-all text-on-surface-variant hover:text-on-surface" id="themeSysBtn" onclick="setTheme('sys')" type="button">
+            System
+          </button>
+</div>
+</div>
+<!-- Accent Color Selection -->
+<div class="flex items-center justify-between pt-1">
+<div class="flex flex-col">
+<span class="font-body-md text-body-md text-on-surface font-medium">Telemetry Accent</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Active sets, PRs &amp; cues</span>
+</div>
+<div class="flex items-center gap-2">
+<!-- Electric Lime Selected -->
+<div class="w-8 h-8 rounded-full bg-primary-container p-0.5 shadow-sm flex items-center justify-center ring-2 ring-primary-container/40">
+<span class="material-symbols-outlined text-on-primary-container text-[16px] font-bold">check</span>
+</div>
+<!-- Muted Cyan (Disabled/Alt preview) -->
+<div class="w-7 h-7 rounded-full bg-tertiary-fixed opacity-40"></div>
+<!-- Bright Gold (Disabled/Alt preview) -->
+<div class="w-7 h-7 rounded-full bg-secondary-fixed opacity-40"></div>
+</div>
+</div>
+</div>
+</section>
+<!-- SECTION 4: INTEGRATIONS & LOCAL DATA -->
+<section class="flex flex-col gap-space-sm">
+<div class="flex items-center gap-1.5 px-space-xs">
+<span class="material-symbols-outlined text-[18px] text-primary-container">database</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Integrations &amp; Storage</h2>
+</div>
+<div class="flex flex-col bg-surface-container-high rounded-xl p-space-md gap-y-space-md shadow-sm">
+<!-- Health Sync Tile -->
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-tertiary-fixed/10 flex items-center justify-center text-tertiary-fixed shrink-0">
+<span class="material-symbols-outlined text-[22px]">vital_signs</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-body-md text-body-md text-on-surface font-medium">Health Connect</span>
+<span class="font-body-sm text-body-sm text-tertiary-fixed">Connected ✓ (Apple Watch &amp; Whoop)</span>
+</div>
+</div>
+<span class="w-2.5 h-2.5 rounded-full bg-tertiary-fixed shadow-[0_0_8px_rgba(132,250,176,0.8)]"></span>
+</div>
+<div class="h-[1px] w-full bg-surface-container-highest"></div>
+<!-- Local SQLite Status -->
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-primary-container shrink-0">
+<span class="material-symbols-outlined text-[22px]">offline_bolt</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-body-md text-body-md text-on-surface font-medium">Local-First Engine</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Offline Ready • SQLite Embedded (0 ms latency)</span>
+</div>
+</div>
+<span class="font-label-caps text-label-caps text-on-surface-variant">SYNCED</span>
+</div>
+<div class="h-[1px] w-full bg-surface-container-highest"></div>
+<!-- Export & Backup Action Buttons -->
+<div class="grid grid-cols-2 gap-space-sm pt-1">
+<button class="flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg bg-surface-container hover:bg-surface-container-highest active:scale-98 transition-all text-on-surface" onclick="triggerToast('Workouts exported as kinetic_export.json')" type="button">
+<span class="material-symbols-outlined text-[18px] text-primary-container">file_download</span>
+<span class="font-label-caps text-label-caps uppercase">Export CSV/JSON</span>
+</button>
+<button class="flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg bg-surface-container hover:bg-surface-container-highest active:scale-98 transition-all text-on-surface" onclick="triggerToast('Local state backed up.')" type="button">
+<span class="material-symbols-outlined text-[18px] text-tertiary-fixed">cloud_sync</span>
+<span class="font-label-caps text-label-caps uppercase">Backup (2m ago)</span>
+</button>
+</div>
+</div>
+</section>
+<!-- SECTION 5: APP META & DANGER ZONE -->
+<section class="flex flex-col gap-space-sm mt-space-xs">
+<div class="flex items-center justify-between px-space-xs">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant">terminal</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface-variant">App Runtime &amp; Safety</h2>
+</div>
+<span class="font-metric-md text-[11px] text-on-surface-variant">v2.4.0 (4190)</span>
+</div>
+<div class="flex flex-col bg-surface-container-low rounded-xl p-space-md gap-y-space-md shadow-sm">
+<div class="flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-body-md text-body-md text-on-surface font-medium">Session Cache</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Clears temporary workout logs &amp; radar traces</span>
+</div>
+<button class="px-3 py-1.5 rounded-lg bg-surface-container text-on-surface font-label-caps text-label-caps uppercase hover:bg-surface-container-high active:scale-95 transition-all" onclick="triggerToast('Session cache purged (14.2 MB freed)')" type="button">
+          Flush
+        </button>
+</div>
+<div class="h-[1px] w-full bg-surface-container"></div>
+<!-- Destructive Action -->
+<div class="flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-body-md text-body-md text-error font-semibold">Delete All Local Data</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Wipes on-device SQLite database irreversibly</span>
+</div>
+<button class="px-3.5 py-2 rounded-lg bg-error-container/30 hover:bg-error-container/50 text-error font-label-caps text-label-caps uppercase active:scale-95 transition-all" onclick="confirmReset()" type="button">
+          Purge
+        </button>
+</div>
+</div>
+<!-- Motivational Footer Note -->
+<div class="flex flex-col items-center justify-center py-space-md text-center">
+<span class="font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest">Engineered for surgical performance</span>
+<span class="font-metric-md text-[10px] text-on-surface-variant/60 mt-0.5">KINETIC HIGH PERFORMANCE ARCHITECTURE</span>
+</div>
+</section>
+<!-- Interactive Toast Notification Container -->
+<div class="fixed top-20 left-1/2 -translate-x-1/2 z-50 transition-all duration-300 pointer-events-none opacity-0 translate-y-[-10px] px-4 py-2.5 rounded-full bg-surface-container-highest shadow-xl flex items-center gap-2 max-w-[90%]" id="toastNotification">
+<span class="material-symbols-outlined text-[18px] text-primary-container">check_circle</span>
+<span class="font-body-sm text-body-sm text-on-surface font-medium truncate" id="toastMessage">Update Saved</span>
+</div>
+</div>
+<script>
+  let currentSets = 3;
+
+  function incrementSets() {
+    if (currentSets < 10) {
+      currentSets++;
+      document.getElementById('setCounter').textContent = currentSets;
+      triggerToast(`Default sets set to ${currentSets}`);
+    }
+  }
+
+  function decrementSets() {
+    if (currentSets > 1) {
+      currentSets--;
+      document.getElementById('setCounter').textContent = currentSets;
+      triggerToast(`Default sets set to ${currentSets}`);
+    }
+  }
+
+  function setUnit(unit) {
+    const kgBtn = document.getElementById('unitKgBtn');
+    const lbBtn = document.getElementById('unitLbBtn');
+    const weightVal = document.getElementById('valWeight');
+
+    if (unit === 'kg') {
+      kgBtn.className = "py-2 rounded-md font-label-caps text-label-caps uppercase text-center transition-all bg-primary-container text-on-primary-container font-semibold shadow-sm";
+      lbBtn.className = "py-2 rounded-md font-label-caps text-label-caps uppercase text-center transition-all text-on-surface-variant hover:text-on-surface";
+      if (weightVal) weightVal.textContent = "74";
+      triggerToast("Units shifted to Kilograms (kg)");
+    } else {
+      lbBtn.className = "py-2 rounded-md font-label-caps text-label-caps uppercase text-center transition-all bg-primary-container text-on-primary-container font-semibold shadow-sm";
+      kgBtn.className = "py-2 rounded-md font-label-caps text-label-caps uppercase text-center transition-all text-on-surface-variant hover:text-on-surface";
+      if (weightVal) weightVal.textContent = "163";
+      triggerToast("Units shifted to Pounds (lb)");
+    }
+  }
+
+  function setTheme(theme) {
+    const dBtn = document.getElementById('themeDarkBtn');
+    const oBtn = document.getElementById('themeOledBtn');
+    const sBtn = document.getElementById('themeSysBtn');
+    const activeClass = "py-2 rounded-md font-label-caps text-label-caps uppercase text-center transition-all bg-surface-container-highest text-primary-container font-semibold shadow-sm";
+    const idleClass = "py-2 rounded-md font-label-caps text-label-caps uppercase text-center transition-all text-on-surface-variant hover:text-on-surface";
+
+    dBtn.className = idleClass;
+    oBtn.className = idleClass;
+    sBtn.className = idleClass;
+
+    if (theme === 'dark') dBtn.className = activeClass;
+    if (theme === 'oled') oBtn.className = activeClass;
+    if (theme === 'sys') sBtn.className = activeClass;
+
+    triggerToast(`Theme set to ${theme.toUpperCase()}`);
+  }
+
+  function confirmReset() {
+    if (confirm("Are you sure? This will wipe your local workout history on SQLite.")) {
+      triggerToast("Data wiped cleanly. Resetting engine state.");
+    }
+  }
+
+  let toastTimer = null;
+  function triggerToast(text) {
+    const toast = document.getElementById('toastNotification');
+    const toastMsg = document.getElementById('toastMessage');
+    if (!toast || !toastMsg) return;
+
+    toastMsg.textContent = text;
+    toast.classList.remove('opacity-0', 'translate-y-[-10px]');
+    toast.classList.add('opacity-100', 'translate-y-0');
+
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => {
+      toast.classList.remove('opacity-100', 'translate-y-0');
+      toast.classList.add('opacity-0', 'translate-y-[-10px]');
+    }, 2200);
+  }
+
+  document.getElementById('biometricsEditBtn')?.addEventListener('click', () => {
+    triggerToast("Quick edit biometrics opened");
+  });
+
+  document.getElementById('progressionToggle')?.addEventListener('change', (e) => {
+    triggerToast(e.target.checked ? "Progression Engine: ACTIVE" : "Progression Engine: MANUAL");
+  });
+</script></main><nav class="fixed bottom-0 inset-x-0 z-50 pb-safe bg-surface/90 backdrop-blur-xl shadow-[0_-8px_24px_rgba(0,0,0,0.6)]" data-active-classes="text-primary-container font-semibold drop-shadow-[0_0_12px_rgba(184,240,0,0.4)]"><div class="flex justify-around items-center h-16 px-space-sm"><a class="flex flex-col items-center justify-center gap-1 min-w-[56px] min-h-[44px] text-on-surface-variant transition-all" data-path="today" href="#"><span class="material-symbols-outlined text-[22px]">bolt</span><span class="font-label-caps text-label-caps tracking-widest uppercase">Today</span></a><a class="flex flex-col items-center justify-center gap-1 min-w-[56px] min-h-[44px] text-on-surface-variant transition-all" data-path="workouts" href="#"><span class="material-symbols-outlined text-[22px]">fitness_center</span><span class="font-label-caps text-label-caps tracking-widest uppercase">Workouts</span></a><a class="flex flex-col items-center justify-center gap-1 min-w-[56px] min-h-[44px] text-on-surface-variant transition-all" data-path="progress" href="#"><span class="material-symbols-outlined text-[22px]">monitoring</span><span class="font-label-caps text-label-caps tracking-widest uppercase">Progress</span></a><a aria-current="page" class="flex flex-col items-center justify-center gap-1 min-w-[56px] min-h-[44px] transition-all text-primary-container font-semibold drop-shadow-[0_0_12px_rgba(184,240,0,0.4)]" data-path="profile" href="#"><span class="material-symbols-outlined text-[22px]">person</span><span class="font-label-caps text-label-caps tracking-widest uppercase">Profile</span></a></div></nav></body></html>

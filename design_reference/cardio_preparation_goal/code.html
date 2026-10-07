@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=JetBrains+Mono:wght@500;600;700&amp;family=Space+Grotesk:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;background-color:#121416;color:#e2e2e5;}body{overscroll-behavior:none;-webkit-tap-highlight-color:transparent;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "secondary-fixed": "#dee3ea", "on-secondary-fixed-variant": "#42474d", "on-secondary-fixed": "#171c21", "outline-variant": "#434933", "on-surface": "#e2e2e5", "error": "#ffb4ab", "secondary-container": "#42474d", "on-secondary-container": "#b1b5bc", "tertiary-container": "#7ff5ac", "surface-tint": "#a5d700", "on-tertiary-fixed-variant": "#00522d", "primary-container": "#b8f000", "surface-dim": "#121416", "surface-container-highest": "#333537", "primary-fixed-dim": "#a5d700", "tertiary-fixed-dim": "#67dd96", "on-primary": "#273500", "tertiary-fixed": "#84fab0", "background": "#121416", "on-error-container": "#ffdad6", "surface-container-lowest": "#0c0e10", "inverse-surface": "#e2e2e5", "surface-variant": "#333537", "primary-fixed": "#bdf510", "on-tertiary-fixed": "#00210f", "surface-container": "#1e2022", "on-primary-fixed-variant": "#394d00", "on-tertiary": "#00391d", "on-secondary": "#2c3136", "outline": "#8d947a", "surface-bright": "#38393c", "surface": "#121416", "on-surface-variant": "#c3caad", "error-container": "#93000a", "on-primary-container": "#506a00", "on-tertiary-container": "#007040", "primary": "#f4ffd3", "on-background": "#e2e2e5", "on-primary-fixed": "#151f00", "secondary-fixed-dim": "#c2c7cd", "inverse-primary": "#4d6700", "on-error": "#690005", "inverse-on-surface": "#2f3133", "secondary": "#c2c7cd", "surface-container-low": "#1a1c1e", "surface-container-high": "#282a2c", "tertiary": "#edffee" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "space-lg": "1.5rem", "margin-desktop": "3rem", "gutter-tablet": "1.5rem", "space-md": "1rem", "space-xs": "0.25rem", "gutter-desktop": "2rem", "margin": "1rem", "gutter": "1rem", "margin-tablet": "2rem", "space-xl": "2.5rem", "space-sm": "0.5rem" }, "fontFamily": { "body-sm": [ "Geist" ], "display-hero-mobile": [ "Space Grotesk" ], "headline-lg": [ "Space Grotesk" ], "headline-sm": [ "Space Grotesk" ], "body-md": [ "Geist" ], "display-hero": [ "Space Grotesk" ], "label-ui": [ "Geist" ], "label-caps": [ "JetBrains Mono" ], "metric-xl": [ "JetBrains Mono" ], "metric-md": [ "JetBrains Mono" ], "headline-md": [ "Space Grotesk" ], "metric-lg": [ "JetBrains Mono" ], "headline-lg-mobile": [ "Space Grotesk" ], "body-lg": [ "Geist" ] }, "fontSize": { "body-sm": [ "12px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "400" } ], "display-hero-mobile": [ "40px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" } ], "headline-lg": [ "32px", { "lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "600" } ], "headline-sm": [ "18px", { "lineHeight": "24px", "letterSpacing": "0em", "fontWeight": "600" } ], "body-md": [ "14px", { "lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "400" } ], "display-hero": [ "56px", { "lineHeight": "60px", "letterSpacing": "-0.03em", "fontWeight": "700" } ], "label-ui": [ "13px", { "lineHeight": "16px", "letterSpacing": "0em", "fontWeight": "500" } ], "label-caps": [ "11px", { "lineHeight": "14px", "letterSpacing": "0.08em", "fontWeight": "500" } ], "metric-xl": [ "48px", { "lineHeight": "48px", "letterSpacing": "-0.04em", "fontWeight": "700" } ], "metric-md": [ "20px", { "lineHeight": "24px", "letterSpacing": "-0.02em", "fontWeight": "600" } ], "headline-md": [ "22px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600" } ], "metric-lg": [ "32px", { "lineHeight": "34px", "letterSpacing": "-0.03em", "fontWeight": "600" } ], "headline-lg-mobile": [ "26px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" } ], "body-lg": [ "16px", { "lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "400" } ] } } } };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-background font-body-md text-on-surface antialiased flex flex-col min-h-screen"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/85 backdrop-blur-xl shadow-[0_1px_12px_rgba(0,0,0,0.4)]"><div class="h-16 px-margin flex items-center justify-between gap-space-sm"><div class="flex items-center gap-space-sm min-w-0"><img alt="KINETIC Logo" class="h-8 w-auto object-contain flex-shrink-0" src="https://lh3.googleusercontent.com/aida/AEtjO1V2OfVb6x575tYCGYJyY0lqcBiNrsQVDOleXgD1quXqKfsckya9M5ZWa7PQCF0h0x-zsInqEwPEYve0dUa9pZKyXphWZkvapoWohyrf1MEVheH4YCP1l-2R_nA4QfUbJPxxT2fE0rEf7UgZI9qhPwXOA88yG_LsCC3TYttVs-a-Q2uGZV9aByOZvqSE2hTrtYqr5fAchboqPRUfsXrCAeBawfOnXNAVLeFCYX86nAsMkbwBgo_Q9ga6uYY"/><div class="flex flex-col min-w-0"><span class="font-label-caps text-label-caps text-primary-container tracking-wider uppercase truncate leading-none">KINETIC</span><h1 class="font-headline-sm text-headline-sm text-on-surface truncate leading-tight">Workouts</h1></div></div><div class="flex items-center gap-space-xs flex-shrink-0"><button aria-label="Athlete Profile" class="w-11 h-11 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors"><img alt="Athlete Avatar" class="w-8 h-8 rounded-full object-cover ring-1 ring-outline-variant" src="https://lh3.googleusercontent.com/aida/AEtjO1VS1u4GcVYp98aXFrkmekBQcdAvUt6cQ-JMF5yEI6tQhxhhqZeo4qV_P2VI2X369r4zDESSzqSVUOktP1t5r5Y90_DD5p4JbY3IJM8xnja8Uc7lW52ifgFNgC9vzX0uPHRHy1e30eglQqWMU6a3v6n46Cf0JGudY381rx4UFZvJq2rm1pusKTvzOdTVrhMG5RPL5uvn7UD6nDp05cEZ2zCCGDO4bQUEMurSygtQ_6eer7Z_VfZN-dCkS9c"/></button></div></div></header><main class="flex flex-col relative w-full pt-16 pb-28 px-margin bg-background flex-1"><div class="flex flex-col w-full space-y-space-md">
+<!-- Top Action & Readiness Bar -->
+<div class="flex items-center justify-between gap-space-sm pt-space-xs">
+<button aria-label="Go Back" class="w-10 h-10 rounded-xl bg-surface-container flex items-center justify-center text-on-surface hover:bg-surface-container-high transition-transform active:scale-95" type="button">
+<span class="material-symbols-outlined text-[20px]">arrow_back</span>
+</button>
+<div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container-high">
+<span class="w-2 h-2 rounded-full bg-primary-container animate-ping"></span>
+<span class="font-label-caps text-label-caps text-primary-container uppercase tracking-wider">GPS Calibrated • Ready</span>
+</div>
+<button aria-label="Route Settings" class="w-10 h-10 rounded-xl bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors" type="button">
+<span class="material-symbols-outlined text-[20px]">tune</span>
+</button>
+</div>
+<!-- Hero Activity & Environment Card -->
+<div class="relative overflow-hidden rounded-xl bg-surface-container-low p-space-md shadow-md">
+<div class="absolute -right-8 -top-8 w-36 h-36 rounded-full bg-primary-container/10 blur-2xl pointer-events-none"></div>
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-space-sm">
+<div class="w-12 h-12 rounded-xl bg-surface-container-highest flex items-center justify-center text-primary-container shadow-inner">
+<span class="material-symbols-outlined text-[28px]">directions_run</span>
+</div>
+<div>
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Discipline</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Outdoor Run</h2>
+</div>
+</div>
+<div class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface-container text-on-surface">
+<span class="material-symbols-outlined text-[16px] text-tertiary-fixed-dim">wb_sunny</span>
+<span class="font-label-caps text-label-caps font-semibold">18°C</span>
+</div>
+</div>
+<!-- Route and Conditions Sub-panel -->
+<div class="mt-space-md grid grid-cols-2 gap-space-xs pt-space-xs">
+<div class="flex flex-col p-2.5 rounded-lg bg-surface-container">
+<div class="flex items-center gap-1 text-on-surface-variant mb-0.5">
+<span class="material-symbols-outlined text-[14px]">near_me</span>
+<span class="font-label-caps text-label-caps uppercase">Target Course</span>
+</div>
+<span class="font-body-md text-body-md text-on-surface font-medium truncate">Metro Riverside Loop</span>
+</div>
+<div class="flex flex-col p-2.5 rounded-lg bg-surface-container">
+<div class="flex items-center gap-1 text-on-surface-variant mb-0.5">
+<span class="material-symbols-outlined text-[14px]">air</span>
+<span class="font-label-caps text-label-caps uppercase">Atmosphere</span>
+</div>
+<span class="font-body-md text-body-md text-on-surface font-medium truncate">Low Wind • 44% Hum</span>
+</div>
+</div>
+</div>
+<!-- Target Goal Selection -->
+<div class="flex flex-col space-y-space-sm">
+<div class="flex items-center justify-between px-0.5">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Select Objective</span>
+<span class="font-label-caps text-label-caps text-primary-container" id="activeGoalLabel">Target Duration</span>
+</div>
+<!-- Horizontal Goal Cards Carousel -->
+<div class="grid grid-cols-4 gap-2">
+<!-- Option 1: Open Track -->
+<button class="goal-pill flex flex-col items-center justify-center p-2.5 rounded-xl bg-surface-container text-on-surface-variant transition-all hover:bg-surface-container-high" data-goal="open" type="button">
+<span class="material-symbols-outlined text-[22px] mb-1">all_inclusive</span>
+<span class="font-label-caps text-[10px] uppercase font-semibold leading-tight text-center">Open</span>
+</button>
+<!-- Option 2: Time Goal (Selected Default) -->
+<button class="goal-pill flex flex-col items-center justify-center p-2.5 rounded-xl bg-primary-container text-on-primary font-semibold shadow-[0_0_16px_rgba(184,240,0,0.35)] transition-all" data-goal="time" type="button">
+<span class="material-symbols-outlined text-[22px] mb-1">timer</span>
+<span class="font-label-caps text-[10px] uppercase font-bold leading-tight text-center">Time</span>
+</button>
+<!-- Option 3: Distance Goal -->
+<button class="goal-pill flex flex-col items-center justify-center p-2.5 rounded-xl bg-surface-container text-on-surface-variant transition-all hover:bg-surface-container-high" data-goal="distance" type="button">
+<span class="material-symbols-outlined text-[22px] mb-1">straighten</span>
+<span class="font-label-caps text-[10px] uppercase font-semibold leading-tight text-center">Dist</span>
+</button>
+<!-- Option 4: Calorie Goal -->
+<button class="goal-pill flex flex-col items-center justify-center p-2.5 rounded-xl bg-surface-container text-on-surface-variant transition-all hover:bg-surface-container-high" data-goal="calories" type="button">
+<span class="material-symbols-outlined text-[22px] mb-1">local_fire_department</span>
+<span class="font-label-caps text-[10px] uppercase font-semibold leading-tight text-center">Cals</span>
+</button>
+</div>
+</div>
+<!-- Interactive Goal Adjuster Widget -->
+<div class="rounded-xl bg-surface-container p-space-md shadow-md flex flex-col items-center relative overflow-hidden">
+<div class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-primary-container/40 to-transparent"></div>
+<div class="flex items-center justify-between w-full mb-space-sm">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Target Duration</span>
+<div class="flex items-center gap-1 text-primary-container">
+<span class="material-symbols-outlined text-[16px]">speed</span>
+<span class="font-label-caps text-label-caps font-semibold">Zone 3 Aerobic</span>
+</div>
+</div>
+<!-- Stepper Display -->
+<div class="flex items-center justify-between w-full max-w-[280px] my-1">
+<button aria-label="Decrease target" class="w-12 h-12 rounded-xl bg-surface-container-highest text-on-surface flex items-center justify-center hover:bg-surface-bright active:scale-95 transition-all" id="stepDownBtn" type="button">
+<span class="material-symbols-outlined text-[24px]">remove</span>
+</button>
+<div class="flex items-baseline justify-center gap-1.5">
+<span class="font-metric-xl text-metric-xl text-on-surface tracking-tight" id="targetValueText">30</span>
+<span class="font-label-caps text-headline-sm text-primary-container font-semibold" id="targetUnitText">MIN</span>
+</div>
+<button aria-label="Increase target" class="w-12 h-12 rounded-xl bg-surface-container-highest text-on-surface flex items-center justify-center hover:bg-surface-bright active:scale-95 transition-all" id="stepUpBtn" type="button">
+<span class="material-symbols-outlined text-[24px]">add</span>
+</button>
+</div>
+<!-- Quick Stepper Increments -->
+<div class="flex items-center gap-2 mt-2">
+<button class="px-2.5 py-1 rounded-md bg-surface-container-low hover:bg-surface-container-highest text-on-surface-variant text-label-caps font-label-caps transition-colors" id="quickMinus5" type="button">
+        - 5 min
+      </button>
+<button class="px-2.5 py-1 rounded-md bg-surface-container-low hover:bg-surface-container-highest text-on-surface-variant text-label-caps font-label-caps transition-colors" id="quickPlus5" type="button">
+        + 5 min
+      </button>
+<button class="px-2.5 py-1 rounded-md bg-surface-container-low hover:bg-surface-container-highest text-on-surface-variant text-label-caps font-label-caps transition-colors" id="quickPlus15" type="button">
+        + 15 min
+      </button>
+</div>
+<!-- Dynamic Projection Strip -->
+<div class="w-full mt-space-md pt-space-sm border-t border-surface-container-highest/40 flex items-center justify-center gap-2 text-center">
+<span class="material-symbols-outlined text-[16px] text-tertiary-fixed-dim">analytics</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant" id="projectionText">
+        Estimated <strong class="text-on-surface font-semibold">~5.0 km</strong> at <strong class="text-on-surface font-semibold">6:00/km</strong> steady pace
+      </p>
+</div>
+</div>
+<!-- Biometrics & Audio Hardware Telemetry -->
+<div class="rounded-xl bg-surface-container-low p-space-md space-y-space-sm">
+<div class="flex items-center justify-between">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Peripherals &amp; Sensors</span>
+<span class="flex h-2 w-2 relative">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-tertiary-fixed-dim opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-tertiary-fixed-dim"></span>
+</span>
+</div>
+<!-- Optical Sensor Feed -->
+<div class="flex items-center justify-between p-3 rounded-lg bg-surface-container">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-lg bg-surface-container-high flex items-center justify-center text-error">
+<span class="material-symbols-outlined text-[20px]">ecg_heart</span>
+</div>
+<div>
+<p class="font-body-md text-body-md text-on-surface font-medium leading-none mb-1">Apple Watch Series 9</p>
+<p class="font-label-caps text-[10px] text-tertiary-fixed-dim uppercase tracking-wider">Live Link Active</p>
+</div>
+</div>
+<div class="flex items-baseline gap-1 text-right">
+<span class="font-metric-md text-metric-md text-on-surface">68</span>
+<span class="font-label-caps text-[10px] text-on-surface-variant uppercase">BPM</span>
+</div>
+</div>
+<!-- Audio Pacer Toggle Row -->
+<div class="flex items-center justify-between p-3 rounded-lg bg-surface-container">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-lg bg-surface-container-high flex items-center justify-center text-primary-container">
+<span class="material-symbols-outlined text-[20px]">record_voice_over</span>
+</div>
+<div>
+<p class="font-body-md text-body-md text-on-surface font-medium leading-none mb-1">Audio Split Coach</p>
+<p class="font-body-sm text-[11px] text-on-surface-variant">Voice pace update every 1.0 km</p>
+</div>
+</div>
+<!-- Custom Toggle -->
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" id="audioPacerToggle" type="checkbox"/>
+<div class="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-surface-container peer-checked:bg-primary-container after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-on-primary after:border-gray-300 after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
+</label>
+</div>
+</div>
+<!-- Adaptive Progression Suggestion Card -->
+<div class="rounded-xl bg-surface-container-low p-space-md relative overflow-hidden">
+<div class="flex items-start gap-3">
+<div class="w-9 h-9 rounded-lg bg-primary-container/15 text-primary-container flex items-center justify-center flex-shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-[20px]">neurology</span>
+</div>
+<div class="space-y-1">
+<div class="flex items-center gap-2">
+<span class="font-label-caps text-label-caps uppercase text-primary-container font-semibold">Progression Engine</span>
+<span class="w-1 h-1 rounded-full bg-on-surface-variant"></span>
+<span class="font-label-caps text-[10px] text-on-surface-variant">48h Recovery Met</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface leading-relaxed">
+          Last session was <span class="font-metric-md text-[14px] text-on-surface font-semibold">30 min • 5.12 km</span>. Suggest maintaining <span class="font-metric-md text-[14px] text-primary-container font-semibold">6:05 /km</span> target pace for continuous Zone 3 mitochondrial adaptation.
+        </p>
+</div>
+</div>
+</div>
+<!-- Pinned Sticky Execute Bar -->
+<div class="pt-space-xs pb-1">
+<button class="w-full py-4 px-6 rounded-xl bg-primary-container text-on-primary font-headline-sm text-headline-sm flex items-center justify-center gap-2 shadow-[0_4px_24px_rgba(184,240,0,0.3)] hover:brightness-105 active:scale-[0.98] transition-all" id="startRunBtn" type="button">
+<span>START OUTDOOR RUN</span>
+<span class="material-symbols-outlined text-[24px]">play_arrow</span>
+</button>
+</div>
+</div>
+<script>
+  (function() {
+    let currentGoal = 'time';
+    let targetMinutes = 30;
+    let targetKm = 5.0;
+    let targetKcal = 350;
+
+    const valueEl = document.getElementById('targetValueText');
+    const unitEl = document.getElementById('targetUnitText');
+    const projEl = document.getElementById('projectionText');
+    const goalLabelEl = document.getElementById('activeGoalLabel');
+    const pills = document.querySelectorAll('.goal-pill');
+
+    function updateDisplay() {
+      if (currentGoal === 'time') {
+        valueEl.textContent = targetMinutes;
+        unitEl.textContent = 'MIN';
+        goalLabelEl.textContent = 'Target Duration';
+        const projectedDistance = (targetMinutes / 6).toFixed(1);
+        projEl.innerHTML = `Estimated <strong class="text-on-surface font-semibold">~${projectedDistance} km</strong> at <strong class="text-on-surface font-semibold">6:00/km</strong> steady pace`;
+      } else if (currentGoal === 'distance') {
+        valueEl.textContent = targetKm.toFixed(1);
+        unitEl.textContent = 'KM';
+        goalLabelEl.textContent = 'Distance Benchmark';
+        const estimatedTime = Math.round(targetKm * 6.08);
+        projEl.innerHTML = `Estimated <strong class="text-on-surface font-semibold">~${estimatedTime} min</strong> at Zone 3 baseline tempo`;
+      } else if (currentGoal === 'calories') {
+        valueEl.textContent = targetKcal;
+        unitEl.textContent = 'KCAL';
+        goalLabelEl.textContent = 'Burn Requirement';
+        const estimatedMin = Math.round(targetKcal / 11.6);
+        projEl.innerHTML = `Estimated <strong class="text-on-surface font-semibold">~${estimatedMin} min</strong> active expenditure duration`;
+      } else {
+        valueEl.textContent = '∞';
+        unitEl.textContent = 'OPEN';
+        goalLabelEl.textContent = 'Unconstrained Run';
+        projEl.innerHTML = `Tracking continuous biometrics until manual session stop`;
+      }
+    }
+
+    pills.forEach(pill => {
+      pill.addEventListener('click', () => {
+        pills.forEach(p => {
+          p.className = 'goal-pill flex flex-col items-center justify-center p-2.5 rounded-xl bg-surface-container text-on-surface-variant transition-all hover:bg-surface-container-high';
+        });
+        pill.className = 'goal-pill flex flex-col items-center justify-center p-2.5 rounded-xl bg-primary-container text-on-primary font-semibold shadow-[0_0_16px_rgba(184,240,0,0.35)] transition-all';
+        currentGoal = pill.getAttribute('data-goal');
+        updateDisplay();
+      });
+    });
+
+    document.getElementById('stepUpBtn').addEventListener('click', () => {
+      if (currentGoal === 'time') targetMinutes = Math.min(180, targetMinutes + 5);
+      else if (currentGoal === 'distance') targetKm = Math.min(42.2, +(targetKm + 0.5).toFixed(1));
+      else if (currentGoal === 'calories') targetKcal = Math.min(2500, targetKcal + 50);
+      updateDisplay();
+    });
+
+    document.getElementById('stepDownBtn').addEventListener('click', () => {
+      if (currentGoal === 'time') targetMinutes = Math.max(5, targetMinutes - 5);
+      else if (currentGoal === 'distance') targetKm = Math.max(0.5, +(targetKm - 0.5).toFixed(1));
+      else if (currentGoal === 'calories') targetKcal = Math.max(50, targetKcal - 50);
+      updateDisplay();
+    });
+
+    document.getElementById('quickMinus5').addEventListener('click', () => {
+      if (currentGoal === 'time') { targetMinutes = Math.max(5, targetMinutes - 5); updateDisplay(); }
+    });
+    document.getElementById('quickPlus5').addEventListener('click', () => {
+      if (currentGoal === 'time') { targetMinutes = Math.min(180, targetMinutes + 5); updateDisplay(); }
+    });
+    document.getElementById('quickPlus15').addEventListener('click', () => {
+      if (currentGoal === 'time') { targetMinutes = Math.min(180, targetMinutes + 15); updateDisplay(); }
+    });
+
+    const startBtn = document.getElementById('startRunBtn');
+    startBtn.addEventListener('click', () => {
+      startBtn.innerHTML = `
+        <span class="w-5 h-5 rounded-full border-2 border-on-primary border-t-transparent animate-spin"></span>
+        <span>LOCKING SATELLITES...</span>
+      `;
+      startBtn.classList.add('opacity-90');
+      setTimeout(() => {
+        startBtn.innerHTML = `
+          <span>GO! START RUNNING</span>
+          <span class="material-symbols-outlined text-[24px]">electric_bolt</span>
+        `;
+      }, 1100);
+    });
+  })();
+</script></main><nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface/90 backdrop-blur-xl shadow-[0_-4px_24px_rgba(0,0,0,0.5)]" data-active-classes="text-primary-container"><div class="flex justify-around items-center h-16 px-space-xs"><a class="flex flex-col items-center justify-center min-w-[64px] min-h-[44px] h-12 gap-0.5 text-on-surface-variant transition-colors hover:text-on-surface" data-path="today" href="#"><span class="material-symbols-outlined text-[22px]">calendar_today</span><span class="font-label-caps text-label-caps tracking-wider uppercase">Today</span></a><a aria-current="page" class="flex flex-col items-center justify-center min-w-[64px] min-h-[44px] h-12 gap-0.5 transition-colors text-primary-container" data-path="workouts" href="#"><span class="material-symbols-outlined text-[22px]">fitness_center</span><span class="font-label-caps text-label-caps tracking-wider uppercase">Workouts</span></a><a class="flex flex-col items-center justify-center min-w-[64px] min-h-[44px] h-12 gap-0.5 text-on-surface-variant transition-colors hover:text-on-surface" data-path="progress" href="#"><span class="material-symbols-outlined text-[22px]">monitoring</span><span class="font-label-caps text-label-caps tracking-wider uppercase">Progress</span></a><a class="flex flex-col items-center justify-center min-w-[64px] min-h-[44px] h-12 gap-0.5 text-on-surface-variant transition-colors hover:text-on-surface" data-path="profile" href="#"><span class="material-symbols-outlined text-[22px]">person</span><span class="font-label-caps text-label-caps tracking-wider uppercase">Profile</span></a></div></nav></body></html>

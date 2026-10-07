@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500;600;700&amp;family=Space+Grotesk:wght@600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100%;margin:0;padding:0;background-color:#121416;color:#e2e2e5;}body{overscroll-behavior:none;-webkit-tap-highlight-color:transparent;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "surface-bright": "#38393c", "inverse-on-surface": "#2f3133", "on-surface": "#e2e2e5", "inverse-primary": "#4d6700", "primary-fixed-dim": "#a5d700", "on-primary-fixed-variant": "#394d00", "surface-container-highest": "#333537", "error-container": "#93000a", "outline-variant": "#434933", "secondary-fixed": "#dee3ea", "on-secondary-container": "#b1b5bc", "on-background": "#e2e2e5", "tertiary-fixed-dim": "#67dd96", "tertiary-fixed": "#84fab0", "primary": "#f4ffd3", "on-secondary-fixed-variant": "#42474d", "surface-tint": "#a5d700", "error": "#ffb4ab", "on-tertiary": "#00391d", "tertiary-container": "#7ff5ac", "on-error-container": "#ffdad6", "on-secondary": "#2c3136", "secondary": "#c2c7cd", "on-primary-fixed": "#151f00", "on-error": "#690005", "surface-container-lowest": "#0c0e10", "on-primary": "#273500", "on-tertiary-container": "#007040", "secondary-container": "#42474d", "on-secondary-fixed": "#171c21", "on-primary-container": "#506a00", "secondary-fixed-dim": "#c2c7cd", "surface-variant": "#333537", "on-surface-variant": "#c3caad", "tertiary": "#edffee", "outline": "#8d947a", "on-tertiary-fixed-variant": "#00522d", "inverse-surface": "#e2e2e5", "on-tertiary-fixed": "#00210f", "primary-fixed": "#bdf510", "surface-dim": "#121416", "background": "#121416", "surface-container-high": "#282a2c", "surface-container-low": "#1a1c1e", "primary-container": "#b8f000", "surface-container": "#1e2022", "surface": "#121416" }, borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, spacing: { "space-md": "1rem", "gutter": "1rem", "space-xs": "0.25rem", "space-lg": "1.5rem", "gutter-desktop": "2rem", "margin": "1rem", "space-xl": "2.5rem", "space-sm": "0.5rem", "gutter-tablet": "1.5rem", "margin-tablet": "2rem", "margin-desktop": "3rem" }, fontFamily: { "metric-md": ["JetBrains Mono"], "body-sm": ["Geist"], "headline-md": ["Space Grotesk"], "display-hero": ["Space Grotesk"], "metric-xl": ["JetBrains Mono"], "body-lg": ["Geist"], "body-md": ["Geist"], "display-hero-mobile": ["Space Grotesk"], "label-caps": ["JetBrains Mono"], "label-ui": ["Geist"], "headline-lg-mobile": ["Space Grotesk"], "metric-lg": ["JetBrains Mono"], "headline-lg": ["Space Grotesk"], "headline-sm": ["Space Grotesk"] }, fontSize: { "metric-md": ["20px", { "lineHeight": "24px", "letterSpacing": "-0.02em", "fontWeight": "600" }], "body-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "400" }], "headline-md": ["22px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "display-hero": ["56px", { "lineHeight": "60px", "letterSpacing": "-0.03em", "fontWeight": "700" }], "metric-xl": ["48px", { "lineHeight": "48px", "letterSpacing": "-0.04em", "fontWeight": "700" }], "body-lg": ["16px", { "lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "400" }], "body-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "400" }], "display-hero-mobile": ["40px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "label-caps": ["11px", { "lineHeight": "14px", "letterSpacing": "0.08em", "fontWeight": "500" }], "label-ui": ["13px", { "lineHeight": "16px", "letterSpacing": "0em", "fontWeight": "500" }], "headline-lg-mobile": ["26px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "metric-lg": ["32px", { "lineHeight": "34px", "letterSpacing": "-0.03em", "fontWeight": "600" }], "headline-lg": ["32px", { "lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "600" }], "headline-sm": ["18px", { "lineHeight": "24px", "letterSpacing": "0em", "fontWeight": "600" }] } } } }</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface font-body-md text-body-md text-on-surface flex flex-col min-h-screen selection:bg-primary-container selection:text-on-primary-container"><header class="fixed top-0 inset-x-0 z-50 bg-surface/85 backdrop-blur-xl pt-safe"><div class="h-16 px-gutter flex items-center justify-between"><div class="flex items-center gap-space-sm"><span class="font-headline-md text-headline-md tracking-tight font-bold text-on-surface">KINETIC</span><span class="font-label-caps text-label-caps text-on-surface-variant uppercase hidden xs:inline tracking-wider">/</span><span class="font-headline-sm text-headline-sm text-on-surface tracking-tight truncate max-w-[120px]">Progress</span></div><div class="flex items-center gap-space-md"><div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-high/60 backdrop-blur-md"><span class="w-1.5 h-1.5 rounded-full bg-tertiary-fixed shadow-[0_0_8px_rgba(132,250,176,0.8)] animate-pulse"></span><span class="font-label-caps text-label-caps text-tertiary-fixed tracking-wider uppercase">Synced ✓</span></div><a class="min-w-[44px] min-h-[44px] flex items-center justify-center" data-path="profile" href="#"><img alt="Profile" class="w-8 h-8 rounded-full object-cover ring-1 ring-outline-variant/30" src="https://lh3.googleusercontent.com/aida/AEtjO1VS1u4GcVYp98aXFrkmekBQcdAvUt6cQ-JMF5yEI6tQhxhhqZeo4qV_P2VI2X369r4zDESSzqSVUOktP1t5r5Y90_DD5p4JbY3IJM8xnja8Uc7lW52ifgFNgC9vzX0uPHRHy1e30eglQqWMU6a3v6n46Cf0JGudY381rx4UFZvJq2rm1pusKTvzOdTVrhMG5RPL5uvn7UD6nDp05cEZ2zCCGDO4bQUEMurSygtQ_6eer7Z_VfZN-dCkS9c"/></a></div></div></header><main class="flex flex-col relative w-full pt-16 pb-24 bg-surface min-h-screen"><div class="flex flex-col w-full px-gutter space-y-space-md pb-12">
+<!-- Title Context Block -->
+<div class="flex flex-col space-y-1">
+<div class="flex items-center justify-between">
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface tracking-tight">Personal Records</h1>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-caps text-label-caps uppercase">
+<span class="material-symbols-outlined text-[14px] text-primary-container">verified</span>
+        Calibrated
+      </span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">Telemetry Milestones &amp; Maximal Strength</p>
+</div>
+<!-- Screen 19: Top Estimated 1RM Hero Card -->
+<div class="relative overflow-hidden rounded-xl bg-surface-container p-space-md shadow-xl">
+<!-- Ambient technical glow accent behind metric -->
+<div class="absolute -right-8 -top-8 w-44 h-44 rounded-full bg-primary-container/10 blur-2xl pointer-events-none"></div>
+<div class="relative flex flex-col space-y-space-sm">
+<!-- Card Sub-header & Exercise Pill -->
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary-container text-[18px]">analytics</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Estimated 1RM</span>
+</div>
+<div class="flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface-container-high text-on-surface font-label-ui text-label-ui">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+<span>Lat Pulldown</span>
+</div>
+</div>
+<!-- Main Metric Projection Display -->
+<div class="flex items-baseline gap-2 pt-1">
+<span class="font-metric-xl text-metric-xl text-primary-container drop-shadow-[0_0_18px_rgba(184,240,0,0.25)]">68.4</span>
+<span class="font-metric-md text-metric-md text-on-surface-variant">kg</span>
+<span class="ml-auto inline-flex items-center gap-1 px-2 py-1 rounded bg-surface-container-highest text-tertiary-fixed font-metric-md text-body-sm font-semibold">
+<span class="material-symbols-outlined text-[14px]">arrow_upward</span>
+          +8.1%
+        </span>
+</div>
+<!-- Telemetry Basis & Mini Sparkline Visualization -->
+<div class="flex items-center justify-between pt-1">
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+          Based on peak: <span class="font-metric-md text-body-sm text-on-surface font-semibold">50 kg × 8 reps</span>
+</p>
+<!-- Mini Velocity SVG Graph -->
+<svg class="w-24 h-6 text-primary-container overflow-visible" fill="none" viewbox="0 0 96 24">
+<path d="M0 20 L24 16 L48 18 L72 8 L96 4" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+<circle class="animate-pulse" cx="96" cy="4" fill="#B8F000" r="3"></circle>
+</svg>
+</div>
+<!-- Formula Technical Callout -->
+<div class="rounded-lg bg-surface-container-low p-2.5 flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant shrink-0">functions</span>
+<div class="flex flex-col min-w-0">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Calculation Matrix</span>
+<span class="font-metric-md text-[11px] leading-tight text-on-surface truncate">Epley / Brzycki Hybrid: W × (1 + R / 30)</span>
+</div>
+</div>
+<!-- Disclaimer Pill Banner -->
+<div class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-surface-container-high/70">
+<span class="material-symbols-outlined text-[14px] text-on-surface-variant shrink-0">info</span>
+<span class="font-body-sm text-[11px] text-on-surface-variant leading-tight">Estimated benchmark, not a tested 1RM attempt.</span>
+</div>
+</div>
+</div>
+<!-- Interactive Filter Controls -->
+<div class="flex flex-col space-y-2 pt-1">
+<!-- PR Category Tabs (Horizontal Scroll) -->
+<div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5" id="pr-category-tabs">
+<button class="shrink-0 px-3.5 py-1.5 rounded-full bg-primary-container text-on-primary-container font-label-ui text-label-ui font-semibold shadow-sm transition-all" data-filter="all">
+        All
+      </button>
+<button class="shrink-0 px-3.5 py-1.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-ui text-label-ui transition-all hover:text-on-surface" data-filter="weight">
+        Heaviest Weight
+      </button>
+<button class="shrink-0 px-3.5 py-1.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-ui text-label-ui transition-all hover:text-on-surface" data-filter="reps">
+        Most Reps
+      </button>
+<button class="shrink-0 px-3.5 py-1.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-ui text-label-ui transition-all hover:text-on-surface" data-filter="est1rm">
+        Est. 1RM
+      </button>
+<button class="shrink-0 px-3.5 py-1.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-ui text-label-ui transition-all hover:text-on-surface" data-filter="volume">
+        Highest Volume
+      </button>
+</div>
+<!-- Muscle Group Target Chips -->
+<div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5" id="muscle-chips">
+<button class="shrink-0 px-2.5 py-1 rounded bg-surface-container-highest text-on-surface font-label-caps text-label-caps uppercase transition-colors" data-muscle="all">
+        All
+      </button>
+<button class="shrink-0 px-2.5 py-1 rounded bg-surface-container-low text-on-surface-variant font-label-caps text-label-caps uppercase hover:text-on-surface transition-colors" data-muscle="chest">
+        Chest
+      </button>
+<button class="shrink-0 px-2.5 py-1 rounded bg-surface-container-low text-on-surface-variant font-label-caps text-label-caps uppercase hover:text-on-surface transition-colors" data-muscle="back">
+        Back
+      </button>
+<button class="shrink-0 px-2.5 py-1 rounded bg-surface-container-low text-on-surface-variant font-label-caps text-label-caps uppercase hover:text-on-surface transition-colors" data-muscle="shoulders">
+        Shoulders
+      </button>
+<button class="shrink-0 px-2.5 py-1 rounded bg-surface-container-low text-on-surface-variant font-label-caps text-label-caps uppercase hover:text-on-surface transition-colors" data-muscle="arms">
+        Arms
+      </button>
+<button class="shrink-0 px-2.5 py-1 rounded bg-surface-container-low text-on-surface-variant font-label-caps text-label-caps uppercase hover:text-on-surface transition-colors" data-muscle="legs">
+        Legs
+      </button>
+</div>
+</div>
+<!-- Screen 18: PR Record Cards List -->
+<div class="flex flex-col space-y-space-sm" id="records-list">
+<!-- Card 1: Lat Pulldown -->
+<div class="flex flex-col rounded-xl bg-surface-container p-space-md space-y-space-sm shadow-md transition-transform active:scale-[0.99]" data-category="weight" data-group="back">
+<div class="flex items-start justify-between">
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="font-headline-sm text-headline-sm text-on-surface">Lat Pulldown</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-high text-on-surface-variant font-label-caps text-[10px] uppercase">Back</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Set Sep 14, 2024</span>
+</div>
+<div class="flex items-center gap-1 px-2 py-1 rounded-md bg-surface-container-lowest text-primary-container font-label-caps text-label-caps uppercase">
+<span class="material-symbols-outlined text-[14px]">emoji_events</span>
+<span>NEW PR +5.0kg</span>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-2 pt-1">
+<div class="rounded-lg bg-surface-container-low p-2.5 flex flex-col">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Peak Performance</span>
+<span class="font-metric-md text-metric-md text-on-surface mt-0.5">55 <span class="text-body-sm text-on-surface-variant font-normal">kg</span> × 8</span>
+</div>
+<div class="rounded-lg bg-surface-container-low p-2.5 flex flex-col">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Projected 1RM</span>
+<span class="font-metric-md text-metric-md text-primary-container mt-0.5">68.4 <span class="text-body-sm text-on-surface-variant font-normal">kg</span></span>
+</div>
+</div>
+</div>
+<!-- Card 2: Incline DB Press -->
+<div class="flex flex-col rounded-xl bg-surface-container p-space-md space-y-space-sm shadow-md transition-transform active:scale-[0.99]" data-category="reps" data-group="chest">
+<div class="flex items-start justify-between">
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="font-headline-sm text-headline-sm text-on-surface">Incline DB Press</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-high text-on-surface-variant font-label-caps text-[10px] uppercase">Chest</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Set Sep 12, 2024</span>
+</div>
+<div class="flex items-center gap-1 px-2 py-1 rounded-md bg-surface-container-lowest text-primary-container font-label-caps text-label-caps uppercase">
+<span class="material-symbols-outlined text-[14px]">workspace_premium</span>
+<span>REP PR +2 reps</span>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-2 pt-1">
+<div class="rounded-lg bg-surface-container-low p-2.5 flex flex-col">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Peak Performance</span>
+<span class="font-metric-md text-metric-md text-on-surface mt-0.5">34 <span class="text-body-sm text-on-surface-variant font-normal">kg</span> × 8</span>
+</div>
+<div class="rounded-lg bg-surface-container-low p-2.5 flex flex-col">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Projected 1RM</span>
+<span class="font-metric-md text-metric-md text-on-surface mt-0.5">42.5 <span class="text-body-sm text-on-surface-variant font-normal">kg</span></span>
+</div>
+</div>
+</div>
+<!-- Card 3: Barbell Squat -->
+<div class="flex flex-col rounded-xl bg-surface-container p-space-md space-y-space-sm shadow-md transition-transform active:scale-[0.99]" data-category="weight" data-group="legs">
+<div class="flex items-start justify-between">
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="font-headline-sm text-headline-sm text-on-surface">Barbell Squat</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-high text-on-surface-variant font-label-caps text-[10px] uppercase">Legs</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Set Sep 10, 2024</span>
+</div>
+<div class="flex items-center gap-1 px-2 py-1 rounded-md bg-surface-container-lowest text-primary-container font-label-caps text-label-caps uppercase">
+<span class="material-symbols-outlined text-[14px]">emoji_events</span>
+<span>NEW PR +5.0kg</span>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-2 pt-1">
+<div class="rounded-lg bg-surface-container-low p-2.5 flex flex-col">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Peak Performance</span>
+<span class="font-metric-md text-metric-md text-on-surface mt-0.5">105 <span class="text-body-sm text-on-surface-variant font-normal">kg</span> × 5</span>
+</div>
+<div class="rounded-lg bg-surface-container-low p-2.5 flex flex-col">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Projected 1RM</span>
+<span class="font-metric-md text-metric-md text-primary-container mt-0.5">122.5 <span class="text-body-sm text-on-surface-variant font-normal">kg</span></span>
+</div>
+</div>
+</div>
+<!-- Card 4: Seated Cable Row -->
+<div class="flex flex-col rounded-xl bg-surface-container p-space-md space-y-space-sm shadow-md transition-transform active:scale-[0.99]" data-category="volume" data-group="back">
+<div class="flex items-start justify-between">
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="font-headline-sm text-headline-sm text-on-surface">Seated Cable Row</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-high text-on-surface-variant font-label-caps text-[10px] uppercase">Back</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Set Sep 07, 2024</span>
+</div>
+<div class="flex items-center gap-1 px-2 py-1 rounded-md bg-surface-container-lowest text-tertiary-fixed font-label-caps text-label-caps uppercase">
+<span class="material-symbols-outlined text-[14px]">electric_bolt</span>
+<span>VOLUME RECORD</span>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-2 pt-1">
+<div class="rounded-lg bg-surface-container-low p-2.5 flex flex-col">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Peak Performance</span>
+<span class="font-metric-md text-metric-md text-on-surface mt-0.5">60 <span class="text-body-sm text-on-surface-variant font-normal">kg</span> × 10</span>
+</div>
+<div class="rounded-lg bg-surface-container-low p-2.5 flex flex-col">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Projected 1RM</span>
+<span class="font-metric-md text-metric-md text-on-surface mt-0.5">80.0 <span class="text-body-sm text-on-surface-variant font-normal">kg</span></span>
+</div>
+</div>
+</div>
+<!-- Card 5: Tricep Pushdown -->
+<div class="flex flex-col rounded-xl bg-surface-container p-space-md space-y-space-sm shadow-md transition-transform active:scale-[0.99]" data-category="est1rm" data-group="arms">
+<div class="flex items-start justify-between">
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="font-headline-sm text-headline-sm text-on-surface">Tricep Pushdown</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-high text-on-surface-variant font-label-caps text-[10px] uppercase">Arms</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Set Sep 05, 2024</span>
+</div>
+<div class="flex items-center gap-1 px-2 py-1 rounded-md bg-surface-container-lowest text-on-surface-variant font-label-caps text-label-caps uppercase">
+<span class="material-symbols-outlined text-[14px]">lock_clock</span>
+<span>STABLE</span>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-2 pt-1">
+<div class="rounded-lg bg-surface-container-low p-2.5 flex flex-col">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Peak Performance</span>
+<span class="font-metric-md text-metric-md text-on-surface mt-0.5">32.5 <span class="text-body-sm text-on-surface-variant font-normal">kg</span> × 10</span>
+</div>
+<div class="rounded-lg bg-surface-container-low p-2.5 flex flex-col">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Projected 1RM</span>
+<span class="font-metric-md text-metric-md text-on-surface mt-0.5">43.3 <span class="text-body-sm text-on-surface-variant font-normal">kg</span></span>
+</div>
+</div>
+</div>
+</div>
+<!-- Interactive Tab State Controller Script -->
+<script>
+    (function () {
+      const categoryTabs = document.querySelectorAll('#pr-category-tabs button');
+      const muscleChips = document.querySelectorAll('#muscle-chips button');
+      const cards = document.querySelectorAll('#records-list > div');
+
+      let currentCategory = 'all';
+      let currentMuscle = 'all';
+
+      function applyFilters() {
+        cards.forEach(card => {
+          const cat = card.getAttribute('data-category');
+          const grp = card.getAttribute('data-group');
+
+          const matchesCat = (currentCategory === 'all') || (cat === currentCategory);
+          const matchesGrp = (currentMuscle === 'all') || (grp === currentMuscle);
+
+          if (matchesCat && matchesGrp) {
+            card.style.display = 'flex';
+          } else {
+            card.style.display = 'none';
+          }
+        });
+      }
+
+      categoryTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          categoryTabs.forEach(t => {
+            t.className = 'shrink-0 px-3.5 py-1.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-ui text-label-ui transition-all hover:text-on-surface';
+          });
+          tab.className = 'shrink-0 px-3.5 py-1.5 rounded-full bg-primary-container text-on-primary-container font-label-ui text-label-ui font-semibold shadow-sm transition-all';
+          currentCategory = tab.getAttribute('data-filter');
+          applyFilters();
+        });
+      });
+
+      muscleChips.forEach(chip => {
+        chip.addEventListener('click', () => {
+          muscleChips.forEach(c => {
+            c.className = 'shrink-0 px-2.5 py-1 rounded bg-surface-container-low text-on-surface-variant font-label-caps text-label-caps uppercase hover:text-on-surface transition-colors';
+          });
+          chip.className = 'shrink-0 px-2.5 py-1 rounded bg-surface-container-highest text-on-surface font-label-caps text-label-caps uppercase transition-colors';
+          currentMuscle = chip.getAttribute('data-muscle');
+          applyFilters();
+        });
+      });
+    })();
+  </script>
+</div></main><nav class="fixed bottom-0 inset-x-0 z-50 pb-safe bg-surface/90 backdrop-blur-xl shadow-[0_-8px_24px_rgba(0,0,0,0.6)]" data-active-classes="text-primary-container font-semibold drop-shadow-[0_0_12px_rgba(184,240,0,0.4)]"><div class="flex justify-around items-center h-16 px-space-sm"><a class="flex flex-col items-center justify-center gap-1 min-w-[56px] min-h-[44px] text-on-surface-variant transition-all" data-path="today" href="#"><span class="material-symbols-outlined text-[22px]">bolt</span><span class="font-label-caps text-label-caps tracking-widest uppercase">Today</span></a><a class="flex flex-col items-center justify-center gap-1 min-w-[56px] min-h-[44px] text-on-surface-variant transition-all" data-path="workouts" href="#"><span class="material-symbols-outlined text-[22px]">fitness_center</span><span class="font-label-caps text-label-caps tracking-widest uppercase">Workouts</span></a><a aria-current="page" class="flex flex-col items-center justify-center gap-1 min-w-[56px] min-h-[44px] transition-all text-primary-container font-semibold drop-shadow-[0_0_12px_rgba(184,240,0,0.4)]" data-path="progress" href="#"><span class="material-symbols-outlined text-[22px]">monitoring</span><span class="font-label-caps text-label-caps tracking-widest uppercase">Progress</span></a><a class="flex flex-col items-center justify-center gap-1 min-w-[56px] min-h-[44px] text-on-surface-variant transition-all" data-path="profile" href="#"><span class="material-symbols-outlined text-[22px]">person</span><span class="font-label-caps text-label-caps tracking-widest uppercase">Profile</span></a></div></nav></body></html>

@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=JetBrains+Mono:wght@500;600;700&amp;family=Space+Grotesk:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;background-color:#121416;color:#e2e2e5;}body{overscroll-behavior:none;-webkit-tap-highlight-color:transparent;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "secondary-fixed": "#dee3ea", "on-secondary-fixed-variant": "#42474d", "on-secondary-fixed": "#171c21", "outline-variant": "#434933", "on-surface": "#e2e2e5", "error": "#ffb4ab", "secondary-container": "#42474d", "on-secondary-container": "#b1b5bc", "tertiary-container": "#7ff5ac", "surface-tint": "#a5d700", "on-tertiary-fixed-variant": "#00522d", "primary-container": "#b8f000", "surface-dim": "#121416", "surface-container-highest": "#333537", "primary-fixed-dim": "#a5d700", "tertiary-fixed-dim": "#67dd96", "on-primary": "#273500", "tertiary-fixed": "#84fab0", "background": "#121416", "on-error-container": "#ffdad6", "surface-container-lowest": "#0c0e10", "inverse-surface": "#e2e2e5", "surface-variant": "#333537", "primary-fixed": "#bdf510", "on-tertiary-fixed": "#00210f", "surface-container": "#1e2022", "on-primary-fixed-variant": "#394d00", "on-tertiary": "#00391d", "on-secondary": "#2c3136", "outline": "#8d947a", "surface-bright": "#38393c", "surface": "#121416", "on-surface-variant": "#c3caad", "error-container": "#93000a", "on-primary-container": "#506a00", "on-tertiary-container": "#007040", "primary": "#f4ffd3", "on-background": "#e2e2e5", "on-primary-fixed": "#151f00", "secondary-fixed-dim": "#c2c7cd", "inverse-primary": "#4d6700", "on-error": "#690005", "inverse-on-surface": "#2f3133", "secondary": "#c2c7cd", "surface-container-low": "#1a1c1e", "surface-container-high": "#282a2c", "tertiary": "#edffee" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "space-lg": "1.5rem", "margin-desktop": "3rem", "gutter-tablet": "1.5rem", "space-md": "1rem", "space-xs": "0.25rem", "gutter-desktop": "2rem", "margin": "1rem", "gutter": "1rem", "margin-tablet": "2rem", "space-xl": "2.5rem", "space-sm": "0.5rem" }, "fontFamily": { "body-sm": [ "Geist" ], "display-hero-mobile": [ "Space Grotesk" ], "headline-lg": [ "Space Grotesk" ], "headline-sm": [ "Space Grotesk" ], "body-md": [ "Geist" ], "display-hero": [ "Space Grotesk" ], "label-ui": [ "Geist" ], "label-caps": [ "JetBrains Mono" ], "metric-xl": [ "JetBrains Mono" ], "metric-md": [ "JetBrains Mono" ], "headline-md": [ "Space Grotesk" ], "metric-lg": [ "JetBrains Mono" ], "headline-lg-mobile": [ "Space Grotesk" ], "body-lg": [ "Geist" ] }, "fontSize": { "body-sm": [ "12px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "400" } ], "display-hero-mobile": [ "40px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" } ], "headline-lg": [ "32px", { "lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "600" } ], "headline-sm": [ "18px", { "lineHeight": "24px", "letterSpacing": "0em", "fontWeight": "600" } ], "body-md": [ "14px", { "lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "400" } ], "display-hero": [ "56px", { "lineHeight": "60px", "letterSpacing": "-0.03em", "fontWeight": "700" } ], "label-ui": [ "13px", { "lineHeight": "16px", "letterSpacing": "0em", "fontWeight": "500" } ], "label-caps": [ "11px", { "lineHeight": "14px", "letterSpacing": "0.08em", "fontWeight": "500" } ], "metric-xl": [ "48px", { "lineHeight": "48px", "letterSpacing": "-0.04em", "fontWeight": "700" } ], "metric-md": [ "20px", { "lineHeight": "24px", "letterSpacing": "-0.02em", "fontWeight": "600" } ], "headline-md": [ "22px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600" } ], "metric-lg": [ "32px", { "lineHeight": "34px", "letterSpacing": "-0.03em", "fontWeight": "600" } ], "headline-lg-mobile": [ "26px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" } ], "body-lg": [ "16px", { "lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "400" } ] } } } };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-background font-body-md text-on-surface antialiased flex flex-col min-h-screen"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/85 backdrop-blur-xl shadow-[0_1px_12px_rgba(0,0,0,0.4)]"><div class="h-16 px-margin flex items-center justify-between gap-space-sm"><div class="flex items-center gap-space-xs min-w-0"><button aria-label="Go Back" class="w-11 h-11 -ml-2 flex items-center justify-center rounded-lg text-on-surface hover:bg-surface-container transition-colors" onclick="history.back()"><span class="material-symbols-outlined text-[24px]">arrow_back</span></button><img alt="Brand logo. - Primary color: #00f0ff
+- Font: spaceGrotesk
+- Mode: dark
+- Roundness: rounded-md
+" class="h-7 w-auto object-contain flex-shrink-0" src="https://lh3.googleusercontent.com/aida/AEtjO1V2OfVb6x575tYCGYJyY0lqcBiNrsQVDOleXgD1quXqKfsckya9M5ZWa7PQCF0h0x-zsInqEwPEYve0dUa9pZKyXphWZkvapoWohyrf1MEVheH4YCP1l-2R_nA4QfUbJPxxT2fE0rEf7UgZI9qhPwXOA88yG_LsCC3TYttVs-a-Q2uGZV9aByOZvqSE2hTrtYqr5fAchboqPRUfsXrCAeBawfOnXNAVLeFCYX86nAsMkbwBgo_Q9ga6uYY"/><h1 class="font-headline-sm text-headline-sm text-on-surface truncate leading-tight">Session Summary</h1></div><div class="flex items-center gap-space-xs flex-shrink-0"><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida/AEtjO1VS1u4GcVYp98aXFrkmekBQcdAvUt6cQ-JMF5yEI6tQhxhhqZeo4qV_P2VI2X369r4zDESSzqSVUOktP1t5r5Y90_DD5p4JbY3IJM8xnja8Uc7lW52ifgFNgC9vzX0uPHRHy1e30eglQqWMU6a3v6n46Cf0JGudY381rx4UFZvJq2rm1pusKTvzOdTVrhMG5RPL5uvn7UD6nDp05cEZ2zCCGDO4bQUEMurSygtQ_6eer7Z_VfZN-dCkS9c"/></div></div></header><main class="flex flex-col relative w-full pt-16 pb-safe px-margin bg-background flex-1"><div class="flex flex-col w-full pb-8">
+<!-- Top Context Header Bar -->
+<div class="flex items-center justify-between py-space-sm mb-space-sm">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary-container text-[20px]">history</span>
+<span class="font-headline-md text-headline-md text-on-surface">Backdate Cardio</span>
+</div>
+<button class="px-space-md py-1.5 rounded-lg bg-surface-container-high hover:bg-surface-bright text-primary-container font-headline-sm text-headline-sm transition-all active:scale-95" id="save-top-btn" type="button">
+      Save
+    </button>
+</div>
+<!-- Notification Banner (Historical Entry Notice) -->
+<div class="flex items-start gap-space-sm p-space-sm mb-space-md bg-surface-container rounded-xl">
+<div class="w-2 h-2 rounded-full bg-primary-container mt-1.5 flex-shrink-0 animate-pulse"></div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-1.5 flex-wrap">
+<span class="font-label-caps text-label-caps uppercase tracking-wider text-primary-container bg-surface-container-lowest px-1.5 py-0.5 rounded">HISTORICAL ENTRY</span>
+<span class="font-label-ui text-label-ui text-secondary">• No Mesocycle Impact</span>
+</div>
+<p class="font-body-sm text-body-sm text-secondary mt-0.5">
+        Session values will populate retrospective aerobic volume metrics without disturbing planned strength blocks.
+      </p>
+</div>
+</div>
+<!-- Activity Selector Chips -->
+<div class="flex flex-col gap-space-xs mb-space-md">
+<label class="font-label-caps text-label-caps text-secondary uppercase tracking-wider">Activity Modality</label>
+<div class="flex items-center gap-space-xs overflow-x-auto pb-1.5 scrollbar-none -mx-margin px-margin">
+<!-- Outdoor Run (Selected) -->
+<button class="activity-chip flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-primary-container text-on-primary font-headline-sm text-headline-sm flex-shrink-0 transition-transform active:scale-95 shadow-sm" type="button">
+<span class="material-symbols-outlined text-[18px]">directions_run</span>
+<span>Outdoor Run</span>
+</button>
+<!-- Treadmill -->
+<button class="activity-chip flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-surface-container text-secondary hover:text-on-surface font-headline-sm text-headline-sm flex-shrink-0 transition-transform active:scale-95" type="button">
+<span class="material-symbols-outlined text-[18px]">sprint</span>
+<span>Treadmill</span>
+</button>
+<!-- Cycling -->
+<button class="activity-chip flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-surface-container text-secondary hover:text-on-surface font-headline-sm text-headline-sm flex-shrink-0 transition-transform active:scale-95" type="button">
+<span class="material-symbols-outlined text-[18px]">directions_bike</span>
+<span>Cycling</span>
+</button>
+<!-- Rowing -->
+<button class="activity-chip flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-surface-container text-secondary hover:text-on-surface font-headline-sm text-headline-sm flex-shrink-0 transition-transform active:scale-95" type="button">
+<span class="material-symbols-outlined text-[18px]">kayaking</span>
+<span>Rowing</span>
+</button>
+<!-- Walking -->
+<button class="activity-chip flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-surface-container text-secondary hover:text-on-surface font-headline-sm text-headline-sm flex-shrink-0 transition-transform active:scale-95" type="button">
+<span class="material-symbols-outlined text-[18px]">hiking</span>
+<span>Walking</span>
+</button>
+<!-- More -->
+<button class="activity-chip flex items-center gap-1 px-3 py-2 rounded-full bg-surface-container-high text-secondary hover:text-on-surface font-headline-sm text-headline-sm flex-shrink-0" type="button">
+<span class="material-symbols-outlined text-[18px]">more_horiz</span>
+</button>
+</div>
+</div>
+<!-- Session Temporal Anchor: Date & Time -->
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-space-sm mb-space-md">
+<!-- Workout Date Selector -->
+<div class="flex flex-col p-space-sm bg-surface-container rounded-xl">
+<div class="flex items-center justify-between mb-1">
+<span class="font-label-caps text-label-caps uppercase tracking-wider text-secondary">Workout Date</span>
+<span class="material-symbols-outlined text-[18px] text-primary-container">calendar_today</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="font-headline-sm text-headline-sm text-on-surface">Sep 10, 2026</span>
+<span class="font-body-sm text-body-sm text-secondary">Thursday</span>
+</div>
+<div class="flex items-center gap-1 mt-2 text-surface-tint">
+<span class="material-symbols-outlined text-[13px]">update</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">LOGGED TODAY (SEP 14, 2026)</span>
+</div>
+</div>
+<!-- Start Time Selector -->
+<div class="flex flex-col p-space-sm bg-surface-container rounded-xl">
+<div class="flex items-center justify-between mb-1">
+<span class="font-label-caps text-label-caps uppercase tracking-wider text-secondary">Start Time</span>
+<span class="material-symbols-outlined text-[18px] text-primary-container">schedule</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="font-headline-sm text-headline-sm text-on-surface">07:15 AM</span>
+<span class="font-body-sm text-body-sm text-secondary">Morning Session</span>
+</div>
+<div class="flex items-center gap-1.5 mt-2">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+<span class="font-label-caps text-label-caps text-secondary">FASTED PROTOCOL</span>
+</div>
+</div>
+</div>
+<!-- Core Telemetry Panel -->
+<div class="flex flex-col p-space-md bg-surface-container rounded-xl mb-space-md shadow-md">
+<div class="flex items-center justify-between mb-space-sm">
+<span class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary-container text-[20px]">speed</span>
+        Telemetry Log
+      </span>
+<div class="flex items-center bg-surface-container-lowest p-0.5 rounded-lg" id="unit-toggle">
+<button class="unit-btn px-2.5 py-0.5 text-xs font-label-caps rounded bg-primary-container text-on-primary" type="button">KM</button>
+<button class="unit-btn px-2.5 py-0.5 text-xs font-label-caps rounded text-secondary hover:text-on-surface" type="button">MI</button>
+</div>
+</div>
+<!-- Primary Metric Grid -->
+<div class="grid grid-cols-2 gap-space-sm mb-space-sm">
+<!-- Duration Input -->
+<div class="flex flex-col bg-surface-container-low p-space-sm rounded-lg">
+<span class="font-label-caps text-label-caps text-secondary uppercase mb-1">Duration</span>
+<div class="flex items-center justify-between">
+<input aria-label="Duration HH:MM:SS" class="bg-transparent font-metric-md text-metric-md text-on-surface tracking-tight focus:outline-none w-full" id="duration-input" type="text" value="00:32:18"/>
+<div class="flex flex-col gap-0.5 ml-1">
+<button class="text-secondary hover:text-primary-container active:scale-90 transition-transform" id="dur-up" type="button">
+<span class="material-symbols-outlined text-[16px]">expand_less</span>
+</button>
+<button class="text-secondary hover:text-primary-container active:scale-90 transition-transform" id="dur-down" type="button">
+<span class="material-symbols-outlined text-[16px]">expand_more</span>
+</button>
+</div>
+</div>
+<span class="font-label-caps text-[10px] text-secondary mt-1">HH : MM : SS</span>
+</div>
+<!-- Distance Input -->
+<div class="flex flex-col bg-surface-container-low p-space-sm rounded-lg">
+<span class="font-label-caps text-label-caps text-secondary uppercase mb-1">Total Distance</span>
+<div class="flex items-center justify-between">
+<input aria-label="Distance in selected units" class="bg-transparent font-metric-md text-metric-md text-on-surface tracking-tight focus:outline-none w-full" id="dist-input" type="text" value="5.20"/>
+<span class="font-label-caps text-label-caps text-secondary unit-label">KM</span>
+</div>
+<span class="font-label-caps text-[10px] text-secondary mt-1">GPS Calibrated</span>
+</div>
+</div>
+<!-- Auto Calculated Pace Block (Tactile Highlight) -->
+<div class="flex items-center justify-between p-space-sm bg-surface-container-lowest rounded-lg">
+<div class="flex flex-col">
+<span class="font-label-caps text-label-caps text-secondary uppercase tracking-wider">Calculated Avg Pace</span>
+<span class="font-body-sm text-body-sm text-on-surface">Pacing consistency: 94%</span>
+</div>
+<div class="flex flex-col items-end">
+<div class="flex items-baseline gap-1">
+<span class="font-metric-lg text-metric-lg text-primary-container" id="calculated-pace">6:12</span>
+<span class="font-label-caps text-label-caps text-primary-container">/KM</span>
+</div>
+<span class="font-label-caps text-[10px] text-surface-tint">AEROBIC THRESHOLD</span>
+</div>
+</div>
+</div>
+<!-- Biometrics & Exertion (Expanded Depth) -->
+<div class="flex flex-col p-space-md bg-surface-container rounded-xl mb-space-md shadow-md">
+<div class="flex items-center justify-between mb-space-sm">
+<span class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary-container text-[20px]">monitor_heart</span>
+        Biometrics &amp; Intensity
+      </span>
+<span class="font-label-caps text-label-caps text-surface-tint bg-surface-container-lowest px-2 py-0.5 rounded">OPTIONAL</span>
+</div>
+<div class="grid grid-cols-2 gap-space-sm mb-space-sm">
+<!-- Energy Expenditure -->
+<div class="flex flex-col bg-surface-container-low p-space-sm rounded-lg">
+<div class="flex items-center justify-between mb-1">
+<span class="font-label-caps text-label-caps text-secondary">ACTIVE BURN</span>
+<span class="material-symbols-outlined text-[16px] text-surface-tint">local_fire_department</span>
+</div>
+<div class="flex items-baseline gap-1">
+<input aria-label="Calories burned" class="bg-transparent font-metric-md text-metric-md text-on-surface focus:outline-none w-20" type="number" value="324"/>
+<span class="font-label-caps text-label-caps text-secondary">KCAL</span>
+</div>
+</div>
+<!-- Average Heart Rate -->
+<div class="flex flex-col bg-surface-container-low p-space-sm rounded-lg">
+<div class="flex items-center justify-between mb-1">
+<span class="font-label-caps text-label-caps text-secondary">AVG HEART RATE</span>
+<span class="material-symbols-outlined text-[16px] text-error">favorite</span>
+</div>
+<div class="flex items-baseline gap-1">
+<input aria-label="Average Heart Rate" class="bg-transparent font-metric-md text-metric-md text-on-surface focus:outline-none w-16" type="number" value="144"/>
+<span class="font-label-caps text-label-caps text-secondary">BPM</span>
+</div>
+<span class="font-label-caps text-[10px] text-tertiary-container mt-1">Zone 3 Aerobic</span>
+</div>
+</div>
+<!-- RPE Exertion Stepper & Slider -->
+<div class="flex flex-col bg-surface-container-low p-space-sm rounded-lg mt-1">
+<div class="flex items-center justify-between mb-2">
+<span class="font-label-caps text-label-caps text-secondary uppercase">Perceived Effort (RPE)</span>
+<div class="flex items-baseline gap-1">
+<span class="font-metric-md text-metric-md text-primary-container" id="rpe-val">7.5</span>
+<span class="font-label-caps text-label-caps text-secondary">/ 10</span>
+<span class="font-body-sm text-body-sm text-on-surface ml-1 font-medium" id="rpe-label">(Hard Effort)</span>
+</div>
+</div>
+<!-- Interactive Custom Track Bar -->
+<input class="w-full accent-primary-container bg-surface-container-highest h-2 rounded-lg cursor-pointer" id="rpe-slider" max="10" min="1" step="0.5" type="range" value="7.5"/>
+<div class="flex justify-between font-label-caps text-[10px] text-secondary mt-1.5 px-0.5">
+<span>1 (Recovery)</span>
+<span>5 (Moderate)</span>
+<span>7.5 (Threshold)</span>
+<span>10 (Maximal)</span>
+</div>
+</div>
+</div>
+<!-- Route Visualizer & Context -->
+<div class="flex flex-col p-space-md bg-surface-container rounded-xl mb-space-md shadow-md">
+<div class="flex items-center justify-between mb-space-sm">
+<span class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary-container text-[20px]">explore</span>
+        Course &amp; Context
+      </span>
+<span class="font-label-caps text-label-caps text-secondary">GPS TRACE</span>
+</div>
+<!-- Route Location Anchor -->
+<div class="relative w-full h-32 rounded-lg overflow-hidden mb-space-sm bg-surface-container-low" data-location="Hudson River Greenway, New York" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAbhwCfMVYj0D3THhIvBhV43B7UeMu0x09udDU5d-rKTINXXB3riVss6zg7NszCCyO_qeCeRqg53goTjSQIyIjK_2lEeSJC469VAEAaJMReq9497Kiv-4tgeW2h6Rptu9xs1HK8HucDQP-7THRSMROivc-1oIV_Dey70oR_mMAuLisJjFQcQl9qg9ixWMRBGDpdt1f8Xxa4lcNKpKOcvVYAJjIu8c2F2nuMgJ0ExRm9aMZyyNpxrZCa')">
+<!-- Gradient Scrim for readable route telemetry overlay -->
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-surface-container-lowest/40 to-transparent flex flex-col justify-end p-2.5">
+<span class="font-label-caps text-label-caps text-primary-container">WATERFRONT CORRIDOR</span>
+<span class="font-headline-sm text-headline-sm text-on-surface truncate">Metro Riverside Waterfront Loop</span>
+</div>
+</div>
+<!-- Location Input -->
+<div class="flex flex-col mb-space-sm">
+<label class="font-label-caps text-label-caps text-secondary uppercase mb-1">Route / Waypoint Name</label>
+<div class="flex items-center gap-2 bg-surface-container-low px-3 py-2.5 rounded-lg">
+<span class="material-symbols-outlined text-[18px] text-secondary">pin_drop</span>
+<input aria-label="Route Location" class="bg-transparent font-body-md text-body-md text-on-surface focus:outline-none w-full" type="text" value="Metro Riverside Waterfront Loop"/>
+</div>
+</div>
+<!-- Equipment / Gear Tracker -->
+<div class="flex flex-col mb-space-sm">
+<label class="font-label-caps text-label-caps text-secondary uppercase mb-1">Gear &amp; Equipment</label>
+<div class="flex items-center justify-between bg-surface-container-low px-3 py-2.5 rounded-lg">
+<div class="flex items-center gap-2 min-w-0">
+<span class="material-symbols-outlined text-[18px] text-primary-container">drive_file_move_outline</span>
+<span class="font-body-md text-body-md text-on-surface truncate">Nike Pegasus 40</span>
+</div>
+<div class="flex items-center gap-1.5 flex-shrink-0">
+<span class="font-label-caps text-label-caps text-secondary">248 KM</span>
+<span class="material-symbols-outlined text-[18px] text-secondary">chevron_right</span>
+</div>
+</div>
+</div>
+<!-- Session Notes -->
+<div class="flex flex-col">
+<label class="font-label-caps text-label-caps text-secondary uppercase mb-1">Session Notes</label>
+<textarea class="w-full bg-surface-container-low rounded-lg p-space-sm font-body-md text-body-md text-on-surface focus:outline-none resize-none leading-relaxed" rows="2">Felt strong during 4th kilometer tempo surge. Mild humidity.</textarea>
+</div>
+</div>
+<!-- Bottom Fixed-Safe Execution Action -->
+<div class="pt-space-xs">
+<button class="w-full py-3.5 px-space-md rounded-xl bg-primary-container hover:bg-primary-fixed-dim text-on-primary font-headline-md text-headline-md uppercase tracking-wide flex items-center justify-center gap-2 shadow-lg active:scale-[0.99] transition-all" id="submit-cardio-btn" type="button">
+<span class="material-symbols-outlined text-[22px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+      Log Historical Cardio
+    </button>
+<p class="font-label-caps text-[10px] text-center text-secondary mt-2 tracking-wider uppercase">
+      Retrospective aerobic metrics synced across training logs
+    </p>
+</div>
+</div>
+<script>
+  // Activity Selection Toggle
+  const activityChips = document.querySelectorAll('.activity-chip');
+  activityChips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      activityChips.forEach(c => {
+        c.classList.remove('bg-primary-container', 'text-on-primary', 'shadow-sm');
+        c.classList.add('bg-surface-container', 'text-secondary');
+      });
+      chip.classList.remove('bg-surface-container', 'text-secondary');
+      chip.classList.add('bg-primary-container', 'text-on-primary', 'shadow-sm');
+    });
+  });
+
+  // Unit Selector Toggle (KM / MI)
+  const unitButtons = document.querySelectorAll('#unit-toggle .unit-btn');
+  const unitLabel = document.querySelector('.unit-label');
+  const calculatedPace = document.getElementById('calculated-pace');
+  const calculatedPaceUnit = calculatedPace.nextElementSibling;
+
+  unitButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      unitButtons.forEach(b => {
+        b.classList.remove('bg-primary-container', 'text-on-primary');
+        b.classList.add('text-secondary');
+      });
+      btn.classList.remove('text-secondary');
+      btn.classList.add('bg-primary-container', 'text-on-primary');
+
+      const isMiles = btn.textContent.trim() === 'MI';
+      if (unitLabel) unitLabel.textContent = isMiles ? 'MI' : 'KM';
+      if (calculatedPaceUnit) calculatedPaceUnit.textContent = isMiles ? '/MI' : '/KM';
+      if (calculatedPace) {
+        calculatedPace.textContent = isMiles ? '9:58' : '6:12';
+      }
+    });
+  });
+
+  // RPE Slider Dynamic Updates
+  const rpeSlider = document.getElementById('rpe-slider');
+  const rpeVal = document.getElementById('rpe-val');
+  const rpeLabel = document.getElementById('rpe-label');
+
+  const rpeDescriptions = {
+    1: '(Very Light)',
+    2: '(Light Recovery)',
+    3: '(Gentle Aerobic)',
+    4: '(Conversational)',
+    5: '(Moderate Effort)',
+    6: '(Aerobic Threshold)',
+    7: '(Vigorous)',
+    7.5: '(Hard Effort)',
+    8: '(Sub-Maximal)',
+    8.5: '(Near Limit)',
+    9: '(Exhausting Surge)',
+    9.5: '(Critical Limit)',
+    10: '(All-Out Searing)'
+  };
+
+  if (rpeSlider && rpeVal && rpeLabel) {
+    rpeSlider.addEventListener('input', (e) => {
+      const val = parseFloat(e.target.value);
+      rpeVal.textContent = val.toFixed(1);
+      rpeLabel.textContent = rpeDescriptions[val] || '(Custom Effort)';
+    });
+  }
+
+  // Stepper Micro-interactions for Duration
+  const durUp = document.getElementById('dur-up');
+  const durDown = document.getElementById('dur-down');
+  const durationInput = document.getElementById('duration-input');
+
+  if (durUp && durationInput) {
+    durUp.addEventListener('click', () => {
+      durationInput.value = '00:33:00';
+    });
+  }
+  if (durDown && durationInput) {
+    durDown.addEventListener('click', () => {
+      durationInput.value = '00:31:30';
+    });
+  }
+
+  // Save / Log Interactive Feedback
+  const submitBtn = document.getElementById('submit-cardio-btn');
+  const topSaveBtn = document.getElementById('save-top-btn');
+
+  function triggerSuccess(button) {
+    const originalContent = button.innerHTML;
+    button.classList.add('bg-tertiary-container', 'text-on-tertiary-container');
+    button.innerHTML = '<span class="material-symbols-outlined text-[20px]">done</span> Saved to Archive';
+    setTimeout(() => {
+      button.innerHTML = originalContent;
+      button.classList.remove('bg-tertiary-container', 'text-on-tertiary-container');
+    }, 2000);
+  }
+
+  if (submitBtn) {
+    submitBtn.addEventListener('click', () => triggerSuccess(submitBtn));
+  }
+  if (topSaveBtn) {
+    topSaveBtn.addEventListener('click', () => triggerSuccess(topSaveBtn));
+  }
+</script></main></body></html>

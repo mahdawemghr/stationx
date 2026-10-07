@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=JetBrains+Mono:wght@500;600;700&amp;family=Space+Grotesk:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;background-color:#121416;color:#e2e2e5;}body{overscroll-behavior:none;-webkit-tap-highlight-color:transparent;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "secondary-fixed": "#dee3ea", "on-secondary-fixed-variant": "#42474d", "on-secondary-fixed": "#171c21", "outline-variant": "#434933", "on-surface": "#e2e2e5", "error": "#ffb4ab", "secondary-container": "#42474d", "on-secondary-container": "#b1b5bc", "tertiary-container": "#7ff5ac", "surface-tint": "#a5d700", "on-tertiary-fixed-variant": "#00522d", "primary-container": "#b8f000", "surface-dim": "#121416", "surface-container-highest": "#333537", "primary-fixed-dim": "#a5d700", "tertiary-fixed-dim": "#67dd96", "on-primary": "#273500", "tertiary-fixed": "#84fab0", "background": "#121416", "on-error-container": "#ffdad6", "surface-container-lowest": "#0c0e10", "inverse-surface": "#e2e2e5", "surface-variant": "#333537", "primary-fixed": "#bdf510", "on-tertiary-fixed": "#00210f", "surface-container": "#1e2022", "on-primary-fixed-variant": "#394d00", "on-tertiary": "#00391d", "on-secondary": "#2c3136", "outline": "#8d947a", "surface-bright": "#38393c", "surface": "#121416", "on-surface-variant": "#c3caad", "error-container": "#93000a", "on-primary-container": "#506a00", "on-tertiary-container": "#007040", "primary": "#f4ffd3", "on-background": "#e2e2e5", "on-primary-fixed": "#151f00", "secondary-fixed-dim": "#c2c7cd", "inverse-primary": "#4d6700", "on-error": "#690005", "inverse-on-surface": "#2f3133", "secondary": "#c2c7cd", "surface-container-low": "#1a1c1e", "surface-container-high": "#282a2c", "tertiary": "#edffee" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "space-lg": "1.5rem", "margin-desktop": "3rem", "gutter-tablet": "1.5rem", "space-md": "1rem", "space-xs": "0.25rem", "gutter-desktop": "2rem", "margin": "1rem", "gutter": "1rem", "margin-tablet": "2rem", "space-xl": "2.5rem", "space-sm": "0.5rem" }, "fontFamily": { "body-sm": [ "Geist" ], "display-hero-mobile": [ "Space Grotesk" ], "headline-lg": [ "Space Grotesk" ], "headline-sm": [ "Space Grotesk" ], "body-md": [ "Geist" ], "display-hero": [ "Space Grotesk" ], "label-ui": [ "Geist" ], "label-caps": [ "JetBrains Mono" ], "metric-xl": [ "JetBrains Mono" ], "metric-md": [ "JetBrains Mono" ], "headline-md": [ "Space Grotesk" ], "metric-lg": [ "JetBrains Mono" ], "headline-lg-mobile": [ "Space Grotesk" ], "body-lg": [ "Geist" ] }, "fontSize": { "body-sm": [ "12px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "400" } ], "display-hero-mobile": [ "40px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" } ], "headline-lg": [ "32px", { "lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "600" } ], "headline-sm": [ "18px", { "lineHeight": "24px", "letterSpacing": "0em", "fontWeight": "600" } ], "body-md": [ "14px", { "lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "400" } ], "display-hero": [ "56px", { "lineHeight": "60px", "letterSpacing": "-0.03em", "fontWeight": "700" } ], "label-ui": [ "13px", { "lineHeight": "16px", "letterSpacing": "0em", "fontWeight": "500" } ], "label-caps": [ "11px", { "lineHeight": "14px", "letterSpacing": "0.08em", "fontWeight": "500" } ], "metric-xl": [ "48px", { "lineHeight": "48px", "letterSpacing": "-0.04em", "fontWeight": "700" } ], "metric-md": [ "20px", { "lineHeight": "24px", "letterSpacing": "-0.02em", "fontWeight": "600" } ], "headline-md": [ "22px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600" } ], "metric-lg": [ "32px", { "lineHeight": "34px", "letterSpacing": "-0.03em", "fontWeight": "600" } ], "headline-lg-mobile": [ "26px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" } ], "body-lg": [ "16px", { "lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "400" } ] } } } };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-background font-body-md text-on-surface antialiased flex flex-col min-h-screen"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/85 backdrop-blur-xl shadow-[0_1px_12px_rgba(0,0,0,0.4)]"><div class="h-16 px-margin flex items-center justify-between gap-space-sm"><div class="flex items-center gap-space-xs min-w-0"><button aria-label="Go Back" class="w-11 h-11 -ml-2 flex items-center justify-center rounded-lg text-on-surface hover:bg-surface-container transition-colors" onclick="history.back()"><span class="material-symbols-outlined text-[24px]">arrow_back</span></button><img alt="Brand logo. - Primary color: #00f0ff
+- Font: spaceGrotesk
+- Mode: dark
+- Roundness: rounded-md
+" class="h-7 w-auto object-contain flex-shrink-0" src="https://lh3.googleusercontent.com/aida/AEtjO1V2OfVb6x575tYCGYJyY0lqcBiNrsQVDOleXgD1quXqKfsckya9M5ZWa7PQCF0h0x-zsInqEwPEYve0dUa9pZKyXphWZkvapoWohyrf1MEVheH4YCP1l-2R_nA4QfUbJPxxT2fE0rEf7UgZI9qhPwXOA88yG_LsCC3TYttVs-a-Q2uGZV9aByOZvqSE2hTrtYqr5fAchboqPRUfsXrCAeBawfOnXNAVLeFCYX86nAsMkbwBgo_Q9ga6uYY"/><h1 class="font-headline-sm text-headline-sm text-on-surface truncate leading-tight">Session Summary</h1></div><div class="flex items-center gap-space-xs flex-shrink-0"><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida/AEtjO1VS1u4GcVYp98aXFrkmekBQcdAvUt6cQ-JMF5yEI6tQhxhhqZeo4qV_P2VI2X369r4zDESSzqSVUOktP1t5r5Y90_DD5p4JbY3IJM8xnja8Uc7lW52ifgFNgC9vzX0uPHRHy1e30eglQqWMU6a3v6n46Cf0JGudY381rx4UFZvJq2rm1pusKTvzOdTVrhMG5RPL5uvn7UD6nDp05cEZ2zCCGDO4bQUEMurSygtQ_6eer7Z_VfZN-dCkS9c"/></div></div></header><main class="flex flex-col relative w-full pt-16 pb-safe px-margin bg-background flex-1"><div class="flex flex-col w-full pb-10 space-y-space-md">
+<!-- Month Navigator -->
+<div class="flex items-center justify-between bg-surface-container rounded-xl p-space-sm shadow-md">
+<div class="flex items-center gap-space-xs">
+<div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center text-primary-container">
+<span class="material-symbols-outlined text-[20px]">calendar_month</span>
+</div>
+<div>
+<p class="font-label-caps text-label-caps uppercase text-on-surface-variant tracking-wider">Historical Log</p>
+<h2 class="font-headline-sm text-headline-sm text-on-surface" id="current-month-label">September 2026</h2>
+</div>
+</div>
+<div class="flex items-center gap-1">
+<button aria-label="Previous Month" class="w-9 h-9 rounded-lg bg-surface-container-high hover:bg-surface-bright flex items-center justify-center text-on-surface transition-all active:scale-95" onclick="navigateMonth(-1)">
+<span class="material-symbols-outlined text-[18px]">chevron_left</span>
+</button>
+<button class="px-2.5 h-9 rounded-lg bg-surface-container-high hover:bg-surface-bright text-on-surface font-label-caps text-label-caps transition-all active:scale-95" onclick="resetToToday()">
+        TODAY
+      </button>
+<button aria-label="Next Month" class="w-9 h-9 rounded-lg bg-surface-container-high hover:bg-surface-bright flex items-center justify-center text-on-surface transition-all active:scale-95" onclick="navigateMonth(1)">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+</div>
+</div>
+<!-- Filter Pills -->
+<div class="flex items-center gap-1.5 overflow-x-auto pb-1 -mx-margin px-margin">
+<button class="filter-pill active-pill px-3 py-2 rounded-lg bg-primary-container text-on-primary font-label-ui text-label-ui flex items-center gap-1.5 whitespace-nowrap shadow-sm" onclick="setFilter(this, 'all')">
+<span class="material-symbols-outlined text-[16px]">tune</span>
+<span>All Activity</span>
+<span class="ml-1 px-1.5 py-0.2 rounded bg-on-primary/20 text-on-primary font-label-caps text-label-caps">19</span>
+</button>
+<button class="filter-pill px-3 py-2 rounded-lg bg-surface-container text-secondary font-label-ui text-label-ui flex items-center gap-1.5 whitespace-nowrap shadow-sm hover:bg-surface-container-high" onclick="setFilter(this, 'strength')">
+<span class="w-2 h-2 rounded-full bg-secondary-fixed"></span>
+<span>Strength Only</span>
+<span class="ml-1 px-1.5 py-0.2 rounded bg-surface-container-highest text-secondary-fixed font-label-caps text-label-caps">12</span>
+</button>
+<button class="filter-pill px-3 py-2 rounded-lg bg-surface-container text-secondary font-label-ui text-label-ui flex items-center gap-1.5 whitespace-nowrap shadow-sm hover:bg-surface-container-high" onclick="setFilter(this, 'cardio')">
+<span class="w-2 h-2 rounded-full bg-primary-container"></span>
+<span>Cardio Only</span>
+<span class="ml-1 px-1.5 py-0.2 rounded bg-surface-container-highest text-secondary-fixed font-label-caps text-label-caps">7</span>
+</button>
+<button class="filter-pill px-3 py-2 rounded-lg bg-surface-container text-secondary font-label-ui text-label-ui flex items-center gap-1.5 whitespace-nowrap shadow-sm hover:bg-surface-container-high" onclick="setFilter(this, 'mixed')">
+<span class="flex items-center -space-x-1">
+<span class="w-2 h-2 rounded-full bg-secondary-fixed"></span>
+<span class="w-2 h-2 rounded-full bg-primary-container"></span>
+</span>
+<span>Mixed Dual</span>
+<span class="ml-1 px-1.5 py-0.2 rounded bg-surface-container-highest text-secondary-fixed font-label-caps text-label-caps">4</span>
+</button>
+</div>
+<!-- Interactive Monthly Calendar Card -->
+<div class="bg-surface-container rounded-xl p-space-md shadow-md space-y-space-md">
+<!-- Day Headers -->
+<div class="grid grid-cols-7 text-center">
+<span class="font-label-caps text-label-caps text-on-surface-variant font-semibold">M</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant font-semibold">T</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant font-semibold">W</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant font-semibold">T</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant font-semibold">F</span>
+<span class="font-label-caps text-label-caps text-primary-container font-semibold">S</span>
+<span class="font-label-caps text-label-caps text-primary-container font-semibold">S</span>
+</div>
+<!-- Calendar Grid (Sep 2026 starts Tuesday Sep 1) -->
+<div class="grid grid-cols-7 gap-1.5" id="calendar-grid">
+<!-- Aug 31 -->
+<div class="h-11 rounded-lg bg-surface-container-low/40 flex flex-col items-center justify-center opacity-30 text-on-surface-variant font-metric-md text-body-sm">31</div>
+<!-- Sep 1: Strength -->
+<button class="cal-day h-11 rounded-lg bg-surface-container-high flex flex-col items-center justify-center gap-1 transition-all active:scale-95" data-cardio="false" data-strength="true" onclick="selectDate(this, 1)">
+<span class="font-label-ui text-label-ui text-on-surface leading-none">1</span>
+<div class="flex items-center gap-0.5">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary-fixed"></span>
+</div>
+</button>
+<!-- Sep 2: Cardio -->
+<button class="cal-day h-11 rounded-lg bg-surface-container-high flex flex-col items-center justify-center gap-1 transition-all active:scale-95" data-cardio="true" data-strength="false" onclick="selectDate(this, 2)">
+<span class="font-label-ui text-label-ui text-on-surface leading-none">2</span>
+<div class="flex items-center gap-0.5">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+</div>
+</button>
+<!-- Sep 3: Strength -->
+<button class="cal-day h-11 rounded-lg bg-surface-container-high flex flex-col items-center justify-center gap-1 transition-all active:scale-95" data-cardio="false" data-strength="true" onclick="selectDate(this, 3)">
+<span class="font-label-ui text-label-ui text-on-surface leading-none">3</span>
+<div class="flex items-center gap-0.5">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary-fixed"></span>
+</div>
+</button>
+<!-- Sep 4: Rest -->
+<button class="cal-day h-11 rounded-lg bg-surface-container-low flex flex-col items-center justify-center gap-1 transition-all active:scale-95 opacity-60" onclick="selectDate(this, 4)">
+<span class="font-label-ui text-label-ui text-on-surface leading-none">4</span>
+</button>
+<!-- Sep 5: Strength + Cardio -->
+<button class="cal-day h-11 rounded-lg bg-surface-container-high flex flex-col items-center justify-center gap-1 transition-all active:scale-95" data-cardio="true" data-strength="true" onclick="selectDate(this, 5)">
+<span class="font-label-ui text-label-ui text-on-surface leading-none">5</span>
+<div class="flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary-fixed"></span>
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+</div>
+</button>
+<!-- Sep 6: Cardio -->
+<button class="cal-day h-11 rounded-lg bg-surface-container-high flex flex-col items-center justify-center gap-1 transition-all active:scale-95" data-cardio="true" data-strength="false" onclick="selectDate(this, 6)">
+<span class="font-label-ui text-label-ui text-on-surface leading-none">6</span>
+<div class="flex items-center gap-0.5">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+</div>
+</button>
+<!-- Sep 7: Strength -->
+<button class="cal-day h-11 rounded-lg bg-surface-container-high flex flex-col items-center justify-center gap-1 transition-all active:scale-95" data-cardio="false" data-strength="true" onclick="selectDate(this, 7)">
+<span class="font-label-ui text-label-ui text-on-surface leading-none">7</span>
+<div class="flex items-center gap-0.5">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary-fixed"></span>
+</div>
+</button>
+<!-- Sep 8: Strength -->
+<button class="cal-day h-11 rounded-lg bg-surface-container-high flex flex-col items-center justify-center gap-1 transition-all active:scale-95" data-cardio="false" data-strength="true" onclick="selectDate(this, 8)">
+<span class="font-label-ui text-label-ui text-on-surface leading-none">8</span>
+<div class="flex items-center gap-0.5">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary-fixed"></span>
+</div>
+</button>
+<!-- Sep 9: Cardio -->
+<button class="cal-day h-11 rounded-lg bg-surface-container-high flex flex-col items-center justify-center gap-1 transition-all active:scale-95" data-cardio="true" data-strength="false" onclick="selectDate(this, 9)">
+<span class="font-label-ui text-label-ui text-on-surface leading-none">9</span>
+<div class="flex items-center gap-0.5">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+</div>
+</button>
+<!-- Sep 10: Rest -->
+<button class="cal-day h-11 rounded-lg bg-surface-container-low flex flex-col items-center justify-center gap-1 transition-all active:scale-95 opacity-60" onclick="selectDate(this, 10)">
+<span class="font-label-ui text-label-ui text-on-surface leading-none">10</span>
+</button>
+<!-- Sep 11: Strength -->
+<button class="cal-day h-11 rounded-lg bg-surface-container-high flex flex-col items-center justify-center gap-1 transition-all active:scale-95" data-cardio="false" data-strength="true" onclick="selectDate(this, 11)">
+<span class="font-label-ui text-label-ui text-on-surface leading-none">11</span>
+<div class="flex items-center gap-0.5">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary-fixed"></span>
+</div>
+</button>
+<!-- Sep 12: Strength -->
+<button class="cal-day h-11 rounded-lg bg-surface-container-high flex flex-col items-center justify-center gap-1 transition-all active:scale-95" data-cardio="false" data-strength="true" onclick="selectDate(this, 12)">
+<span class="font-label-ui text-label-ui text-on-surface leading-none">12</span>
+<div class="flex items-center gap-0.5">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary-fixed"></span>
+</div>
+</button>
+<!-- Sep 13: SELECTED (Saturday) -> Dual Stacked Dots -->
+<button class="cal-day selected-day h-11 rounded-lg bg-surface-bright flex flex-col items-center justify-center gap-1 transition-all active:scale-95 shadow-lg relative" data-cardio="true" data-strength="true" id="day-13" onclick="selectDate(this, 13)">
+<span class="font-label-ui text-label-ui text-primary-container font-semibold leading-none">13</span>
+<div class="flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary-fixed shadow-[0_0_6px_rgba(222,227,234,0.6)]"></span>
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container shadow-[0_0_6px_rgba(184,240,0,0.8)]"></span>
+</div>
+<span class="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-primary-container"></span>
+</button>
+<!-- Sep 14: Cardio -->
+<button class="cal-day h-11 rounded-lg bg-surface-container-high flex flex-col items-center justify-center gap-1 transition-all active:scale-95" data-cardio="true" data-strength="false" onclick="selectDate(this, 14)">
+<span class="font-label-ui text-label-ui text-on-surface leading-none">14</span>
+<div class="flex items-center gap-0.5">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+</div>
+</button>
+<!-- Sep 15: Strength -->
+<button class="cal-day h-11 rounded-lg bg-surface-container-high flex flex-col items-center justify-center gap-1 transition-all active:scale-95" data-cardio="false" data-strength="true" onclick="selectDate(this, 15)">
+<span class="font-label-ui text-label-ui text-on-surface leading-none">15</span>
+<div class="flex items-center gap-0.5">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary-fixed"></span>
+</div>
+</button>
+<!-- Sep 16: Strength + Cardio -->
+<button class="cal-day h-11 rounded-lg bg-surface-container-high flex flex-col items-center justify-center gap-1 transition-all active:scale-95" data-cardio="true" data-strength="true" onclick="selectDate(this, 16)">
+<span class="font-label-ui text-label-ui text-on-surface leading-none">16</span>
+<div class="flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary-fixed"></span>
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+</div>
+</button>
+<!-- Sep 17: Rest -->
+<button class="cal-day h-11 rounded-lg bg-surface-container-low flex flex-col items-center justify-center gap-1 transition-all active:scale-95 opacity-60" onclick="selectDate(this, 17)">
+<span class="font-label-ui text-label-ui text-on-surface leading-none">17</span>
+</button>
+<!-- Sep 18: Strength -->
+<button class="cal-day h-11 rounded-lg bg-surface-container-high flex flex-col items-center justify-center gap-1 transition-all active:scale-95" data-cardio="false" data-strength="true" onclick="selectDate(this, 18)">
+<span class="font-label-ui text-label-ui text-on-surface leading-none">18</span>
+<div class="flex items-center gap-0.5">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary-fixed"></span>
+</div>
+</button>
+<!-- Sep 19: Cardio -->
+<button class="cal-day h-11 rounded-lg bg-surface-container-high flex flex-col items-center justify-center gap-1 transition-all active:scale-95" data-cardio="true" data-strength="false" onclick="selectDate(this, 19)">
+<span class="font-label-ui text-label-ui text-on-surface leading-none">19</span>
+<div class="flex items-center gap-0.5">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+</div>
+</button>
+<!-- Sep 20: Rest -->
+<button class="cal-day h-11 rounded-lg bg-surface-container-low flex flex-col items-center justify-center gap-1 transition-all active:scale-95 opacity-60" onclick="selectDate(this, 20)">
+<span class="font-label-ui text-label-ui text-on-surface leading-none">20</span>
+</button>
+<!-- Sep 21: Strength -->
+<button class="cal-day h-11 rounded-lg bg-surface-container-high flex flex-col items-center justify-center gap-1 transition-all active:scale-95" data-cardio="false" data-strength="true" onclick="selectDate(this, 21)">
+<span class="font-label-ui text-label-ui text-on-surface leading-none">21</span>
+<div class="flex items-center gap-0.5">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary-fixed"></span>
+</div>
+</button>
+<!-- Sep 22: Strength -->
+<button class="cal-day h-11 rounded-lg bg-surface-container-high flex flex-col items-center justify-center gap-1 transition-all active:scale-95" data-cardio="false" data-strength="true" onclick="selectDate(this, 22)">
+<span class="font-label-ui text-label-ui text-on-surface leading-none">22</span>
+<div class="flex items-center gap-0.5">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary-fixed"></span>
+</div>
+</button>
+<!-- Sep 23: Strength + Cardio -->
+<button class="cal-day h-11 rounded-lg bg-surface-container-high flex flex-col items-center justify-center gap-1 transition-all active:scale-95" data-cardio="true" data-strength="true" onclick="selectDate(this, 23)">
+<span class="font-label-ui text-label-ui text-on-surface leading-none">23</span>
+<div class="flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary-fixed"></span>
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+</div>
+</button>
+<!-- Sep 24: Rest -->
+<button class="cal-day h-11 rounded-lg bg-surface-container-low flex flex-col items-center justify-center gap-1 transition-all active:scale-95 opacity-60" onclick="selectDate(this, 24)">
+<span class="font-label-ui text-label-ui text-on-surface leading-none">24</span>
+</button>
+<!-- Sep 25: Strength -->
+<button class="cal-day h-11 rounded-lg bg-surface-container-high flex flex-col items-center justify-center gap-1 transition-all active:scale-95" data-cardio="false" data-strength="true" onclick="selectDate(this, 25)">
+<span class="font-label-ui text-label-ui text-on-surface leading-none">25</span>
+<div class="flex items-center gap-0.5">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary-fixed"></span>
+</div>
+</button>
+<!-- Sep 26: Cardio -->
+<button class="cal-day h-11 rounded-lg bg-surface-container-high flex flex-col items-center justify-center gap-1 transition-all active:scale-95" data-cardio="true" data-strength="false" onclick="selectDate(this, 26)">
+<span class="font-label-ui text-label-ui text-on-surface leading-none">26</span>
+<div class="flex items-center gap-0.5">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+</div>
+</button>
+<!-- Sep 27: Rest -->
+<button class="cal-day h-11 rounded-lg bg-surface-container-low flex flex-col items-center justify-center gap-1 transition-all active:scale-95 opacity-60" onclick="selectDate(this, 27)">
+<span class="font-label-ui text-label-ui text-on-surface leading-none">27</span>
+</button>
+<!-- Sep 28: Strength -->
+<button class="cal-day h-11 rounded-lg bg-surface-container-high flex flex-col items-center justify-center gap-1 transition-all active:scale-95" data-cardio="false" data-strength="true" onclick="selectDate(this, 28)">
+<span class="font-label-ui text-label-ui text-on-surface leading-none">28</span>
+<div class="flex items-center gap-0.5">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary-fixed"></span>
+</div>
+</button>
+<!-- Sep 29: Strength -->
+<button class="cal-day h-11 rounded-lg bg-surface-container-high flex flex-col items-center justify-center gap-1 transition-all active:scale-95" data-cardio="false" data-strength="true" onclick="selectDate(this, 29)">
+<span class="font-label-ui text-label-ui text-on-surface leading-none">29</span>
+<div class="flex items-center gap-0.5">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary-fixed"></span>
+</div>
+</button>
+<!-- Sep 30: Cardio -->
+<button class="cal-day h-11 rounded-lg bg-surface-container-high flex flex-col items-center justify-center gap-1 transition-all active:scale-95" data-cardio="true" data-strength="false" onclick="selectDate(this, 30)">
+<span class="font-label-ui text-label-ui text-on-surface leading-none">30</span>
+<div class="flex items-center gap-0.5">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+</div>
+</button>
+<!-- Oct 1-4 fillers -->
+<div class="h-11 rounded-lg bg-surface-container-low/40 flex flex-col items-center justify-center opacity-30 text-on-surface-variant font-metric-md text-body-sm">1</div>
+<div class="h-11 rounded-lg bg-surface-container-low/40 flex flex-col items-center justify-center opacity-30 text-on-surface-variant font-metric-md text-body-sm">2</div>
+<div class="h-11 rounded-lg bg-surface-container-low/40 flex flex-col items-center justify-center opacity-30 text-on-surface-variant font-metric-md text-body-sm">3</div>
+<div class="h-11 rounded-lg bg-surface-container-low/40 flex flex-col items-center justify-center opacity-30 text-on-surface-variant font-metric-md text-body-sm">4</div>
+</div>
+<!-- Legend -->
+<div class="flex items-center justify-between pt-space-xs bg-surface-container-low rounded-lg px-space-sm py-2">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-primary-container"></span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">Cardio</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-secondary-fixed"></span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">Strength</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="flex items-center -space-x-1">
+<span class="w-2 h-2 rounded-full bg-secondary-fixed"></span>
+<span class="w-2 h-2 rounded-full bg-primary-container"></span>
+</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">Mixed Session</span>
+</div>
+</div>
+</div>
+<!-- Weekly Consistency Pill & Recovery Score -->
+<div class="bg-surface-container-low rounded-xl p-space-sm flex items-center justify-between shadow-sm">
+<div class="flex items-center gap-space-sm">
+<div class="w-9 h-9 rounded-lg bg-tertiary-container flex items-center justify-center text-on-tertiary-container">
+<span class="material-symbols-outlined text-[20px]">local_fire_department</span>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<span class="font-headline-sm text-headline-sm text-on-surface">Week 37 Streak</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-highest text-primary font-label-caps text-label-caps">5/5 GOAL MET</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Training density +12% vs prior week</p>
+</div>
+</div>
+<div class="text-right">
+<p class="font-label-caps text-label-caps uppercase text-on-surface-variant">Recovery</p>
+<span class="font-metric-md text-metric-md text-tertiary-fixed">88%</span>
+</div>
+</div>
+<!-- Selected Day Breakdown Header -->
+<div class="flex items-end justify-between pt-1">
+<div>
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary-container animate-pulse"></span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface" id="selected-date-heading">Saturday, September 13</h3>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5" id="selected-date-sub">2 Completed Sessions • 1h 20m Total Time</p>
+</div>
+<span class="px-2 py-1 rounded-lg bg-surface-container text-on-surface-variant font-label-caps text-label-caps">
+      SEP 13, 2026
+    </span>
+</div>
+<!-- Workout Card 1: Strength Session -->
+<div class="bg-surface-container rounded-xl p-space-md shadow-md space-y-space-sm hover:bg-surface-bright transition-all cursor-pointer group">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="px-2 py-0.5 rounded bg-surface-container-highest text-secondary-fixed font-label-caps text-label-caps uppercase flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]">fitness_center</span>
+          Strength
+        </span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">07:15 AM</span>
+</div>
+<!-- PR Badge -->
+<div class="flex items-center gap-1 bg-surface-container-lowest px-2 py-0.5 rounded-full shadow-sm">
+<span class="material-symbols-outlined text-primary-container text-[14px]">military_tech</span>
+<span class="font-label-caps text-label-caps text-primary-container font-semibold tracking-wider uppercase">Bench Press 105kg PR</span>
+</div>
+</div>
+<div class="flex items-start justify-between">
+<div class="space-y-1">
+<h4 class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors">
+          Day 1 — Chest + Biceps
+        </h4>
+<p class="font-metric-md text-body-md text-on-surface-variant">
+          48 min <span class="text-surface-variant">•</span> 6 Exercises <span class="text-surface-variant">•</span> 18 Sets
+        </p>
+</div>
+<div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant group-hover:bg-primary-container group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</div>
+</div>
+<!-- Metrics Strip -->
+<div class="grid grid-cols-3 gap-2 pt-space-xs">
+<div class="bg-surface-container-low rounded-lg p-2 text-center">
+<p class="font-label-caps text-label-caps text-on-surface-variant uppercase">Total Volume</p>
+<p class="font-metric-md text-metric-md text-on-surface mt-0.5">4,250 <span class="text-label-caps text-on-surface-variant">kg</span></p>
+</div>
+<div class="bg-surface-container-low rounded-lg p-2 text-center">
+<p class="font-label-caps text-label-caps text-on-surface-variant uppercase">Avg Intensity</p>
+<p class="font-metric-md text-metric-md text-secondary-fixed mt-0.5">RPE 8.5</p>
+</div>
+<div class="bg-surface-container-low rounded-lg p-2 text-center">
+<p class="font-label-caps text-label-caps text-on-surface-variant uppercase">Energy Burn</p>
+<p class="font-metric-md text-metric-md text-on-surface mt-0.5">410 <span class="text-label-caps text-on-surface-variant">kcal</span></p>
+</div>
+</div>
+</div>
+<!-- Workout Card 2: Cardio Session -->
+<div class="bg-surface-container rounded-xl p-space-md shadow-md space-y-space-sm hover:bg-surface-bright transition-all cursor-pointer group">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="px-2 py-0.5 rounded bg-primary-container/20 text-primary-container font-label-caps text-label-caps uppercase flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]">directions_run</span>
+          Cardio
+        </span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">05:40 PM</span>
+</div>
+<!-- PR Badge -->
+<div class="flex items-center gap-1 bg-surface-container-lowest px-2 py-0.5 rounded-full shadow-sm">
+<span class="material-symbols-outlined text-primary-container text-[14px]">workspace_premium</span>
+<span class="font-label-caps text-label-caps text-primary-container font-semibold tracking-wider uppercase">Fastest 5K PR</span>
+</div>
+</div>
+<div class="flex items-start justify-between">
+<div class="space-y-1">
+<div class="flex items-center gap-2">
+<h4 class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors">
+            Outdoor Run
+          </h4>
+<span class="px-2 py-0.5 rounded bg-surface-container-high text-on-surface font-label-caps text-label-caps flex items-center gap-1">
+<span class="material-symbols-outlined text-[11px] text-primary-container">route</span>
+            Riverside Loop
+          </span>
+</div>
+<p class="font-metric-md text-body-md text-on-surface-variant">
+          32:18 min <span class="text-surface-variant">•</span> 5.20 km <span class="text-surface-variant">•</span> 6:12 /km pace
+        </p>
+</div>
+<div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant group-hover:bg-primary-container group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</div>
+</div>
+<!-- Cardio Route Map Thumbnail & Metrics -->
+<div class="grid grid-cols-4 gap-2 pt-space-xs">
+<div class="col-span-1 h-16 rounded-lg bg-cover bg-center relative overflow-hidden shadow-inner" data-alt="Dark GPS tracking route overlay on dark topographic outdoor park pathway map with electric lime high contrast route line under stadium night ambiance." data-location="Riverside Park Path, London" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuA8stn0MRBJepkXDKYdwHaqDJBeGXDjeFRveRVpPGUsPKbJWJbWS6cZp6RCDyVb2HelhA3R5jt-3vhAtRZUUpY9DDpbfxhjI8-onYcPsMV2yNtXKm4bO_TVp5Ujf04xlF0KYjzXjKQ7hYuqQkVqynX4mZOOFWXYSOxHU41aEMwUY3HIZ4UuEVtdFii7rP7PtBOx5__JDZVdKUKktztUSh7sEzbqut4JhOrBKHVN36Td2q44dAv2xum9')">
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest/80 via-transparent to-transparent"></div>
+<div class="absolute bottom-1 left-1.5 flex items-center gap-0.5">
+<span class="material-symbols-outlined text-primary-container text-[12px]">navigation</span>
+<span class="font-label-caps text-[9px] text-on-surface leading-none">GPS LOCK</span>
+</div>
+</div>
+<div class="col-span-3 grid grid-cols-3 gap-1.5">
+<div class="bg-surface-container-low rounded-lg p-2 text-center flex flex-col justify-center">
+<p class="font-label-caps text-label-caps text-on-surface-variant uppercase">Pace</p>
+<p class="font-metric-md text-body-md text-on-surface font-semibold mt-0.5">6:12</p>
+</div>
+<div class="bg-surface-container-low rounded-lg p-2 text-center flex flex-col justify-center">
+<p class="font-label-caps text-label-caps text-on-surface-variant uppercase">Heart Rate</p>
+<p class="font-metric-md text-body-md text-error mt-0.5">144 <span class="text-label-caps text-on-surface-variant">bpm</span></p>
+</div>
+<div class="bg-surface-container-low rounded-lg p-2 text-center flex flex-col justify-center">
+<p class="font-label-caps text-label-caps text-on-surface-variant uppercase">Calories</p>
+<p class="font-metric-md text-body-md text-on-surface mt-0.5">324</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Historical Logging Quick Action Dock -->
+<div class="pt-2 space-y-space-xs">
+<p class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider px-1">Record Retroactive Data</p>
+<div class="grid grid-cols-2 gap-space-xs">
+<button class="w-full py-3.5 px-space-sm bg-surface-container-high hover:bg-surface-bright rounded-xl text-on-surface font-headline-sm text-label-ui flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-sm" onclick="openModal('strength')">
+<span class="material-symbols-outlined text-secondary-fixed text-[20px]">fitness_center</span>
+<span>+ Log Historical Lift</span>
+</button>
+<button class="w-full py-3.5 px-space-sm bg-surface-container-high hover:bg-surface-bright rounded-xl text-on-surface font-headline-sm text-label-ui flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-sm" onclick="openModal('cardio')">
+<span class="material-symbols-outlined text-primary-container text-[20px]">directions_run</span>
+<span>+ Backdate Cardio</span>
+</button>
+</div>
+</div>
+<!-- Micro-interaction feedback toast -->
+<div class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-surface-container-highest text-on-surface px-4 py-2.5 rounded-xl shadow-2xl flex items-center gap-2 transition-all duration-300 opacity-0 pointer-events-none translate-y-4 z-40" id="action-toast">
+<span class="material-symbols-outlined text-primary-container text-[18px]">check_circle</span>
+<span class="font-label-ui text-label-ui" id="toast-text">Action logged</span>
+</div>
+</div>
+<script>
+  function setFilter(button, filterType) {
+    document.querySelectorAll('.filter-pill').forEach(btn => {
+      btn.classList.remove('bg-primary-container', 'text-on-primary');
+      btn.classList.add('bg-surface-container', 'text-secondary');
+    });
+    button.classList.remove('bg-surface-container', 'text-secondary');
+    button.classList.add('bg-primary-container', 'text-on-primary');
+
+    const days = document.querySelectorAll('.cal-day');
+    days.forEach(day => {
+      const hasStrength = day.dataset.strength === 'true';
+      const hasCardio = day.dataset.cardio === 'true';
+
+      if (filterType === 'all') {
+        day.style.opacity = '1';
+      } else if (filterType === 'strength') {
+        day.style.opacity = hasStrength ? '1' : '0.25';
+      } else if (filterType === 'cardio') {
+        day.style.opacity = hasCardio ? '1' : '0.25';
+      } else if (filterType === 'mixed') {
+        day.style.opacity = (hasStrength && hasCardio) ? '1' : '0.25';
+      }
+    });
+
+    showToast(`Filter applied: ${button.innerText.trim().split('\n')[0]}`);
+  }
+
+  function selectDate(el, day) {
+    document.querySelectorAll('.cal-day').forEach(d => {
+      d.classList.remove('selected-day', 'bg-surface-bright');
+      d.classList.add('bg-surface-container-high');
+      const numSpan = d.querySelector('span');
+      if (numSpan && !numSpan.classList.contains('text-primary-container')) {
+        numSpan.classList.remove('text-primary-container');
+        numSpan.classList.add('text-on-surface');
+      }
+    });
+
+    el.classList.remove('bg-surface-container-high');
+    el.classList.add('selected-day', 'bg-surface-bright');
+    const labelSpan = el.querySelector('span');
+    if (labelSpan) {
+      labelSpan.classList.add('text-primary-container');
+    }
+
+    const heading = document.getElementById('selected-date-heading');
+    const sub = document.getElementById('selected-date-sub');
+    
+    if (day === 13) {
+      heading.innerText = 'Saturday, September 13';
+      sub.innerText = '2 Completed Sessions • 1h 20m Total Time';
+    } else {
+      const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      const dateObj = new Date(2026, 8, day);
+      const dayName = daysOfWeek[dateObj.getDay()];
+      heading.innerText = `${dayName}, September ${day}`;
+      
+      const hasStr = el.dataset.strength === 'true';
+      const hasCar = el.dataset.cardio === 'true';
+      if (hasStr && hasCar) {
+        sub.innerText = '2 Completed Sessions • High Density Training Day';
+      } else if (hasStr) {
+        sub.innerText = '1 Completed Strength Workout • 52m Total Time';
+      } else if (hasCar) {
+        sub.innerText = '1 Completed Cardio Session • 34m Total Time';
+      } else {
+        sub.innerText = 'Rest & Neural Recovery Day';
+      }
+    }
+  }
+
+  function navigateMonth(direction) {
+    const label = document.getElementById('current-month-label');
+    if (direction === 1) {
+      label.innerText = 'October 2026';
+      showToast('Loaded October 2026 logs');
+    } else {
+      label.innerText = 'August 2026';
+      showToast('Loaded August 2026 logs');
+    }
+  }
+
+  function resetToToday() {
+    const label = document.getElementById('current-month-label');
+    label.innerText = 'September 2026';
+    const day13 = document.getElementById('day-13');
+    if (day13) selectDate(day13, 13);
+    showToast('Reset to Current: Sep 13, 2026');
+  }
+
+  function openModal(type) {
+    showToast(type === 'strength' ? 'Opening Strength Logger...' : 'Opening Cardio Backdate Sheet...');
+  }
+
+  function showToast(message) {
+    const toast = document.getElementById('action-toast');
+    const text = document.getElementById('toast-text');
+    text.innerText = message;
+    toast.classList.remove('opacity-0', 'translate-y-4', 'pointer-events-none');
+    toast.classList.add('opacity-100', 'translate-y-0');
+    setTimeout(() => {
+      toast.classList.add('opacity-0', 'translate-y-4', 'pointer-events-none');
+      toast.classList.remove('opacity-100', 'translate-y-0');
+    }, 2000);
+  }
+</script></main></body></html>

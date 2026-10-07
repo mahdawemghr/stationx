@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=JetBrains+Mono:wght@500;600;700&amp;family=Space+Grotesk:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;background-color:#121416;color:#e2e2e5;}body{overscroll-behavior:none;-webkit-tap-highlight-color:transparent;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "secondary-fixed": "#dee3ea", "on-secondary-fixed-variant": "#42474d", "on-secondary-fixed": "#171c21", "outline-variant": "#434933", "on-surface": "#e2e2e5", "error": "#ffb4ab", "secondary-container": "#42474d", "on-secondary-container": "#b1b5bc", "tertiary-container": "#7ff5ac", "surface-tint": "#a5d700", "on-tertiary-fixed-variant": "#00522d", "primary-container": "#b8f000", "surface-dim": "#121416", "surface-container-highest": "#333537", "primary-fixed-dim": "#a5d700", "tertiary-fixed-dim": "#67dd96", "on-primary": "#273500", "tertiary-fixed": "#84fab0", "background": "#121416", "on-error-container": "#ffdad6", "surface-container-lowest": "#0c0e10", "inverse-surface": "#e2e2e5", "surface-variant": "#333537", "primary-fixed": "#bdf510", "on-tertiary-fixed": "#00210f", "surface-container": "#1e2022", "on-primary-fixed-variant": "#394d00", "on-tertiary": "#00391d", "on-secondary": "#2c3136", "outline": "#8d947a", "surface-bright": "#38393c", "surface": "#121416", "on-surface-variant": "#c3caad", "error-container": "#93000a", "on-primary-container": "#506a00", "on-tertiary-container": "#007040", "primary": "#f4ffd3", "on-background": "#e2e2e5", "on-primary-fixed": "#151f00", "secondary-fixed-dim": "#c2c7cd", "inverse-primary": "#4d6700", "on-error": "#690005", "inverse-on-surface": "#2f3133", "secondary": "#c2c7cd", "surface-container-low": "#1a1c1e", "surface-container-high": "#282a2c", "tertiary": "#edffee" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "space-lg": "1.5rem", "margin-desktop": "3rem", "gutter-tablet": "1.5rem", "space-md": "1rem", "space-xs": "0.25rem", "gutter-desktop": "2rem", "margin": "1rem", "gutter": "1rem", "margin-tablet": "2rem", "space-xl": "2.5rem", "space-sm": "0.5rem" }, "fontFamily": { "body-sm": [ "Geist" ], "display-hero-mobile": [ "Space Grotesk" ], "headline-lg": [ "Space Grotesk" ], "headline-sm": [ "Space Grotesk" ], "body-md": [ "Geist" ], "display-hero": [ "Space Grotesk" ], "label-ui": [ "Geist" ], "label-caps": [ "JetBrains Mono" ], "metric-xl": [ "JetBrains Mono" ], "metric-md": [ "JetBrains Mono" ], "headline-md": [ "Space Grotesk" ], "metric-lg": [ "JetBrains Mono" ], "headline-lg-mobile": [ "Space Grotesk" ], "body-lg": [ "Geist" ] }, "fontSize": { "body-sm": [ "12px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "400" } ], "display-hero-mobile": [ "40px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" } ], "headline-lg": [ "32px", { "lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "600" } ], "headline-sm": [ "18px", { "lineHeight": "24px", "letterSpacing": "0em", "fontWeight": "600" } ], "body-md": [ "14px", { "lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "400" } ], "display-hero": [ "56px", { "lineHeight": "60px", "letterSpacing": "-0.03em", "fontWeight": "700" } ], "label-ui": [ "13px", { "lineHeight": "16px", "letterSpacing": "0em", "fontWeight": "500" } ], "label-caps": [ "11px", { "lineHeight": "14px", "letterSpacing": "0.08em", "fontWeight": "500" } ], "metric-xl": [ "48px", { "lineHeight": "48px", "letterSpacing": "-0.04em", "fontWeight": "700" } ], "metric-md": [ "20px", { "lineHeight": "24px", "letterSpacing": "-0.02em", "fontWeight": "600" } ], "headline-md": [ "22px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600" } ], "metric-lg": [ "32px", { "lineHeight": "34px", "letterSpacing": "-0.03em", "fontWeight": "600" } ], "headline-lg-mobile": [ "26px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" } ], "body-lg": [ "16px", { "lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "400" } ] } } } };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-background font-body-md text-on-surface antialiased flex flex-col min-h-screen"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/85 backdrop-blur-xl shadow-[0_1px_12px_rgba(0,0,0,0.4)]"><div class="h-16 px-margin flex items-center justify-between gap-space-sm"><div class="flex items-center gap-space-xs min-w-0"><button aria-label="Go Back" class="w-11 h-11 -ml-2 flex items-center justify-center rounded-lg text-on-surface hover:bg-surface-container transition-colors" onclick="history.back()"><span class="material-symbols-outlined text-[24px]">arrow_back</span></button><div class="flex items-center gap-space-xs min-w-0"><img alt="KINETIC Logo" class="h-6 w-auto object-contain flex-shrink-0" src="https://lh3.googleusercontent.com/aida/AEtjO1V2OfVb6x575tYCGYJyY0lqcBiNrsQVDOleXgD1quXqKfsckya9M5ZWa7PQCF0h0x-zsInqEwPEYve0dUa9pZKyXphWZkvapoWohyrf1MEVheH4YCP1l-2R_nA4QfUbJPxxT2fE0rEf7UgZI9qhPwXOA88yG_LsCC3TYttVs-a-Q2uGZV9aByOZvqSE2hTrtYqr5fAchboqPRUfsXrCAeBawfOnXNAVLeFCYX86nAsMkbwBgo_Q9ga6uYY"/><div class="flex flex-col min-w-0"><span class="font-label-caps text-label-caps text-primary-container tracking-wider uppercase truncate leading-none">KINETIC</span><h1 class="font-headline-sm text-headline-sm text-on-surface truncate leading-tight">Session Summary</h1></div></div></div><div class="flex items-center gap-space-xs flex-shrink-0"><button aria-label="Athlete Profile" class="w-11 h-11 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors"><img alt="Athlete Avatar" class="w-8 h-8 rounded-full object-cover ring-1 ring-outline-variant" src="https://lh3.googleusercontent.com/aida/AEtjO1VS1u4GcVYp98aXFrkmekBQcdAvUt6cQ-JMF5yEI6tQhxhhqZeo4qV_P2VI2X369r4zDESSzqSVUOktP1t5r5Y90_DD5p4JbY3IJM8xnja8Uc7lW52ifgFNgC9vzX0uPHRHy1e30eglQqWMU6a3v6n46Cf0JGudY381rx4UFZvJq2rm1pusKTvzOdTVrhMG5RPL5uvn7UD6nDp05cEZ2zCCGDO4bQUEMurSygtQ_6eer7Z_VfZN-dCkS9c"/></button></div></div></header><main class="flex flex-col relative w-full pt-16 pb-safe px-margin bg-background flex-1"><div class="flex flex-col w-full pb-24 gap-space-md">
+<!-- Sub-action bar & Session Tag -->
+<div class="flex items-center justify-between pt-space-xs">
+<div class="flex items-center gap-space-xs">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary-container text-on-primary-container font-label-caps text-label-caps">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">directions_run</span>
+        SESSION #1042
+      </span>
+<span class="px-2 py-1 rounded-full bg-surface-container text-on-surface-variant font-label-caps text-label-caps">VERIFIED GPS</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<button aria-label="Share Session" class="w-9 h-9 flex items-center justify-center rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high transition-transform active:scale-95" id="shareBtn">
+<span class="material-symbols-outlined text-[18px]">share</span>
+</button>
+<button aria-label="Quick Edit" class="w-9 h-9 flex items-center justify-center rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high transition-transform active:scale-95" id="quickEditBtn">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+</button>
+<button aria-label="Delete Entry" class="w-9 h-9 flex items-center justify-center rounded-lg bg-surface-container text-error hover:bg-error-container hover:text-on-error-container transition-transform active:scale-95" id="quickDeleteBtn">
+<span class="material-symbols-outlined text-[18px]">delete</span>
+</button>
+</div>
+</div>
+<!-- Primary Session Header Card -->
+<div class="relative overflow-hidden rounded-xl bg-surface-container-low p-space-md shadow-md">
+<div class="absolute -right-12 -top-12 w-44 h-44 rounded-full bg-surface-tint/5 blur-2xl pointer-events-none"></div>
+<div class="flex flex-col gap-1 mb-space-md">
+<div class="flex items-center justify-between">
+<span class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-2">
+          Outdoor Run
+          <span class="material-symbols-outlined text-primary-container text-[20px]" style="font-variation-settings: 'FILL' 1;">verified</span>
+</span>
+<span class="font-label-caps text-label-caps text-primary-container bg-surface-container-high px-2 py-0.5 rounded">PR CANDIDATE</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[15px]">calendar_today</span>
+        Saturday, Sep 13, 2026 • 7:15 AM - 7:47 AM
+      </p>
+</div>
+<!-- 4-Grid Primary Telemetry Readout -->
+<div class="grid grid-cols-2 gap-space-xs">
+<div class="bg-surface-container rounded-lg p-space-sm flex flex-col justify-between">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Duration</span>
+<div class="flex items-baseline gap-1 mt-1">
+<span class="font-metric-lg text-metric-lg text-on-surface">32:18</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">MIN</span>
+</div>
+</div>
+<div class="bg-surface-container rounded-lg p-space-sm flex flex-col justify-between">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Distance</span>
+<div class="flex items-baseline gap-1 mt-1">
+<span class="font-metric-lg text-metric-lg text-primary-container">5.20</span>
+<span class="font-label-caps text-label-caps text-primary-container">KM</span>
+</div>
+</div>
+<div class="bg-surface-container rounded-lg p-space-sm flex flex-col justify-between">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Avg Pace</span>
+<div class="flex items-baseline gap-1 mt-1">
+<span class="font-metric-lg text-metric-lg text-on-surface">6:12</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">/KM</span>
+</div>
+</div>
+<div class="bg-surface-container rounded-lg p-space-sm flex flex-col justify-between">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Energy Burn</span>
+<div class="flex items-baseline gap-1 mt-1">
+<span class="font-metric-lg text-metric-lg text-on-surface">324</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">KCAL</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Interactive Map & Visual Route Card -->
+<div class="relative rounded-xl overflow-hidden bg-surface-container-low shadow-sm">
+<div class="w-full h-44 bg-cover bg-center" data-alt="Dark high-contrast satellite aerial route trace through Riverside Park, electric lime GPS line path tracing along asphalt trails, dusk athletic lighting, clean technical UI aesthetic with dark slate tones and subtle neon green glow." data-location="Riverside Park Loop, New York" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBrjLDt46UMjFNK2sLeffoAIEpvzHAa5LHpCPaNDrDNiazJeyiiLzHjOA8AhHSs8LQItnFcHcTYQL9wzJetLuOIQEz2nKkDiQvOjaYldLv9OGwx-hiMQWDBbHYFV0SsiZgJSIJEk_N6jwpLofZGBDRYx7oESuMT1btX8la_BuBXPKu-GEYhbZOXQiFT9Z-Jo-aYAVn1emdVDoO4vNQuWSyT2MCLmtrD_ZQTEPcq2B0l_Hp7O4ZWLJxi')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-low via-transparent to-transparent"></div>
+<div class="absolute bottom-3 left-3 right-3 flex items-center justify-between">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-surface-container-highest/90 backdrop-blur-md text-on-surface font-label-caps text-label-caps">
+<span class="w-2 h-2 rounded-full bg-primary-container animate-pulse"></span>
+        Riverside North Waterfront Loop
+      </span>
+<span class="font-label-caps text-label-caps text-on-surface-variant bg-surface-container-highest/90 backdrop-blur-md px-2 py-1 rounded">5.20 km mapped</span>
+</div>
+</div>
+<!-- Biometric Telemetry Breakdown -->
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center justify-between px-1">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Biometric Telemetry</span>
+<span class="font-label-caps text-label-caps text-tertiary-fixed-dim">ZONE 3 / 4 PREDOMINANT</span>
+</div>
+<!-- Heart Rate Card -->
+<div class="rounded-xl bg-surface-container-low p-space-md flex flex-col gap-space-sm shadow-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-error text-[20px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">Heart Rate Dynamics</span>
+</div>
+<span class="font-metric-md text-metric-md text-on-surface">144 <span class="font-label-caps text-label-caps text-on-surface-variant">BPM AVG</span></span>
+</div>
+<!-- Mini Sparkline SVG -->
+<div class="w-full h-12 py-1">
+<svg class="w-full h-full overflow-visible" fill="none" preserveaspectratio="none" viewbox="0 0 300 40">
+<path class="text-error" d="M0,28 Q25,24 50,26 T100,18 T150,20 T200,10 T250,8 T300,5" stroke="currentColor" stroke-linecap="round" stroke-width="2.5"></path>
+<path class="text-error/10" d="M0,28 Q25,24 50,26 T100,18 T150,20 T200,10 T250,8 T300,5 L300,40 L0,40 Z" fill="currentColor"></path>
+<circle class="fill-error" cx="250" cy="8" r="3.5"></circle>
+</svg>
+</div>
+<div class="grid grid-cols-3 gap-space-xs pt-space-xs">
+<div class="bg-surface-container rounded-lg p-2 text-center">
+<span class="font-label-caps text-label-caps text-on-surface-variant block">AVG</span>
+<span class="font-metric-md text-metric-md text-on-surface">144</span>
+</div>
+<div class="bg-surface-container rounded-lg p-2 text-center">
+<span class="font-label-caps text-label-caps text-on-surface-variant block">PEAK MAX</span>
+<span class="font-metric-md text-metric-md text-error">168</span>
+</div>
+<div class="bg-surface-container rounded-lg p-2 text-center">
+<span class="font-label-caps text-label-caps text-on-surface-variant block">RECOVERY 1M</span>
+<span class="font-metric-md text-metric-md text-tertiary-fixed-dim">-32</span>
+</div>
+</div>
+</div>
+<!-- Dual Metric Cards: Cadence & Elevation -->
+<div class="grid grid-cols-2 gap-space-xs">
+<!-- Cadence -->
+<div class="rounded-xl bg-surface-container-low p-space-sm flex flex-col justify-between shadow-sm">
+<div class="flex items-center gap-1.5 mb-2">
+<span class="material-symbols-outlined text-primary-container text-[18px]">speed</span>
+<span class="font-body-md text-body-md font-medium text-on-surface">Cadence</span>
+</div>
+<div>
+<div class="flex items-baseline gap-1">
+<span class="font-metric-md text-metric-md text-on-surface">166</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">SPM</span>
+</div>
+<p class="font-body-sm text-body-sm text-tertiary-fixed-dim mt-0.5">Max 178 SPM</p>
+</div>
+<div class="mt-2 pt-2 bg-surface-container rounded p-1.5 text-center">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Optimal Efficiency</span>
+</div>
+</div>
+<!-- Elevation -->
+<div class="rounded-xl bg-surface-container-low p-space-sm flex flex-col justify-between shadow-sm">
+<div class="flex items-center gap-1.5 mb-2">
+<span class="material-symbols-outlined text-secondary text-[18px]">terrain</span>
+<span class="font-body-md text-body-md font-medium text-on-surface">Elevation</span>
+</div>
+<div>
+<div class="flex items-baseline gap-1">
+<span class="font-metric-md text-metric-md text-on-surface">+48</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">M GAIN</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">-42m Loss • Slope 4.2%</p>
+</div>
+<div class="mt-2 pt-2 bg-surface-container rounded p-1.5 text-center">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Rolling Asphalt</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Detailed Kilometer Splits Table -->
+<div class="rounded-xl bg-surface-container-low p-space-md flex flex-col gap-space-sm shadow-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container text-[20px]">timer</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Kilometer Splits</h2>
+</div>
+<span class="font-label-caps text-label-caps text-on-surface-variant">6 SEGMENTS</span>
+</div>
+<div class="flex flex-col gap-1.5 mt-1">
+<!-- Split KM 1 -->
+<div class="flex items-center justify-between p-2.5 rounded-lg bg-surface-container hover:bg-surface-container-high transition-colors">
+<div class="flex items-center gap-3">
+<span class="font-label-caps text-label-caps w-10 text-on-surface-variant">KM 1</span>
+<div class="w-16 h-1.5 rounded-full bg-surface-variant overflow-hidden">
+<div class="bg-on-surface-variant h-full" style="width: 72%;"></div>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<span class="font-metric-md text-metric-md text-on-surface">6:24 <span class="font-label-caps text-label-caps text-on-surface-variant">/km</span></span>
+<span class="font-body-sm text-body-sm text-on-surface-variant w-16 text-right">138 bpm</span>
+</div>
+</div>
+<!-- Split KM 2 -->
+<div class="flex items-center justify-between p-2.5 rounded-lg bg-surface-container hover:bg-surface-container-high transition-colors">
+<div class="flex items-center gap-3">
+<span class="font-label-caps text-label-caps w-10 text-on-surface-variant">KM 2</span>
+<div class="w-16 h-1.5 rounded-full bg-surface-variant overflow-hidden">
+<div class="bg-on-surface-variant h-full" style="width: 78%;"></div>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<span class="font-metric-md text-metric-md text-on-surface">6:15 <span class="font-label-caps text-label-caps text-on-surface-variant">/km</span></span>
+<span class="font-body-sm text-body-sm text-on-surface-variant w-16 text-right">142 bpm</span>
+</div>
+</div>
+<!-- Split KM 3 -->
+<div class="flex items-center justify-between p-2.5 rounded-lg bg-surface-container hover:bg-surface-container-high transition-colors">
+<div class="flex items-center gap-3">
+<span class="font-label-caps text-label-caps w-10 text-on-surface-variant">KM 3</span>
+<div class="w-16 h-1.5 rounded-full bg-surface-variant overflow-hidden">
+<div class="bg-on-surface-variant h-full" style="width: 82%;"></div>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<span class="font-metric-md text-metric-md text-on-surface">6:08 <span class="font-label-caps text-label-caps text-on-surface-variant">/km</span></span>
+<span class="font-body-sm text-body-sm text-on-surface-variant w-16 text-right">146 bpm</span>
+</div>
+</div>
+<!-- Split KM 4 - Highlighted Fast Split -->
+<div class="flex items-center justify-between p-2.5 rounded-lg bg-surface-container-highest shadow-inner">
+<div class="flex items-center gap-3">
+<span class="font-label-caps text-label-caps w-10 text-primary-container font-semibold">KM 4</span>
+<div class="w-16 h-1.5 rounded-full bg-surface-variant overflow-hidden">
+<div class="bg-primary-container h-full" style="width: 95%;"></div>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<span class="px-1.5 py-0.5 rounded bg-surface-container text-primary-container font-label-caps text-label-caps flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[13px]" style="font-variation-settings: 'FILL' 1;">star</span>
+            FASTEST
+          </span>
+<span class="font-metric-md text-metric-md text-primary-container">6:02</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant w-14 text-right">151 bpm</span>
+</div>
+</div>
+<!-- Split KM 5 -->
+<div class="flex items-center justify-between p-2.5 rounded-lg bg-surface-container hover:bg-surface-container-high transition-colors">
+<div class="flex items-center gap-3">
+<span class="font-label-caps text-label-caps w-10 text-on-surface-variant">KM 5</span>
+<div class="w-16 h-1.5 rounded-full bg-surface-variant overflow-hidden">
+<div class="bg-on-surface-variant h-full" style="width: 80%;"></div>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<span class="font-metric-md text-metric-md text-on-surface">6:11 <span class="font-label-caps text-label-caps text-on-surface-variant">/km</span></span>
+<span class="font-body-sm text-body-sm text-on-surface-variant w-16 text-right">154 bpm</span>
+</div>
+</div>
+<!-- Final Sprint 0.2km -->
+<div class="flex items-center justify-between p-2.5 rounded-lg bg-surface-container hover:bg-surface-container-high transition-colors">
+<div class="flex items-center gap-3">
+<span class="font-label-caps text-label-caps w-10 text-tertiary-fixed-dim">0.20K</span>
+<div class="w-16 h-1.5 rounded-full bg-surface-variant overflow-hidden">
+<div class="bg-tertiary-fixed-dim h-full" style="width: 100%;"></div>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<span class="font-metric-md text-metric-md text-tertiary-fixed-dim">5:48 <span class="font-label-caps text-label-caps text-on-surface-variant">sprint</span></span>
+<span class="font-body-sm text-body-sm text-on-surface-variant w-16 text-right">165 bpm</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Performance vs Historical Benchmark -->
+<div class="rounded-xl bg-surface-container-low p-space-md flex flex-col gap-space-sm shadow-sm">
+<div class="flex items-center justify-between">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Historical Delta</span>
+<span class="font-label-caps text-label-caps text-primary-container flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[15px]">trending_up</span> PROGRESSION
+      </span>
+</div>
+<div class="flex items-center justify-between bg-surface-container rounded-lg p-space-sm">
+<div class="flex flex-col">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Previous Match (Sep 05)</span>
+<span class="font-headline-sm text-headline-sm text-on-surface mt-0.5">5.0 km • 31:45</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">Benchmark: 6:21 /km avg pace</span>
+</div>
+<div class="flex flex-col items-end gap-1">
+<span class="px-2 py-0.5 rounded bg-surface-container-high text-primary-container font-label-caps text-label-caps flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">arrow_downward</span> -9s/km
+        </span>
+<span class="font-body-sm text-body-sm text-tertiary-fixed-dim">+0.20 km added</span>
+</div>
+</div>
+</div>
+<!-- Session Notes & Gear Section -->
+<div class="rounded-xl bg-surface-container-low p-space-md flex flex-col gap-space-sm shadow-sm">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px]">tune</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Equipment &amp; Context</h2>
+</div>
+<div class="grid grid-cols-2 gap-space-xs">
+<div class="bg-surface-container rounded-lg p-space-sm flex flex-col justify-between">
+<div class="flex items-center gap-1.5 text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px]">steps</span>
+<span class="font-label-caps text-label-caps">FOOTWEAR</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface mt-1 font-medium">Nike Pegasus 40</p>
+<span class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">248 km tracked</span>
+</div>
+<div class="bg-surface-container rounded-lg p-space-sm flex flex-col justify-between">
+<div class="flex items-center gap-1.5 text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px]">thermostat</span>
+<span class="font-label-caps text-label-caps">CONDITIONS</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface mt-1 font-medium">14°C Clear</p>
+<span class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">RPE 7.5 / 10 Effort</span>
+</div>
+</div>
+</div>
+<!-- Bottom Floating Execution Dock -->
+<div class="fixed bottom-0 left-0 right-0 p-margin bg-surface/90 backdrop-blur-xl z-40 flex flex-col gap-2">
+<button class="w-full h-12 rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-headline-sm text-headline-sm flex items-center justify-center gap-2 transition-transform active:scale-[0.99] shadow-sm" id="editSessionBtn">
+<span class="material-symbols-outlined text-[20px]">tune</span>
+      Edit Session Metrics
+    </button>
+<button class="w-full py-1 text-center font-body-sm text-body-sm text-error hover:text-on-error-container transition-colors" id="deleteSessionBtn">
+      Delete Session Entry
+    </button>
+</div>
+<!-- Action Modal Dialog (Delete Confirmation) -->
+<div class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-margin" id="deleteModal">
+<div class="w-full max-w-xs rounded-xl bg-surface-container p-space-md flex flex-col gap-space-md shadow-2xl animate-in fade-in zoom-in duration-150">
+<div class="w-12 h-12 rounded-full bg-error-container text-on-error-container flex items-center justify-center mx-auto">
+<span class="material-symbols-outlined text-[26px]">delete_forever</span>
+</div>
+<div class="text-center">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Delete Session #1042?</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">This will permanently remove the GPS trace, biometric heart logs, and splits from your history.</p>
+</div>
+<div class="flex flex-col gap-space-xs">
+<button class="w-full h-11 rounded-lg bg-error-container text-on-error-container font-body-md text-body-md font-semibold hover:opacity-90" id="confirmDelete">
+          Confirm Deletion
+        </button>
+<button class="w-full h-11 rounded-lg bg-surface-container-high text-on-surface font-body-md text-body-md" id="cancelDelete">
+          Cancel
+        </button>
+</div>
+</div>
+</div>
+<!-- Toast Notification -->
+<div class="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 bg-primary-container text-on-primary-container px-4 py-2 rounded-full font-label-caps text-label-caps shadow-lg opacity-0 pointer-events-none transition-opacity duration-200" id="statusToast">
+    LINK COPIED TO CLIPBOARD
+  </div>
+</div>
+<script>
+  (function() {
+    const deleteModal = document.getElementById('deleteModal');
+    const deleteBtn = document.getElementById('deleteSessionBtn');
+    const quickDelete = document.getElementById('quickDeleteBtn');
+    const cancelDelete = document.getElementById('cancelDelete');
+    const confirmDelete = document.getElementById('confirmDelete');
+    const shareBtn = document.getElementById('shareBtn');
+    const toast = document.getElementById('statusToast');
+    const editButtons = [document.getElementById('quickEditBtn'), document.getElementById('editSessionBtn')];
+
+    function showModal() {
+      deleteModal.classList.remove('hidden');
+      deleteModal.classList.add('flex');
+    }
+
+    function hideModal() {
+      deleteModal.classList.add('hidden');
+      deleteModal.classList.remove('flex');
+    }
+
+    function triggerToast(text) {
+      toast.textContent = text;
+      toast.classList.remove('opacity-0');
+      toast.classList.add('opacity-100');
+      setTimeout(() => {
+        toast.classList.remove('opacity-100');
+        toast.classList.add('opacity-0');
+      }, 2200);
+    }
+
+    deleteBtn?.addEventListener('click', showModal);
+    quickDelete?.addEventListener('click', showModal);
+    cancelDelete?.addEventListener('click', hideModal);
+
+    confirmDelete?.addEventListener('click', () => {
+      hideModal();
+      triggerToast('SESSION #1042 DELETED');
+      setTimeout(() => {
+        window.history.back();
+      }, 1000);
+    });
+
+    shareBtn?.addEventListener('click', () => {
+      triggerToast('SESSION METRICS COPIED');
+    });
+
+    editButtons.forEach(btn => {
+      btn?.addEventListener('click', () => {
+        triggerToast('OPENING TELEMETRY EDITOR...');
+      });
+    });
+  })();
+</script></main></body></html>

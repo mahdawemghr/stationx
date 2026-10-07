@@ -1,19 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:stationx/landing/landing_page.dart';
+import 'package:flutter/services.dart';
+
+import 'app/stationx_app.dart';
 
 void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Station X',
-      debugShowCheckedModeBanner: false,
-      home: const LandingPage(),
-    );
-  }
+  WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    statusBarIconBrightness: Brightness.light,
+    systemNavigationBarColor: Color(0xFF1A1C1E),
+    systemNavigationBarIconBrightness: Brightness.light,
+  ));
+  runApp(const StationXApp());
 }

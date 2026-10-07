@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=JetBrains+Mono:wght@500;600;700&amp;family=Space+Grotesk:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;background-color:#121416;color:#e2e2e5;}body{overscroll-behavior:none;-webkit-tap-highlight-color:transparent;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "secondary-fixed": "#dee3ea", "on-secondary-fixed-variant": "#42474d", "on-secondary-fixed": "#171c21", "outline-variant": "#434933", "on-surface": "#e2e2e5", "error": "#ffb4ab", "secondary-container": "#42474d", "on-secondary-container": "#b1b5bc", "tertiary-container": "#7ff5ac", "surface-tint": "#a5d700", "on-tertiary-fixed-variant": "#00522d", "primary-container": "#b8f000", "surface-dim": "#121416", "surface-container-highest": "#333537", "primary-fixed-dim": "#a5d700", "tertiary-fixed-dim": "#67dd96", "on-primary": "#273500", "tertiary-fixed": "#84fab0", "background": "#121416", "on-error-container": "#ffdad6", "surface-container-lowest": "#0c0e10", "inverse-surface": "#e2e2e5", "surface-variant": "#333537", "primary-fixed": "#bdf510", "on-tertiary-fixed": "#00210f", "surface-container": "#1e2022", "on-primary-fixed-variant": "#394d00", "on-tertiary": "#00391d", "on-secondary": "#2c3136", "outline": "#8d947a", "surface-bright": "#38393c", "surface": "#121416", "on-surface-variant": "#c3caad", "error-container": "#93000a", "on-primary-container": "#506a00", "on-tertiary-container": "#007040", "primary": "#f4ffd3", "on-background": "#e2e2e5", "on-primary-fixed": "#151f00", "secondary-fixed-dim": "#c2c7cd", "inverse-primary": "#4d6700", "on-error": "#690005", "inverse-on-surface": "#2f3133", "secondary": "#c2c7cd", "surface-container-low": "#1a1c1e", "surface-container-high": "#282a2c", "tertiary": "#edffee" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "space-lg": "1.5rem", "margin-desktop": "3rem", "gutter-tablet": "1.5rem", "space-md": "1rem", "space-xs": "0.25rem", "gutter-desktop": "2rem", "margin": "1rem", "gutter": "1rem", "margin-tablet": "2rem", "space-xl": "2.5rem", "space-sm": "0.5rem" }, "fontFamily": { "body-sm": [ "Geist" ], "display-hero-mobile": [ "Space Grotesk" ], "headline-lg": [ "Space Grotesk" ], "headline-sm": [ "Space Grotesk" ], "body-md": [ "Geist" ], "display-hero": [ "Space Grotesk" ], "label-ui": [ "Geist" ], "label-caps": [ "JetBrains Mono" ], "metric-xl": [ "JetBrains Mono" ], "metric-md": [ "JetBrains Mono" ], "headline-md": [ "Space Grotesk" ], "metric-lg": [ "JetBrains Mono" ], "headline-lg-mobile": [ "Space Grotesk" ], "body-lg": [ "Geist" ] }, "fontSize": { "body-sm": [ "12px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "400" } ], "display-hero-mobile": [ "40px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" } ], "headline-lg": [ "32px", { "lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "600" } ], "headline-sm": [ "18px", { "lineHeight": "24px", "letterSpacing": "0em", "fontWeight": "600" } ], "body-md": [ "14px", { "lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "400" } ], "display-hero": [ "56px", { "lineHeight": "60px", "letterSpacing": "-0.03em", "fontWeight": "700" } ], "label-ui": [ "13px", { "lineHeight": "16px", "letterSpacing": "0em", "fontWeight": "500" } ], "label-caps": [ "11px", { "lineHeight": "14px", "letterSpacing": "0.08em", "fontWeight": "500" } ], "metric-xl": [ "48px", { "lineHeight": "48px", "letterSpacing": "-0.04em", "fontWeight": "700" } ], "metric-md": [ "20px", { "lineHeight": "24px", "letterSpacing": "-0.02em", "fontWeight": "600" } ], "headline-md": [ "22px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600" } ], "metric-lg": [ "32px", { "lineHeight": "34px", "letterSpacing": "-0.03em", "fontWeight": "600" } ], "headline-lg-mobile": [ "26px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" } ], "body-lg": [ "16px", { "lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "400" } ] } } } };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-background font-body-md text-on-surface antialiased flex flex-col min-h-screen"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/85 backdrop-blur-xl shadow-[0_1px_12px_rgba(0,0,0,0.4)]"><div class="h-16 px-margin flex items-center justify-between gap-space-sm"><div class="flex items-center gap-space-xs min-w-0"><button aria-label="Go Back" class="w-11 h-11 -ml-2 flex items-center justify-center rounded-lg text-on-surface hover:bg-surface-container transition-colors" onclick="history.back()"><span class="material-symbols-outlined text-[24px]">arrow_back</span></button><img alt="Brand logo. - Primary color: #00f0ff
+- Font: spaceGrotesk
+- Mode: dark
+- Roundness: rounded-md
+" class="h-7 w-auto object-contain flex-shrink-0" src="https://lh3.googleusercontent.com/aida/AEtjO1V2OfVb6x575tYCGYJyY0lqcBiNrsQVDOleXgD1quXqKfsckya9M5ZWa7PQCF0h0x-zsInqEwPEYve0dUa9pZKyXphWZkvapoWohyrf1MEVheH4YCP1l-2R_nA4QfUbJPxxT2fE0rEf7UgZI9qhPwXOA88yG_LsCC3TYttVs-a-Q2uGZV9aByOZvqSE2hTrtYqr5fAchboqPRUfsXrCAeBawfOnXNAVLeFCYX86nAsMkbwBgo_Q9ga6uYY"/><h1 class="font-headline-sm text-headline-sm text-on-surface truncate leading-tight">Session Summary</h1></div><div class="flex items-center gap-space-xs flex-shrink-0"><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida/AEtjO1VS1u4GcVYp98aXFrkmekBQcdAvUt6cQ-JMF5yEI6tQhxhhqZeo4qV_P2VI2X369r4zDESSzqSVUOktP1t5r5Y90_DD5p4JbY3IJM8xnja8Uc7lW52ifgFNgC9vzX0uPHRHy1e30eglQqWMU6a3v6n46Cf0JGudY381rx4UFZvJq2rm1pusKTvzOdTVrhMG5RPL5uvn7UD6nDp05cEZ2zCCGDO4bQUEMurSygtQ_6eer7Z_VfZN-dCkS9c"/></div></div></header><main class="flex flex-col relative w-full pt-16 pb-safe px-margin bg-background flex-1"><div class="flex flex-col w-full pb-8 gap-space-lg">
+<!-- Subheader Utility Bar -->
+<div class="flex items-center justify-between pt-2">
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary-container animate-pulse"></span>
+<span class="font-label-caps text-label-caps uppercase text-primary-container tracking-wider">Engine Protocol v3.8</span>
+</div>
+<span class="font-body-sm text-body-sm text-secondary">Calibrated telemetry &amp; telemetry peripherals</span>
+</div>
+<button class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high transition-all active:scale-95 text-label-ui font-label-ui" id="reset-all-btn">
+<span class="material-symbols-outlined text-[16px] text-secondary">restart_alt</span>
+<span>Reset</span>
+</button>
+</div>
+<!-- Section 1: Units & Formats -->
+<section class="flex flex-col gap-3">
+<div class="flex items-center justify-between px-1">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container text-[18px]">straighten</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Cardio Units &amp; Formats</h2>
+</div>
+<span class="font-label-caps text-label-caps uppercase text-secondary bg-surface-container-high px-2 py-0.5 rounded">Independent</span>
+</div>
+<div class="flex flex-col gap-3 p-4 rounded-xl bg-surface-container-low shadow-sm">
+<!-- Distance Unit -->
+<div class="flex flex-col gap-1.5">
+<div class="flex justify-between items-center text-body-sm font-body-sm text-secondary px-0.5">
+<span>Distance Measurement</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">ISO 80000</span>
+</div>
+<div class="grid grid-cols-2 p-1 gap-1 bg-surface-container rounded-lg" data-segmented-group="distance">
+<button class="segmented-opt flex items-center justify-center py-2.5 rounded text-on-primary bg-primary-container font-headline-sm text-[13px] tracking-wide transition-all shadow-sm" data-val="km" type="button">
+            KILOMETERS (KM)
+          </button>
+<button class="segmented-opt flex items-center justify-center py-2.5 rounded text-secondary hover:text-on-surface font-headline-sm text-[13px] tracking-wide transition-all" data-val="mi" type="button">
+            MILES (MI)
+          </button>
+</div>
+</div>
+<!-- Speed Format -->
+<div class="flex flex-col gap-1.5">
+<div class="flex justify-between items-center text-body-sm font-body-sm text-secondary px-0.5">
+<span>Speed Format</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">Velocity</span>
+</div>
+<div class="grid grid-cols-2 p-1 gap-1 bg-surface-container rounded-lg" data-segmented-group="speed">
+<button class="segmented-opt flex items-center justify-center py-2.5 rounded text-on-primary bg-primary-container font-headline-sm text-[13px] tracking-wide transition-all shadow-sm" data-val="kmh" type="button">
+            KM / H
+          </button>
+<button class="segmented-opt flex items-center justify-center py-2.5 rounded text-secondary hover:text-on-surface font-headline-sm text-[13px] tracking-wide transition-all" data-val="mph" type="button">
+            MPH
+          </button>
+</div>
+</div>
+<!-- Pace Format -->
+<div class="flex flex-col gap-1.5">
+<div class="flex justify-between items-center text-body-sm font-body-sm text-secondary px-0.5">
+<span>Split Pace Resolution</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">Lap Base</span>
+</div>
+<div class="grid grid-cols-2 p-1 gap-1 bg-surface-container rounded-lg" data-segmented-group="pace">
+<button class="segmented-opt flex items-center justify-center py-2.5 rounded text-on-primary bg-primary-container font-headline-sm text-[13px] tracking-wide transition-all shadow-sm" data-val="minkm" type="button">
+            MIN / KM
+          </button>
+<button class="segmented-opt flex items-center justify-center py-2.5 rounded text-secondary hover:text-on-surface font-headline-sm text-[13px] tracking-wide transition-all" data-val="minmi" type="button">
+            MIN / MI
+          </button>
+</div>
+</div>
+<!-- Elevation Unit -->
+<div class="flex flex-col gap-1.5">
+<div class="flex justify-between items-center text-body-sm font-body-sm text-secondary px-0.5">
+<span>Vertical Ascent &amp; Elevation</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">Altimeter</span>
+</div>
+<div class="grid grid-cols-2 p-1 gap-1 bg-surface-container rounded-lg" data-segmented-group="elevation">
+<button class="segmented-opt flex items-center justify-center py-2.5 rounded text-on-primary bg-primary-container font-headline-sm text-[13px] tracking-wide transition-all shadow-sm" data-val="m" type="button">
+            METERS (M)
+          </button>
+<button class="segmented-opt flex items-center justify-center py-2.5 rounded text-secondary hover:text-on-surface font-headline-sm text-[13px] tracking-wide transition-all" data-val="ft" type="button">
+            FEET (FT)
+          </button>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 2: Wearable Telemetry & Sensors -->
+<section class="flex flex-col gap-3">
+<div class="flex items-center justify-between px-1">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container text-[18px]">sensors</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Telemetry &amp; Sensors</h2>
+</div>
+<span class="font-label-caps text-label-caps text-primary-container">BLE ACTIVE</span>
+</div>
+<!-- Heart Rate Monitor Card -->
+<div class="flex flex-col p-4 rounded-xl bg-surface-container-low shadow-sm gap-3">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-primary-container">
+<span class="material-symbols-outlined text-[24px]">ecg_heart</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-headline-sm text-[15px] text-on-surface truncate">Polar H10 Chest Strap</span>
+<div class="flex items-center gap-2 mt-0.5">
+<span class="inline-flex items-center gap-1 font-label-caps text-label-caps text-tertiary-container bg-surface-container px-1.5 py-0.5 rounded">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary-container"></span>
+                Connected
+              </span>
+<span class="font-metric-md text-[12px] text-secondary flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[13px] text-primary-container">battery_6_bar</span>
+                88%
+              </span>
+</div>
+</div>
+</div>
+<button class="px-2.5 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-secondary text-body-sm font-body-sm transition-all active:scale-95" id="repair-btn">
+          Disconnect
+        </button>
+</div>
+<div class="flex items-center justify-between p-2.5 rounded-lg bg-surface-container text-body-sm font-body-sm text-on-surface">
+<div class="flex items-center gap-2 min-w-0">
+<span class="material-symbols-outlined text-primary-container text-[16px] flex-shrink-0">stream</span>
+<span class="truncate text-secondary">Streaming live ECG HR to HUD</span>
+</div>
+<span class="font-label-caps text-label-caps text-primary-container bg-surface-container-high px-1.5 py-0.5 rounded flex-shrink-0">0ms latency</span>
+</div>
+</div>
+<!-- Smartwatch & Health OS Card -->
+<div class="flex flex-col p-4 rounded-xl bg-surface-container-low shadow-sm gap-4">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-primary-container">
+<span class="material-symbols-outlined text-[24px]">watch</span>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-sm text-[15px] text-on-surface">Health Connect / Apple Watch</span>
+<span class="font-label-caps text-label-caps text-tertiary-container flex items-center gap-1 mt-0.5">
+<span class="material-symbols-outlined text-[14px]">check_circle</span>
+              Background Sync Verified
+            </span>
+</div>
+</div>
+</div>
+<!-- Toggles inside Sensor Card -->
+<div class="flex flex-col gap-3 pt-2">
+<label class="flex items-start justify-between gap-3 cursor-pointer group">
+<div class="flex flex-col min-w-0 pr-2">
+<span class="font-body-md text-body-md text-on-surface">Auto-sync post-workout</span>
+<span class="font-body-sm text-body-sm text-secondary">Exports resting HR, elevations &amp; GPS trace to Apple Health immediately upon completion.</span>
+</div>
+<input checked="" class="sr-only toggle-input" type="checkbox"/>
+<div class="toggle-track w-12 h-7 bg-primary-container rounded-full relative flex-shrink-0 transition-colors duration-200">
+<div class="toggle-thumb absolute top-1 left-6 w-5 h-5 bg-surface-container-lowest rounded-full shadow-md transition-transform duration-200"></div>
+</div>
+</label>
+<label class="flex items-start justify-between gap-3 cursor-pointer group">
+<div class="flex flex-col min-w-0 pr-2">
+<span class="font-body-md text-body-md text-on-surface">Background cadence logging</span>
+<span class="font-body-sm text-body-sm text-secondary">Samples high-frequency stride steps via wrist motion sensors at 100Hz.</span>
+</div>
+<input checked="" class="sr-only toggle-input" type="checkbox"/>
+<div class="toggle-track w-12 h-7 bg-primary-container rounded-full relative flex-shrink-0 transition-colors duration-200">
+<div class="toggle-thumb absolute top-1 left-6 w-5 h-5 bg-surface-container-lowest rounded-full shadow-md transition-transform duration-200"></div>
+</div>
+</label>
+</div>
+</div>
+</section>
+<!-- Section 3: Audio Coaching & Pacer -->
+<section class="flex flex-col gap-3">
+<div class="flex items-center justify-between px-1">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container text-[18px]">record_voice_over</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Audio Coaching &amp; Pacer</h2>
+</div>
+<span class="font-label-caps text-label-caps text-secondary">SPATIAL HUD</span>
+</div>
+<div class="flex flex-col p-4 rounded-xl bg-surface-container-low shadow-sm gap-4">
+<label class="flex items-start justify-between gap-3 cursor-pointer group">
+<div class="flex flex-col min-w-0 pr-2">
+<span class="font-body-md text-body-md text-on-surface font-headline-sm">Voice Split Coach</span>
+<span class="font-body-sm text-body-sm text-secondary">Synthesized audio cues overlaid on media playback without ducking tempo tracks.</span>
+</div>
+<input checked="" class="sr-only toggle-input" type="checkbox"/>
+<div class="toggle-track w-12 h-7 bg-primary-container rounded-full relative flex-shrink-0 transition-colors duration-200">
+<div class="toggle-thumb absolute top-1 left-6 w-5 h-5 bg-surface-container-lowest rounded-full shadow-md transition-transform duration-200"></div>
+</div>
+</label>
+<!-- Dropdown Interval -->
+<div class="flex flex-col gap-1.5 pt-1">
+<label class="font-body-sm text-body-sm text-secondary" for="interval-select">Audio Cue Interval</label>
+<div class="relative">
+<select class="w-full appearance-none bg-surface-container text-on-surface font-metric-md text-[14px] px-3.5 py-3 rounded-lg focus:outline-none focus:bg-surface-container-high transition-colors cursor-pointer" id="interval-select">
+<option value="0.5">Every 0.5 km (High Frequency)</option>
+<option selected="" value="1.0">Every 1.0 km (Standard Split)</option>
+<option value="2.0">Every 2.0 km (Endurance Pacing)</option>
+<option value="5.0">Every 5.0 km (Marathon Base)</option>
+<option value="time-5">Every 5 minutes</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-3.5 text-secondary pointer-events-none text-[20px]">expand_more</span>
+</div>
+</div>
+<!-- Cue Content Pills -->
+<div class="flex flex-col gap-2 pt-1">
+<span class="font-body-sm text-body-sm text-secondary">Announced Cue Content</span>
+<div class="flex flex-wrap gap-2" id="cue-pill-group">
+<button class="cue-pill px-3 py-1.5 rounded-full text-label-ui font-label-ui bg-primary-container text-on-primary font-medium flex items-center gap-1.5 transition-all shadow-sm" data-selected="true" type="button">
+<span class="material-symbols-outlined text-[14px]">check</span>
+            Pace
+          </button>
+<button class="cue-pill px-3 py-1.5 rounded-full text-label-ui font-label-ui bg-primary-container text-on-primary font-medium flex items-center gap-1.5 transition-all shadow-sm" data-selected="true" type="button">
+<span class="material-symbols-outlined text-[14px]">check</span>
+            Split Time
+          </button>
+<button class="cue-pill px-3 py-1.5 rounded-full text-label-ui font-label-ui bg-primary-container text-on-primary font-medium flex items-center gap-1.5 transition-all shadow-sm" data-selected="true" type="button">
+<span class="material-symbols-outlined text-[14px]">check</span>
+            Heart Rate Zone
+          </button>
+<button class="cue-pill px-3 py-1.5 rounded-full text-label-ui font-label-ui bg-surface-container text-secondary hover:text-on-surface font-medium flex items-center gap-1.5 transition-all" data-selected="false" type="button">
+<span class="material-symbols-outlined text-[14px]">add</span>
+            Cadence (SPM)
+          </button>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 4: Progression & Safety Controls -->
+<section class="flex flex-col gap-3">
+<div class="flex items-center justify-between px-1">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container text-[18px]">verified_user</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Progression &amp; Safety Controls</h2>
+</div>
+<span class="font-label-caps text-label-caps text-secondary">FAIL-SAFE</span>
+</div>
+<div class="flex flex-col p-4 rounded-xl bg-surface-container-low shadow-sm gap-4">
+<label class="flex items-start justify-between gap-3 cursor-pointer group">
+<div class="flex flex-col min-w-0 pr-2">
+<span class="font-body-md text-body-md text-on-surface">Sweat-Proof Screen Lock</span>
+<span class="font-body-sm text-body-sm text-secondary">Requires 2.0s long-press to pause or finish session, eliminating capacitive droplet touches.</span>
+</div>
+<input checked="" class="sr-only toggle-input" type="checkbox"/>
+<div class="toggle-track w-12 h-7 bg-primary-container rounded-full relative flex-shrink-0 transition-colors duration-200">
+<div class="toggle-thumb absolute top-1 left-6 w-5 h-5 bg-surface-container-lowest rounded-full shadow-md transition-transform duration-200"></div>
+</div>
+</label>
+<label class="flex items-start justify-between gap-3 cursor-pointer group">
+<div class="flex flex-col min-w-0 pr-2">
+<span class="font-body-md text-body-md text-on-surface">Auto-Pause Detection</span>
+<span class="font-body-sm text-body-sm text-secondary">Pauses timer when running speed drops below 2.0 km/h at crossings or intersections.</span>
+</div>
+<input checked="" class="sr-only toggle-input" type="checkbox"/>
+<div class="toggle-track w-12 h-7 bg-primary-container rounded-full relative flex-shrink-0 transition-colors duration-200">
+<div class="toggle-thumb absolute top-1 left-6 w-5 h-5 bg-surface-container-lowest rounded-full shadow-md transition-transform duration-200"></div>
+</div>
+</label>
+<label class="flex items-start justify-between gap-3 cursor-pointer group">
+<div class="flex flex-col min-w-0 pr-2">
+<span class="font-body-md text-body-md text-on-surface">Aerobic Zone Target Reminder</span>
+<span class="font-body-sm text-body-sm text-secondary">Vibrates phone &amp; peripheral watch when heart rate enters Zone 4/5 during a programmed Zone 2 base run.</span>
+</div>
+<input checked="" class="sr-only toggle-input" type="checkbox"/>
+<div class="toggle-track w-12 h-7 bg-primary-container rounded-full relative flex-shrink-0 transition-colors duration-200">
+<div class="toggle-thumb absolute top-1 left-6 w-5 h-5 bg-surface-container-lowest rounded-full shadow-md transition-transform duration-200"></div>
+</div>
+</label>
+</div>
+</section>
+<!-- Section 5: Offline Storage & GPX Export -->
+<section class="flex flex-col gap-3">
+<div class="flex items-center justify-between px-1">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container text-[18px]">folder_zip</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Offline Storage &amp; Trace Export</h2>
+</div>
+<span class="font-label-caps text-label-caps text-secondary">SECURE LOCAL</span>
+</div>
+<div class="flex flex-col p-4 rounded-xl bg-surface-container-low shadow-sm gap-4">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-primary-container">
+<span class="material-symbols-outlined text-[22px]">map</span>
+</div>
+<div class="flex flex-col">
+<span class="font-body-md text-body-md text-on-surface font-medium">Cardio Route Cache</span>
+<span class="font-label-caps text-label-caps text-secondary mt-0.5">14 GPS routes stored offline (4.2 MB)</span>
+</div>
+</div>
+<button class="text-body-sm font-body-sm text-secondary hover:text-error transition-colors px-2 py-1 rounded" id="clear-cache-btn">
+          Clear
+        </button>
+</div>
+<!-- Quick Action export row -->
+<div class="grid grid-cols-2 gap-2 pt-1">
+<button class="flex items-center justify-center gap-2 py-3 px-3 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-headline-sm text-[13px] active:scale-98 transition-all" id="export-gpx">
+<span class="material-symbols-outlined text-[18px] text-primary-container">file_download</span>
+          Export GPX
+        </button>
+<button class="flex items-center justify-center gap-2 py-3 px-3 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-headline-sm text-[13px] active:scale-98 transition-all" id="export-tcx">
+<span class="material-symbols-outlined text-[18px] text-primary-container">share</span>
+          Export TCX
+        </button>
+</div>
+</div>
+</section>
+<!-- Interactive notification toast -->
+<div class="fixed bottom-6 left-1/2 -translate-x-1/2 max-w-[90vw] px-4 py-2.5 rounded-lg bg-surface-container-highest text-on-surface font-body-sm text-body-sm flex items-center gap-2 shadow-2xl opacity-0 pointer-events-none transition-all duration-300 z-50" id="toast-notify">
+<span class="material-symbols-outlined text-primary-container text-[18px]" id="toast-icon">check</span>
+<span id="toast-message">Configuration saved</span>
+</div>
+</div>
+<script>
+  // Toast notification helper
+  function triggerToast(msg, icon = 'check') {
+    const toast = document.getElementById('toast-notify');
+    const msgEl = document.getElementById('toast-message');
+    const iconEl = document.getElementById('toast-icon');
+    if (!toast || !msgEl || !iconEl) return;
+    msgEl.textContent = msg;
+    iconEl.textContent = icon;
+    toast.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-2');
+    toast.classList.add('opacity-100', 'translate-y-0');
+    setTimeout(() => {
+      toast.classList.remove('opacity-100', 'translate-y-0');
+      toast.classList.add('opacity-0', 'pointer-events-none', 'translate-y-2');
+    }, 2400);
+  }
+
+  // Segmented control toggling
+  document.querySelectorAll('[data-segmented-group]').forEach(group => {
+    const buttons = group.querySelectorAll('.segmented-opt');
+    buttons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        buttons.forEach(b => {
+          b.classList.remove('bg-primary-container', 'text-on-primary', 'shadow-sm');
+          b.classList.add('text-secondary');
+        });
+        btn.classList.add('bg-primary-container', 'text-on-primary', 'shadow-sm');
+        btn.classList.remove('text-secondary');
+        triggerToast(`Format updated: ${btn.textContent.trim()}`);
+      });
+    });
+  });
+
+  // Checkbox toggle micro-interactions
+  document.querySelectorAll('.toggle-input').forEach(input => {
+    const track = input.nextElementSibling;
+    const thumb = track.querySelector('.toggle-thumb');
+
+    input.addEventListener('change', () => {
+      if (input.checked) {
+        track.classList.remove('bg-surface-container-high');
+        track.classList.add('bg-primary-container');
+        thumb.classList.remove('left-1');
+        thumb.classList.add('left-6');
+      } else {
+        track.classList.remove('bg-primary-container');
+        track.classList.add('bg-surface-container-high');
+        thumb.classList.remove('left-6');
+        thumb.classList.add('left-1');
+      }
+      triggerToast(input.checked ? 'Setting enabled' : 'Setting disabled');
+    });
+  });
+
+  // Audio Cue Pills
+  document.querySelectorAll('.cue-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      const isSelected = pill.getAttribute('data-selected') === 'true';
+      const icon = pill.querySelector('.material-symbols-outlined');
+      if (isSelected) {
+        pill.setAttribute('data-selected', 'false');
+        pill.classList.remove('bg-primary-container', 'text-on-primary', 'shadow-sm');
+        pill.classList.add('bg-surface-container', 'text-secondary');
+        if (icon) icon.textContent = 'add';
+      } else {
+        pill.setAttribute('data-selected', 'true');
+        pill.classList.add('bg-primary-container', 'text-on-primary', 'shadow-sm');
+        pill.classList.remove('bg-surface-container', 'text-secondary');
+        if (icon) icon.textContent = 'check';
+      }
+    });
+  });
+
+  // Disconnect / Re-pair Button
+  const repairBtn = document.getElementById('repair-btn');
+  if (repairBtn) {
+    let connected = true;
+    repairBtn.addEventListener('click', () => {
+      connected = !connected;
+      if (connected) {
+        repairBtn.textContent = 'Disconnect';
+        repairBtn.classList.remove('bg-primary-container', 'text-on-primary');
+        repairBtn.classList.add('bg-surface-container', 'text-secondary');
+        triggerToast('Polar H10 reconnected (ECG Active)', 'bluetooth_connected');
+      } else {
+        repairBtn.textContent = 'Re-pair';
+        repairBtn.classList.remove('bg-surface-container', 'text-secondary');
+        repairBtn.classList.add('bg-primary-container', 'text-on-primary');
+        triggerToast('Polar H10 Disconnected', 'bluetooth_disabled');
+      }
+    });
+  }
+
+  // Export Buttons
+  const exportGpx = document.getElementById('export-gpx');
+  const exportTcx = document.getElementById('export-tcx');
+  if (exportGpx) exportGpx.addEventListener('click', () => triggerToast('Generating GPX package (14 routes)...', 'file_download'));
+  if (exportTcx) exportTcx.addEventListener('click', () => triggerToast('TCX bundle prepared for export', 'share'));
+
+  // Clear cache
+  const clearCacheBtn = document.getElementById('clear-cache-btn');
+  if (clearCacheBtn) {
+    clearCacheBtn.addEventListener('click', () => {
+      triggerToast('GPS cache purged (0 routes)', 'delete_sweep');
+    });
+  }
+
+  // Reset top button
+  const resetAllBtn = document.getElementById('reset-all-btn');
+  if (resetAllBtn) {
+    resetAllBtn.addEventListener('click', () => {
+      triggerToast('All cardio telemetry set to defaults', 'restart_alt');
+    });
+  }
+</script></main></body></html>

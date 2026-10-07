@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=JetBrains+Mono:wght@500;600;700&amp;family=Space+Grotesk:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;background-color:#121416;color:#e2e2e5;}body{overscroll-behavior:none;-webkit-tap-highlight-color:transparent;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "secondary-fixed": "#dee3ea", "on-secondary-fixed-variant": "#42474d", "on-secondary-fixed": "#171c21", "outline-variant": "#434933", "on-surface": "#e2e2e5", "error": "#ffb4ab", "secondary-container": "#42474d", "on-secondary-container": "#b1b5bc", "tertiary-container": "#7ff5ac", "surface-tint": "#a5d700", "on-tertiary-fixed-variant": "#00522d", "primary-container": "#b8f000", "surface-dim": "#121416", "surface-container-highest": "#333537", "primary-fixed-dim": "#a5d700", "tertiary-fixed-dim": "#67dd96", "on-primary": "#273500", "tertiary-fixed": "#84fab0", "background": "#121416", "on-error-container": "#ffdad6", "surface-container-lowest": "#0c0e10", "inverse-surface": "#e2e2e5", "surface-variant": "#333537", "primary-fixed": "#bdf510", "on-tertiary-fixed": "#00210f", "surface-container": "#1e2022", "on-primary-fixed-variant": "#394d00", "on-tertiary": "#00391d", "on-secondary": "#2c3136", "outline": "#8d947a", "surface-bright": "#38393c", "surface": "#121416", "on-surface-variant": "#c3caad", "error-container": "#93000a", "on-primary-container": "#506a00", "on-tertiary-container": "#007040", "primary": "#f4ffd3", "on-background": "#e2e2e5", "on-primary-fixed": "#151f00", "secondary-fixed-dim": "#c2c7cd", "inverse-primary": "#4d6700", "on-error": "#690005", "inverse-on-surface": "#2f3133", "secondary": "#c2c7cd", "surface-container-low": "#1a1c1e", "surface-container-high": "#282a2c", "tertiary": "#edffee" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "space-lg": "1.5rem", "margin-desktop": "3rem", "gutter-tablet": "1.5rem", "space-md": "1rem", "space-xs": "0.25rem", "gutter-desktop": "2rem", "margin": "1rem", "gutter": "1rem", "margin-tablet": "2rem", "space-xl": "2.5rem", "space-sm": "0.5rem" }, "fontFamily": { "body-sm": [ "Geist" ], "display-hero-mobile": [ "Space Grotesk" ], "headline-lg": [ "Space Grotesk" ], "headline-sm": [ "Space Grotesk" ], "body-md": [ "Geist" ], "display-hero": [ "Space Grotesk" ], "label-ui": [ "Geist" ], "label-caps": [ "JetBrains Mono" ], "metric-xl": [ "JetBrains Mono" ], "metric-md": [ "JetBrains Mono" ], "headline-md": [ "Space Grotesk" ], "metric-lg": [ "JetBrains Mono" ], "headline-lg-mobile": [ "Space Grotesk" ], "body-lg": [ "Geist" ] }, "fontSize": { "body-sm": [ "12px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "400" } ], "display-hero-mobile": [ "40px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" } ], "headline-lg": [ "32px", { "lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "600" } ], "headline-sm": [ "18px", { "lineHeight": "24px", "letterSpacing": "0em", "fontWeight": "600" } ], "body-md": [ "14px", { "lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "400" } ], "display-hero": [ "56px", { "lineHeight": "60px", "letterSpacing": "-0.03em", "fontWeight": "700" } ], "label-ui": [ "13px", { "lineHeight": "16px", "letterSpacing": "0em", "fontWeight": "500" } ], "label-caps": [ "11px", { "lineHeight": "14px", "letterSpacing": "0.08em", "fontWeight": "500" } ], "metric-xl": [ "48px", { "lineHeight": "48px", "letterSpacing": "-0.04em", "fontWeight": "700" } ], "metric-md": [ "20px", { "lineHeight": "24px", "letterSpacing": "-0.02em", "fontWeight": "600" } ], "headline-md": [ "22px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600" } ], "metric-lg": [ "32px", { "lineHeight": "34px", "letterSpacing": "-0.03em", "fontWeight": "600" } ], "headline-lg-mobile": [ "26px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" } ], "body-lg": [ "16px", { "lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "400" } ] } } } };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-background font-body-md text-on-surface antialiased flex flex-col min-h-screen"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/85 backdrop-blur-xl shadow-[0_1px_12px_rgba(0,0,0,0.4)]"><div class="h-16 px-margin flex items-center justify-between gap-space-sm"><div class="flex items-center gap-space-sm min-w-0"><img alt="KINETIC Logo" class="h-8 w-auto object-contain flex-shrink-0" src="https://lh3.googleusercontent.com/aida/AEtjO1V2OfVb6x575tYCGYJyY0lqcBiNrsQVDOleXgD1quXqKfsckya9M5ZWa7PQCF0h0x-zsInqEwPEYve0dUa9pZKyXphWZkvapoWohyrf1MEVheH4YCP1l-2R_nA4QfUbJPxxT2fE0rEf7UgZI9qhPwXOA88yG_LsCC3TYttVs-a-Q2uGZV9aByOZvqSE2hTrtYqr5fAchboqPRUfsXrCAeBawfOnXNAVLeFCYX86nAsMkbwBgo_Q9ga6uYY"/><div class="flex flex-col min-w-0"><span class="font-label-caps text-label-caps text-primary-container tracking-wider uppercase truncate leading-none">KINETIC</span><h1 class="font-headline-sm text-headline-sm text-on-surface truncate leading-tight">Workouts</h1></div></div><div class="flex items-center gap-space-xs flex-shrink-0"><button aria-label="Athlete Profile" class="w-11 h-11 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors"><img alt="Athlete Avatar" class="w-8 h-8 rounded-full object-cover ring-1 ring-outline-variant" src="https://lh3.googleusercontent.com/aida/AEtjO1VS1u4GcVYp98aXFrkmekBQcdAvUt6cQ-JMF5yEI6tQhxhhqZeo4qV_P2VI2X369r4zDESSzqSVUOktP1t5r5Y90_DD5p4JbY3IJM8xnja8Uc7lW52ifgFNgC9vzX0uPHRHy1e30eglQqWMU6a3v6n46Cf0JGudY381rx4UFZvJq2rm1pusKTvzOdTVrhMG5RPL5uvn7UD6nDp05cEZ2zCCGDO4bQUEMurSygtQ_6eer7Z_VfZN-dCkS9c"/></button></div></div></header><main class="flex flex-col relative w-full pt-16 pb-28 px-margin bg-background flex-1"><div class="flex flex-col w-full pb-8">
+<!-- Screen Subheader Bar with Back Action -->
+<div class="flex items-center justify-between py-space-sm mb-space-sm">
+<button aria-label="Go Back" class="w-11 h-11 -ml-2 rounded-full bg-surface-container flex items-center justify-center text-on-surface hover:bg-surface-container-high transition-colors active:scale-95" type="button">
+<span class="material-symbols-outlined text-[20px]">arrow_back</span>
+</button>
+<div class="flex flex-col items-center">
+<span class="font-label-caps text-label-caps text-primary-container tracking-wider uppercase leading-none">Cardio Engine</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">Select Activity</span>
+</div>
+<button aria-label="Activity Settings" class="w-11 h-11 -mr-2 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors active:scale-95" type="button">
+<span class="material-symbols-outlined text-[20px]">tune</span>
+</button>
+</div>
+<!-- Search and Quick Match Bar -->
+<div class="relative w-full mb-space-md">
+<div class="flex items-center w-full h-12 bg-surface-container-high rounded-xl px-space-sm gap-space-sm focus-within:bg-surface-container-highest transition-colors shadow-sm">
+<span class="material-symbols-outlined text-outline text-[22px] flex-shrink-0">search</span>
+<input class="w-full bg-transparent text-on-surface placeholder:text-outline font-body-md text-body-md focus:outline-none min-w-0" id="cardio-search" placeholder="Search cardio activity or equipment..." type="text"/>
+<button class="hidden text-outline hover:text-on-surface p-1" id="clear-search" type="button">
+<span class="material-symbols-outlined text-[18px]">close</span>
+</button>
+</div>
+</div>
+<!-- Horizontal Scrollable Category Filter Chips -->
+<div class="flex items-center gap-space-xs overflow-x-auto no-scrollbar -mx-margin px-margin mb-space-lg pb-1">
+<button class="filter-chip flex-shrink-0 h-9 px-4 rounded-full bg-primary-container text-on-primary font-headline-sm text-[13px] font-semibold flex items-center gap-1.5 transition-transform active:scale-95" data-filter="all" type="button">
+<span>All (12)</span>
+</button>
+<button class="filter-chip flex-shrink-0 h-9 px-4 rounded-full bg-surface-container text-on-surface-variant hover:text-on-surface font-label-ui text-label-ui flex items-center gap-1.5 transition-transform active:scale-95" data-filter="outdoor" type="button">
+<span class="material-symbols-outlined text-[16px]">nature_people</span>
+<span>Outdoor</span>
+</button>
+<button class="filter-chip flex-shrink-0 h-9 px-4 rounded-full bg-surface-container text-on-surface-variant hover:text-on-surface font-label-ui text-label-ui flex items-center gap-1.5 transition-transform active:scale-95" data-filter="gym" type="button">
+<span class="material-symbols-outlined text-[16px]">fitness_center</span>
+<span>Gym Machine</span>
+</button>
+<button class="filter-chip flex-shrink-0 h-9 px-4 rounded-full bg-surface-container text-on-surface-variant hover:text-on-surface font-label-ui text-label-ui flex items-center gap-1.5 transition-transform active:scale-95" data-filter="hiit" type="button">
+<span class="material-symbols-outlined text-[16px]">bolt</span>
+<span>High Intensity</span>
+</button>
+<button class="filter-chip flex-shrink-0 h-9 px-4 rounded-full bg-surface-container text-on-surface-variant hover:text-on-surface font-label-ui text-label-ui flex items-center gap-1.5 transition-transform active:scale-95" data-filter="low-impact" type="button">
+<span class="material-symbols-outlined text-[16px]">spa</span>
+<span>Low Impact</span>
+</button>
+</div>
+<!-- Quick Telemetry & GPS State Badge -->
+<div class="flex items-center justify-between px-space-md py-space-sm bg-surface-container-low rounded-xl mb-space-md">
+<div class="flex items-center gap-space-sm">
+<span class="relative flex h-2.5 w-2.5">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-container opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary-container"></span>
+</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant tracking-wider uppercase">Sensors Ready: HR Monitor • GPS Precision High</span>
+</div>
+<span class="font-metric-md text-[13px] text-primary-container">98%</span>
+</div>
+<!-- Activity Cards List / Grid -->
+<div class="flex flex-col gap-space-sm" id="activity-container">
+<!-- Card 1: Outdoor Run -->
+<div class="activity-card group relative bg-surface-container-low hover:bg-surface-container p-space-md rounded-xl transition-all duration-200 cursor-pointer active:scale-[0.99] overflow-hidden" data-category="outdoor" data-title="outdoor run gps">
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex items-center gap-space-md min-w-0">
+<div class="w-12 h-12 rounded-lg bg-surface-container-highest flex items-center justify-center text-primary-container group-hover:bg-primary-container group-hover:text-on-primary transition-colors flex-shrink-0">
+<span class="material-symbols-outlined text-[26px]">directions_run</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-space-xs flex-wrap">
+<h3 class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary-container transition-colors truncate">Outdoor Run</h3>
+<span class="px-2 py-0.5 rounded-full bg-primary-container text-on-primary font-label-caps text-[10px] tracking-wider uppercase font-bold">Most Popular</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate mt-0.5">GPS Tracked • Distance &amp; Pace</p>
+</div>
+</div>
+<div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-outline group-hover:text-primary-container transition-colors flex-shrink-0">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</div>
+</div>
+<div class="mt-space-sm pt-space-xs flex items-center justify-between font-label-caps text-label-caps text-outline">
+<span>METRICS: KM • PACE • CADENCE</span>
+<span class="text-primary-container flex items-center gap-0.5"><span class="material-symbols-outlined text-[14px]">my_location</span> LOCKED</span>
+</div>
+</div>
+<!-- Card 2: Outdoor Walk -->
+<div class="activity-card group relative bg-surface-container-low hover:bg-surface-container p-space-md rounded-xl transition-all duration-200 cursor-pointer active:scale-[0.99] overflow-hidden" data-category="outdoor low-impact" data-title="outdoor walk active recovery">
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex items-center gap-space-md min-w-0">
+<div class="w-12 h-12 rounded-lg bg-surface-container-highest flex items-center justify-center text-on-surface-variant group-hover:bg-primary-container group-hover:text-on-primary transition-colors flex-shrink-0">
+<span class="material-symbols-outlined text-[26px]">nordic_walking</span>
+</div>
+<div class="flex flex-col min-w-0">
+<h3 class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary-container transition-colors truncate">Outdoor Walk</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate mt-0.5">Low-impact endurance &amp; active recovery</p>
+</div>
+</div>
+<div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-outline group-hover:text-primary-container transition-colors flex-shrink-0">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</div>
+</div>
+<div class="mt-space-sm pt-space-xs flex items-center justify-between font-label-caps text-label-caps text-outline">
+<span>METRICS: STEPS • ELEVATION • HR ZONES</span>
+<span>ZONE 1-2</span>
+</div>
+</div>
+<!-- Card 3: Treadmill -->
+<div class="activity-card group relative bg-surface-container-low hover:bg-surface-container p-space-md rounded-xl transition-all duration-200 cursor-pointer active:scale-[0.99] overflow-hidden" data-category="gym" data-title="treadmill indoor intervals speed incline">
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex items-center gap-space-md min-w-0">
+<div class="w-12 h-12 rounded-lg bg-surface-container-highest flex items-center justify-center text-primary-container group-hover:bg-primary-container group-hover:text-on-primary transition-colors flex-shrink-0">
+<span class="material-symbols-outlined text-[26px]">sprint</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-space-xs flex-wrap">
+<h3 class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary-container transition-colors truncate">Treadmill</h3>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-highest text-primary-container font-label-caps text-[10px] tracking-wider uppercase font-bold">Recent</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate mt-0.5">Speed &amp; Incline tracking • Indoor intervals</p>
+</div>
+</div>
+<div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-outline group-hover:text-primary-container transition-colors flex-shrink-0">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</div>
+</div>
+<div class="mt-space-sm pt-space-xs flex items-center justify-between font-label-caps text-label-caps text-outline">
+<span>METRICS: SPEED • INCLINE % • SPLITS</span>
+<span class="text-on-surface">LAST: 5.2 KM @ 4:58</span>
+</div>
+</div>
+<!-- Card 4: Cycling (Road) -->
+<div class="activity-card group relative bg-surface-container-low hover:bg-surface-container p-space-md rounded-xl transition-all duration-200 cursor-pointer active:scale-[0.99] overflow-hidden" data-category="outdoor" data-title="cycling road bike cadence speed power">
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex items-center gap-space-md min-w-0">
+<div class="w-12 h-12 rounded-lg bg-surface-container-highest flex items-center justify-center text-on-surface-variant group-hover:bg-primary-container group-hover:text-on-primary transition-colors flex-shrink-0">
+<span class="material-symbols-outlined text-[26px]">directions_bike</span>
+</div>
+<div class="flex flex-col min-w-0">
+<h3 class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary-container transition-colors truncate">Cycling (Road)</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate mt-0.5">Speed, cadence, power, &amp; distance</p>
+</div>
+</div>
+<div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-outline group-hover:text-primary-container transition-colors flex-shrink-0">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</div>
+</div>
+<div class="mt-space-sm pt-space-xs flex items-center justify-between font-label-caps text-label-caps text-outline">
+<span>POWER METER • CADENCE SENSOR COMPATIBLE</span>
+<span>WATTS / KG</span>
+</div>
+</div>
+<!-- Card 5: Stationary Bike -->
+<div class="activity-card group relative bg-surface-container-low hover:bg-surface-container p-space-md rounded-xl transition-all duration-200 cursor-pointer active:scale-[0.99] overflow-hidden" data-category="gym low-impact" data-title="stationary bike spin rpm wattage resistance">
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex items-center gap-space-md min-w-0">
+<div class="w-12 h-12 rounded-lg bg-surface-container-highest flex items-center justify-center text-on-surface-variant group-hover:bg-primary-container group-hover:text-on-primary transition-colors flex-shrink-0">
+<span class="material-symbols-outlined text-[26px]">pedal_bike</span>
+</div>
+<div class="flex flex-col min-w-0">
+<h3 class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary-container transition-colors truncate">Stationary Bike</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate mt-0.5">RPM, wattage, &amp; resistance levels</p>
+</div>
+</div>
+<div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-outline group-hover:text-primary-container transition-colors flex-shrink-0">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</div>
+</div>
+<div class="mt-space-sm pt-space-xs flex items-center justify-between font-label-caps text-label-caps text-outline">
+<span>METRICS: RESISTANCE LVL • RPM • WATTS</span>
+<span>STEADY STATE</span>
+</div>
+</div>
+<!-- Card 6: Elliptical -->
+<div class="activity-card group relative bg-surface-container-low hover:bg-surface-container p-space-md rounded-xl transition-all duration-200 cursor-pointer active:scale-[0.99] overflow-hidden" data-category="gym low-impact" data-title="elliptical cross trainer joint friendly">
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex items-center gap-space-md min-w-0">
+<div class="w-12 h-12 rounded-lg bg-surface-container-highest flex items-center justify-center text-on-surface-variant group-hover:bg-primary-container group-hover:text-on-primary transition-colors flex-shrink-0">
+<span class="material-symbols-outlined text-[26px]">accessibility_new</span>
+</div>
+<div class="flex flex-col min-w-0">
+<h3 class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary-container transition-colors truncate">Elliptical</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate mt-0.5">Low impact joint-friendly endurance</p>
+</div>
+</div>
+<div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-outline group-hover:text-primary-container transition-colors flex-shrink-0">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</div>
+</div>
+<div class="mt-space-sm pt-space-xs flex items-center justify-between font-label-caps text-label-caps text-outline">
+<span>METRICS: STRIDE CADENCE • RESISTANCE</span>
+<span class="text-tertiary-container">ZERO IMPACT</span>
+</div>
+</div>
+<!-- Card 7: Rowing Machine -->
+<div class="activity-card group relative bg-surface-container-low hover:bg-surface-container p-space-md rounded-xl transition-all duration-200 cursor-pointer active:scale-[0.99] overflow-hidden" data-category="gym hiit" data-title="rowing machine erg ergometer split pace spm 500m">
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex items-center gap-space-md min-w-0">
+<div class="w-12 h-12 rounded-lg bg-surface-container-highest flex items-center justify-center text-primary-container group-hover:bg-primary-container group-hover:text-on-primary transition-colors flex-shrink-0">
+<span class="material-symbols-outlined text-[26px]">kayaking</span>
+</div>
+<div class="flex flex-col min-w-0">
+<h3 class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary-container transition-colors truncate">Rowing Machine</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate mt-0.5">500m split pace &amp; stroke rate (SPM)</p>
+</div>
+</div>
+<div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-outline group-hover:text-primary-container transition-colors flex-shrink-0">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</div>
+</div>
+<div class="mt-space-sm pt-space-xs flex items-center justify-between font-label-caps text-label-caps text-outline">
+<span>CONCEPT2 LOG • CALS/HR • SPLIT TIME</span>
+<span class="text-on-surface">PR / 500M: 1:34.2</span>
+</div>
+</div>
+<!-- Card 8: Stair Climber -->
+<div class="activity-card group relative bg-surface-container-low hover:bg-surface-container p-space-md rounded-xl transition-all duration-200 cursor-pointer active:scale-[0.99] overflow-hidden" data-category="gym hiit" data-title="stair climber stairmaster vertical steps cadence floors">
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex items-center gap-space-md min-w-0">
+<div class="w-12 h-12 rounded-lg bg-surface-container-highest flex items-center justify-center text-on-surface-variant group-hover:bg-primary-container group-hover:text-on-primary transition-colors flex-shrink-0">
+<span class="material-symbols-outlined text-[26px]">stairs</span>
+</div>
+<div class="flex flex-col min-w-0">
+<h3 class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary-container transition-colors truncate">Stair Climber</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate mt-0.5">Floors climbed, step cadence, &amp; intensity</p>
+</div>
+</div>
+<div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-outline group-hover:text-primary-container transition-colors flex-shrink-0">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</div>
+</div>
+<div class="mt-space-sm pt-space-xs flex items-center justify-between font-label-caps text-label-caps text-outline">
+<span>METRICS: FLOORS • STEPS/MIN • ELEVATION</span>
+<span>GLUTE BURN</span>
+</div>
+</div>
+<!-- Card 9: Swimming -->
+<div class="activity-card group relative bg-surface-container-low hover:bg-surface-container p-space-md rounded-xl transition-all duration-200 cursor-pointer active:scale-[0.99] overflow-hidden" data-category="low-impact outdoor" data-title="swimming pool laps freestyle breaststroke">
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex items-center gap-space-md min-w-0">
+<div class="w-12 h-12 rounded-lg bg-surface-container-highest flex items-center justify-center text-on-surface-variant group-hover:bg-primary-container group-hover:text-on-primary transition-colors flex-shrink-0">
+<span class="material-symbols-outlined text-[26px]">pool</span>
+</div>
+<div class="flex flex-col min-w-0">
+<h3 class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary-container transition-colors truncate">Swimming</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate mt-0.5">Laps, pool length (25m/50m), &amp; stroke count</p>
+</div>
+</div>
+<div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-outline group-hover:text-primary-container transition-colors flex-shrink-0">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</div>
+</div>
+<div class="mt-space-sm pt-space-xs flex items-center justify-between font-label-caps text-label-caps text-outline">
+<span>SWOLF SCORE • STROKE DETECT • LAP PACER</span>
+<span>FULL BODY</span>
+</div>
+</div>
+<!-- Card 10: Jump Rope -->
+<div class="activity-card group relative bg-surface-container-low hover:bg-surface-container p-space-md rounded-xl transition-all duration-200 cursor-pointer active:scale-[0.99] overflow-hidden" data-category="hiit" data-title="jump rope skipping intervals cadence">
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex items-center gap-space-md min-w-0">
+<div class="w-12 h-12 rounded-lg bg-surface-container-highest flex items-center justify-center text-on-surface-variant group-hover:bg-primary-container group-hover:text-on-primary transition-colors flex-shrink-0">
+<span class="material-symbols-outlined text-[26px]">emergency_heat</span>
+</div>
+<div class="flex flex-col min-w-0">
+<h3 class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary-container transition-colors truncate">Jump Rope</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate mt-0.5">High-intensity cardio • Jump cadence</p>
+</div>
+</div>
+<div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-outline group-hover:text-primary-container transition-colors flex-shrink-0">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</div>
+</div>
+<div class="mt-space-sm pt-space-xs flex items-center justify-between font-label-caps text-label-caps text-outline">
+<span>METRICS: ROTATION COUNT • JUMPS/MIN</span>
+<span class="text-tertiary-fixed-dim">ANAEROBIC</span>
+</div>
+</div>
+<!-- Card 11: HIIT & Metcon -->
+<div class="activity-card group relative bg-surface-container-low hover:bg-surface-container p-space-md rounded-xl transition-all duration-200 cursor-pointer active:scale-[0.99] overflow-hidden" data-category="hiit" data-title="hiit metcon interval rounds dynamic heart rate crossfit">
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex items-center gap-space-md min-w-0">
+<div class="w-12 h-12 rounded-lg bg-surface-container-highest flex items-center justify-center text-primary-container group-hover:bg-primary-container group-hover:text-on-primary transition-colors flex-shrink-0">
+<span class="material-symbols-outlined text-[26px]">timer_10_alt_1</span>
+</div>
+<div class="flex flex-col min-w-0">
+<h3 class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary-container transition-colors truncate">HIIT &amp; Metcon</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate mt-0.5">Interval rounds • Dynamic heart rate</p>
+</div>
+</div>
+<div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-outline group-hover:text-primary-container transition-colors flex-shrink-0">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</div>
+</div>
+<div class="mt-space-sm pt-space-xs flex items-center justify-between font-label-caps text-label-caps text-outline">
+<span>WORK:REST TIMERS • PEAK HR • RECOVERY DELTA</span>
+<span class="text-primary-container">TABATA READY</span>
+</div>
+</div>
+<!-- Empty Search State -->
+<div class="hidden flex flex-col items-center justify-center py-space-xl px-space-md text-center bg-surface-container-low rounded-xl" id="no-results">
+<span class="material-symbols-outlined text-outline text-[44px] mb-space-sm">travel_explore</span>
+<h4 class="font-headline-sm text-headline-sm text-on-surface">No Activity Found</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant max-w-[260px] mt-1">Try another keyword or build a personalized training profile below.</p>
+</div>
+</div>
+<!-- Custom Cardio Activity Action Card -->
+<div class="mt-space-lg">
+<button class="w-full text-left p-space-md rounded-xl bg-surface-container hover:bg-surface-container-high transition-all duration-200 active:scale-[0.99] flex items-center justify-between gap-space-md shadow-md" type="button">
+<div class="flex items-center gap-space-md min-w-0">
+<div class="w-12 h-12 rounded-lg bg-primary-container text-on-primary flex items-center justify-center flex-shrink-0 font-display-hero-mobile text-[24px]">
+<span class="material-symbols-outlined text-[24px]">add_circle</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-1.5 truncate">
+            Custom Cardio Activity
+          </span>
+<span class="font-body-sm text-body-sm text-on-surface-variant truncate">
+            Define custom metrics &amp; sport tags
+          </span>
+</div>
+</div>
+<span class="material-symbols-outlined text-primary-container text-[20px] flex-shrink-0">add</span>
+</button>
+</div>
+<!-- Quick Setup & Bluetooth Peripherals Footer -->
+<div class="mt-space-md p-space-md rounded-xl bg-surface-container-lowest flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-tertiary-fixed-dim">
+<span class="material-symbols-outlined text-[18px]">bluetooth_connected</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-ui text-label-ui text-on-surface leading-tight">Polar H10 Chest Strap</span>
+<span class="font-label-caps text-[10px] text-tertiary-fixed-dim uppercase tracking-wider">Connected • 138 bpm</span>
+</div>
+</div>
+<span class="px-2.5 py-1 rounded bg-surface-container font-label-caps text-label-caps text-on-surface-variant">AUTO-SYNC</span>
+</div>
+</div>
+<script>
+  (function() {
+    const searchInput = document.getElementById('cardio-search');
+    const clearBtn = document.getElementById('clear-search');
+    const cards = document.querySelectorAll('.activity-card');
+    const filterChips = document.querySelectorAll('.filter-chip');
+    const noResults = document.getElementById('no-results');
+
+    let currentFilter = 'all';
+
+    function applyFilters() {
+      const query = (searchInput.value || '').toLowerCase().trim();
+      let visibleCount = 0;
+
+      cards.forEach(card => {
+        const titleMatch = (card.getAttribute('data-title') || '').toLowerCase().includes(query);
+        const categories = (card.getAttribute('data-category') || '').split(' ');
+        const categoryMatch = currentFilter === 'all' || categories.includes(currentFilter);
+
+        if (titleMatch && categoryMatch) {
+          card.classList.remove('hidden');
+          visibleCount++;
+        } else {
+          card.classList.add('hidden');
+        }
+      });
+
+      if (visibleCount === 0) {
+        noResults.classList.remove('hidden');
+      } else {
+        noResults.classList.add('hidden');
+      }
+
+      if (query.length > 0) {
+        clearBtn.classList.remove('hidden');
+      } else {
+        clearBtn.classList.add('hidden');
+      }
+    }
+
+    searchInput.addEventListener('input', applyFilters);
+
+    clearBtn.addEventListener('click', () => {
+      searchInput.value = '';
+      applyFilters();
+      searchInput.focus();
+    });
+
+    filterChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        filterChips.forEach(c => {
+          c.classList.remove('bg-primary-container', 'text-on-primary', 'font-semibold');
+          c.classList.add('bg-surface-container', 'text-on-surface-variant');
+        });
+
+        chip.classList.remove('bg-surface-container', 'text-on-surface-variant');
+        chip.classList.add('bg-primary-container', 'text-on-primary', 'font-semibold');
+
+        currentFilter = chip.getAttribute('data-filter') || 'all';
+        applyFilters();
+      });
+    });
+
+    // Tactile feedback micro-interaction
+    cards.forEach(card => {
+      card.addEventListener('click', () => {
+        card.classList.add('scale-[0.98]');
+        setTimeout(() => card.classList.remove('scale-[0.98]'), 120);
+      });
+    });
+  })();
+</script></main><nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface/90 backdrop-blur-xl shadow-[0_-4px_24px_rgba(0,0,0,0.5)]" data-active-classes="text-primary-container"><div class="flex justify-around items-center h-16 px-space-xs"><a class="flex flex-col items-center justify-center min-w-[64px] min-h-[44px] h-12 gap-0.5 text-on-surface-variant transition-colors hover:text-on-surface" data-path="today" href="#"><span class="material-symbols-outlined text-[22px]">calendar_today</span><span class="font-label-caps text-label-caps tracking-wider uppercase">Today</span></a><a aria-current="page" class="flex flex-col items-center justify-center min-w-[64px] min-h-[44px] h-12 gap-0.5 transition-colors text-primary-container" data-path="workouts" href="#"><span class="material-symbols-outlined text-[22px]">fitness_center</span><span class="font-label-caps text-label-caps tracking-wider uppercase">Workouts</span></a><a class="flex flex-col items-center justify-center min-w-[64px] min-h-[44px] h-12 gap-0.5 text-on-surface-variant transition-colors hover:text-on-surface" data-path="progress" href="#"><span class="material-symbols-outlined text-[22px]">monitoring</span><span class="font-label-caps text-label-caps tracking-wider uppercase">Progress</span></a><a class="flex flex-col items-center justify-center min-w-[64px] min-h-[44px] h-12 gap-0.5 text-on-surface-variant transition-colors hover:text-on-surface" data-path="profile" href="#"><span class="material-symbols-outlined text-[22px]">person</span><span class="font-label-caps text-label-caps tracking-wider uppercase">Profile</span></a></div></nav></body></html>

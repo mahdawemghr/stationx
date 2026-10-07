@@ -1,0 +1,314 @@
+import 'package:flutter/material.dart';
+
+import '../../app/app_controller.dart';
+import '../../app/app_scope.dart';
+import '../../app/nav.dart';
+import '../../core/theme/sx_spacing.dart';
+import '../../core/theme/sx_theme.dart';
+import '../../core/theme/sx_typography.dart';
+import '../../core/utils/formatters.dart';
+import '../../core/widgets/widgets.dart';
+import '../../domain/domain.dart';
+import 'workout_stats.dart';
+
+/// Workout preview: day header, rotation note, target sequence with last
+/// session numbers, start / edit actions.
+class WorkoutPreviewPage extends StatelessWidget {
+  const WorkoutPreviewPage({super.key, required this.workoutId});
+  final String workoutId;
+
+  @override
+  Widget build(BuildContext context) {
+    final app = context.app;
+    return ListenableBuilder(
+      listenable: Listenable.merge([app.workouts, app.sessions, app.exercises, app.profile]),
+      builder: (context, _) {
+        final w = app.workouts.byId(workoutId);
+        if (w == null) {
+          return const SxScaffold(
+            topBar: SxTopBar(title: 'Workout Preview'),
+            body: Center(child: ErrorState(message: 'This workout no longer exists. It may have been deleted.')),
+          );
+        }
+        return _Preview(workout: w, app: app);
+      },
+    );
+  }
+}
+
+class _Preview extends StatelessWidget {
+  const _Preview({required this.workout, required this.app});
+  final Workout workout;
+  final AppController app;
+
+  @override
+  Widget build(BuildContext context) {
+    final WorkoutRepository workouts = app.workouts;
+    final SessionRepository sessions = app.sessions;
+    final ExerciseRepository exercises = app.exercises;
+    final unit = app.profile.profile.unit;
+    final c = context.sx;
+
+    final rot = workouts.rotation;
+    final idx = rot.workoutIds.indexOf(workout.id);
+    final isCurrent = rot.currentWorkoutId == workout.id;
+    final muscles = WorkoutStats.muscles(workout, exercises);
+
+    return SxScaffold(
+      topBar: SxTopBar(
+        title: 'Workout Preview',
+        actions: [
+          SxIconButton(icon: Icons.tune, tooltip: 'Edit workout structure', filled: false, onPressed: () => AppNav.workoutEditor(context, workout.id)),
+        ],
+      ),
+      bottom: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SxButton(
+            label: 'Start workout',
+            icon: Icons.play_arrow,
+            onPressed: workout.exercises.isEmpty ? null : () => AppNav.activeWorkout(context, workout.id),
+          ),
+          const SizedBox(height: 4),
+          SxButton(
+            label: 'Edit workout structure',
+            icon: Icons.tune,
+            variant: SxButtonVariant.ghost,
+            height: 44,
+            onPressed: () => AppNav.workoutEditor(context, workout.id),
+          ),
+        ],
+      ),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(SxSpace.screenMargin, SxSpace.md, SxSpace.screenMargin, SxSpace.lg),
+        children: [
+          SxCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(idx >= 0 ? 'ROTATION • DAY ${idx + 1}' : 'STANDALONE ROUTINE',
+                              style: SxText.labelCaps.copyWith(color: c.primary, letterSpacing: 1.2)),
+                          const SizedBox(height: 6),
+                          Text(workout.name.toUpperCase(), style: SxText.headlineLg.copyWith(color: c.textHigh, fontWeight: FontWeight.w700)),
+                          const SizedBox(height: 4),
+                          Text(
+                            idx >= 0 ? 'Day ${idx + 1} of ${rot.length} • ${rot.length}-Day Rotation' : 'Not part of your rotation',
+                            style: SxText.bodyMd.copyWith(color: c.textBody),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (idx >= 0) ...[
+                      const SizedBox(width: 12),
+                      SxInset(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        child: Column(children: [
+                          Text('${idx + 1}'.padLeft(2, '0'), style: SxText.metricMd.copyWith(color: c.primary)),
+                          Text('DAY', style: SxText.labelCaps.copyWith(color: c.textBody, fontSize: 10)),
+                        ]),
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: SxSpace.md),
+                Row(
+                  children: [
+                    Expanded(child: _Fact(icon: Icons.format_list_numbered, label: 'Volume', value: '${workout.exercises.length}', unit: 'Ex • ${workout.totalSets} Sets')),
+                    const SizedBox(width: 8),
+                    Expanded(child: _Fact(icon: Icons.schedule, label: 'Duration', value: '~${workout.estimatedMinutes}', unit: 'min')),
+                  ],
+                ),
+                if (muscles.isNotEmpty) ...[
+                  const SizedBox(height: SxSpace.sm),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [for (final m in muscles) _Tag(m.label)],
+                  ),
+                ],
+                const SizedBox(height: SxSpace.md),
+                SxInset(
+                  color: Colors.black.withValues(alpha: 0.3),
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
+                    children: [
+                      Icon(Icons.published_with_changes, size: 20, color: c.primary),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          isCurrent || idx < 0
+                              ? 'Rotation advances upon completion. Missed sessions stay queued in sequence.'
+                              : 'This is not next in your rotation. Use “Change next” in the Workouts tab to reorder.',
+                          style: SxText.bodySm.copyWith(color: c.textBody),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: SxSpace.lg),
+          const SectionHeader('Target sequence'),
+          const SizedBox(height: SxSpace.sm),
+          if (workout.exercises.isEmpty)
+            SxCard(
+              child: EmptyState(
+                icon: Icons.playlist_add,
+                title: 'No exercises yet',
+                message: 'Add exercises to this workout to start training.',
+                actionLabel: 'Edit structure',
+                onAction: () => AppNav.workoutEditor(context, workout.id),
+              ),
+            )
+          else
+            for (var i = 0; i < workout.exercises.length; i++)
+              Padding(
+                padding: const EdgeInsets.only(bottom: SxSpace.sm),
+                child: _SequenceRow(
+                  index: i,
+                  re: workout.exercises[i],
+                  exercise: exercises.byId(workout.exercises[i].exerciseId),
+                  lastSet: _lastSet(sessions, workout.exercises[i].exerciseId),
+                  unit: unit,
+                ),
+              ),
+        ],
+      ),
+    );
+  }
+
+  SetLog? _lastSet(SessionRepository sessions, String exerciseId) {
+    final s = sessions.lastWithExercise(exerciseId);
+    return s == null ? null : WorkoutStats.topSet(s, exerciseId);
+  }
+}
+
+class _Fact extends StatelessWidget {
+  const _Fact({required this.icon, required this.label, required this.value, required this.unit});
+  final IconData icon;
+  final String label;
+  final String value;
+  final String unit;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.sx;
+    return SxInset(
+      padding: const EdgeInsets.all(10),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: c.primary),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label.toUpperCase(), style: SxText.labelCaps.copyWith(color: c.textMuted, fontSize: 9)),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Text(value, style: SxText.metricMd.copyWith(color: c.textHigh)),
+                    const SizedBox(width: 4),
+                    Flexible(child: Text(unit, style: SxText.bodySm.copyWith(color: c.textBody), overflow: TextOverflow.ellipsis)),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Tag extends StatelessWidget {
+  const _Tag(this.text);
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.sx;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(color: c.surface2, borderRadius: BorderRadius.circular(SxRadius.base), border: Border.all(color: c.hairline)),
+      child: Text(text, style: SxText.metricSm.copyWith(color: c.textBody, fontSize: 12)),
+    );
+  }
+}
+
+class _SequenceRow extends StatelessWidget {
+  const _SequenceRow({required this.index, required this.re, required this.exercise, required this.lastSet, required this.unit});
+  final int index;
+  final RoutineExercise re;
+  final Exercise? exercise;
+  final SetLog? lastSet;
+  final WeightUnit unit;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.sx;
+    final name = exercise?.name ?? 'Unknown exercise';
+    return SxCard(
+      onTap: exercise == null ? null : () => AppNav.exerciseDetails(context, exercise!.id),
+      padding: const EdgeInsets.all(12),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(color: c.surface2, borderRadius: BorderRadius.circular(SxRadius.base)),
+            child: Text('${index + 1}'.padLeft(2, '0'), style: SxText.metricSm.copyWith(color: c.primary, fontWeight: FontWeight.w700)),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(name, style: SxText.headlineSm.copyWith(color: c.textHigh), maxLines: 2, overflow: TextOverflow.ellipsis),
+                const SizedBox(height: 4),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 2,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    Row(mainAxisSize: MainAxisSize.min, children: [
+                      Icon(Icons.repeat, size: 13, color: c.primary),
+                      const SizedBox(width: 4),
+                      Text(WorkoutStats.setsReps(re), style: SxText.metricSm.copyWith(color: c.primary, fontSize: 12)),
+                    ]),
+                    if (exercise != null)
+                      Text('${exercise!.equipment.label} • ${exercise!.primaryMuscle.label}', style: SxText.bodySm.copyWith(color: c.textBody)),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          SxInset(
+            color: Colors.black.withValues(alpha: 0.25),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text('LAST SESSION', style: SxText.labelCaps.copyWith(color: c.textMuted, fontSize: 8)),
+                const SizedBox(height: 2),
+                Text(lastSet == null ? 'No history' : Fmt.setLabel(lastSet!.weightKg, lastSet!.reps, unit),
+                    style: SxText.metricSm.copyWith(color: lastSet == null ? c.textMuted : c.textHigh, fontSize: 12)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

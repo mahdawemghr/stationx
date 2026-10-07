@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=JetBrains+Mono:wght@500;600;700&amp;family=Space+Grotesk:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;background-color:#121416;color:#e2e2e5;}body{overscroll-behavior:none;-webkit-tap-highlight-color:transparent;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "secondary-fixed": "#dee3ea", "on-secondary-fixed-variant": "#42474d", "on-secondary-fixed": "#171c21", "outline-variant": "#434933", "on-surface": "#e2e2e5", "error": "#ffb4ab", "secondary-container": "#42474d", "on-secondary-container": "#b1b5bc", "tertiary-container": "#7ff5ac", "surface-tint": "#a5d700", "on-tertiary-fixed-variant": "#00522d", "primary-container": "#b8f000", "surface-dim": "#121416", "surface-container-highest": "#333537", "primary-fixed-dim": "#a5d700", "tertiary-fixed-dim": "#67dd96", "on-primary": "#273500", "tertiary-fixed": "#84fab0", "background": "#121416", "on-error-container": "#ffdad6", "surface-container-lowest": "#0c0e10", "inverse-surface": "#e2e2e5", "surface-variant": "#333537", "primary-fixed": "#bdf510", "on-tertiary-fixed": "#00210f", "surface-container": "#1e2022", "on-primary-fixed-variant": "#394d00", "on-tertiary": "#00391d", "on-secondary": "#2c3136", "outline": "#8d947a", "surface-bright": "#38393c", "surface": "#121416", "on-surface-variant": "#c3caad", "error-container": "#93000a", "on-primary-container": "#506a00", "on-tertiary-container": "#007040", "primary": "#f4ffd3", "on-background": "#e2e2e5", "on-primary-fixed": "#151f00", "secondary-fixed-dim": "#c2c7cd", "inverse-primary": "#4d6700", "on-error": "#690005", "inverse-on-surface": "#2f3133", "secondary": "#c2c7cd", "surface-container-low": "#1a1c1e", "surface-container-high": "#282a2c", "tertiary": "#edffee" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "space-lg": "1.5rem", "margin-desktop": "3rem", "gutter-tablet": "1.5rem", "space-md": "1rem", "space-xs": "0.25rem", "gutter-desktop": "2rem", "margin": "1rem", "gutter": "1rem", "margin-tablet": "2rem", "space-xl": "2.5rem", "space-sm": "0.5rem" }, "fontFamily": { "body-sm": [ "Geist" ], "display-hero-mobile": [ "Space Grotesk" ], "headline-lg": [ "Space Grotesk" ], "headline-sm": [ "Space Grotesk" ], "body-md": [ "Geist" ], "display-hero": [ "Space Grotesk" ], "label-ui": [ "Geist" ], "label-caps": [ "JetBrains Mono" ], "metric-xl": [ "JetBrains Mono" ], "metric-md": [ "JetBrains Mono" ], "headline-md": [ "Space Grotesk" ], "metric-lg": [ "JetBrains Mono" ], "headline-lg-mobile": [ "Space Grotesk" ], "body-lg": [ "Geist" ] }, "fontSize": { "body-sm": [ "12px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "400" } ], "display-hero-mobile": [ "40px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" } ], "headline-lg": [ "32px", { "lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "600" } ], "headline-sm": [ "18px", { "lineHeight": "24px", "letterSpacing": "0em", "fontWeight": "600" } ], "body-md": [ "14px", { "lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "400" } ], "display-hero": [ "56px", { "lineHeight": "60px", "letterSpacing": "-0.03em", "fontWeight": "700" } ], "label-ui": [ "13px", { "lineHeight": "16px", "letterSpacing": "0em", "fontWeight": "500" } ], "label-caps": [ "11px", { "lineHeight": "14px", "letterSpacing": "0.08em", "fontWeight": "500" } ], "metric-xl": [ "48px", { "lineHeight": "48px", "letterSpacing": "-0.04em", "fontWeight": "700" } ], "metric-md": [ "20px", { "lineHeight": "24px", "letterSpacing": "-0.02em", "fontWeight": "600" } ], "headline-md": [ "22px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600" } ], "metric-lg": [ "32px", { "lineHeight": "34px", "letterSpacing": "-0.03em", "fontWeight": "600" } ], "headline-lg-mobile": [ "26px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" } ], "body-lg": [ "16px", { "lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "400" } ] } } } };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-background font-body-md text-on-surface antialiased flex flex-col min-h-screen"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/85 backdrop-blur-xl shadow-[0_1px_12px_rgba(0,0,0,0.4)]"><div class="h-16 px-margin flex items-center justify-between gap-space-sm"><div class="flex items-center gap-space-xs min-w-0"><button aria-label="Go Back" class="w-11 h-11 -ml-2 flex items-center justify-center rounded-lg text-on-surface hover:bg-surface-container transition-colors" onclick="history.back()"><span class="material-symbols-outlined text-[24px]">arrow_back</span></button><img alt="Brand logo. - Primary color: #00f0ff
+- Font: spaceGrotesk
+- Mode: dark
+- Roundness: rounded-md
+" class="h-7 w-auto object-contain flex-shrink-0" src="https://lh3.googleusercontent.com/aida/AEtjO1V2OfVb6x575tYCGYJyY0lqcBiNrsQVDOleXgD1quXqKfsckya9M5ZWa7PQCF0h0x-zsInqEwPEYve0dUa9pZKyXphWZkvapoWohyrf1MEVheH4YCP1l-2R_nA4QfUbJPxxT2fE0rEf7UgZI9qhPwXOA88yG_LsCC3TYttVs-a-Q2uGZV9aByOZvqSE2hTrtYqr5fAchboqPRUfsXrCAeBawfOnXNAVLeFCYX86nAsMkbwBgo_Q9ga6uYY"/><h1 class="font-headline-sm text-headline-sm text-on-surface truncate leading-tight">Session Summary</h1></div><div class="flex items-center gap-space-xs flex-shrink-0"><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida/AEtjO1VS1u4GcVYp98aXFrkmekBQcdAvUt6cQ-JMF5yEI6tQhxhhqZeo4qV_P2VI2X369r4zDESSzqSVUOktP1t5r5Y90_DD5p4JbY3IJM8xnja8Uc7lW52ifgFNgC9vzX0uPHRHy1e30eglQqWMU6a3v6n46Cf0JGudY381rx4UFZvJq2rm1pusKTvzOdTVrhMG5RPL5uvn7UD6nDp05cEZ2zCCGDO4bQUEMurSygtQ_6eer7Z_VfZN-dCkS9c"/></div></div></header><main class="flex flex-col relative w-full pt-16 pb-safe px-margin bg-background flex-1"><div class="flex flex-col w-full pb-8 gap-y-6">
+<!-- Top Technical Banner -->
+<div class="relative overflow-hidden rounded-xl bg-surface-container-low p-4 shadow-sm">
+<div class="flex items-start gap-3">
+<div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-container text-on-primary-container">
+<span class="material-symbols-outlined text-[20px]">tune</span>
+</div>
+<div class="flex flex-col min-w-0 pr-2">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Telemetry Architect</span>
+<p class="font-body-md text-body-md text-on-surface mt-0.5 leading-snug">
+          Define custom sport telemetry &amp; tracking metrics for your endurance repertoire.
+        </p>
+</div>
+</div>
+<!-- Subtle telemetry aesthetic accent -->
+<div class="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-primary/5 to-transparent pointer-events-none"></div>
+</div>
+<!-- Section 1: Activity Identity -->
+<div class="flex flex-col gap-3 rounded-xl bg-surface-container p-4 shadow-md">
+<div class="flex items-center justify-between">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">01 / Activity Identity</span>
+<span class="font-label-caps text-label-caps text-primary-container flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container animate-pulse"></span> READY
+      </span>
+</div>
+<!-- Activity Name Input -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-ui text-label-ui text-on-surface-variant" for="activity-name">Activity Name</label>
+<div class="relative flex items-center">
+<input class="w-full h-12 rounded-lg bg-surface-container-high px-3.5 pr-10 font-headline-sm text-headline-sm text-on-surface placeholder:text-on-surface-variant/40 focus:outline-none focus:bg-surface-bright transition-colors" id="activity-name" placeholder="e.g. RowErg Sprint Intervals" type="text" value="Boxing / Heavy Bag Rounds"/>
+<button aria-label="Clear field" class="absolute right-3 text-on-surface-variant hover:text-on-surface" type="button">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+</button>
+</div>
+</div>
+<!-- Category Selector -->
+<div class="flex flex-col gap-2 mt-1">
+<label class="font-label-ui text-label-ui text-on-surface-variant">Discipline Category</label>
+<div class="grid grid-cols-2 gap-2" id="category-pills">
+<button class="category-btn h-10 px-3 rounded-lg bg-primary-container text-on-primary-container font-label-ui text-label-ui font-semibold flex items-center justify-center gap-1.5 text-center transition-all shadow-sm" type="button">
+<span class="material-symbols-outlined text-[16px]">sports_mma</span>
+          Combat Sport
+        </button>
+<button class="category-btn h-10 px-3 rounded-lg bg-surface-container-high text-on-surface-variant font-label-ui text-label-ui flex items-center justify-center gap-1.5 text-center transition-all" type="button">
+<span class="material-symbols-outlined text-[16px]">local_fire_department</span>
+          Functional HIIT
+        </button>
+<button class="category-btn h-10 px-3 rounded-lg bg-surface-container-high text-on-surface-variant font-label-ui text-label-ui flex items-center justify-center gap-1.5 text-center transition-all" type="button">
+<span class="material-symbols-outlined text-[16px]">sports_soccer</span>
+          Field Sports
+        </button>
+<button class="category-btn h-10 px-3 rounded-lg bg-surface-container-high text-on-surface-variant font-label-ui text-label-ui flex items-center justify-center gap-1.5 text-center transition-all" type="button">
+<span class="material-symbols-outlined text-[16px]">kayaking</span>
+          Water / Paddle
+        </button>
+</div>
+</div>
+<!-- Activity Icon Selector (8 badges) -->
+<div class="flex flex-col gap-2 mt-2">
+<div class="flex items-center justify-between">
+<label class="font-label-ui text-label-ui text-on-surface-variant">Telemetry Icon Glyph</label>
+<span class="font-label-caps text-label-caps text-on-surface-variant">COMBAT_GLOVE</span>
+</div>
+<div class="grid grid-cols-4 gap-2.5" id="glyph-selector">
+<!-- 1: Boxing Glove (Selected with lime accent container) -->
+<button class="glyph-btn group relative flex flex-col items-center justify-center h-14 rounded-lg bg-primary-container text-on-primary shadow-md transition-all" type="button">
+<span class="material-symbols-outlined text-[24px]">sports_mma</span>
+<span class="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-surface-container-lowest flex items-center justify-center">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+</span>
+</button>
+<!-- 2: Kettlebell -->
+<button class="glyph-btn flex flex-col items-center justify-center h-14 rounded-lg bg-surface-container-high text-on-surface-variant hover:bg-surface-bright hover:text-on-surface transition-all" type="button">
+<span class="material-symbols-outlined text-[24px]">fitness_center</span>
+</button>
+<!-- 3: Skierg -->
+<button class="glyph-btn flex flex-col items-center justify-center h-14 rounded-lg bg-surface-container-high text-on-surface-variant hover:bg-surface-bright hover:text-on-surface transition-all" type="button">
+<span class="material-symbols-outlined text-[24px]">downhill_skiing</span>
+</button>
+<!-- 4: Mountain / Hike -->
+<button class="glyph-btn flex flex-col items-center justify-center h-14 rounded-lg bg-surface-container-high text-on-surface-variant hover:bg-surface-bright hover:text-on-surface transition-all" type="button">
+<span class="material-symbols-outlined text-[24px]">landscape</span>
+</button>
+<!-- 5: Surfer -->
+<button class="glyph-btn flex flex-col items-center justify-center h-14 rounded-lg bg-surface-container-high text-on-surface-variant hover:bg-surface-bright hover:text-on-surface transition-all" type="button">
+<span class="material-symbols-outlined text-[24px]">surfing</span>
+</button>
+<!-- 6: Soccer Ball -->
+<button class="glyph-btn flex flex-col items-center justify-center h-14 rounded-lg bg-surface-container-high text-on-surface-variant hover:bg-surface-bright hover:text-on-surface transition-all" type="button">
+<span class="material-symbols-outlined text-[24px]">sports_soccer</span>
+</button>
+<!-- 7: Rower -->
+<button class="glyph-btn flex flex-col items-center justify-center h-14 rounded-lg bg-surface-container-high text-on-surface-variant hover:bg-surface-bright hover:text-on-surface transition-all" type="button">
+<span class="material-symbols-outlined text-[24px]">rowing</span>
+</button>
+<!-- 8: Precision Timer -->
+<button class="glyph-btn flex flex-col items-center justify-center h-14 rounded-lg bg-surface-container-high text-on-surface-variant hover:bg-surface-bright hover:text-on-surface transition-all" type="button">
+<span class="material-symbols-outlined text-[24px]">timer</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Section 2: Metric Tracking Configuration -->
+<div class="flex flex-col gap-3 rounded-xl bg-surface-container p-4 shadow-md">
+<div class="flex flex-col">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">02 / Telemetry Configuration</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+        Choose metrics tracked during live session and logged in history
+      </p>
+</div>
+<!-- Switches Container -->
+<div class="flex flex-col gap-2 mt-1">
+<!-- Switch 1: Duration & Round Timer (Always ON, required) -->
+<div class="flex items-center justify-between p-3 rounded-lg bg-surface-container-low">
+<div class="flex items-start gap-3 min-w-0 pr-2">
+<span class="material-symbols-outlined text-[20px] text-on-surface-variant shrink-0 mt-0.5">timer</span>
+<div class="flex flex-col min-w-0">
+<span class="font-label-ui text-label-ui text-on-surface font-semibold truncate">Duration &amp; Round Timer</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Core timekeeping engine (system lock)</span>
+</div>
+</div>
+<div class="flex items-center gap-1.5 shrink-0">
+<span class="font-label-caps text-label-caps text-on-surface-variant">LOCK</span>
+<div class="w-12 h-6 rounded-full bg-primary-container/40 p-0.5 flex items-center justify-end cursor-not-allowed">
+<div class="w-5 h-5 rounded-full bg-primary-container shadow-sm flex items-center justify-center">
+<span class="material-symbols-outlined text-[13px] text-on-primary font-bold">check</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Switch 2: Heart Rate & Zone Telemetry (ON) -->
+<label class="flex items-center justify-between p-3 rounded-lg bg-surface-container-low cursor-pointer hover:bg-surface-container-high transition-colors">
+<div class="flex items-start gap-3 min-w-0 pr-2">
+<span class="material-symbols-outlined text-[20px] text-primary-container shrink-0 mt-0.5">favorite</span>
+<div class="flex flex-col min-w-0">
+<span class="font-label-ui text-label-ui text-on-surface font-semibold">Heart Rate &amp; Zone Telemetry</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Pairable with Bluetooth HR chest straps &amp; Apple Watch</span>
+</div>
+</div>
+<input checked="" class="sr-only peer toggle-input" type="checkbox"/>
+<div class="w-12 h-6 rounded-full bg-surface-variant peer-checked:bg-primary-container p-0.5 transition-colors relative shrink-0">
+<div class="w-5 h-5 rounded-full bg-on-surface peer-checked:bg-on-primary shadow-sm transform peer-checked:translate-x-6 transition-transform flex items-center justify-center"></div>
+</div>
+</label>
+<!-- Switch 3: Estimated Calorie Burn (ON) -->
+<label class="flex items-center justify-between p-3 rounded-lg bg-surface-container-low cursor-pointer hover:bg-surface-container-high transition-colors">
+<div class="flex items-start gap-3 min-w-0 pr-2">
+<span class="material-symbols-outlined text-[20px] text-primary-container shrink-0 mt-0.5">local_fire_department</span>
+<div class="flex flex-col min-w-0">
+<span class="font-label-ui text-label-ui text-on-surface font-semibold">Estimated Calorie Burn</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Calculated via MET index &amp; HR intensity</span>
+</div>
+</div>
+<input checked="" class="sr-only peer toggle-input" type="checkbox"/>
+<div class="w-12 h-6 rounded-full bg-surface-variant peer-checked:bg-primary-container p-0.5 transition-colors relative shrink-0">
+<div class="w-5 h-5 rounded-full bg-on-surface peer-checked:bg-on-primary shadow-sm transform peer-checked:translate-x-6 transition-transform flex items-center justify-center"></div>
+</div>
+</label>
+<!-- Switch 4: Distance (OFF) -->
+<label class="flex items-center justify-between p-3 rounded-lg bg-surface-container-low cursor-pointer hover:bg-surface-container-high transition-colors">
+<div class="flex items-start gap-3 min-w-0 pr-2">
+<span class="material-symbols-outlined text-[20px] text-on-surface-variant shrink-0 mt-0.5">straighten</span>
+<div class="flex flex-col min-w-0">
+<span class="font-label-ui text-label-ui text-on-surface font-semibold">Distance (km / mi)</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">For mobile GPS or treadmill/track tracking</span>
+</div>
+</div>
+<input class="sr-only peer toggle-input" type="checkbox"/>
+<div class="w-12 h-6 rounded-full bg-surface-variant peer-checked:bg-primary-container p-0.5 transition-colors relative shrink-0">
+<div class="w-5 h-5 rounded-full bg-on-surface peer-checked:bg-on-primary shadow-sm transform peer-checked:translate-x-6 transition-transform flex items-center justify-center"></div>
+</div>
+</label>
+<!-- Switch 5: Rounds & Intervals Counter (ON) -->
+<label class="flex items-center justify-between p-3 rounded-lg bg-surface-container-low cursor-pointer hover:bg-surface-container-high transition-colors">
+<div class="flex items-start gap-3 min-w-0 pr-2">
+<span class="material-symbols-outlined text-[20px] text-primary-container shrink-0 mt-0.5">autorenew</span>
+<div class="flex flex-col min-w-0">
+<span class="font-label-ui text-label-ui text-on-surface font-semibold">Rounds &amp; Intervals Counter</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Track round count (e.g. 3 min work, 1 min rest)</span>
+</div>
+</div>
+<input checked="" class="sr-only peer toggle-input" id="round-counter-toggle" type="checkbox"/>
+<div class="w-12 h-6 rounded-full bg-surface-variant peer-checked:bg-primary-container p-0.5 transition-colors relative shrink-0">
+<div class="w-5 h-5 rounded-full bg-on-surface peer-checked:bg-on-primary shadow-sm transform peer-checked:translate-x-6 transition-transform flex items-center justify-center"></div>
+</div>
+</label>
+<!-- Switch 6: Cadence / RPM / Strikes (OFF) -->
+<label class="flex items-center justify-between p-3 rounded-lg bg-surface-container-low cursor-pointer hover:bg-surface-container-high transition-colors">
+<div class="flex items-start gap-3 min-w-0 pr-2">
+<span class="material-symbols-outlined text-[20px] text-on-surface-variant shrink-0 mt-0.5">speed</span>
+<div class="flex flex-col min-w-0">
+<span class="font-label-ui text-label-ui text-on-surface font-semibold">Cadence / RPM / Strikes</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Punches, kicks, or stroke rate tracking</span>
+</div>
+</div>
+<input class="sr-only peer toggle-input" type="checkbox"/>
+<div class="w-12 h-6 rounded-full bg-surface-variant peer-checked:bg-primary-container p-0.5 transition-colors relative shrink-0">
+<div class="w-5 h-5 rounded-full bg-on-surface peer-checked:bg-on-primary shadow-sm transform peer-checked:translate-x-6 transition-transform flex items-center justify-center"></div>
+</div>
+</label>
+</div>
+</div>
+<!-- Section 3: Default Rest & Round Timers -->
+<div class="flex flex-col gap-3 rounded-xl bg-surface-container p-4 shadow-md">
+<div class="flex items-center justify-between">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">03 / Round &amp; Interval Engine</span>
+<span class="font-label-caps text-label-caps text-primary-container">PRESET_01</span>
+</div>
+<!-- Stepper Grid -->
+<div class="flex flex-col gap-2.5">
+<!-- Round Duration Stepper -->
+<div class="flex items-center justify-between p-3 rounded-lg bg-surface-container-low">
+<div class="flex flex-col">
+<span class="font-label-ui text-label-ui text-on-surface font-medium">Round Duration</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Active work cycle</span>
+</div>
+<div class="flex items-center gap-2">
+<button aria-label="Decrease round duration" class="w-10 h-10 rounded-lg bg-surface-container-high text-on-surface flex items-center justify-center active:bg-surface-bright transition-colors" onclick="adjustTime('round-dur', -15)" type="button">
+<span class="material-symbols-outlined text-[18px]">remove</span>
+</button>
+<div class="w-20 text-center font-metric-md text-metric-md text-on-surface tabular-nums" id="round-dur-val">
+            3:00
+          </div>
+<button aria-label="Increase round duration" class="w-10 h-10 rounded-lg bg-surface-container-high text-on-surface flex items-center justify-center active:bg-surface-bright transition-colors" onclick="adjustTime('round-dur', 15)" type="button">
+<span class="material-symbols-outlined text-[18px]">add</span>
+</button>
+</div>
+</div>
+<!-- Rest Interval Stepper -->
+<div class="flex items-center justify-between p-3 rounded-lg bg-surface-container-low">
+<div class="flex flex-col">
+<span class="font-label-ui text-label-ui text-on-surface font-medium">Rest Interval</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Recovery between rounds</span>
+</div>
+<div class="flex items-center gap-2">
+<button aria-label="Decrease rest interval" class="w-10 h-10 rounded-lg bg-surface-container-high text-on-surface flex items-center justify-center active:bg-surface-bright transition-colors" onclick="adjustTime('rest-int', -15)" type="button">
+<span class="material-symbols-outlined text-[18px]">remove</span>
+</button>
+<div class="w-20 text-center font-metric-md text-metric-md text-on-surface tabular-nums" id="rest-int-val">
+            1:00
+          </div>
+<button aria-label="Increase rest interval" class="w-10 h-10 rounded-lg bg-surface-container-high text-on-surface flex items-center justify-center active:bg-surface-bright transition-colors" onclick="adjustTime('rest-int', 15)" type="button">
+<span class="material-symbols-outlined text-[18px]">add</span>
+</button>
+</div>
+</div>
+<!-- Total Rounds Target Stepper -->
+<div class="flex items-center justify-between p-3 rounded-lg bg-surface-container-low">
+<div class="flex flex-col">
+<span class="font-label-ui text-label-ui text-on-surface font-medium">Total Rounds Target</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Default session target</span>
+</div>
+<div class="flex items-center gap-2">
+<button aria-label="Decrease rounds target" class="w-10 h-10 rounded-lg bg-surface-container-high text-on-surface flex items-center justify-center active:bg-surface-bright transition-colors" onclick="adjustRounds(-1)" type="button">
+<span class="material-symbols-outlined text-[18px]">remove</span>
+</button>
+<div class="w-20 text-center font-metric-md text-metric-md text-on-surface tabular-nums" id="rounds-target-val">
+            5 Rnds
+          </div>
+<button aria-label="Increase rounds target" class="w-10 h-10 rounded-lg bg-surface-container-high text-on-surface flex items-center justify-center active:bg-surface-bright transition-colors" onclick="adjustRounds(1)" type="button">
+<span class="material-symbols-outlined text-[18px]">add</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Calculated Total Workout Overview Pill -->
+<div class="mt-1 flex items-center justify-between rounded-lg bg-surface-container-highest p-3">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-primary-container">timelapse</span>
+<span class="font-body-sm text-body-sm text-on-surface">Calculated Working Time</span>
+</div>
+<span class="font-metric-md text-metric-md text-primary-container" id="total-time-estimate">19:00</span>
+</div>
+</div>
+<!-- Primary Bottom CTA Pinned in thumb zone -->
+<div class="sticky bottom-4 w-full pt-2">
+<button class="w-full h-14 rounded-xl bg-primary-container text-on-primary font-headline-sm text-headline-sm font-bold flex items-center justify-center gap-2 tracking-wide uppercase shadow-xl hover:bg-primary-fixed-dim active:scale-[0.99] transition-all" id="save-activity-btn" type="button">
+<span class="material-symbols-outlined text-[22px]">save</span>
+<span>Save Custom Activity</span>
+</button>
+</div>
+<!-- Micro-interaction Toast Placeholder -->
+<div class="fixed bottom-24 left-1/2 -translate-x-1/2 pointer-events-none opacity-0 transition-opacity duration-300 z-50" id="toast">
+<div class="flex items-center gap-2 rounded-lg bg-surface-bright px-4 py-2.5 shadow-2xl">
+<span class="material-symbols-outlined text-primary-container text-[18px]">check_circle</span>
+<span class="font-label-ui text-label-ui text-on-surface font-medium">Activity Template Saved</span>
+</div>
+</div>
+</div>
+<script>
+  // Dynamic Stepper State
+  let roundSeconds = 180; // 3:00
+  let restSeconds = 60;   // 1:00
+  let totalRounds = 5;
+
+  function formatTime(totalSec) {
+    const m = Math.floor(totalSec / 60);
+    const s = totalSec % 60;
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
+  }
+
+  function updateTotalTime() {
+    const totalSec = (roundSeconds * totalRounds) + (restSeconds * Math.max(0, totalRounds - 1));
+    const label = document.getElementById('total-time-estimate');
+    if (label) {
+      label.textContent = formatTime(totalSec);
+    }
+  }
+
+  function adjustTime(type, delta) {
+    if (type === 'round-dur') {
+      roundSeconds = Math.max(15, Math.min(1800, roundSeconds + delta));
+      const el = document.getElementById('round-dur-val');
+      if (el) el.textContent = formatTime(roundSeconds);
+    } else if (type === 'rest-int') {
+      restSeconds = Math.max(0, Math.min(600, restSeconds + delta));
+      const el = document.getElementById('rest-int-val');
+      if (el) el.textContent = formatTime(restSeconds);
+    }
+    updateTotalTime();
+  }
+
+  function adjustRounds(delta) {
+    totalRounds = Math.max(1, Math.min(50, totalRounds + delta));
+    const el = document.getElementById('rounds-target-val');
+    if (el) el.textContent = `${totalRounds} Rnds`;
+    updateTotalTime();
+  }
+
+  // Category selection handler
+  document.querySelectorAll('#category-pills .category-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#category-pills .category-btn').forEach(b => {
+        b.className = 'category-btn h-10 px-3 rounded-lg bg-surface-container-high text-on-surface-variant font-label-ui text-label-ui flex items-center justify-center gap-1.5 text-center transition-all';
+      });
+      btn.className = 'category-btn h-10 px-3 rounded-lg bg-primary-container text-on-primary-container font-label-ui text-label-ui font-semibold flex items-center justify-center gap-1.5 text-center transition-all shadow-sm';
+    });
+  });
+
+  // Glyph badge selector handler
+  document.querySelectorAll('#glyph-selector .glyph-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#glyph-selector .glyph-btn').forEach(b => {
+        b.className = 'glyph-btn flex flex-col items-center justify-center h-14 rounded-lg bg-surface-container-high text-on-surface-variant hover:bg-surface-bright hover:text-on-surface transition-all';
+        const indicator = b.querySelector('span.absolute');
+        if (indicator) indicator.remove();
+      });
+      btn.className = 'glyph-btn group relative flex flex-col items-center justify-center h-14 rounded-lg bg-primary-container text-on-primary shadow-md transition-all';
+      
+      const badge = document.createElement('span');
+      badge.className = 'absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-surface-container-lowest flex items-center justify-center';
+      badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>';
+      btn.appendChild(badge);
+    });
+  });
+
+  // Save Toast Micro-interaction
+  const saveBtn = document.getElementById('save-activity-btn');
+  const toast = document.getElementById('toast');
+  if (saveBtn && toast) {
+    saveBtn.addEventListener('click', () => {
+      toast.classList.remove('opacity-0');
+      toast.classList.add('opacity-100');
+      setTimeout(() => {
+        toast.classList.remove('opacity-100');
+        toast.classList.add('opacity-0');
+      }, 2200);
+    });
+  }
+</script></main></body></html>

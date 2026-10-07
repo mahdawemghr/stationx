@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;background-color:#121416;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "on-primary": "#273500", "primary-fixed-dim": "#a5d700", "inverse-primary": "#4d6700", "background": "#121416", "inverse-on-surface": "#2f3133", "on-secondary": "#2c3136", "surface": "#121416", "on-tertiary-fixed": "#00210f", "outline": "#8d947a", "surface-dim": "#121416", "tertiary-fixed": "#84fab0", "secondary-container": "#42474d", "primary": "#f4ffd3", "secondary": "#c2c7cd", "on-background": "#e2e2e5", "surface-container-high": "#282a2c", "surface-container-lowest": "#0c0e10", "on-surface": "#e2e2e5", "on-surface-variant": "#c3caad", "error-container": "#93000a", "primary-container": "#b8f000", "inverse-surface": "#e2e2e5", "on-primary-fixed-variant": "#394d00", "tertiary-fixed-dim": "#67dd96", "error": "#ffb4ab", "on-tertiary": "#00391d", "on-secondary-container": "#b1b5bc", "on-primary-container": "#506a00", "on-error-container": "#ffdad6", "primary-fixed": "#bdf510", "on-primary-fixed": "#151f00", "surface-tint": "#a5d700", "on-tertiary-container": "#007040", "surface-variant": "#333537", "on-secondary-fixed-variant": "#42474d", "surface-container-low": "#1a1c1e", "on-secondary-fixed": "#171c21", "surface-container": "#1e2022", "tertiary": "#edffee", "outline-variant": "#434933", "tertiary-container": "#7ff5ac", "surface-bright": "#38393c", "secondary-fixed": "#dee3ea", "secondary-fixed-dim": "#c2c7cd", "surface-container-highest": "#333537", "on-error": "#690005", "on-tertiary-fixed-variant": "#00522d" }, borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, spacing: { "space-lg": "1.5rem", "margin-desktop": "3rem", "space-md": "1rem", "margin-tablet": "2rem", "space-xs": "0.25rem", "gutter-desktop": "2rem", "gutter-tablet": "1.5rem", "gutter": "1rem", "space-xl": "2.5rem", "margin": "1rem", "space-sm": "0.5rem" }, fontFamily: { "body-sm": ["Geist"], "label-ui": ["Geist"], "metric-md": ["JetBrains Mono"], "metric-xl": ["JetBrains Mono"], "body-md": ["Geist"], "display-hero-mobile": ["Space Grotesk"], "headline-md": ["Space Grotesk"], "label-caps": ["JetBrains Mono"], "metric-lg": ["JetBrains Mono"], "display-hero": ["Space Grotesk"], "headline-sm": ["Space Grotesk"], "headline-lg-mobile": ["Space Grotesk"], "headline-lg": ["Space Grotesk"], "body-lg": ["Geist"] }, fontSize: { "body-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "400" }], "label-ui": ["13px", { "lineHeight": "16px", "letterSpacing": "0em", "fontWeight": "500" }], "metric-md": ["20px", { "lineHeight": "24px", "letterSpacing": "-0.02em", "fontWeight": "600" }], "metric-xl": ["48px", { "lineHeight": "48px", "letterSpacing": "-0.04em", "fontWeight": "700" }], "body-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "400" }], "display-hero-mobile": ["40px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "headline-md": ["22px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "label-caps": ["11px", { "lineHeight": "14px", "letterSpacing": "0.08em", "fontWeight": "500" }], "metric-lg": ["32px", { "lineHeight": "34px", "letterSpacing": "-0.03em", "fontWeight": "600" }], "display-hero": ["56px", { "lineHeight": "60px", "letterSpacing": "-0.03em", "fontWeight": "700" }], "headline-sm": ["18px", { "lineHeight": "24px", "letterSpacing": "0em", "fontWeight": "600" }], "headline-lg-mobile": ["26px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "headline-lg": ["32px", { "lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "600" }], "body-lg": ["16px", { "lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "400" }] } } } };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface text-on-surface flex flex-col min-h-screen pt-safe pb-safe"><main class="flex-1 flex flex-col relative w-full bg-surface"><div class="flex flex-col w-full">
+<div class="px-margin pt-space-md pb-space-lg flex flex-col gap-space-md">
+<!-- Top Status / Branding Row -->
+<div class="flex items-center justify-between w-full">
+<div class="flex items-center gap-space-xs">
+<div class="w-8 h-8 rounded-lg bg-primary-container flex items-center justify-center text-on-primary-container shadow-md shadow-primary-container/20">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">bolt</span>
+</div>
+<div class="flex flex-col leading-none">
+<span class="font-headline-sm text-headline-sm tracking-tight text-on-surface uppercase">KINETIC</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant tracking-widest mt-0.5">STRENGTH LAB</span>
+</div>
+</div>
+<!-- Offline Readiness Pill -->
+<div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-high">
+<span class="w-2 h-2 rounded-full bg-primary-container animate-pulse"></span>
+<span class="font-label-caps text-label-caps text-primary-container tracking-wider uppercase">LOCAL-FIRST</span>
+</div>
+</div>
+<!-- Hero Card with Visual Motif -->
+<div class="relative w-full rounded-xl overflow-hidden bg-surface-container shadow-xl">
+<!-- Image with Scrim -->
+<div class="relative w-full h-72">
+<img class="w-full h-full object-cover object-center brightness-90 contrast-125" data-alt="Cinematic high contrast low-key portrait of a focused athlete performing heavy barbell lift in a dark industrial gym facility. Volumetric dramatic electric lime green neon light accents contouring the muscles and barbell edge. Atmospheric chalk particles suspended in dark obsidian air with technical holographic telemetry lines." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD6H5F-lM7N434PRqY_5RRA_xCDqx7rULeXfzWcBPX76n_oyt4FHDPh_C-ux0JA6-Cdwxfc3Dbubh1BkMNNPQOWmav9cAEAs_rVegyG2kfPfWpwBaGa55KKmxpPOOrTXhf6bBFTuwfkd00zFBPp7VgDIgTi6V3PAFYTedpBc7P_1ss7p0EQ_PKnyNWHuKFQENDOWS0tVAAhvIbD2OKQweB0v9TEYh1h76I6N7avttYyN_Rc92GaLYf9"/>
+<!-- Gradient Scrim for Contrast -->
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container via-surface-container/60 to-transparent"></div>
+<div class="absolute inset-0 bg-gradient-to-r from-surface-container/80 via-transparent to-transparent"></div>
+<!-- Telemetry Geometric Overlay -->
+<div class="absolute top-3 right-3 flex flex-col items-end gap-1">
+<div class="flex items-center gap-1 px-2 py-0.5 rounded bg-surface-container-lowest/80 backdrop-blur-md">
+<span class="material-symbols-outlined text-primary-container text-[14px]">speed</span>
+<span class="font-label-caps text-label-caps text-on-surface">VMAX 0.82 m/s</span>
+</div>
+<div class="px-2 py-0.5 rounded bg-surface-container-lowest/80 backdrop-blur-md">
+<span class="font-label-caps text-label-caps text-on-surface-variant">BARBELL CALIBRATED</span>
+</div>
+</div>
+<!-- Hero Headline Content Overlaid on lower half -->
+<div class="absolute bottom-0 left-0 right-0 p-space-md flex flex-col gap-1">
+<div class="flex items-center gap-1 text-primary-container">
+<span class="material-symbols-outlined text-[14px]">terminal</span>
+<span class="font-label-caps text-label-caps tracking-widest uppercase">PRECISION PROTOCOL</span>
+</div>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile font-bold tracking-tight text-on-surface leading-[1.05] uppercase">
+            TRAIN.<br/>
+            TRACK.<br/>
+<span class="text-primary-container">PROGRESS.</span>
+</h1>
+</div>
+</div>
+<!-- Supporting Statement Bar -->
+<div class="px-space-md py-3 bg-surface-container-high flex items-center justify-between">
+<p class="font-body-sm text-body-sm text-on-surface-variant max-w-[85%]">
+          Precision strength engineering, live telemetry, and automated progressive overload.
+        </p>
+<span class="material-symbols-outlined text-primary-container text-[18px]">verified</span>
+</div>
+</div>
+<!-- Feature Pillars (Compact High-Density Stack) -->
+<div class="flex flex-col gap-2.5">
+<div class="flex items-center justify-between px-1">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">SYSTEM MODULES</span>
+<span class="font-label-caps text-label-caps text-primary-container">3 / 3 ACTIVE</span>
+</div>
+<!-- Feature 1: STRENGTH -->
+<div class="p-3.5 rounded-xl bg-surface-container flex items-center justify-between">
+<div class="flex items-center gap-3 min-w-0">
+<div class="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center shrink-0 text-primary-container">
+<span class="material-symbols-outlined text-[22px]">fitness_center</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<span class="font-headline-sm text-headline-sm text-on-surface leading-tight">STRENGTH</span>
+<span class="px-1.5 py-0.2 bg-surface-container-highest font-label-caps text-[10px] text-primary-container rounded">AUTO RPE</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant truncate">Track sets, barbell velocity &amp; target RIR</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant text-[20px] shrink-0 ml-2">chevron_right</span>
+</div>
+<!-- Feature 2: CARDIO -->
+<div class="p-3.5 rounded-xl bg-surface-container flex items-center justify-between">
+<div class="flex items-center gap-3 min-w-0">
+<div class="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center shrink-0 text-primary-container">
+<span class="material-symbols-outlined text-[22px]">sprint</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<span class="font-headline-sm text-headline-sm text-on-surface leading-tight">CARDIO</span>
+<span class="px-1.5 py-0.2 bg-surface-container-highest font-label-caps text-[10px] text-on-surface rounded">ZONES 1-5</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant truncate">Telemetry, split pacing &amp; VO2 estimates</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant text-[20px] shrink-0 ml-2">chevron_right</span>
+</div>
+<!-- Feature 3: PROGRESS -->
+<div class="p-3.5 rounded-xl bg-surface-container flex items-center justify-between">
+<div class="flex items-center gap-3 min-w-0">
+<div class="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center shrink-0 text-primary-container">
+<span class="material-symbols-outlined text-[22px]">trending_up</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<span class="font-headline-sm text-headline-sm text-on-surface leading-tight">PROGRESS</span>
+<span class="px-1.5 py-0.2 bg-primary-container font-label-caps text-[10px] text-on-primary-container font-bold rounded">PR RADAR</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant truncate">Volume load curves &amp; adaptations</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant text-[20px] shrink-0 ml-2">chevron_right</span>
+</div>
+</div>
+<!-- Quick Telemetry Showcase Card -->
+<div class="p-3.5 rounded-xl bg-surface-container-low flex flex-col gap-2">
+<div class="flex items-center justify-between">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">TODAY'S BENCHMARK POD</span>
+<div class="flex items-center gap-1 text-primary-container">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+<span class="font-label-caps text-label-caps uppercase">10,480 KG MOVED</span>
+</div>
+</div>
+<!-- Mini Sparkline Representation -->
+<div class="w-full h-8 flex items-end gap-1 pt-1">
+<div class="flex-1 bg-surface-container-high rounded-t-sm h-[30%]"></div>
+<div class="flex-1 bg-surface-container-high rounded-t-sm h-[50%]"></div>
+<div class="flex-1 bg-surface-container-high rounded-t-sm h-[45%]"></div>
+<div class="flex-1 bg-surface-container-high rounded-t-sm h-[75%]"></div>
+<div class="flex-1 bg-surface-container-high rounded-t-sm h-[60%]"></div>
+<div class="flex-1 bg-surface-container-high rounded-t-sm h-[90%]"></div>
+<div class="flex-1 bg-primary-container rounded-t-sm h-[100%] shadow-sm shadow-primary-container/40"></div>
+</div>
+</div>
+<!-- Action Buttons Stack -->
+<div class="flex flex-col gap-3 pt-2">
+<!-- Primary CTA: Create Account -->
+<button class="w-full py-4 rounded-xl font-headline-sm text-headline-sm font-bold uppercase tracking-wider bg-primary-container text-on-primary-container flex items-center justify-center gap-2 shadow-lg shadow-primary-container/20 active:scale-[0.99] transition-transform" type="button">
+<span class="material-symbols-outlined text-[20px]">fitness_center</span>
+<span>CREATE ACCOUNT</span>
+</button>
+<!-- Secondary CTA: Log In -->
+<button class="w-full py-3.5 rounded-xl font-headline-sm text-headline-sm font-semibold uppercase tracking-wider bg-surface-container text-on-surface hover:bg-surface-container-high active:scale-[0.99] transition-all flex items-center justify-center gap-2" type="button">
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant">login</span>
+<span>LOG IN</span>
+</button>
+<!-- Offline Guest Access Button -->
+<button class="w-full py-2 flex items-center justify-center gap-2 text-on-surface-variant hover:text-primary-container transition-colors active:opacity-75" type="button">
+<span class="material-symbols-outlined text-[16px]">cloud_off</span>
+<span class="font-label-ui text-label-ui">Continue as Guest (Offline Mode)</span>
+</button>
+</div>
+<!-- Engineering Watermark / Local First Compliance Badge -->
+<div class="flex items-center justify-center gap-2 pt-2 pb-1">
+<span class="material-symbols-outlined text-[14px] text-outline">database</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant tracking-wider uppercase text-center">
+        v4.2 LOCAL-FIRST ENGINE • 100% ZERO-LATENCY TELEMETRY
+      </span>
+</div>
+</div>
+</div></main></body></html>

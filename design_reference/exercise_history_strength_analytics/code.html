@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500;600;700&amp;family=Space+Grotesk:wght@600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100%;margin:0;padding:0;background-color:#121416;color:#e2e2e5;}body{overscroll-behavior:none;-webkit-tap-highlight-color:transparent;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "surface-bright": "#38393c", "inverse-on-surface": "#2f3133", "on-surface": "#e2e2e5", "inverse-primary": "#4d6700", "primary-fixed-dim": "#a5d700", "on-primary-fixed-variant": "#394d00", "surface-container-highest": "#333537", "error-container": "#93000a", "outline-variant": "#434933", "secondary-fixed": "#dee3ea", "on-secondary-container": "#b1b5bc", "on-background": "#e2e2e5", "tertiary-fixed-dim": "#67dd96", "tertiary-fixed": "#84fab0", "primary": "#f4ffd3", "on-secondary-fixed-variant": "#42474d", "surface-tint": "#a5d700", "error": "#ffb4ab", "on-tertiary": "#00391d", "tertiary-container": "#7ff5ac", "on-error-container": "#ffdad6", "on-secondary": "#2c3136", "secondary": "#c2c7cd", "on-primary-fixed": "#151f00", "on-error": "#690005", "surface-container-lowest": "#0c0e10", "on-primary": "#273500", "on-tertiary-container": "#007040", "secondary-container": "#42474d", "on-secondary-fixed": "#171c21", "on-primary-container": "#506a00", "secondary-fixed-dim": "#c2c7cd", "surface-variant": "#333537", "on-surface-variant": "#c3caad", "tertiary": "#edffee", "outline": "#8d947a", "on-tertiary-fixed-variant": "#00522d", "inverse-surface": "#e2e2e5", "on-tertiary-fixed": "#00210f", "primary-fixed": "#bdf510", "surface-dim": "#121416", "background": "#121416", "surface-container-high": "#282a2c", "surface-container-low": "#1a1c1e", "primary-container": "#b8f000", "surface-container": "#1e2022", "surface": "#121416" }, borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, spacing: { "space-md": "1rem", "gutter": "1rem", "space-xs": "0.25rem", "space-lg": "1.5rem", "gutter-desktop": "2rem", "margin": "1rem", "space-xl": "2.5rem", "space-sm": "0.5rem", "gutter-tablet": "1.5rem", "margin-tablet": "2rem", "margin-desktop": "3rem" }, fontFamily: { "metric-md": ["JetBrains Mono"], "body-sm": ["Geist"], "headline-md": ["Space Grotesk"], "display-hero": ["Space Grotesk"], "metric-xl": ["JetBrains Mono"], "body-lg": ["Geist"], "body-md": ["Geist"], "display-hero-mobile": ["Space Grotesk"], "label-caps": ["JetBrains Mono"], "label-ui": ["Geist"], "headline-lg-mobile": ["Space Grotesk"], "metric-lg": ["JetBrains Mono"], "headline-lg": ["Space Grotesk"], "headline-sm": ["Space Grotesk"] }, fontSize: { "metric-md": ["20px", { "lineHeight": "24px", "letterSpacing": "-0.02em", "fontWeight": "600" }], "body-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "400" }], "headline-md": ["22px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "display-hero": ["56px", { "lineHeight": "60px", "letterSpacing": "-0.03em", "fontWeight": "700" }], "metric-xl": ["48px", { "lineHeight": "48px", "letterSpacing": "-0.04em", "fontWeight": "700" }], "body-lg": ["16px", { "lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "400" }], "body-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "400" }], "display-hero-mobile": ["40px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "label-caps": ["11px", { "lineHeight": "14px", "letterSpacing": "0.08em", "fontWeight": "500" }], "label-ui": ["13px", { "lineHeight": "16px", "letterSpacing": "0em", "fontWeight": "500" }], "headline-lg-mobile": ["26px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "metric-lg": ["32px", { "lineHeight": "34px", "letterSpacing": "-0.03em", "fontWeight": "600" }], "headline-lg": ["32px", { "lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "600" }], "headline-sm": ["18px", { "lineHeight": "24px", "letterSpacing": "0em", "fontWeight": "600" }] } } } }</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface font-body-md text-body-md text-on-surface flex flex-col min-h-screen selection:bg-primary-container selection:text-on-primary-container"><header class="fixed top-0 inset-x-0 z-50 bg-surface/85 backdrop-blur-xl pt-safe"><div class="h-16 px-gutter flex items-center justify-between"><div class="flex items-center gap-space-sm"><span class="font-headline-md text-headline-md tracking-tight font-bold text-on-surface">KINETIC</span><span class="font-label-caps text-label-caps text-on-surface-variant uppercase hidden xs:inline tracking-wider">/</span><span class="font-headline-sm text-headline-sm text-on-surface tracking-tight truncate max-w-[120px]">Progress</span></div><div class="flex items-center gap-space-md"><div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-high/60 backdrop-blur-md"><span class="w-1.5 h-1.5 rounded-full bg-tertiary-fixed shadow-[0_0_8px_rgba(132,250,176,0.8)] animate-pulse"></span><span class="font-label-caps text-label-caps text-tertiary-fixed tracking-wider uppercase">Synced ✓</span></div><a class="min-w-[44px] min-h-[44px] flex items-center justify-center" data-path="profile" href="#"><img alt="Profile" class="w-8 h-8 rounded-full object-cover ring-1 ring-outline-variant/30" src="https://lh3.googleusercontent.com/aida/AEtjO1VS1u4GcVYp98aXFrkmekBQcdAvUt6cQ-JMF5yEI6tQhxhhqZeo4qV_P2VI2X369r4zDESSzqSVUOktP1t5r5Y90_DD5p4JbY3IJM8xnja8Uc7lW52ifgFNgC9vzX0uPHRHy1e30eglQqWMU6a3v6n46Cf0JGudY381rx4UFZvJq2rm1pusKTvzOdTVrhMG5RPL5uvn7UD6nDp05cEZ2zCCGDO4bQUEMurSygtQ_6eer7Z_VfZN-dCkS9c"/></a></div></div></header><main class="flex flex-col relative w-full pt-16 pb-24 bg-surface min-h-screen"><div class="flex flex-col w-full">
+<div class="flex items-center justify-between px-margin py-space-sm bg-surface-container-low/60 backdrop-blur-md">
+<button class="flex items-center gap-1 text-on-surface-variant hover:text-on-surface transition-colors py-1" type="button">
+<span class="material-symbols-outlined text-[20px]">arrow_back</span>
+<span class="font-label-ui text-label-ui">Back to Exercise</span>
+</button>
+<button class="flex items-center justify-center w-8 h-8 rounded-full bg-surface-container text-on-surface-variant hover:text-on-surface" type="button">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+<div class="px-margin pt-space-md pb-space-sm flex flex-col gap-space-xs">
+<div class="flex items-center gap-space-sm flex-wrap">
+<span class="px-2.5 py-0.5 rounded-full bg-surface-container-high font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Back</span>
+<span class="w-1 h-1 rounded-full bg-outline"></span>
+<span class="px-2.5 py-0.5 rounded-full bg-surface-container-high font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Cable Machine</span>
+<span class="w-1 h-1 rounded-full bg-outline"></span>
+<span class="font-label-caps text-label-caps text-tertiary-fixed tracking-wider">Upper Pull A</span>
+</div>
+<div class="flex items-baseline justify-between mt-1">
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface tracking-tight">Lat Pulldown</h1>
+<span class="font-label-caps text-label-caps text-on-surface-variant tracking-wider uppercase">V-Bar • Neutral</span>
+</div>
+</div>
+<div class="px-margin mb-space-md">
+<div class="bg-surface-container rounded-xl p-space-md shadow-md flex flex-col gap-space-md">
+<div class="flex items-center justify-between pb-space-xs">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Key Milestones</span>
+<div class="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary-container/15 text-primary-container">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">emoji_events</span>
+<span class="font-label-caps text-label-caps font-bold">ALL-TIME PR: 55 KG</span>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-space-sm">
+<div class="bg-surface-container-high/70 rounded-lg p-space-sm flex flex-col justify-between">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Current Best</span>
+<div class="mt-1 flex items-baseline gap-1">
+<span class="font-metric-lg text-metric-lg text-on-surface">55</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">kg</span>
+<span class="font-metric-md text-metric-md text-primary-container ml-1">× 8</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Recorded Sep 14</span>
+</div>
+<div class="bg-surface-container-high/70 rounded-lg p-space-sm flex flex-col justify-between">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Estimated 1RM</span>
+<div class="mt-1 flex items-baseline gap-1">
+<span class="font-metric-lg text-metric-lg text-on-surface">68.4</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">kg</span>
+</div>
+<div class="flex items-center gap-1 mt-0.5 text-tertiary-fixed">
+<span class="material-symbols-outlined text-[14px]">trending_up</span>
+<span class="font-label-caps text-label-caps font-semibold">+3.2 kg vs last mo</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="px-margin mb-space-sm overflow-x-auto no-scrollbar">
+<div class="flex items-center gap-1.5 p-1 bg-surface-container-low rounded-xl w-max">
+<button class="metric-tab px-3.5 py-1.5 rounded-lg bg-primary-container text-on-primary-container font-headline-sm text-label-ui transition-all shadow-sm flex items-center gap-1" type="button">
+<span class="material-symbols-outlined text-[15px]">fitness_center</span>
+        Weight (kg)
+      </button>
+<button class="metric-tab px-3.5 py-1.5 rounded-lg text-on-surface-variant hover:text-on-surface font-label-ui text-label-ui transition-all" type="button">
+        Reps
+      </button>
+<button class="metric-tab px-3.5 py-1.5 rounded-lg text-on-surface-variant hover:text-on-surface font-label-ui text-label-ui transition-all" type="button">
+        Volume (kg)
+      </button>
+<button class="metric-tab px-3.5 py-1.5 rounded-lg text-on-surface-variant hover:text-on-surface font-label-ui text-label-ui transition-all" type="button">
+        Est. 1RM
+      </button>
+</div>
+</div>
+<div class="px-margin mb-space-lg">
+<div class="bg-surface-container rounded-xl p-space-md shadow-md flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">8-Week Strength Trajectory</span>
+<span class="font-headline-sm text-headline-sm text-on-surface mt-0.5">+22.2% Heavy Load Load</span>
+</div>
+<div class="flex items-center gap-1 px-2 py-0.5 rounded bg-surface-container-high text-on-surface-variant">
+<span class="font-label-caps text-label-caps">AUG 01 - SEP 14</span>
+</div>
+</div>
+<div class="relative w-full h-44 mt-2">
+<div class="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-20">
+<div class="w-full h-px bg-outline"></div>
+<div class="w-full h-px bg-outline"></div>
+<div class="w-full h-px bg-outline"></div>
+<div class="w-full h-px bg-outline"></div>
+</div>
+<svg class="w-full h-full overflow-visible" preserveaspectratio="none" viewbox="0 0 320 150">
+<defs>
+<lineargradient id="limeFade" x1="0%" x2="0%" y1="0%" y2="100%">
+<stop offset="0%" stop-color="#b8f000" stop-opacity="0.32"></stop>
+<stop offset="70%" stop-color="#b8f000" stop-opacity="0.05"></stop>
+<stop offset="100%" stop-color="#b8f000" stop-opacity="0"></stop>
+</lineargradient>
+<filter height="140%" id="glow" width="140%" x="-20%" y="-20%">
+<fedropshadow dx="0" dy="0" flood-color="#b8f000" flood-opacity="0.6" stddeviation="3"></fedropshadow>
+</filter>
+</defs>
+<path d="M 10 130 Q 50 120, 85 105 T 160 85 T 235 55 T 310 20 L 310 150 L 10 150 Z" fill="url(#limeFade)"></path>
+<path d="M 10 130 Q 50 120, 85 105 T 160 85 T 235 55 T 310 20" fill="none" filter="url(#glow)" stroke="#b8f000" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"></path>
+<circle class="cursor-pointer transition-transform hover:scale-125" cx="10" cy="130" fill="#121416" r="4" stroke="#b8f000" stroke-width="2"></circle>
+<circle class="cursor-pointer transition-transform hover:scale-125" cx="85" cy="105" fill="#121416" r="4" stroke="#b8f000" stroke-width="2"></circle>
+<circle class="cursor-pointer transition-transform hover:scale-125" cx="160" cy="85" fill="#121416" r="4" stroke="#b8f000" stroke-width="2"></circle>
+<circle class="cursor-pointer transition-transform hover:scale-125" cx="235" cy="55" fill="#121416" r="4" stroke="#b8f000" stroke-width="2"></circle>
+<circle class="cursor-pointer animate-pulse" cx="310" cy="20" fill="#b8f000" r="5.5" stroke="#121416" stroke-width="2"></circle>
+</svg>
+<div class="absolute -top-3 right-0 bg-surface-container-highest px-2 py-0.5 rounded shadow-sm pointer-events-none flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+<span class="font-metric-md text-body-sm text-primary font-bold">55 kg</span>
+<span class="font-label-caps text-[9px] text-on-surface-variant uppercase">Peak</span>
+</div>
+</div>
+<div class="flex justify-between items-center text-on-surface-variant font-label-caps text-label-caps pt-1 px-1">
+<span>AUG 21 (45kg)</span>
+<span>AUG 28</span>
+<span>SEP 04 (50kg)</span>
+<span>SEP 09</span>
+<span class="text-primary-container font-semibold">SEP 14 (55kg)</span>
+</div>
+</div>
+</div>
+<div class="px-margin flex flex-col gap-space-sm mb-space-lg">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant">history</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Recent Sessions</h2>
+</div>
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Set-by-Set Log</span>
+</div>
+<div class="bg-surface-container rounded-xl p-space-md shadow-sm flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-2.5 h-2.5 rounded-full bg-primary-container shadow-[0_0_8px_rgba(184,240,0,0.6)]"></div>
+<span class="font-headline-sm text-headline-sm text-on-surface">Sep 14, 2024</span>
+<span class="px-2 py-0.5 rounded bg-surface-container-high font-label-caps text-label-caps text-tertiary-fixed font-bold">PR SET</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-highest font-metric-md text-label-caps text-on-surface">RPE 8.5</span>
+</div>
+</div>
+<div class="grid grid-cols-3 gap-space-xs mt-1">
+<div class="bg-surface-container-high rounded-lg p-2 flex flex-col items-center">
+<span class="font-label-caps text-label-caps text-on-surface-variant">SET 1</span>
+<div class="flex items-baseline gap-0.5 mt-0.5">
+<span class="font-metric-md text-metric-md text-on-surface">50</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">kg</span>
+<span class="font-body-sm text-body-sm text-on-surface ml-0.5">× 8</span>
+</div>
+</div>
+<div class="bg-surface-container-high rounded-lg p-2 flex flex-col items-center">
+<span class="font-label-caps text-label-caps text-on-surface-variant">SET 2</span>
+<div class="flex items-baseline gap-0.5 mt-0.5">
+<span class="font-metric-md text-metric-md text-on-surface">50</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">kg</span>
+<span class="font-body-sm text-body-sm text-on-surface ml-0.5">× 8</span>
+</div>
+</div>
+<div class="bg-surface-container-high rounded-lg p-2 flex flex-col items-center">
+<span class="font-label-caps text-label-caps text-on-surface-variant">SET 3</span>
+<div class="flex items-baseline gap-0.5 mt-0.5">
+<span class="font-metric-md text-metric-md text-on-surface">47.5</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">kg</span>
+<span class="font-body-sm text-body-sm text-on-surface ml-0.5">× 10</span>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-between pt-2 text-on-surface-variant font-label-caps text-label-caps">
+<span>3 sets completed</span>
+<span class="text-on-surface font-semibold">Total Volume: <span class="text-primary-container">1,275 kg</span></span>
+</div>
+</div>
+<div class="bg-surface-container rounded-xl p-space-md shadow-sm flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-outline"></div>
+<span class="font-headline-sm text-headline-sm text-on-surface">Sep 09, 2024</span>
+</div>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-highest font-metric-md text-label-caps text-on-surface-variant">RPE 8.0</span>
+</div>
+<div class="grid grid-cols-3 gap-space-xs mt-1">
+<div class="bg-surface-container-high rounded-lg p-2 flex flex-col items-center">
+<span class="font-label-caps text-label-caps text-on-surface-variant">SET 1</span>
+<div class="flex items-baseline gap-0.5 mt-0.5">
+<span class="font-metric-md text-metric-md text-on-surface">50</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">kg</span>
+<span class="font-body-sm text-body-sm text-on-surface ml-0.5">× 7</span>
+</div>
+</div>
+<div class="bg-surface-container-high rounded-lg p-2 flex flex-col items-center">
+<span class="font-label-caps text-label-caps text-on-surface-variant">SET 2</span>
+<div class="flex items-baseline gap-0.5 mt-0.5">
+<span class="font-metric-md text-metric-md text-on-surface">47.5</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">kg</span>
+<span class="font-body-sm text-body-sm text-on-surface ml-0.5">× 9</span>
+</div>
+</div>
+<div class="bg-surface-container-high rounded-lg p-2 flex flex-col items-center">
+<span class="font-label-caps text-label-caps text-on-surface-variant">SET 3</span>
+<div class="flex items-baseline gap-0.5 mt-0.5">
+<span class="font-metric-md text-metric-md text-on-surface">47.5</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">kg</span>
+<span class="font-body-sm text-body-sm text-on-surface ml-0.5">× 8</span>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-between pt-2 text-on-surface-variant font-label-caps text-label-caps">
+<span>3 sets completed</span>
+<span class="text-on-surface font-semibold">Total Volume: <span class="text-on-surface">1,157 kg</span></span>
+</div>
+</div>
+<div class="bg-surface-container rounded-xl p-space-md shadow-sm flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-outline"></div>
+<span class="font-headline-sm text-headline-sm text-on-surface">Sep 04, 2024</span>
+</div>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-highest font-metric-md text-label-caps text-on-surface-variant">RPE 8.5</span>
+</div>
+<div class="grid grid-cols-3 gap-space-xs mt-1">
+<div class="bg-surface-container-high rounded-lg p-2 flex flex-col items-center">
+<span class="font-label-caps text-label-caps text-on-surface-variant">SET 1</span>
+<div class="flex items-baseline gap-0.5 mt-0.5">
+<span class="font-metric-md text-metric-md text-on-surface">47.5</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">kg</span>
+<span class="font-body-sm text-body-sm text-on-surface ml-0.5">× 10</span>
+</div>
+</div>
+<div class="bg-surface-container-high rounded-lg p-2 flex flex-col items-center">
+<span class="font-label-caps text-label-caps text-on-surface-variant">SET 2</span>
+<div class="flex items-baseline gap-0.5 mt-0.5">
+<span class="font-metric-md text-metric-md text-on-surface">47.5</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">kg</span>
+<span class="font-body-sm text-body-sm text-on-surface ml-0.5">× 9</span>
+</div>
+</div>
+<div class="bg-surface-container-high rounded-lg p-2 flex flex-col items-center">
+<span class="font-label-caps text-label-caps text-on-surface-variant">SET 3</span>
+<div class="flex items-baseline gap-0.5 mt-0.5">
+<span class="font-metric-md text-metric-md text-on-surface">45</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">kg</span>
+<span class="font-body-sm text-body-sm text-on-surface ml-0.5">× 10</span>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-between pt-2 text-on-surface-variant font-label-caps text-label-caps">
+<span>3 sets completed</span>
+<span class="text-on-surface font-semibold">Total Volume: <span class="text-on-surface">1,352 kg</span></span>
+</div>
+</div>
+<div class="bg-surface-container rounded-xl p-space-md shadow-sm flex flex-col gap-space-sm opacity-85">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-outline-variant"></div>
+<span class="font-headline-sm text-headline-sm text-on-surface">Aug 28, 2024</span>
+<span class="px-2 py-0.5 rounded bg-surface-container-high font-label-caps text-label-caps text-on-surface-variant uppercase">Baseline</span>
+</div>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-highest font-metric-md text-label-caps text-on-surface-variant">RPE 7.5</span>
+</div>
+<div class="grid grid-cols-3 gap-space-xs mt-1">
+<div class="bg-surface-container-high rounded-lg p-2 flex flex-col items-center">
+<span class="font-label-caps text-label-caps text-on-surface-variant">SET 1</span>
+<div class="flex items-baseline gap-0.5 mt-0.5">
+<span class="font-metric-md text-metric-md text-on-surface">45</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">kg</span>
+<span class="font-body-sm text-body-sm text-on-surface ml-0.5">× 10</span>
+</div>
+</div>
+<div class="bg-surface-container-high rounded-lg p-2 flex flex-col items-center">
+<span class="font-label-caps text-label-caps text-on-surface-variant">SET 2</span>
+<div class="flex items-baseline gap-0.5 mt-0.5">
+<span class="font-metric-md text-metric-md text-on-surface">45</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">kg</span>
+<span class="font-body-sm text-body-sm text-on-surface ml-0.5">× 10</span>
+</div>
+</div>
+<div class="bg-surface-container-high rounded-lg p-2 flex flex-col items-center">
+<span class="font-label-caps text-label-caps text-on-surface-variant">SET 3</span>
+<div class="flex items-baseline gap-0.5 mt-0.5">
+<span class="font-metric-md text-metric-md text-on-surface">45</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">kg</span>
+<span class="font-body-sm text-body-sm text-on-surface ml-0.5">× 10</span>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-between pt-2 text-on-surface-variant font-label-caps text-label-caps">
+<span>3 sets completed</span>
+<span class="text-on-surface font-semibold">Total Volume: <span class="text-on-surface">1,350 kg</span></span>
+</div>
+</div>
+</div>
+<div class="px-margin mb-space-lg">
+<div class="bg-surface-container-high/40 rounded-xl p-space-md flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<div class="w-10 h-10 rounded-lg bg-surface-container-highest flex items-center justify-center text-primary-container">
+<span class="material-symbols-outlined text-[24px]">school</span>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-on-surface">Form &amp; Cue Check</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Shoulder blades depressed, slight 10° torso lean</span>
+</div>
+</div>
+<button class="px-3 py-1.5 rounded-lg bg-surface-container-highest text-on-surface font-label-ui text-label-ui hover:bg-surface-bright transition-colors" type="button">
+        View
+      </button>
+</div>
+</div>
+<div class="sticky bottom-0 inset-x-0 p-margin bg-surface/95 backdrop-blur-xl flex items-center gap-space-sm shadow-xl z-20">
+<button class="flex-1 py-3.5 px-space-md rounded-xl bg-primary-container text-on-primary-container font-headline-sm text-headline-sm flex items-center justify-center gap-2 active:scale-[0.99] transition-transform shadow-md" type="button">
+<span class="material-symbols-outlined text-[20px]">add</span>
+<span>+ Log Set</span>
+</button>
+<button class="px-4 py-3.5 rounded-xl bg-surface-container-high text-on-surface font-label-ui text-label-ui flex items-center justify-center gap-1.5 hover:bg-surface-bright transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant">menu_book</span>
+<span>Protocol</span>
+</button>
+</div>
+</div>
+<script>
+  document.querySelectorAll('.metric-tab').forEach(tab => {
+    tab.addEventListener('click', function() {
+      document.querySelectorAll('.metric-tab').forEach(t => {
+        t.classList.remove('bg-primary-container', 'text-on-primary-container', 'font-headline-sm', 'shadow-sm');
+        t.classList.add('text-on-surface-variant', 'font-label-ui');
+        const icon = t.querySelector('.material-symbols-outlined');
+        if (icon) icon.remove();
+      });
+      this.classList.remove('text-on-surface-variant', 'font-label-ui');
+      this.classList.add('bg-primary-container', 'text-on-primary-container', 'font-headline-sm', 'shadow-sm');
+    });
+  });
+</script></main><nav class="fixed bottom-0 inset-x-0 z-50 pb-safe bg-surface/90 backdrop-blur-xl shadow-[0_-8px_24px_rgba(0,0,0,0.6)]" data-active-classes="text-primary-container font-semibold drop-shadow-[0_0_12px_rgba(184,240,0,0.4)]"><div class="flex justify-around items-center h-16 px-space-sm"><a class="flex flex-col items-center justify-center gap-1 min-w-[56px] min-h-[44px] text-on-surface-variant transition-all" data-path="today" href="#"><span class="material-symbols-outlined text-[22px]">bolt</span><span class="font-label-caps text-label-caps tracking-widest uppercase">Today</span></a><a class="flex flex-col items-center justify-center gap-1 min-w-[56px] min-h-[44px] text-on-surface-variant transition-all" data-path="workouts" href="#"><span class="material-symbols-outlined text-[22px]">fitness_center</span><span class="font-label-caps text-label-caps tracking-widest uppercase">Workouts</span></a><a aria-current="page" class="flex flex-col items-center justify-center gap-1 min-w-[56px] min-h-[44px] transition-all text-primary-container font-semibold drop-shadow-[0_0_12px_rgba(184,240,0,0.4)]" data-path="progress" href="#"><span class="material-symbols-outlined text-[22px]">monitoring</span><span class="font-label-caps text-label-caps tracking-widest uppercase">Progress</span></a><a class="flex flex-col items-center justify-center gap-1 min-w-[56px] min-h-[44px] text-on-surface-variant transition-all" data-path="profile" href="#"><span class="material-symbols-outlined text-[22px]">person</span><span class="font-label-caps text-label-caps tracking-widest uppercase">Profile</span></a></div></nav></body></html>
