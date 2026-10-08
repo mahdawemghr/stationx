@@ -301,7 +301,7 @@ Performed on the pre-existing code (Phase 17 repeats it on the final tree).
 | Logging | No `print`/`debugPrint` of data | — | OK |
 | Local storage | None exists | — | n/a |
 | Auth | None existed; the Stitch login/register screens would imply auth. **Risk:** shipping a UI that appears to authenticate/encrypt but doesn't. Mitigation: local-profile-only flow, no password persistence, security claims removed from copy. | Medium (product-honesty) | Mitigated: login/register are local-only, password lives in a TextEditingController and is cleared, never stored/logged |
-| Android `applicationId` | `com.example.stationx` is template default | Low | Documented, not changed (release-signing decision for owners) |
+| Android `applicationId` | was `com.example.stationx` | Low | Fixed 2026-10-08 → `dev.mahdi_ramadhan.stationx` (§T) |
 | Fonts | Bundled OFL fonts, licences copied into `assets/fonts/` | — | OK |
 
 ---
@@ -311,7 +311,7 @@ Performed on the pre-existing code (Phase 17 repeats it on the final tree).
 - ~~No persistence~~ — **done, see §L.** Remaining persistence work: schema migrations (none needed yet), at-rest encryption, backup/export to file.
 - Provisional domain services (rotation, Epley 1RM, double-progression, PR, volume, Smart Swap) — to be reconciled with the real engine when it exists.
 - Health Connect (sleep + resting heart rate, read-only, opt-in) is implemented for Android (§O). iOS Apple Health is implemented but **untested** (§P). Still not implemented: GPS / live HR / cadence / elevation / direct cloud APIs for Garmin/Fitbit/Whoop/Oura/Polar.
-- Auth is local-profile only; no real accounts/sync.
+- Auth: the local profile is still local-only; an optional separate Supabase cloud account provides backup/sync (§U).
 - ~~App launcher icon not regenerated~~ — done (§M).
 - Share/export actions limited (no share/file packages added).
 - Custom cardio activity interval-engine (rounds) fields are not part of the persisted cardio model.
@@ -360,6 +360,9 @@ _(updated as work lands)_
 
 **Known limits / future:** no at-rest encryption (Isar 3 has none; use OS full-disk/app sandbox or add SQLCipher-style layer later); schema changes beyond additive ones need a migration keyed on `AppMetaEntity.schemaVersion` (none yet); not exercised on a physical Android/iOS device here (only Linux desktop + Android build).
 
+- 2026-10-08 — **Cloud sync client** (§U): engine, Isar sync store, Supabase auth/gateway, UI, privacy rewrite, INTERNET permission, 100+ new tests incl. real-database end-to-end.
+- 2026-10-08 — App id `dev.mahdi_ramadhan.stationx` applied; Supabase schema + RLS + tests applied/verified (§T).
+- 2026-10-08 — Large-history performance tests (§S): 4-year dataset timings, Isar load/write timings, regression budgets.
 - 2026-10-07 — Accessibility / TalkBack pass (§R): 48 dp targets, contrast token fix, semantics, large-text layout, gesture alternatives; ~125 new tests (30 screen sweeps, 30 large-text, 12 state, 4 gesture, 52 contrast).
 - 2026-10-07 — Release readiness (§Q): signing guard, dark launch screen, startup-failure recovery, release error widget, real version label, privacy page + policy draft, `docs/RELEASE.md`.
 - 2026-10-07 — **Apple Health (iOS)** support (untested on iOS, §P): provider-aware UI, remembered consent, entitlements, iOS 15 target.
@@ -423,7 +426,7 @@ _(updated as work lands)_
 - Verified: release APK builds (61.5 MB, 3 ABIs); release merged manifest has no `INTERNET`; 188 tests pass, analyzer clean.
 
 **Blocked / owner actions (not done)**
-- `applicationId`/bundle id is still `com.example.stationx` — cannot be published; owner chose to keep the template id for now (2026-10-07) and decide later.
+- ~~`applicationId` still the template id~~ — set 2026-10-08 (§T).
 - Create upload keystore + `key.properties`; developer accounts; hosted privacy-policy URL; store listing assets (screenshots, 512 icon, feature graphic).
 - **Never verified at runtime:** the *release* build (R8 minification can break plugins — test Isar + Health Connect in release on a real phone), Health Connect/HealthKit on devices, performance profiling, TalkBack pass.
 - iOS build has never been run.
@@ -446,6 +449,54 @@ _(updated as work lands)_
 - Reduced motion: meter/ring/bar/segment animations and the rest-tile resize honour the system "remove animations" setting.
 
 **Not done / needs a human with TalkBack (see `docs/RELEASE.md` §5):** real-device TalkBack walkthrough of the main flows (log a workout, cardio, calendar), focus-order sanity on every screen, Switch Access, and Android's Accessibility Scanner. Known judgement calls: fixed 1.3× cap on bar labels; the cardio hold-to-lock still needs a hold for sighted users; `ses` is read literally on the Today stat tile.
+
+## S. Performance with a large history (added 2026-10-08) — `test/perf/`
+Synthetic heavy-use dataset: **4 years, 832 strength sessions (~15k sets) + 624 cardio sessions** (4 strength + 3 cardio per week). Measured in the Flutter test VM (debug/JIT, headless — several times slower than a release build on a phone), so treat numbers as an upper bound / regression guard, not device frame times.
+
+| Case | Time |
+|---|---|
+| First build: Today / Workouts hub / Progress / Exercise history / Personal records / Calendar | 85–125 ms (Today ~540 ms incl. VM warm-up; 100 ms warm) |
+| First build: Exercise library (38 exercises, PR badge each) | ~205–230 ms |
+| Library: each search keystroke (full list rebuild) | 29–125 ms (first keystroke warms up) |
+| Progress → "All time" period; Calendar month change | ~85–90 ms |
+| Isar: bulk write 1,456 sessions / cold open + load all into memory | 61 ms / 55 ms |
+| Isar: add one session with the big history loaded | 6 ms |
+
+Conclusions: screens compute their stats synchronously from the in-memory cache and stay well inside a 16 ms-frame budget *per rebuild on a release build is expected but unverified*; startup loading everything is cheap at this scale (≈ linear; ~100k+ sessions would need paging/lazy loading — not a realistic personal-use size). Micro-optimisation made: `PrService.forExercise` now filters to relevant sessions before sorting. Regression budgets are asserted in the tests (first build < 2.5 s, Isar cold load < 5 s, single add < 0.5 s — deliberately loose to avoid flaky CI).
+**Still needs a device:** real frame timing with `flutter run --profile` + DevTools (active-workout page with the 1-second tickers, scrolling the calendar/history lists, chart repaint), memory over a long session, and low-end Android.
+
+## T. App id + Supabase database (added 2026-10-08)
+**Application id:** Android `applicationId`/`namespace`/Kotlin package → `dev.mahdi_ramadhan.stationx` (MainActivity moved to `kotlin/dev/mahdi_ramadhan/stationx/`). iOS/macOS bundle ids → `dev.mahdi-ramadhan.stationx` (+ `.RunnerTests`) because **iOS bundle identifiers cannot contain underscores**; Linux app id `dev.mahdi_ramadhan.stationx`; copyright/company strings updated. Debug APK builds with the new id. iOS/macOS builds not run (no Xcode).
+
+**Supabase (project `StationX`, ref `fyigpfuddgegvkibnvgd`)** — see `supabase/README.md`.
+- Verified the project was empty (0 tables, 0 users) before applying `supabase/migrations/20261008000000_initial_schema.sql`: 8 per-user tables mirroring the domain models (profiles, exercises[custom], workouts, rotations, workout_sessions, cardio_sessions, cardio_goals, custom_cardio_activities), sync columns (`created_at`, `updated_at`, `server_updated_at`, `deleted_at`), `workout_date` separate from `created_at`, enum/range/jsonb check constraints, indexes for incremental pulls and by-date queries, RLS on every table (owner-only), `anon` revoked, last-write-wins trigger, signup→profile trigger, `delete_account()` RPC.
+- Verified with `supabase/tests/rls_and_sync_test.sql` (self-rolling-back): **21/21 PASS** — signup trigger, backdating, spoofing blocked, stale-write ignored, constraints, user isolation (read/update/delete), anon denied, account deletion cascade. No test data left behind.
+- Supabase advisors: 1 *intentional* security warning (`delete_account` callable by signed-in users — it only deletes `auth.uid()`), performance notes are "unused index" on an empty DB.
+- **Not done:** the Flutter app does **not** talk to Supabase (no client, no auth flow, no sync service, still no `INTERNET` permission). Turning sync on requires the client work plus privacy-policy / data-safety / privacy-label updates (checklist in `supabase/README.md`). Auth settings left unchanged (recommended: set Site URL, raise min password length from 6).
+- **Security incident to handle:** a Supabase *personal access token* (account-wide) was pasted into the chat. It was used only for the calls above and was **not written to any file**. **Revoke it** (Supabase dashboard → Account → Access Tokens) and create a new one only when needed.
+
+## U. Cloud sync client (added 2026-10-08) — optional, off by default
+The app can now back up and sync to the Supabase database from §T. **It is inert unless the build has a Supabase URL + publishable key (`--dart-define-from-file=env/supabase.json`) *and* the user signs in.** Without either, the app makes no network requests.
+
+**Architecture** (`lib/data/sync/`, `lib/data/isar/isar_sync_store.dart`, `lib/features/cloud/`)
+- `SupabaseConfig` (refuses `sbp_`/`sb_secret_`/`service_role` credentials) · `CloudAuth` (+Supabase impl, friendly error mapping, delete-account RPC) · `SyncGateway` (+Supabase impl) · `SyncLocalStore` (+Isar impl: dirty rows, outbox of deletions, last-write-wins apply, state/cursors) · `SyncEngine` (push → tombstones → pull, idempotent, failure-tolerant) · `CloudSyncController` (status, debounce, resume throttle, retry, single-flight, account-switch decision) · row mappers (`sync_rows.dart`).
+- Isar schema additions (additive): `SyncStateEntity`, `SyncDeletionEntity` (tombstone outbox), `updatedAt`/`syncStatus` on profile & rotation. Seed/default/demo rows are "clean" (epoch `updatedAt`, synced) so they never upload and always lose to real cloud data.
+- UI: Profile › *Cloud backup & sync* card (status, Sync now, Sign out, Delete cloud account & data); `CloudAuthPage` (sign in / create account / e-mail-confirmation step / account-switch sheet); "Restore from cloud backup" on the welcome screen (hidden when not configured). Wipe-device dialog explains it also unlinks sync. Privacy page + policy rewritten.
+- Android manifest: **`INTERNET` permission added** (the release build previously had none).
+
+**Verified**
+- 7 mapper tests, 22 engine tests (two Isar "phones" + a fake server with the same LWW rules: push/pull, backdating preserved, edit/delete propagation, conflicts both orders, stale writes, resurrect-after-delete, defaults vs. edited routines, first-link profile rules, account switch merge/replace, mid-push network failure + retry, edit during in-flight push, pagination, regression for UTC-vs-local `DateTime` equality), 14 controller tests, 18 cloud UI tests, 4 config-guard tests.
+- **End-to-end against the real Supabase project** (opt-in `test/e2e`): real GoTrue sign-in (wrong/right password), two phones converge through the real database (rows verified via SQL: user_id, workout_date ≠ created_at, nested cardio, tombstones), idempotent re-sync, stale-edit rejection, RLS (another user reads nothing, spoofing blocked, cannot update/delete others' rows, anonymous denied), account deletion cascades to every table. The run **caught a real bug** (singleton rows re-"pulled" every sync due to `DateTime ==` comparing the UTC flag) which is fixed and has a regression test. Test users are deleted afterwards; the DB was verified empty.
+- Full suite 393 passing, analyzer clean, debug APK builds with the cloud config.
+
+**Not done / owner decisions** (also in `supabase/README.md`, `docs/RELEASE.md` §5b): password reset flow (needs a hosted page); Supabase Site URL / min password length / SMTP; Play account-deletion URL; Data-safety form & App Store privacy label updates; field-level conflict merge (currently newest-row-wins); real-phone testing of sign-in/sync UX, flaky networks, token refresh over long idle periods, iOS (unbuilt). The Supabase access token pasted in chat should be **revoked**.
+
+## V. Import from Gym Tracker (added 2026-10-08)
+- **gym_tracker** (separate repo, uncommitted changes): Settings › Data › *Export Data* writes a versioned `gym_tracker_export` v1 JSON (all completed/unfinished sessions with sets in kg, exercises, templates, PRs, settings) via the system "Save as" dialog, with a "Copy instead" fallback; spec in its `docs/EXPORT_FORMAT.md`; 12 new tests.
+- **StationX**: `lib/data/import/gym_tracker_import.dart` (pure plan → apply), `exercise_aliases.dart`, `import_file_source.dart` (file_picker, fakeable), UI `lib/features/profile/gym_tracker_import_flow.dart` (source sheet → preview with counts/new exercises/optional "continue where Gym Tracker left off" → result).
+- **Rules**: only completed workouts; `workoutDate` = start time, `createdAt` = now; ids `gt_s<id>` make re-imports idempotent; nothing existing is modified; rotation changes only if ticked; PRs/1RM recomputed by the domain layer; achievements ignored; weights are kg both sides (no conversion); malformed entries skipped individually; 50 MB cap; hostile names sanitised into ids; one batched Isar write (single notify).
+- **Tests**: 20 importer tests against a fixture produced by the REAL exporter (incl. Isar restart persistence) + 10 UI-flow tests.
+- **Not verified**: on a real phone (file picker / SAF), and with the user's real Gym Tracker data (the desktop DB was nearly empty).
 
 ## J. Verification record (2026-10-07)
 - `flutter analyze`: No issues found.

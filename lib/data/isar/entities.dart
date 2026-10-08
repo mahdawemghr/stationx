@@ -120,6 +120,11 @@ class RotationEntity {
   Id id = 1;
   List<String> workoutIds = [];
   int currentIndex = 0;
+
+  /// Epoch + synced = untouched default (never pushed, always loses to the cloud copy).
+  DateTime updatedAt = DateTime.fromMillisecondsSinceEpoch(0);
+  @Enumerated(EnumType.name)
+  SyncStatus syncStatus = SyncStatus.synced;
 }
 
 @collection
@@ -205,6 +210,11 @@ class ProfileEntity {
   bool progressionEnabled = true;
   int weeklySessionTarget = 4;
   bool cardioDistanceUnitKm = true;
+
+  /// Epoch + synced = untouched default (never pushed, always loses to the cloud copy).
+  DateTime updatedAt = DateTime.fromMillisecondsSinceEpoch(0);
+  @Enumerated(EnumType.name)
+  SyncStatus syncStatus = SyncStatus.synced;
 }
 
 /// Singleton (id = 1): app-level flags that are not user data.
@@ -217,4 +227,28 @@ class AppMetaEntity {
   /// User opted in to the platform health store (needed on iOS, where the OS
   /// cannot report read access). Additive field: existing databases default to false.
   bool healthConnected = false;
+}
+
+/// Singleton (id = 1): cloud-sync bookkeeping. Never contains credentials.
+@collection
+class SyncStateEntity {
+  Id id = 1;
+
+  /// Cloud account (Supabase user id) this device's data was last synced with.
+  String? userId;
+
+  /// JSON map table → last `server_updated_at` pulled (ISO-8601).
+  String cursorsJson = '{}';
+  DateTime? lastSyncAt;
+}
+
+/// Deletions made locally that still have to be sent to the cloud (tombstones).
+@collection
+class SyncDeletionEntity {
+  Id id = Isar.autoIncrement;
+
+  @Index(unique: true, replace: true, composite: [CompositeIndex('rowId')])
+  String table = '';
+  String rowId = '';
+  DateTime deletedAt = DateTime.fromMillisecondsSinceEpoch(0);
 }

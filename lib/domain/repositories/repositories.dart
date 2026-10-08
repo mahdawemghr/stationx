@@ -37,6 +37,9 @@ abstract class SessionRepository implements Listenable {
   List<WorkoutSession> get sessions;
   WorkoutSession? byId(String id);
   Future<void> add(WorkoutSession s);
+
+  /// Adds many sessions in ONE write (one notification) — used by data import.
+  Future<void> addAll(List<WorkoutSession> sessions);
   Future<void> update(WorkoutSession s);
   Future<void> delete(String id);
 

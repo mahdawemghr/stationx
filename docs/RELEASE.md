@@ -5,9 +5,9 @@ Status legend: ✅ done in the repo · 🟡 needs the owner · 🔴 blocked (nee
 ## 0. Decisions only the owner can make
 | Item | Current | Action |
 |---|---|---|
-| 🟡 Application ID / bundle ID | `com.example.stationx` (Flutter template; **cannot be published** with `com.example`) | Choose a reverse-domain id you own (e.g. `com.yourname.stationx`) and tell the assistant to apply it (Android `applicationId`+`namespace`+Kotlin package, iOS `PRODUCT_BUNDLE_IDENTIFIER` ×4). **It can never be changed after publishing.** |
+| ✅ Application ID / bundle ID | Android `dev.mahdi_ramadhan.stationx`; iOS/macOS `dev.mahdi-ramadhan.stationx` (iOS bundle ids cannot contain `_`, so the underscore became a hyphen) | Applied 2026-10-08. **Cannot be changed after publishing.** The two platforms' ids need not match. If you'd rather have one id everywhere, choose one without `_` (e.g. `dev.mahdiramadhan.stationx`) *before* the first upload. |
 | 🟡 Developer accounts | — | Google Play Console ($25 one-time); Apple Developer Program ($99/yr) for iOS |
-| 🟡 Privacy-policy URL + contact email | draft in `docs/PRIVACY_POLICY.md` | Fill placeholders, host over HTTPS |
+| 🟡 Privacy-policy URL + contact email | draft in `docs/PRIVACY_POLICY.md` (now describes optional cloud sync) | Fill placeholders, host over HTTPS; also an **account-deletion page/email** for Google Play |
 | 🟡 App name / store listing text | "StationX" | Confirm the name is available on both stores |
 | 🟡 Distribution scope | — | Which countries; free vs paid |
 
@@ -36,7 +36,15 @@ Status legend: ✅ done in the repo · 🟡 needs the owner · 🔴 blocked (nee
 
 ## 3. Google Play Console checklist
 - **App content → Privacy policy:** the hosted URL.
-- **App content → Data safety:** *Does your app collect or share any of the required user data types?* → **No** (all data stays on the device; no network permission; no analytics/ads SDKs). Health data is read on-device only and not collected.
+- **App content → Data safety** (answers change because of the optional cloud account — re-check against the final build):
+  - *Does the app collect or share user data?* → **Yes — collected, optional** (only when the user creates a cloud account).
+  - Collected types: **Personal info → Email address, Name**; **Health and fitness → Fitness info** (workouts, sets, cardio sessions, goals); **App info/Other → user-generated content** (notes).
+    Mark them **optional** (users can use the whole app without an account).
+  - Purpose: **App functionality** and **Account management**. **Not** used for advertising, analytics or personalisation.
+  - *Shared with third parties?* → **No** (Supabase is a service provider processing data on our behalf; Google does not count that as "sharing").
+  - Security: **data encrypted in transit: Yes**; **users can request data deletion: Yes** (in-app *Delete cloud account & data*).
+  - **Account deletion web page:** Google Play requires a public URL (or email process) where users can request account deletion — **owner must provide it** and enter it in the Data safety form.
+  - Health Connect / Apple Health data is read on-device and **never collected or uploaded**.
 - **App content → Health Connect permissions declaration** (required because the manifest requests `READ_SLEEP` and `READ_RESTING_HEART_RATE`):
   - Purpose: *"Shows the user a recovery summary (last night's sleep and resting heart rate versus their 7-day average) on the home screen. Data is read on-device only, is not written back, stored, uploaded or shared. Access is optional and requested only after the user taps Connect and confirms an in-app explanation."*
   - Link to the privacy policy.
@@ -64,11 +72,18 @@ Status legend: ✅ done in the repo · 🟡 needs the owner · 🔴 blocked (nee
 - [ ] Airplane mode: everything works (no network use).
 - [ ] TalkBack walkthrough on a real device (code-level pass is done and tested — see roadmap §R): log a full workout, finish cardio, browse the calendar, change settings; check focus order, that nothing is read twice, and the rest-timer "Rest over" announcement. Also run Android's *Accessibility Scanner* and try *Switch Access*.
 
+## 5b. Cloud sync release checklist (Supabase)
+- Build with the cloud config: `flutter build appbundle --release --dart-define-from-file=env/supabase.json` (publishable key only; the file is gitignored). **Without it the cloud feature is absent from the build.**
+- Supabase dashboard (not changed by the assistant): set **Site URL** (confirmation e-mails link there; `http://localhost:3000` is wrong for production), raise **minimum password length** (currently 6; the app requires 8), configure **custom SMTP** (the default mail sender is heavily rate-limited), review **e-mail templates**, enable **leaked-password protection** if available.
+- **Password reset is not implemented in the app** (it needs a hosted page to receive the reset link). Until then a user who forgets the password can only reset it from the Supabase email flow with a web page you host.
+- Run `SUPABASE_E2E=1 … flutter test test/e2e` (see `supabase/README.md`) against the production project before shipping.
+- Update the **Play Data safety form** and **App Store privacy label** (see §3 above); re-test the release build with and without a cloud account.
+
 ## 6. Build hygiene
 - `flutter analyze` and `flutter test` must be clean before every release.
 - Persistence tests download the Isar core on first run (gitignored `libisar.so`).
 - Release APK is ~61 MB (3 ABIs); the Play App Bundle delivers per-ABI splits. For direct distribution use `flutter build apk --split-per-abi`.
-- Android release has **no** `INTERNET` permission (verified in the merged manifest); debug/profile add it for tooling.
+- The Android release now **has the `INTERNET` permission** (needed only for optional cloud sync; the app makes no requests unless the user signs in). Verify the merged manifest before each release.
 
 ## 7. Known gaps relevant to release
 See `docs/STATIONX_UI_IMPLEMENTATION_ROADMAP.md` §H, §L, §O, §P. Highlights: no at-rest database encryption; no schema migrations yet (additive changes only); iOS untested; privacy policy placeholders; applicationId still a template value.

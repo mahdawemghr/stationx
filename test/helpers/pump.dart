@@ -47,12 +47,13 @@ Future<AppController> pumpPage(
   SxColors colors = SxColors.obsidian,
   HealthRepository? health,
   bool screenReader = false,
+  AppController? controller,
 }) async {
   tester.view.physicalSize = size * 2;
   tester.view.devicePixelRatio = 2;
   addTearDown(tester.view.reset);
-  final app = AppController(health: health);
-  if (demo) app.startDemo();
+  final app = controller ?? AppController(health: health);
+  if (controller == null && demo) app.startDemo();
   await tester.pumpWidget(AppScope(
     controller: app,
     child: MaterialApp(

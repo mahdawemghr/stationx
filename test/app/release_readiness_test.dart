@@ -53,8 +53,10 @@ void main() {
     testWidgets('page states the local-first facts and works on a small screen', (t) async {
       await pumpPage(t, const PrivacyPage(), size: const Size(320, 568), textScale: 1.3);
       expect(find.text('Your data stays on your device'), findsOneWidget);
-      expect(find.text('No network'), findsOneWidget);
-      expect(find.text('Optional health data', skipOffstage: false), findsOneWidget); // lazy list: may be off-screen
+      expect(find.text('Optional cloud backup', skipOffstage: false), findsOneWidget);
+      // The page is a lazy list: scroll to the later sections.
+      await t.scrollUntilVisible(find.text('Optional health data'), 200, scrollable: find.byType(Scrollable).first);
+      expect(find.text('Optional health data'), findsOneWidget);
       expect(t.takeException(), isNull);
     });
 

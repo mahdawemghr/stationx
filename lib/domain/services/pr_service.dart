@@ -5,7 +5,10 @@ import 'formulas.dart';
 abstract final class PrService {
   /// Best value per [PrType] for [exerciseId], with the previous best.
   static Map<PrType, StrengthPr> forExercise(String exerciseId, List<WorkoutSession> sessions) {
-    final asc = [...sessions]..sort((a, b) => a.workoutDate.compareTo(b.workoutDate));
+    // Only sessions that logged this exercise matter; filtering first keeps the sort cheap
+    // (the library screen calls this once per exercise over the whole history).
+    final asc = sessions.where((s) => s.exercises.any((e) => e.exerciseId == exerciseId)).toList()
+      ..sort((a, b) => a.workoutDate.compareTo(b.workoutDate));
     final best = <PrType, StrengthPr>{};
     for (final s in asc) {
       for (final log in s.exercises.where((e) => e.exerciseId == exerciseId)) {

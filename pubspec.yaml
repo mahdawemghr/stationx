@@ -42,8 +42,14 @@ dependencies:
   path_provider: ^2.1.5
   package_info_plus: ^10.2.2
 
+  # Optional cloud backup/sync (off unless configured + user signs in). See supabase/README.md.
+  supabase_flutter: ^2.18.0
+
   # Health Connect (Android) read access: sleep + resting heart rate. Optional, opt-in.
   health: ^13.3.2
+
+  # Pick a Gym Tracker export file to import. Read-only; nothing is uploaded.
+  file_picker: ^13.1.0
 
 dev_dependencies:
   flutter_test:

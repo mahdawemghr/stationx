@@ -1,4 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Network: used ONLY by the optional cloud backup/sync (off unless the user signs in).
+         Without signing in the app makes no network requests. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+
     <!-- Health Connect: READ-ONLY, opt-in. Sleep and resting heart rate only.
          Nothing is written back and nothing leaves the device. -->
     <uses-permission android:name="android.permission.health.READ_SLEEP"/>

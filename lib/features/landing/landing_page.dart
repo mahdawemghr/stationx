@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../app/app_scope.dart';
+import '../cloud/cloud_auth_page.dart';
 import '../../app/nav.dart';
 import '../../core/theme/sx_spacing.dart';
 import '../../core/theme/sx_theme.dart';
@@ -56,6 +57,16 @@ class LandingPage extends StatelessWidget {
           await context.app.startGuest();
           if (context.mounted) AppNav.enterApp(context);
         }),
+        // New phone, existing cloud account: sign in and pull everything. Hidden when this build has no cloud.
+        if (context.app.cloud.available)
+          Center(
+            child: TextButton.icon(
+              onPressed: () => Navigator.of(context).push(MaterialPageRoute<bool>(builder: (_) => const CloudAuthPage(restoreOnNewDevice: true))),
+              style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
+              icon: Icon(Icons.cloud_download_outlined, size: 20, color: context.sx.primary),
+              label: Text('Restore from cloud backup', style: SxText.bodyMd.copyWith(color: context.sx.primary, fontWeight: FontWeight.w600)),
+            ),
+          ),
         const _Footer(),
       ],
     );

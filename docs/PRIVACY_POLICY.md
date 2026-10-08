@@ -3,42 +3,61 @@
 _Effective date: [YYYY-MM-DD — fill in before publishing]_
 _Contact: [your contact email — fill in before publishing]_
 
-> **Owner action required:** this is a draft that accurately describes how the app is built today. Fill in the two placeholders above, have it reviewed if you need legal assurance, and host it at a public HTTPS URL (the Google Play and App Store listings require a URL). Keep it in sync with `lib/features/profile/privacy_page.dart`. If the app ever adds a server, analytics, ads or crash reporting, this policy and the store data-safety forms MUST be updated first.
+> **Owner action required:** this draft accurately describes how the app is built today. Fill in the two
+> placeholders, have it reviewed if you need legal assurance, and host it at a public HTTPS URL (the Google Play
+> and App Store listings require one). Keep it in sync with `lib/features/profile/privacy_page.dart` and the
+> store privacy forms (see `docs/RELEASE.md`). If data handling changes, update this policy FIRST.
 
-StationX is a local-first strength and cardio tracker. This policy explains what the app stores and what it does not do.
+StationX is a local-first strength and cardio tracker. It works fully offline. **Cloud backup is optional and off
+by default.** This policy explains what the app stores, what it uploads (only if you opt in), and your choices.
 
-## What StationX stores, and where
-StationX stores the following **only on your device**, in a local database:
-- Your profile and settings (name, optional email for the local profile, body measurements you enter, units, preferences).
-- Your workouts, exercises, sets, repetitions and weights, cardio sessions, goals and personal records.
+## 1. Data stored on your device (always)
+StationX stores the following in a database on your device:
+- your profile and settings (name, an optional email for the local profile, body measurements you enter, units, preferences);
+- your workouts and routines, the rotation position, logged sets / repetitions / weights, cardio sessions, goals,
+  personal records and custom exercises or activities, with the dates you trained and notes you write.
 
-There is no StationX account server. Creating or signing in to a "local account" only creates or restores a profile **on your device**. Passwords you type into the sign-in and register forms are used only to validate the form and are **never stored, logged or transmitted**.
+Without a cloud account, **nothing leaves your device and the app makes no network requests.**
 
-## What StationX does not do
-- It does **not** send your data to any server, and does not need an internet connection. The released Android app does not request the `INTERNET` permission.
+## 2. Optional cloud backup & sync (only if you sign in)
+If you choose **Profile › Cloud backup & sync › Sign in or create account**, StationX uploads the data listed in section 1
+(except anything marked "never uploaded" below) to a private cloud account so you can back it up and use more than one device.
+- **What is uploaded:** profile & settings, workouts/routines and rotation position, workout and cardio history, goals,
+  custom exercises/activities, with their dates and notes, plus your account email (and the name you enter when creating the account).
+- **Never uploaded:** your password (see below), data from Health Connect / Apple Health, and the built-in demo/sample data.
+- **Where it is stored:** the cloud database is hosted by Supabase (PostgreSQL, region: Asia-Pacific / Tokyo). Supabase acts as our
+  service provider; we do not sell your data or share it with advertisers or other third parties.
+- **Who can read it:** access rules in the database restrict every row to the signed-in account that owns it. Data is encrypted in transit (HTTPS).
+- **Your password:** it is sent to the authentication service only to create the account or sign in. StationX never stores or logs it;
+  the service stores only a one-way hash.
+- **Sync behaviour:** changes upload automatically while you are signed in and online; if you are offline they wait on the device and upload later.
+  If you edit the same item on two devices, the most recent edit wins.
+
+## 3. Optional health data (Health Connect / Apple Health)
+If — and only if — you choose "Connect", StationX asks the operating system for **read-only** access to **sleep** and **resting heart rate**
+to show a recovery summary. StationX never writes to these services. The values are kept in memory while the app runs; they are **not saved,
+not uploaded and not shared**, even if cloud sync is on. Disconnect any time in the app (Profile) and remove access in your device settings
+(Android: Health Connect › App permissions; iOS: Settings › Health › Data Access & Devices › StationX).
+
+## 4. What StationX does not do
 - It contains **no analytics, advertising, tracking or third-party crash-reporting** SDKs.
-- It does **not** sell or share your data with anyone.
+- It does not sell your data.
 
-## Optional health data (Health Connect / Apple Health)
-If — and only if — you choose "Connect" in the app, StationX asks the operating system for **read-only** access to:
-- **Sleep** (to show how long you slept last night), and
-- **Resting heart rate** (to show your latest value and the 7-day average).
+## 5. Exporting, deleting, and your choices
+- **Export:** Profile › Export copies a JSON or CSV of your training data to your clipboard.
+- **Import from Gym Tracker:** Profile › Import from Gym Tracker reads a file you choose (or text you paste) on your device and adds the completed workouts in it to your history. Nothing is uploaded by the import itself; imported workouts follow the same rules as any other data (they sync only if you turned cloud sync on).
+- **Sign out of cloud sync:** your data stays on the device; nothing more is uploaded.
+- **Delete your cloud account and all cloud data:** Profile › Cloud backup & sync › *Delete cloud account & data*. This permanently removes the
+  account and everything stored in it; data on your device is kept. [Owner: also provide a public web page/email for account deletion requests — required by Google Play.]
+- **Delete data on the device:** Profile › *Delete all local data* (and, if you are signed in, it also turns cloud sync off on that device).
+  Uninstalling the app removes everything stored on the device.
+Because deleted data cannot be recovered, export first if you may want it later.
 
-This data is read from Health Connect (Android) or Apple Health (iOS) on your device. StationX **never writes** to these services. The values are kept in memory while the app runs to display your recovery summary; they are not saved to StationX's database, not uploaded and not shared. You can disconnect at any time in the app (Profile) and remove access in your device's settings (Android: Health Connect › App permissions; iOS: Settings › Health › Data Access & Devices › StationX).
+## 6. Children
+StationX is a general fitness tool and is not directed at children under 13. It does not knowingly collect personal information from children.
 
-## Exporting your data
-StationX can produce a JSON or CSV export of your training data. Exports are copied to your clipboard when you ask; what you do with them afterwards is up to you.
-
-## Deleting your data
-- In the app: **Profile › Delete all local data** removes your workouts, cardio sessions and goals.
-- Uninstalling the app removes everything it stored on your device.
-Because StationX holds no copy of your data on any server, we cannot recover data you delete or lose.
-
-## Children
-StationX is a general fitness tool and is not directed at children under 13. It does not knowingly collect personal information from anyone.
-
-## Changes to this policy
+## 7. Changes to this policy
 If the way the app handles data changes, this policy will be updated and the effective date changed.
 
-## Contact
+## 8. Contact
 [your contact email]

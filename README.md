@@ -6,7 +6,8 @@ Local-first strength + cardio tracker built with Flutter. Sequential workout rot
 
 ```bash
 flutter pub get
-flutter run                      # on a device / emulator
+flutter run                      # on a device / emulator (offline-only build)
+flutter run --dart-define-from-file=env/supabase.json   # with optional cloud sync (see supabase/README.md)
 flutter test                     # unit + widget + persistence tests
 flutter analyze
 dart run build_runner build      # after changing lib/data/isar/entities.dart
@@ -14,6 +15,9 @@ dart run flutter_launcher_icons  # after changing assets/icon/*
 ```
 
 Persistence tests call `Isar.initializeIsarCore(download: true)`, which downloads a native library into the project root (`libisar.so`, gitignored) the first time they run — they need network once.
+
+## Import from Gym Tracker
+The companion Gym Tracker app has Settings › Export Data (format: `gym_tracker/docs/EXPORT_FORMAT.md`). In StationX use **Profile › Import from Gym Tracker**, choose the file (or paste it), review the preview and confirm. Only completed workouts are added, each keeping the date you trained; importing the same file twice adds nothing; existing data is never changed. Exercises are matched by name (with a curated alias list); unknown ones become custom exercises. Code: `lib/data/import/`, `lib/features/profile/gym_tracker_import_flow.dart`.
 
 ## Architecture
 
@@ -46,6 +50,8 @@ Rules worth knowing:
 - Use theme tokens (`context.sx`, `SxText`, `SxSpace`); avoid raw colours.
 
 Optional wearable data (sleep, resting heart rate) is read-only and opt-in: Health Connect on Android, Apple Health on iOS (iOS path untested — see roadmap §P). Samsung Health and most fitness wearables sync into those two stores.
+
+Optional cloud backup/sync (Supabase, off unless configured *and* the user signs in): `supabase/README.md`.
 
 Release steps (signing, store checklists, privacy policy): `docs/RELEASE.md`.
 

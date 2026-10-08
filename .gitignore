@@ -48,3 +48,6 @@ app.*.map.json
 /libisar.so
 /libisar.dylib
 /isar.dll
+
+# Local Supabase client config (publishable key). Copy env/supabase.example.json -> env/supabase.json
+/env/supabase.json

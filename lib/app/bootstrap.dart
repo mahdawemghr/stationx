@@ -5,12 +5,19 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../core/theme/sx_colors.dart';
 import '../core/theme/sx_typography.dart';
 import '../data/health/health_connect_repository.dart';
 import '../data/health/plugin_health_gateway.dart';
 import '../data/isar/isar_store.dart';
+import '../data/isar/isar_sync_store.dart';
+import '../data/sync/cloud_auth.dart';
+import '../data/sync/cloud_sync_controller.dart';
+import '../data/sync/supabase_config.dart';
+import '../data/sync/supabase_sync_gateway.dart';
+import '../data/sync/sync_engine.dart';
 import '../domain/domain.dart';
 import 'app_controller.dart';
 import 'startup_error_app.dart';
@@ -75,7 +82,33 @@ Future<void> _start() async {
       : NoopHealthRepository();
   unawaited(health.init()); // never blocks startup; UI reacts when it completes
 
-  runApp(StationXApp(controller: AppController(store: store, health: health)));
+  final cloud = await _buildCloud(store);
+  runApp(StationXApp(controller: AppController(store: store, health: health, cloud: cloud)));
+  unawaited(cloud.init()); // loads status; if signed in, syncs in the background
+}
+
+/// Optional cloud sync. Absent unless the build was given a Supabase URL + publishable key;
+/// any failure here must never prevent the (offline-first) app from starting.
+Future<CloudSyncController> _buildCloud(IsarStore store) async {
+  final problem = SupabaseConfig.validate(SupabaseConfig.url, SupabaseConfig.anonKey);
+  if (problem != null) {
+    if (SupabaseConfig.url.isNotEmpty || SupabaseConfig.anonKey.isNotEmpty) debugPrint('Cloud sync disabled: $problem');
+    return CloudSyncController.unavailable();
+  }
+  try {
+    await Supabase.initialize(url: SupabaseConfig.url, publishableKey: SupabaseConfig.anonKey);
+    final client = Supabase.instance.client;
+    final local = IsarSyncLocalStore(store);
+    return CloudSyncController(
+      auth: SupabaseCloudAuth(client),
+      engine: SyncEngine(local, SupabaseSyncGateway(client)),
+      local: local,
+      preferCloudProfile: () => store.profile.profile.isGuest,
+    );
+  } catch (e) {
+    debugPrint('Cloud sync unavailable: ${e.runtimeType}');
+    return CloudSyncController.unavailable();
+  }
 }
 
 /// Deletes the Isar database files for [dbName] in [directory]. Destructive —

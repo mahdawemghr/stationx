@@ -12,9 +12,11 @@ class PrivacyPage extends StatelessWidget {
 
   static const sections = <(String, String)>[
     ('Your data stays on your device',
-        'Workouts, cardio sessions, goals, personal records and settings are stored in a database on this device only. StationX has no server, no account system and no analytics.'),
-    ('No network',
-        'StationX does not need an internet connection and does not send your data anywhere. The release app does not request the INTERNET permission.'),
+        'Workouts, cardio sessions, goals, personal records and settings are stored in a database on this device. StationX works fully offline, with no analytics, no ads and no tracking.'),
+    ('Optional cloud backup',
+        'Only if you choose to sign in under Profile › Cloud backup & sync, your training data (workouts, sessions, goals, custom exercises and settings) is uploaded to a private cloud account so you can back it up and use more than one device. It is protected so only your account can read it. Until you sign in, the app makes no network requests. You can sign out at any time, and delete your cloud account and all its data from the same screen.'),
+    ('Your password',
+        'Your password is sent to the server only to sign you in. StationX never stores it on the device and never logs it.'),
     ('Optional health data',
         'If you choose to connect Health Connect (Android) or Apple Health (iOS), StationX READS your sleep and resting heart rate to show a recovery summary. It never writes to those apps, keeps the values only in memory while the app is running, and never shares them. You can disconnect at any time.'),
     ('Export and sharing',

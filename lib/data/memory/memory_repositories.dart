@@ -133,6 +133,13 @@ class MemorySessionRepository extends ChangeNotifier implements SessionRepositor
   }
 
   @override
+  Future<void> addAll(List<WorkoutSession> sessions) async {
+    _items.addAll(sessions);
+    _sort();
+    notifyListeners();
+  }
+
+  @override
   Future<void> update(WorkoutSession s) async {
     final i = _items.indexWhere((x) => x.id == s.id);
     if (i >= 0) _items[i] = s;

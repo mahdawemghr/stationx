@@ -2,6 +2,8 @@ import 'package:flutter/foundation.dart';
 
 import '../data/data_store.dart';
 import '../data/health/health_connect_repository.dart';
+import '../data/import/import_file_source.dart';
+import '../data/sync/cloud_sync_controller.dart';
 import '../data/memory/memory_repositories.dart';
 import '../data/seed/seed_data.dart';
 import '../domain/domain.dart';
@@ -13,14 +15,29 @@ import '../domain/domain.dart';
 /// [MemoryStore]. There is no remote account: "sign in" only restores the single
 /// local profile on this device, and no password is ever stored.
 class AppController extends ChangeNotifier {
-  AppController({DataStore? store, HealthRepository? health})
+  AppController({DataStore? store, HealthRepository? health, CloudSyncController? cloud, ImportFileSource? importSource})
       : _store = store ?? MemoryStore(SeedData.fresh()),
-        health = health ?? NoopHealthRepository();
+        health = health ?? NoopHealthRepository(),
+        cloud = cloud ?? CloudSyncController.unavailable(),
+        importSource = importSource ?? const FilePickerImportSource() {
+    // Any local data change may need uploading (debounced inside the controller; a no-op
+    // when cloud sync is unavailable or the user is signed out).
+    _localChanges = Listenable.merge([_store.exercises, _store.workouts, _store.sessions, _store.cardio, _store.profile])
+      ..addListener(this.cloud.onLocalChange);
+  }
+
+  late final Listenable _localChanges;
 
   final DataStore _store;
 
   /// Optional wearable data (Health Connect). Read-only, opt-in, on-device.
   final HealthRepository health;
+
+  /// Optional cloud backup/sync. Inert unless the build is configured and the user signs in.
+  final CloudSyncController cloud;
+
+  /// Where "Import from Gym Tracker" gets its file (system picker; fakeable in tests).
+  final ImportFileSource importSource;
 
   /// Persisted flag: the user is past the landing screen.
   bool get signedIn => _store.signedIn;
@@ -96,7 +113,17 @@ class AppController extends ChangeNotifier {
   /// "Delete All Local Data": removes all history and custom content; keeps the
   /// profile (name/email/settings). Restores the default catalogue + rotation.
   Future<void> wipeAllData() async {
+    // Otherwise the next sync would pull everything back (or push the wipe's defaults).
+    // The cloud backup itself is kept; delete it explicitly from Cloud sync settings.
+    if (cloud.user != null) await cloud.forgetThisDevice();
     await _store.replaceAll(SeedData.fresh(), profile.profile);
+    notifyListeners();
+  }
+
+  /// Enter the app after a cloud sign-in on a new device (profile comes from the cloud,
+  /// so nothing is rewritten here).
+  Future<void> resumeSession() async {
+    await _store.setSignedIn(true);
     notifyListeners();
   }
 
@@ -104,6 +131,13 @@ class AppController extends ChangeNotifier {
   Future<void> signOut() async {
     await _store.setSignedIn(false);
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _localChanges.removeListener(cloud.onLocalChange);
+    cloud.dispose();
+    super.dispose();
   }
 
   Future<void> close() => _store.close();

@@ -1,0 +1,244 @@
+STATIONX — FULL PROJECT DETAILS
+================================
+
+1. WHAT IT IS
+-------------
+StationX is a local-first strength and cardio training log for phones, built with
+Flutter (Dart). You log every set, rep and weight of your workouts, follow a fixed
+rotation of workouts (for example Chest + Biceps -> Back + Triceps -> Legs + Shoulders),
+and the app calculates volume, estimated one-rep max (1RM), progression suggestions and
+personal records (PRs) for you. Cardio (runs, treadmill, bike, etc.) is tracked too.
+
+Everything works offline. Your data lives in a database on your device. An optional cloud
+backup/sync (Supabase) and optional read-only Health Connect / Apple Health sleep and
+resting-heart-rate data can be turned on by the user; both are off by default.
+
+  App name ........ StationX
+  Version ......... 1.0.0+1
+  Package / app id  dev.mahdi_ramadhan.stationx
+  Platforms ....... Android (primary, min SDK 26), iOS/desktop scaffolding present
+  Framework ....... Flutter 3.47 / Dart 3.13, Material 3
+  Author .......... Mahdi Ramadhan
+
+
+2. DESIGN
+---------
+The UI/UX was designed in Google Stitch (reference exports are kept in design_reference/)
+and implemented as the "Kinetic Obsidian" dark theme: near-black canvas (#121416) with a
+lime accent (#B8F000). Fonts are bundled (Space Grotesk, Geist, JetBrains Mono) so the app
+makes no font requests. Design tokens live in lib/core/theme (colours, typography, spacing,
+radius, motion) and shared widgets in lib/core/widgets (buttons, cards, chips, sheets,
+charts, numeric keypad, muscle map, etc.). Screens never use raw colours; they use
+context.sx and the Sx* tokens.
+
+Stitch's mock-only content (sensors, mesocycles, social features) was replaced with honest
+empty/"not available" states. Exercise "images" are vector muscle-map illustrations drawn in
+code instead of photos.
+
+
+3. FEATURES
+-----------
+Entry
+  * Landing page, local account (create / log in), "Continue as Guest (Offline Mode)".
+  * Optional cloud sign-in and "Restore from cloud backup" on a new phone.
+
+Today (home)
+  * Next workout from the rotation, with exercise/set/minute estimates, Start / Preview.
+  * Weekly summary (sessions done, volume, records), recent progress, recovery summary
+    from Health Connect / Apple Health when connected.
+
+Workouts
+  * Workout library and detail, create / edit / delete workouts, reorder exercises.
+  * "Change next workout" (move the rotation pointer).
+  * Smart Swap: suggests equivalent replacement exercises (same muscle, similar movement).
+
+Active workout (strength logger)
+  * Per-exercise set rows (weight, reps, done), numeric keypad, previous performance,
+    progression suggestion, rest timer, plate calculator, notes, finish / discard.
+  * Finishing a workout advances the rotation; backdated sessions are supported.
+
+Exercises
+  * Library with search/filters, exercise details (muscle map, history, PRs, e1RM chart),
+    custom exercises.
+
+Progress
+  * Volume and strength trends, estimated 1RM chart, personal records, muscle-group
+    breakdown, improvement summaries.
+
+History
+  * Session list, calendar view, session details, edit and delete.
+
+Cardio
+  * Live cardio session and manual logging for run / treadmill / bike / row / etc.
+    Fields adapt to the activity type (distance, duration, pace, incline, resistance, heart
+    rate, calories...). Cardio goals, records, history, edit and delete.
+
+Profile
+  * Name, body metrics, weight unit (kg / lb), theme (including OLED), workout config.
+  * Integrations & storage: Health Connect / Apple Health, cloud backup & sync, JSON/CSV
+    export (to clipboard), Import from Gym Tracker (see section 9).
+  * App & safety: privacy policy page, delete all local data, version label.
+
+
+4. PRODUCT RULES (do not break)
+-------------------------------
+  * Workout rotation is index-based, not calendar-based. It advances only when a workout
+    is completed.
+  * "workout_date" (when you trained; can be backdated) is always separate from
+    "created_at" (when the row was entered).
+  * Progression, 1RM (Epley), volume and PR calculations live in the pure-Dart domain
+    layer. UI widgets never calculate them.
+  * Cardio fields adapt by activity type.
+  * Local-first: the app is fully usable offline; the network is optional.
+  * No fake data where real data exists. Seed/demo data is only shown for guests/demo mode
+    and is marked "clean" so it never syncs as if the user created it.
+
+
+5. ARCHITECTURE
+---------------
+State management: plain Flutter (ChangeNotifier + ListenableBuilder + an AppScope
+InheritedWidget). No state-management package. Navigation goes through one AppNav helper.
+
+lib/
+  app/        AppController, bootstrap (opens Isar, health, cloud), app shell, navigation
+  core/       theme tokens, shared widgets, formatters
+  domain/     PURE DART: models (Exercise, Workout, WorkoutSession, CardioSession, profile,
+              records...), SyncMeta {createdAt, updatedAt, syncStatus}, repository
+              interfaces, services (RotationService, ProgressionService, PrService,
+              VolumeService, SmartSwapService, PlateCalculator, WorkoutCompletion,
+              cardio metrics, health summary, formulas)
+  data/
+    memory/   in-memory repositories (tests, demo)
+    isar/     Isar persistence: entities, mappers, write-through-cache repositories
+    seed/     exercise catalog, default workouts, demo history
+    health/   Health Connect / HealthKit gateway (read-only sleep + resting heart rate),
+              consent store
+    sync/     Supabase sync: config guard, auth, gateway, SyncEngine, controller
+    import/   Gym Tracker importer (plan -> apply), exercise alias map, file source
+  features/   one folder per area: landing, auth, today, workouts, active_workout,
+              exercises, progress, history, cardio, profile, cloud, health, shell
+
+The UI depends only on repository interfaces and domain services, so storage can change
+without touching screens.
+
+
+6. DATA & PERSISTENCE
+---------------------
+  * Isar (isar_community 3.3.2, the maintained fork) is the on-device database, behind a
+    DataStore abstraction. Repositories keep an in-memory cache and write through to Isar.
+  * Every record carries SyncMeta (createdAt, updatedAt, syncStatus) so sync is possible
+    without changing the data model.
+  * Batch writes (for example imports) use a single transaction and a single notification.
+
+
+7. OPTIONAL CLOUD SYNC (SUPABASE)
+---------------------------------
+  * Off unless the build is configured with a Supabase URL + PUBLISHABLE (anon) key and the
+    user signs in. The config guard refuses secret keys (sbp_..., sb_secret_..., service_role).
+  * Backend (supabase/migrations/20261008000000_initial_schema.sql): per-user tables with
+    composite primary key (user_id, id), Row Level Security (owner-only), last-write-wins
+    trigger, server_updated_at pull cursor, tombstones (deleted_at) for deletions and a
+    delete_account() RPC that removes the account and all its data.
+  * Client SyncEngine: push -> tombstones -> pull; idempotent and safe to repeat. The
+    CloudSyncController adds debounce, retry, single-flight and resume throttling, and
+    handles the "signed into a different account" decision (merge or replace).
+  * Config lives in env/supabase.json (git-ignored; template env/supabase.example.json).
+    Only the publishable key may ever be in the app. See supabase/README.md.
+
+
+8. HEALTH INTEGRATION
+---------------------
+Read-only sleep and resting heart rate from Health Connect (Android) or Apple Health (iOS)
+through the "health" package. Strictly opt-in: the app explains what is read before asking
+for permission, never writes to the health store, and the data stays on the device.
+
+
+9. IMPORT FROM GYM TRACKER (ONE-TIME MIGRATION)
+-----------------------------------------------
+StationX replaces an older personal app, Gym Tracker (../gym_tracker). Gym Tracker got a new
+Settings > Data > "Export Data" button that writes a versioned JSON file
+("gym_tracker_export" v1; spec in gym_tracker/docs/EXPORT_FORMAT.md). In StationX:
+Profile > Integrations > "Import from Gym Tracker" -> choose the file (or paste copied data)
+-> review a preview -> Import.
+
+  * Only completed workouts are imported; each keeps the date you trained.
+  * Importing the same file twice adds nothing (ids are gt_s<id>).
+  * Existing StationX data is never modified or deleted.
+  * Exercises are matched by name (exact, then a curated alias list); unknown ones become
+    custom exercises with an inferred muscle group and equipment (shown in the preview).
+  * PRs and estimated 1RM are recomputed from the imported history; achievements are ignored.
+  * Optional checkbox: make the next workout match where Gym Tracker left off.
+  * Weights are kg on both sides (no unit conversion). Malformed entries are skipped one by
+    one; files over 50 MB are refused.
+  * Code: lib/data/import/ and lib/features/profile/gym_tracker_import_flow.dart.
+
+
+10. SECURITY & PRIVACY
+----------------------
+  * No analytics, no ads, no tracking; no network access unless the user turns on cloud sync.
+  * Passwords are validated by forms only and never stored or logged; cloud auth uses
+    Supabase Auth.
+  * RLS makes every cloud row owner-only; verified against the real Supabase project by an
+    opt-in end-to-end test (including attempts to read/modify another user's rows).
+  * Secrets are never committed; env/supabase.json is git-ignored.
+  * Privacy policy: docs/PRIVACY_POLICY.md (also shown in the app).
+
+
+11. ACCESSIBILITY & QUALITY
+---------------------------
+  * TalkBack pass: semantic labels, 48dp touch targets, large-text (up to 2x) overflow
+    checks, a11y sweep tests.
+  * Performance tests with large seeded histories.
+  * Responsive layout with a maximum content width on tablets.
+
+
+12. TESTING
+-----------
+About 420 tests across test/{domain,data,features,a11y,perf,app,core,store,helpers,e2e}:
+  * unit tests for the domain services, mappers and sync engine (two simulated phones plus a
+    fake server with the same last-write-wins rules);
+  * widget tests for every feature, including overflow and empty states;
+  * the Gym Tracker importer tested against a file produced by the REAL exporter;
+  * an opt-in end-to-end suite against the real Supabase project
+    (SUPABASE_E2E=1 flutter test test/e2e ...);
+  * a store-screenshot generator (STORE_SHOTS=1 flutter test test/store) producing
+    1080x2400 phone screenshots into docs/store/screenshots.
+Latest status: flutter analyze clean, all tests passing, debug APK builds.
+
+
+13. RUNNING / BUILDING
+----------------------
+  flutter pub get
+  flutter run                       # runs fully offline with local data
+  flutter analyze
+  flutter test
+  flutter build apk --debug
+
+To enable cloud sync, copy env/supabase.example.json to env/supabase.json, fill in the
+project URL and PUBLISHABLE key, and pass it with --dart-define-from-file=env/supabase.json.
+Release steps (signing, store listing, data-safety form) are in docs/RELEASE.md.
+
+
+14. DOCUMENTATION MAP
+---------------------
+  README.md ............................. quick start and architecture rules
+  docs/STATIONX_UI_IMPLEMENTATION_ROADMAP.md  living roadmap + verification record
+  docs/PRIVACY_POLICY.md ................ privacy policy
+  docs/RELEASE.md ....................... release checklist and owner decisions
+  docs/store/ ........................... Play icon, feature graphic, screenshots
+  supabase/README.md .................... backend setup, schema, RLS tests
+  design_reference/ ..................... Google Stitch design exports
+
+
+15. KNOWN LIMITATIONS / TO DO
+-----------------------------
+  * Not yet tested on a real phone: sign-in/sync over flaky networks, long-idle token
+    refresh, Health Connect on device, the Gym Tracker file import with real data, and iOS
+    (never built).
+  * Cloud conflicts are resolved per row (newest wins), not per field.
+  * Password reset needs a hosted page; Supabase Site URL, min password length and SMTP
+    settings are owner decisions.
+  * Google Play: account-deletion URL, data-safety form and store listing text still need
+    to be completed by the owner. Note: Play expects phone screenshots no taller than 2x
+    their width; the current 1080x2400 shots are slightly over that.
+  * Sensors/GPS live tracking and share-as-file export are not implemented.

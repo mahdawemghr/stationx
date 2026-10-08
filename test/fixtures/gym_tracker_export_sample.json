@@ -1,0 +1,4449 @@
+{
+  "format": "gym_tracker_export",
+  "version": 1,
+  "exportedAt": "2026-10-08T12:30:00.000Z",
+  "app": {
+    "name": "gym_tracker",
+    "databaseSchemaVersion": 1
+  },
+  "summary": {
+    "sessions": 21,
+    "completedSessions": 19,
+    "sets": 374,
+    "exercises": 23,
+    "personalRecords": 1,
+    "achievementsUnlocked": 1
+  },
+  "settings": {
+    "weightUnit": "lb",
+    "nextWorkoutDay": 2,
+    "restDays": [
+      {
+        "day": "friday",
+        "type": "hard"
+      },
+      {
+        "day": "tuesday",
+        "type": "soft"
+      }
+    ]
+  },
+  "exercises": [
+    {
+      "id": 1,
+      "name": "Bench Press",
+      "primaryMuscles": "Chest",
+      "secondaryMuscles": "Triceps, Shoulders",
+      "instructions": null,
+      "formTips": null,
+      "commonMistakes": null,
+      "isCustom": false,
+      "createdAt": "2026-10-08T06:03:23.000Z"
+    },
+    {
+      "id": 2,
+      "name": "Incline Dumbbell Press",
+      "primaryMuscles": "Chest",
+      "secondaryMuscles": "Shoulders, Triceps",
+      "instructions": null,
+      "formTips": null,
+      "commonMistakes": null,
+      "isCustom": false,
+      "createdAt": "2026-10-08T06:03:23.000Z"
+    },
+    {
+      "id": 3,
+      "name": "Chest Press Machine",
+      "primaryMuscles": "Chest",
+      "secondaryMuscles": "Triceps",
+      "instructions": null,
+      "formTips": null,
+      "commonMistakes": null,
+      "isCustom": false,
+      "createdAt": "2026-10-08T06:03:23.000Z"
+    },
+    {
+      "id": 4,
+      "name": "Dumbbell Chest Fly",
+      "primaryMuscles": "Chest",
+      "secondaryMuscles": null,
+      "instructions": null,
+      "formTips": null,
+      "commonMistakes": null,
+      "isCustom": false,
+      "createdAt": "2026-10-08T06:03:23.000Z"
+    },
+    {
+      "id": 5,
+      "name": "Dumbbell Bicep Curl",
+      "primaryMuscles": "Biceps",
+      "secondaryMuscles": "Forearms",
+      "instructions": null,
+      "formTips": null,
+      "commonMistakes": null,
+      "isCustom": false,
+      "createdAt": "2026-10-08T06:03:23.000Z"
+    },
+    {
+      "id": 6,
+      "name": "EZ-Bar Preacher Curl",
+      "primaryMuscles": "Biceps",
+      "secondaryMuscles": null,
+      "instructions": null,
+      "formTips": null,
+      "commonMistakes": null,
+      "isCustom": false,
+      "createdAt": "2026-10-08T06:03:23.000Z"
+    },
+    {
+      "id": 7,
+      "name": "Hammer Curl",
+      "primaryMuscles": "Biceps",
+      "secondaryMuscles": "Forearms",
+      "instructions": null,
+      "formTips": null,
+      "commonMistakes": null,
+      "isCustom": false,
+      "createdAt": "2026-10-08T06:03:23.000Z"
+    },
+    {
+      "id": 8,
+      "name": "Lat Pulldown",
+      "primaryMuscles": "Back",
+      "secondaryMuscles": "Biceps",
+      "instructions": null,
+      "formTips": null,
+      "commonMistakes": null,
+      "isCustom": false,
+      "createdAt": "2026-10-08T06:03:23.000Z"
+    },
+    {
+      "id": 9,
+      "name": "Seated Cable Row",
+      "primaryMuscles": "Back",
+      "secondaryMuscles": "Biceps",
+      "instructions": null,
+      "formTips": null,
+      "commonMistakes": null,
+      "isCustom": false,
+      "createdAt": "2026-10-08T06:03:23.000Z"
+    },
+    {
+      "id": 10,
+      "name": "Chest-Supported Row Machine",
+      "primaryMuscles": "Back",
+      "secondaryMuscles": "Biceps",
+      "instructions": null,
+      "formTips": null,
+      "commonMistakes": null,
+      "isCustom": false,
+      "createdAt": "2026-10-08T06:03:23.000Z"
+    },
+    {
+      "id": 11,
+      "name": "Straight-Arm Cable Pulldown",
+      "primaryMuscles": "Back",
+      "secondaryMuscles": "Triceps",
+      "instructions": null,
+      "formTips": null,
+      "commonMistakes": null,
+      "isCustom": false,
+      "createdAt": "2026-10-08T06:03:23.000Z"
+    },
+    {
+      "id": 12,
+      "name": "Face Pull",
+      "primaryMuscles": "Rear Delts",
+      "secondaryMuscles": "Upper Back",
+      "instructions": null,
+      "formTips": null,
+      "commonMistakes": null,
+      "isCustom": false,
+      "createdAt": "2026-10-08T06:03:23.000Z"
+    },
+    {
+      "id": 13,
+      "name": "Cable Tricep Pushdown",
+      "primaryMuscles": "Triceps",
+      "secondaryMuscles": null,
+      "instructions": null,
+      "formTips": null,
+      "commonMistakes": null,
+      "isCustom": false,
+      "createdAt": "2026-10-08T06:03:23.000Z"
+    },
+    {
+      "id": 14,
+      "name": "Overhead Cable Tricep Extension",
+      "primaryMuscles": "Triceps",
+      "secondaryMuscles": null,
+      "instructions": null,
+      "formTips": null,
+      "commonMistakes": null,
+      "isCustom": false,
+      "createdAt": "2026-10-08T06:03:23.000Z"
+    },
+    {
+      "id": 15,
+      "name": "Close-Grip Bench Press",
+      "primaryMuscles": "Triceps",
+      "secondaryMuscles": "Chest",
+      "instructions": null,
+      "formTips": null,
+      "commonMistakes": null,
+      "isCustom": false,
+      "createdAt": "2026-10-08T06:03:23.000Z"
+    },
+    {
+      "id": 16,
+      "name": "Leg Press",
+      "primaryMuscles": "Quads",
+      "secondaryMuscles": "Glutes, Hamstrings",
+      "instructions": null,
+      "formTips": null,
+      "commonMistakes": null,
+      "isCustom": false,
+      "createdAt": "2026-10-08T06:03:23.000Z"
+    },
+    {
+      "id": 17,
+      "name": "Leg Extension",
+      "primaryMuscles": "Quads",
+      "secondaryMuscles": null,
+      "instructions": null,
+      "formTips": null,
+      "commonMistakes": null,
+      "isCustom": false,
+      "createdAt": "2026-10-08T06:03:23.000Z"
+    },
+    {
+      "id": 18,
+      "name": "Lying Leg Curl",
+      "primaryMuscles": "Hamstrings",
+      "secondaryMuscles": null,
+      "instructions": null,
+      "formTips": null,
+      "commonMistakes": null,
+      "isCustom": false,
+      "createdAt": "2026-10-08T06:03:23.000Z"
+    },
+    {
+      "id": 19,
+      "name": "Hip Abduction Machine",
+      "primaryMuscles": "Glutes",
+      "secondaryMuscles": null,
+      "instructions": null,
+      "formTips": null,
+      "commonMistakes": null,
+      "isCustom": false,
+      "createdAt": "2026-10-08T06:03:23.000Z"
+    },
+    {
+      "id": 20,
+      "name": "Seated Calf Raise",
+      "primaryMuscles": "Calves",
+      "secondaryMuscles": null,
+      "instructions": null,
+      "formTips": null,
+      "commonMistakes": null,
+      "isCustom": false,
+      "createdAt": "2026-10-08T06:03:23.000Z"
+    },
+    {
+      "id": 21,
+      "name": "Machine Shoulder Press",
+      "primaryMuscles": "Shoulders",
+      "secondaryMuscles": "Triceps",
+      "instructions": null,
+      "formTips": null,
+      "commonMistakes": null,
+      "isCustom": false,
+      "createdAt": "2026-10-08T06:03:23.000Z"
+    },
+    {
+      "id": 22,
+      "name": "Dumbbell Lateral Raise",
+      "primaryMuscles": "Shoulders",
+      "secondaryMuscles": null,
+      "instructions": null,
+      "formTips": null,
+      "commonMistakes": null,
+      "isCustom": false,
+      "createdAt": "2026-10-08T06:03:23.000Z"
+    },
+    {
+      "id": 23,
+      "name": "Zercher Squat",
+      "primaryMuscles": "Quads",
+      "secondaryMuscles": "Glutes, Back",
+      "instructions": null,
+      "formTips": null,
+      "commonMistakes": null,
+      "isCustom": true,
+      "createdAt": "2026-10-08T06:03:23.000Z"
+    }
+  ],
+  "templates": [
+    {
+      "dayIndex": 1,
+      "name": "Chest + Biceps",
+      "exercises": [
+        {
+          "exerciseId": 1,
+          "exerciseName": "Bench Press",
+          "orderIndex": 0,
+          "targetSets": 3,
+          "repLow": 6,
+          "repHigh": 10,
+          "increment": null
+        },
+        {
+          "exerciseId": 2,
+          "exerciseName": "Incline Dumbbell Press",
+          "orderIndex": 1,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "increment": null
+        },
+        {
+          "exerciseId": 3,
+          "exerciseName": "Chest Press Machine",
+          "orderIndex": 2,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "increment": null
+        },
+        {
+          "exerciseId": 4,
+          "exerciseName": "Dumbbell Chest Fly",
+          "orderIndex": 3,
+          "targetSets": 2,
+          "repLow": 10,
+          "repHigh": 15,
+          "increment": null
+        },
+        {
+          "exerciseId": 5,
+          "exerciseName": "Dumbbell Bicep Curl",
+          "orderIndex": 4,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "increment": null
+        },
+        {
+          "exerciseId": 6,
+          "exerciseName": "EZ-Bar Preacher Curl",
+          "orderIndex": 5,
+          "targetSets": 3,
+          "repLow": 10,
+          "repHigh": 12,
+          "increment": null
+        },
+        {
+          "exerciseId": 7,
+          "exerciseName": "Hammer Curl",
+          "orderIndex": 6,
+          "targetSets": 2,
+          "repLow": 10,
+          "repHigh": 15,
+          "increment": null
+        }
+      ]
+    },
+    {
+      "dayIndex": 2,
+      "name": "Back + Triceps",
+      "exercises": [
+        {
+          "exerciseId": 8,
+          "exerciseName": "Lat Pulldown",
+          "orderIndex": 0,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "increment": null
+        },
+        {
+          "exerciseId": 9,
+          "exerciseName": "Seated Cable Row",
+          "orderIndex": 1,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "increment": null
+        },
+        {
+          "exerciseId": 10,
+          "exerciseName": "Chest-Supported Row Machine",
+          "orderIndex": 2,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "increment": null
+        },
+        {
+          "exerciseId": 11,
+          "exerciseName": "Straight-Arm Cable Pulldown",
+          "orderIndex": 3,
+          "targetSets": 2,
+          "repLow": 10,
+          "repHigh": 15,
+          "increment": null
+        },
+        {
+          "exerciseId": 12,
+          "exerciseName": "Face Pull",
+          "orderIndex": 4,
+          "targetSets": 2,
+          "repLow": 12,
+          "repHigh": 15,
+          "increment": null
+        },
+        {
+          "exerciseId": 13,
+          "exerciseName": "Cable Tricep Pushdown",
+          "orderIndex": 5,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "increment": null
+        },
+        {
+          "exerciseId": 14,
+          "exerciseName": "Overhead Cable Tricep Extension",
+          "orderIndex": 6,
+          "targetSets": 3,
+          "repLow": 10,
+          "repHigh": 15,
+          "increment": null
+        },
+        {
+          "exerciseId": 15,
+          "exerciseName": "Close-Grip Bench Press",
+          "orderIndex": 7,
+          "targetSets": 2,
+          "repLow": 8,
+          "repHigh": 12,
+          "increment": null
+        }
+      ]
+    },
+    {
+      "dayIndex": 3,
+      "name": "Legs + Shoulders",
+      "exercises": [
+        {
+          "exerciseId": 16,
+          "exerciseName": "Leg Press",
+          "orderIndex": 0,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "increment": null
+        },
+        {
+          "exerciseId": 17,
+          "exerciseName": "Leg Extension",
+          "orderIndex": 1,
+          "targetSets": 3,
+          "repLow": 10,
+          "repHigh": 15,
+          "increment": null
+        },
+        {
+          "exerciseId": 18,
+          "exerciseName": "Lying Leg Curl",
+          "orderIndex": 2,
+          "targetSets": 3,
+          "repLow": 10,
+          "repHigh": 15,
+          "increment": null
+        },
+        {
+          "exerciseId": 19,
+          "exerciseName": "Hip Abduction Machine",
+          "orderIndex": 3,
+          "targetSets": 2,
+          "repLow": 12,
+          "repHigh": 15,
+          "increment": null
+        },
+        {
+          "exerciseId": 20,
+          "exerciseName": "Seated Calf Raise",
+          "orderIndex": 4,
+          "targetSets": 3,
+          "repLow": 12,
+          "repHigh": 20,
+          "increment": null
+        },
+        {
+          "exerciseId": 21,
+          "exerciseName": "Machine Shoulder Press",
+          "orderIndex": 5,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "increment": null
+        },
+        {
+          "exerciseId": 22,
+          "exerciseName": "Dumbbell Lateral Raise",
+          "orderIndex": 6,
+          "targetSets": 3,
+          "repLow": 10,
+          "repHigh": 15,
+          "increment": null
+        },
+        {
+          "exerciseId": 12,
+          "exerciseName": "Face Pull",
+          "orderIndex": 7,
+          "targetSets": 2,
+          "repLow": 12,
+          "repHigh": 15,
+          "increment": null
+        }
+      ]
+    }
+  ],
+  "sessions": [
+    {
+      "id": 1,
+      "templateDay": 1,
+      "templateName": "Chest + Biceps",
+      "status": "completed",
+      "startedAt": "2026-08-03T07:30:00.000Z",
+      "completedAt": "2026-08-03T08:20:00.000Z",
+      "lastActivityAt": "2026-08-03T08:20:00.000Z",
+      "score": 70,
+      "scoreBreakdown": {
+        "completion": 40,
+        "quality": 20,
+        "consistency": 10
+      },
+      "exercises": [
+        {
+          "exerciseId": 1,
+          "exerciseName": "Bench Press",
+          "orderIndex": 0,
+          "targetSets": 3,
+          "repLow": 6,
+          "repHigh": 10,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 22.5,
+              "reps": 10
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 22.5,
+              "reps": 9
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 22.5,
+              "reps": 8
+            }
+          ]
+        },
+        {
+          "exerciseId": 2,
+          "exerciseName": "Incline Dumbbell Press",
+          "orderIndex": 1,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 25.0,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 25.0,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 25.0,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 3,
+          "exerciseName": "Chest Press Machine",
+          "orderIndex": 2,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 27.5,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 27.5,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 27.5,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 4,
+          "exerciseName": "Dumbbell Chest Fly",
+          "orderIndex": 3,
+          "targetSets": 2,
+          "repLow": 10,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 30.0,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 30.0,
+              "reps": 14
+            }
+          ]
+        },
+        {
+          "exerciseId": 5,
+          "exerciseName": "Dumbbell Bicep Curl",
+          "orderIndex": 4,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 32.5,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 32.5,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 32.5,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 6,
+          "exerciseName": "EZ-Bar Preacher Curl",
+          "orderIndex": 5,
+          "targetSets": 3,
+          "repLow": 10,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 35.0,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 35.0,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 35.0,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 7,
+          "exerciseName": "Hammer Curl",
+          "orderIndex": 6,
+          "targetSets": 2,
+          "repLow": 10,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 37.5,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 37.5,
+              "reps": 14
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "templateDay": 2,
+      "templateName": "Back + Triceps",
+      "status": "completed",
+      "startedAt": "2026-08-05T07:30:00.000Z",
+      "completedAt": "2026-08-05T08:20:00.000Z",
+      "lastActivityAt": "2026-08-05T08:20:00.000Z",
+      "score": 70,
+      "scoreBreakdown": {
+        "completion": 40,
+        "quality": 20,
+        "consistency": 10
+      },
+      "exercises": [
+        {
+          "exerciseId": 8,
+          "exerciseName": "Lat Pulldown",
+          "orderIndex": 0,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 40.0,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 40.0,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 40.0,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 9,
+          "exerciseName": "Seated Cable Row",
+          "orderIndex": 1,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 42.5,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 42.5,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 42.5,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 10,
+          "exerciseName": "Chest-Supported Row Machine",
+          "orderIndex": 2,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 45.0,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 45.0,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 45.0,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 11,
+          "exerciseName": "Straight-Arm Cable Pulldown",
+          "orderIndex": 3,
+          "targetSets": 2,
+          "repLow": 10,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 47.5,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 47.5,
+              "reps": 14
+            }
+          ]
+        },
+        {
+          "exerciseId": 12,
+          "exerciseName": "Face Pull",
+          "orderIndex": 4,
+          "targetSets": 2,
+          "repLow": 12,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 50.0,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 50.0,
+              "reps": 14
+            }
+          ]
+        },
+        {
+          "exerciseId": 13,
+          "exerciseName": "Cable Tricep Pushdown",
+          "orderIndex": 5,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 52.5,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 52.5,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 52.5,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 14,
+          "exerciseName": "Overhead Cable Tricep Extension",
+          "orderIndex": 6,
+          "targetSets": 3,
+          "repLow": 10,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 55.0,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 55.0,
+              "reps": 14
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 55.0,
+              "reps": 13
+            }
+          ]
+        },
+        {
+          "exerciseId": 15,
+          "exerciseName": "Close-Grip Bench Press",
+          "orderIndex": 7,
+          "targetSets": 2,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 57.5,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 57.5,
+              "reps": 11
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "templateDay": 3,
+      "templateName": "Legs + Shoulders",
+      "status": "completed",
+      "startedAt": "2026-08-07T07:30:00.000Z",
+      "completedAt": "2026-08-07T08:20:00.000Z",
+      "lastActivityAt": "2026-08-07T08:20:00.000Z",
+      "score": 70,
+      "scoreBreakdown": {
+        "completion": 40,
+        "quality": 20,
+        "consistency": 10
+      },
+      "exercises": [
+        {
+          "exerciseId": 16,
+          "exerciseName": "Leg Press",
+          "orderIndex": 0,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 60.0,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 60.0,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 60.0,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 17,
+          "exerciseName": "Leg Extension",
+          "orderIndex": 1,
+          "targetSets": 3,
+          "repLow": 10,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 62.5,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 62.5,
+              "reps": 14
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 62.5,
+              "reps": 13
+            }
+          ]
+        },
+        {
+          "exerciseId": 18,
+          "exerciseName": "Lying Leg Curl",
+          "orderIndex": 2,
+          "targetSets": 3,
+          "repLow": 10,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 65.0,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 65.0,
+              "reps": 14
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 65.0,
+              "reps": 13
+            }
+          ]
+        },
+        {
+          "exerciseId": 19,
+          "exerciseName": "Hip Abduction Machine",
+          "orderIndex": 3,
+          "targetSets": 2,
+          "repLow": 12,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 67.5,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 67.5,
+              "reps": 14
+            }
+          ]
+        },
+        {
+          "exerciseId": 20,
+          "exerciseName": "Seated Calf Raise",
+          "orderIndex": 4,
+          "targetSets": 3,
+          "repLow": 12,
+          "repHigh": 20,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 70.0,
+              "reps": 20
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 70.0,
+              "reps": 19
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 70.0,
+              "reps": 18
+            }
+          ]
+        },
+        {
+          "exerciseId": 21,
+          "exerciseName": "Machine Shoulder Press",
+          "orderIndex": 5,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 72.5,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 72.5,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 72.5,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 22,
+          "exerciseName": "Dumbbell Lateral Raise",
+          "orderIndex": 6,
+          "targetSets": 3,
+          "repLow": 10,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 75.0,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 75.0,
+              "reps": 14
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 75.0,
+              "reps": 13
+            }
+          ]
+        },
+        {
+          "exerciseId": 12,
+          "exerciseName": "Face Pull",
+          "orderIndex": 7,
+          "targetSets": 2,
+          "repLow": 12,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 50.0,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 50.0,
+              "reps": 14
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "templateDay": 1,
+      "templateName": "Chest + Biceps",
+      "status": "completed",
+      "startedAt": "2026-08-10T07:30:00.000Z",
+      "completedAt": "2026-08-10T08:21:00.000Z",
+      "lastActivityAt": "2026-08-10T08:21:00.000Z",
+      "score": 74,
+      "scoreBreakdown": {
+        "completion": 40,
+        "quality": 20,
+        "consistency": 10
+      },
+      "exercises": [
+        {
+          "exerciseId": 1,
+          "exerciseName": "Bench Press",
+          "orderIndex": 0,
+          "targetSets": 3,
+          "repLow": 6,
+          "repHigh": 10,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 25.0,
+              "reps": 10
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 25.0,
+              "reps": 9
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 25.0,
+              "reps": 8
+            }
+          ]
+        },
+        {
+          "exerciseId": 2,
+          "exerciseName": "Incline Dumbbell Press",
+          "orderIndex": 1,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 27.5,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 27.5,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 27.5,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 3,
+          "exerciseName": "Chest Press Machine",
+          "orderIndex": 2,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 30.0,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 30.0,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 30.0,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 4,
+          "exerciseName": "Dumbbell Chest Fly",
+          "orderIndex": 3,
+          "targetSets": 2,
+          "repLow": 10,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 32.5,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 32.5,
+              "reps": 14
+            }
+          ]
+        },
+        {
+          "exerciseId": 5,
+          "exerciseName": "Dumbbell Bicep Curl",
+          "orderIndex": 4,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 35.0,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 35.0,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 35.0,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 6,
+          "exerciseName": "EZ-Bar Preacher Curl",
+          "orderIndex": 5,
+          "targetSets": 3,
+          "repLow": 10,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 37.5,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 37.5,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 37.5,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 7,
+          "exerciseName": "Hammer Curl",
+          "orderIndex": 6,
+          "targetSets": 2,
+          "repLow": 10,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 40.0,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 40.0,
+              "reps": 14
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "templateDay": 2,
+      "templateName": "Back + Triceps",
+      "status": "completed",
+      "startedAt": "2026-08-12T07:30:00.000Z",
+      "completedAt": "2026-08-12T08:21:00.000Z",
+      "lastActivityAt": "2026-08-12T08:21:00.000Z",
+      "score": 74,
+      "scoreBreakdown": {
+        "completion": 40,
+        "quality": 20,
+        "consistency": 10
+      },
+      "exercises": [
+        {
+          "exerciseId": 8,
+          "exerciseName": "Lat Pulldown",
+          "orderIndex": 0,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 42.5,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 42.5,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 42.5,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 9,
+          "exerciseName": "Seated Cable Row",
+          "orderIndex": 1,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 45.0,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 45.0,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 45.0,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 10,
+          "exerciseName": "Chest-Supported Row Machine",
+          "orderIndex": 2,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 47.5,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 47.5,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 47.5,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 11,
+          "exerciseName": "Straight-Arm Cable Pulldown",
+          "orderIndex": 3,
+          "targetSets": 2,
+          "repLow": 10,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 50.0,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 50.0,
+              "reps": 14
+            }
+          ]
+        },
+        {
+          "exerciseId": 12,
+          "exerciseName": "Face Pull",
+          "orderIndex": 4,
+          "targetSets": 2,
+          "repLow": 12,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 52.5,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 52.5,
+              "reps": 14
+            }
+          ]
+        },
+        {
+          "exerciseId": 13,
+          "exerciseName": "Cable Tricep Pushdown",
+          "orderIndex": 5,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 55.0,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 55.0,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 55.0,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 14,
+          "exerciseName": "Overhead Cable Tricep Extension",
+          "orderIndex": 6,
+          "targetSets": 3,
+          "repLow": 10,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 57.5,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 57.5,
+              "reps": 14
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 57.5,
+              "reps": 13
+            }
+          ]
+        },
+        {
+          "exerciseId": 15,
+          "exerciseName": "Close-Grip Bench Press",
+          "orderIndex": 7,
+          "targetSets": 2,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 60.0,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 60.0,
+              "reps": 11
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "templateDay": 3,
+      "templateName": "Legs + Shoulders",
+      "status": "completed",
+      "startedAt": "2026-08-14T07:30:00.000Z",
+      "completedAt": "2026-08-14T08:21:00.000Z",
+      "lastActivityAt": "2026-08-14T08:21:00.000Z",
+      "score": 74,
+      "scoreBreakdown": {
+        "completion": 40,
+        "quality": 20,
+        "consistency": 10
+      },
+      "exercises": [
+        {
+          "exerciseId": 16,
+          "exerciseName": "Leg Press",
+          "orderIndex": 0,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 62.5,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 62.5,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 62.5,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 17,
+          "exerciseName": "Leg Extension",
+          "orderIndex": 1,
+          "targetSets": 3,
+          "repLow": 10,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 65.0,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 65.0,
+              "reps": 14
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 65.0,
+              "reps": 13
+            }
+          ]
+        },
+        {
+          "exerciseId": 18,
+          "exerciseName": "Lying Leg Curl",
+          "orderIndex": 2,
+          "targetSets": 3,
+          "repLow": 10,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 67.5,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 67.5,
+              "reps": 14
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 67.5,
+              "reps": 13
+            }
+          ]
+        },
+        {
+          "exerciseId": 19,
+          "exerciseName": "Hip Abduction Machine",
+          "orderIndex": 3,
+          "targetSets": 2,
+          "repLow": 12,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 70.0,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 70.0,
+              "reps": 14
+            }
+          ]
+        },
+        {
+          "exerciseId": 20,
+          "exerciseName": "Seated Calf Raise",
+          "orderIndex": 4,
+          "targetSets": 3,
+          "repLow": 12,
+          "repHigh": 20,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 72.5,
+              "reps": 20
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 72.5,
+              "reps": 19
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 72.5,
+              "reps": 18
+            }
+          ]
+        },
+        {
+          "exerciseId": 21,
+          "exerciseName": "Machine Shoulder Press",
+          "orderIndex": 5,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 75.0,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 75.0,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 75.0,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 22,
+          "exerciseName": "Dumbbell Lateral Raise",
+          "orderIndex": 6,
+          "targetSets": 3,
+          "repLow": 10,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 77.5,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 77.5,
+              "reps": 14
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 77.5,
+              "reps": 13
+            }
+          ]
+        },
+        {
+          "exerciseId": 12,
+          "exerciseName": "Face Pull",
+          "orderIndex": 7,
+          "targetSets": 2,
+          "repLow": 12,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 52.5,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 52.5,
+              "reps": 14
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "templateDay": 1,
+      "templateName": "Chest + Biceps",
+      "status": "completed",
+      "startedAt": "2026-08-17T07:30:00.000Z",
+      "completedAt": "2026-08-17T08:22:00.000Z",
+      "lastActivityAt": "2026-08-17T08:22:00.000Z",
+      "score": 78,
+      "scoreBreakdown": {
+        "completion": 40,
+        "quality": 20,
+        "consistency": 10
+      },
+      "exercises": [
+        {
+          "exerciseId": 1,
+          "exerciseName": "Bench Press",
+          "orderIndex": 0,
+          "targetSets": 3,
+          "repLow": 6,
+          "repHigh": 10,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 27.5,
+              "reps": 10
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 27.5,
+              "reps": 9
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 27.5,
+              "reps": 8
+            }
+          ]
+        },
+        {
+          "exerciseId": 2,
+          "exerciseName": "Incline Dumbbell Press",
+          "orderIndex": 1,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": "felt strong, add weight next time",
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 30.0,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 30.0,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 30.0,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 3,
+          "exerciseName": "Chest Press Machine",
+          "orderIndex": 2,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 32.5,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 32.5,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 32.5,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 4,
+          "exerciseName": "Dumbbell Chest Fly",
+          "orderIndex": 3,
+          "targetSets": 2,
+          "repLow": 10,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 35.0,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 35.0,
+              "reps": 14
+            }
+          ]
+        },
+        {
+          "exerciseId": 5,
+          "exerciseName": "Dumbbell Bicep Curl",
+          "orderIndex": 4,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 37.5,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 37.5,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 37.5,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 6,
+          "exerciseName": "EZ-Bar Preacher Curl",
+          "orderIndex": 5,
+          "targetSets": 3,
+          "repLow": 10,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 40.0,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 40.0,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 40.0,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 7,
+          "exerciseName": "Hammer Curl",
+          "orderIndex": 6,
+          "targetSets": 2,
+          "repLow": 10,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 42.5,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 42.5,
+              "reps": 14
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "templateDay": 2,
+      "templateName": "Back + Triceps",
+      "status": "completed",
+      "startedAt": "2026-08-19T07:30:00.000Z",
+      "completedAt": "2026-08-19T08:22:00.000Z",
+      "lastActivityAt": "2026-08-19T08:22:00.000Z",
+      "score": 78,
+      "scoreBreakdown": {
+        "completion": 40,
+        "quality": 20,
+        "consistency": 10
+      },
+      "exercises": [
+        {
+          "exerciseId": 8,
+          "exerciseName": "Lat Pulldown",
+          "orderIndex": 0,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 45.0,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 45.0,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 45.0,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 9,
+          "exerciseName": "Seated Cable Row",
+          "orderIndex": 1,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": "felt strong, add weight next time",
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 47.5,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 47.5,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 47.5,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 10,
+          "exerciseName": "Chest-Supported Row Machine",
+          "orderIndex": 2,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 50.0,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 50.0,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 50.0,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 11,
+          "exerciseName": "Straight-Arm Cable Pulldown",
+          "orderIndex": 3,
+          "targetSets": 2,
+          "repLow": 10,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 52.5,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 52.5,
+              "reps": 14
+            }
+          ]
+        },
+        {
+          "exerciseId": 12,
+          "exerciseName": "Face Pull",
+          "orderIndex": 4,
+          "targetSets": 2,
+          "repLow": 12,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 55.0,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 55.0,
+              "reps": 14
+            }
+          ]
+        },
+        {
+          "exerciseId": 13,
+          "exerciseName": "Cable Tricep Pushdown",
+          "orderIndex": 5,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 57.5,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 57.5,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 57.5,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 14,
+          "exerciseName": "Overhead Cable Tricep Extension",
+          "orderIndex": 6,
+          "targetSets": 3,
+          "repLow": 10,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 60.0,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 60.0,
+              "reps": 14
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 60.0,
+              "reps": 13
+            }
+          ]
+        },
+        {
+          "exerciseId": 15,
+          "exerciseName": "Close-Grip Bench Press",
+          "orderIndex": 7,
+          "targetSets": 2,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 62.5,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 62.5,
+              "reps": 11
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "templateDay": 3,
+      "templateName": "Legs + Shoulders",
+      "status": "completed",
+      "startedAt": "2026-08-21T07:30:00.000Z",
+      "completedAt": "2026-08-21T08:22:00.000Z",
+      "lastActivityAt": "2026-08-21T08:22:00.000Z",
+      "score": 78,
+      "scoreBreakdown": {
+        "completion": 40,
+        "quality": 20,
+        "consistency": 10
+      },
+      "exercises": [
+        {
+          "exerciseId": 16,
+          "exerciseName": "Leg Press",
+          "orderIndex": 0,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 65.0,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 65.0,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 65.0,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 17,
+          "exerciseName": "Leg Extension",
+          "orderIndex": 1,
+          "targetSets": 3,
+          "repLow": 10,
+          "repHigh": 15,
+          "status": null,
+          "note": "felt strong, add weight next time",
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 67.5,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 67.5,
+              "reps": 14
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 67.5,
+              "reps": 13
+            }
+          ]
+        },
+        {
+          "exerciseId": 18,
+          "exerciseName": "Lying Leg Curl",
+          "orderIndex": 2,
+          "targetSets": 3,
+          "repLow": 10,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 70.0,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 70.0,
+              "reps": 14
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 70.0,
+              "reps": 13
+            }
+          ]
+        },
+        {
+          "exerciseId": 19,
+          "exerciseName": "Hip Abduction Machine",
+          "orderIndex": 3,
+          "targetSets": 2,
+          "repLow": 12,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 72.5,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 72.5,
+              "reps": 14
+            }
+          ]
+        },
+        {
+          "exerciseId": 20,
+          "exerciseName": "Seated Calf Raise",
+          "orderIndex": 4,
+          "targetSets": 3,
+          "repLow": 12,
+          "repHigh": 20,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 75.0,
+              "reps": 20
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 75.0,
+              "reps": 19
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 75.0,
+              "reps": 18
+            }
+          ]
+        },
+        {
+          "exerciseId": 21,
+          "exerciseName": "Machine Shoulder Press",
+          "orderIndex": 5,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 77.5,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 77.5,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 77.5,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 22,
+          "exerciseName": "Dumbbell Lateral Raise",
+          "orderIndex": 6,
+          "targetSets": 3,
+          "repLow": 10,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 80.0,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 80.0,
+              "reps": 14
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 80.0,
+              "reps": 13
+            }
+          ]
+        },
+        {
+          "exerciseId": 12,
+          "exerciseName": "Face Pull",
+          "orderIndex": 7,
+          "targetSets": 2,
+          "repLow": 12,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 55.0,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 55.0,
+              "reps": 14
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "templateDay": 1,
+      "templateName": "Chest + Biceps",
+      "status": "completed",
+      "startedAt": "2026-08-24T07:30:00.000Z",
+      "completedAt": "2026-08-24T08:23:00.000Z",
+      "lastActivityAt": "2026-08-24T08:23:00.000Z",
+      "score": 82,
+      "scoreBreakdown": {
+        "completion": 40,
+        "quality": 20,
+        "consistency": 10
+      },
+      "exercises": [
+        {
+          "exerciseId": 1,
+          "exerciseName": "Bench Press",
+          "orderIndex": 0,
+          "targetSets": 3,
+          "repLow": 6,
+          "repHigh": 10,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 30.0,
+              "reps": 10
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 30.0,
+              "reps": 9
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 30.0,
+              "reps": 8
+            }
+          ]
+        },
+        {
+          "exerciseId": 2,
+          "exerciseName": "Incline Dumbbell Press",
+          "orderIndex": 1,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 32.5,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 32.5,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 32.5,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 3,
+          "exerciseName": "Chest Press Machine",
+          "orderIndex": 2,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 35.0,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 35.0,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 35.0,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 4,
+          "exerciseName": "Dumbbell Chest Fly",
+          "orderIndex": 3,
+          "targetSets": 2,
+          "repLow": 10,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 37.5,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 37.5,
+              "reps": 14
+            }
+          ]
+        },
+        {
+          "exerciseId": 5,
+          "exerciseName": "Dumbbell Bicep Curl",
+          "orderIndex": 4,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 40.0,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 40.0,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 40.0,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 6,
+          "exerciseName": "EZ-Bar Preacher Curl",
+          "orderIndex": 5,
+          "targetSets": 3,
+          "repLow": 10,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 42.5,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 42.5,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 42.5,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 7,
+          "exerciseName": "Hammer Curl",
+          "orderIndex": 6,
+          "targetSets": 2,
+          "repLow": 10,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 45.0,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 45.0,
+              "reps": 14
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "templateDay": 2,
+      "templateName": "Back + Triceps",
+      "status": "completed",
+      "startedAt": "2026-08-26T07:30:00.000Z",
+      "completedAt": "2026-08-26T08:23:00.000Z",
+      "lastActivityAt": "2026-08-26T08:23:00.000Z",
+      "score": 82,
+      "scoreBreakdown": {
+        "completion": 40,
+        "quality": 20,
+        "consistency": 10
+      },
+      "exercises": [
+        {
+          "exerciseId": 8,
+          "exerciseName": "Lat Pulldown",
+          "orderIndex": 0,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 47.5,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 47.5,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 47.5,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 9,
+          "exerciseName": "Seated Cable Row",
+          "orderIndex": 1,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 50.0,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 50.0,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 50.0,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 10,
+          "exerciseName": "Chest-Supported Row Machine",
+          "orderIndex": 2,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 52.5,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 52.5,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 52.5,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 11,
+          "exerciseName": "Straight-Arm Cable Pulldown",
+          "orderIndex": 3,
+          "targetSets": 2,
+          "repLow": 10,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 55.0,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 55.0,
+              "reps": 14
+            }
+          ]
+        },
+        {
+          "exerciseId": 12,
+          "exerciseName": "Face Pull",
+          "orderIndex": 4,
+          "targetSets": 2,
+          "repLow": 12,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 57.5,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 57.5,
+              "reps": 14
+            }
+          ]
+        },
+        {
+          "exerciseId": 13,
+          "exerciseName": "Cable Tricep Pushdown",
+          "orderIndex": 5,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 60.0,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 60.0,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 60.0,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 14,
+          "exerciseName": "Overhead Cable Tricep Extension",
+          "orderIndex": 6,
+          "targetSets": 3,
+          "repLow": 10,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 62.5,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 62.5,
+              "reps": 14
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 62.5,
+              "reps": 13
+            }
+          ]
+        },
+        {
+          "exerciseId": 15,
+          "exerciseName": "Close-Grip Bench Press",
+          "orderIndex": 7,
+          "targetSets": 2,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 65.0,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 65.0,
+              "reps": 11
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "templateDay": 3,
+      "templateName": "Legs + Shoulders",
+      "status": "completed",
+      "startedAt": "2026-08-28T07:30:00.000Z",
+      "completedAt": "2026-08-28T08:23:00.000Z",
+      "lastActivityAt": "2026-08-28T08:23:00.000Z",
+      "score": 82,
+      "scoreBreakdown": {
+        "completion": 40,
+        "quality": 20,
+        "consistency": 10
+      },
+      "exercises": [
+        {
+          "exerciseId": 16,
+          "exerciseName": "Leg Press",
+          "orderIndex": 0,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 67.5,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 67.5,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 67.5,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 17,
+          "exerciseName": "Leg Extension",
+          "orderIndex": 1,
+          "targetSets": 3,
+          "repLow": 10,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 70.0,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 70.0,
+              "reps": 14
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 70.0,
+              "reps": 13
+            }
+          ]
+        },
+        {
+          "exerciseId": 18,
+          "exerciseName": "Lying Leg Curl",
+          "orderIndex": 2,
+          "targetSets": 3,
+          "repLow": 10,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 72.5,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 72.5,
+              "reps": 14
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 72.5,
+              "reps": 13
+            }
+          ]
+        },
+        {
+          "exerciseId": 19,
+          "exerciseName": "Hip Abduction Machine",
+          "orderIndex": 3,
+          "targetSets": 2,
+          "repLow": 12,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 75.0,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 75.0,
+              "reps": 14
+            }
+          ]
+        },
+        {
+          "exerciseId": 20,
+          "exerciseName": "Seated Calf Raise",
+          "orderIndex": 4,
+          "targetSets": 3,
+          "repLow": 12,
+          "repHigh": 20,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 77.5,
+              "reps": 20
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 77.5,
+              "reps": 19
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 77.5,
+              "reps": 18
+            }
+          ]
+        },
+        {
+          "exerciseId": 21,
+          "exerciseName": "Machine Shoulder Press",
+          "orderIndex": 5,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 80.0,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 80.0,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 80.0,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 22,
+          "exerciseName": "Dumbbell Lateral Raise",
+          "orderIndex": 6,
+          "targetSets": 3,
+          "repLow": 10,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 82.5,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 82.5,
+              "reps": 14
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 82.5,
+              "reps": 13
+            }
+          ]
+        },
+        {
+          "exerciseId": 12,
+          "exerciseName": "Face Pull",
+          "orderIndex": 7,
+          "targetSets": 2,
+          "repLow": 12,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 57.5,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 57.5,
+              "reps": 14
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "templateDay": 1,
+      "templateName": "Chest + Biceps",
+      "status": "completed",
+      "startedAt": "2026-08-31T07:30:00.000Z",
+      "completedAt": "2026-08-31T08:24:00.000Z",
+      "lastActivityAt": "2026-08-31T08:24:00.000Z",
+      "score": 86,
+      "scoreBreakdown": {
+        "completion": 40,
+        "quality": 20,
+        "consistency": 10
+      },
+      "exercises": [
+        {
+          "exerciseId": 1,
+          "exerciseName": "Bench Press",
+          "orderIndex": 0,
+          "targetSets": 3,
+          "repLow": 6,
+          "repHigh": 10,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 32.5,
+              "reps": 10
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 32.5,
+              "reps": 9
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 32.5,
+              "reps": 8
+            }
+          ]
+        },
+        {
+          "exerciseId": 2,
+          "exerciseName": "Incline Dumbbell Press",
+          "orderIndex": 1,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 35.0,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 35.0,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 35.0,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 3,
+          "exerciseName": "Chest Press Machine",
+          "orderIndex": 2,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 37.5,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 37.5,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 37.5,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 4,
+          "exerciseName": "Dumbbell Chest Fly",
+          "orderIndex": 3,
+          "targetSets": 2,
+          "repLow": 10,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 40.0,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 40.0,
+              "reps": 14
+            }
+          ]
+        },
+        {
+          "exerciseId": 5,
+          "exerciseName": "Dumbbell Bicep Curl",
+          "orderIndex": 4,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 42.5,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 42.5,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 42.5,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 6,
+          "exerciseName": "EZ-Bar Preacher Curl",
+          "orderIndex": 5,
+          "targetSets": 3,
+          "repLow": 10,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 45.0,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 45.0,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 45.0,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 7,
+          "exerciseName": "Hammer Curl",
+          "orderIndex": 6,
+          "targetSets": 2,
+          "repLow": 10,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 47.5,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 47.5,
+              "reps": 14
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "templateDay": 2,
+      "templateName": "Back + Triceps",
+      "status": "completed",
+      "startedAt": "2026-09-02T07:30:00.000Z",
+      "completedAt": "2026-09-02T08:24:00.000Z",
+      "lastActivityAt": "2026-09-02T08:24:00.000Z",
+      "score": 86,
+      "scoreBreakdown": {
+        "completion": 40,
+        "quality": 20,
+        "consistency": 10
+      },
+      "exercises": [
+        {
+          "exerciseId": 8,
+          "exerciseName": "Lat Pulldown",
+          "orderIndex": 0,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 50.0,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 50.0,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 50.0,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 9,
+          "exerciseName": "Seated Cable Row",
+          "orderIndex": 1,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 52.5,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 52.5,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 52.5,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 10,
+          "exerciseName": "Chest-Supported Row Machine",
+          "orderIndex": 2,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 55.0,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 55.0,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 55.0,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 11,
+          "exerciseName": "Straight-Arm Cable Pulldown",
+          "orderIndex": 3,
+          "targetSets": 2,
+          "repLow": 10,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 57.5,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 57.5,
+              "reps": 14
+            }
+          ]
+        },
+        {
+          "exerciseId": 12,
+          "exerciseName": "Face Pull",
+          "orderIndex": 4,
+          "targetSets": 2,
+          "repLow": 12,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 60.0,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 60.0,
+              "reps": 14
+            }
+          ]
+        },
+        {
+          "exerciseId": 13,
+          "exerciseName": "Cable Tricep Pushdown",
+          "orderIndex": 5,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 62.5,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 62.5,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 62.5,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 14,
+          "exerciseName": "Overhead Cable Tricep Extension",
+          "orderIndex": 6,
+          "targetSets": 3,
+          "repLow": 10,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 65.0,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 65.0,
+              "reps": 14
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 65.0,
+              "reps": 13
+            }
+          ]
+        },
+        {
+          "exerciseId": 15,
+          "exerciseName": "Close-Grip Bench Press",
+          "orderIndex": 7,
+          "targetSets": 2,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 67.5,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 67.5,
+              "reps": 11
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "templateDay": 3,
+      "templateName": "Legs + Shoulders",
+      "status": "completed",
+      "startedAt": "2026-09-04T07:30:00.000Z",
+      "completedAt": "2026-09-04T08:24:00.000Z",
+      "lastActivityAt": "2026-09-04T08:24:00.000Z",
+      "score": 86,
+      "scoreBreakdown": {
+        "completion": 40,
+        "quality": 20,
+        "consistency": 10
+      },
+      "exercises": [
+        {
+          "exerciseId": 16,
+          "exerciseName": "Leg Press",
+          "orderIndex": 0,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 70.0,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 70.0,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 70.0,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 17,
+          "exerciseName": "Leg Extension",
+          "orderIndex": 1,
+          "targetSets": 3,
+          "repLow": 10,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 72.5,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 72.5,
+              "reps": 14
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 72.5,
+              "reps": 13
+            }
+          ]
+        },
+        {
+          "exerciseId": 18,
+          "exerciseName": "Lying Leg Curl",
+          "orderIndex": 2,
+          "targetSets": 3,
+          "repLow": 10,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 75.0,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 75.0,
+              "reps": 14
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 75.0,
+              "reps": 13
+            }
+          ]
+        },
+        {
+          "exerciseId": 19,
+          "exerciseName": "Hip Abduction Machine",
+          "orderIndex": 3,
+          "targetSets": 2,
+          "repLow": 12,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 77.5,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 77.5,
+              "reps": 14
+            }
+          ]
+        },
+        {
+          "exerciseId": 20,
+          "exerciseName": "Seated Calf Raise",
+          "orderIndex": 4,
+          "targetSets": 3,
+          "repLow": 12,
+          "repHigh": 20,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 80.0,
+              "reps": 20
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 80.0,
+              "reps": 19
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 80.0,
+              "reps": 18
+            }
+          ]
+        },
+        {
+          "exerciseId": 21,
+          "exerciseName": "Machine Shoulder Press",
+          "orderIndex": 5,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 82.5,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 82.5,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 82.5,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 22,
+          "exerciseName": "Dumbbell Lateral Raise",
+          "orderIndex": 6,
+          "targetSets": 3,
+          "repLow": 10,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 85.0,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 85.0,
+              "reps": 14
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 85.0,
+              "reps": 13
+            }
+          ]
+        },
+        {
+          "exerciseId": 12,
+          "exerciseName": "Face Pull",
+          "orderIndex": 7,
+          "targetSets": 2,
+          "repLow": 12,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 60.0,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 60.0,
+              "reps": 14
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "templateDay": 1,
+      "templateName": "Chest + Biceps",
+      "status": "completed",
+      "startedAt": "2026-09-07T07:30:00.000Z",
+      "completedAt": "2026-09-07T08:25:00.000Z",
+      "lastActivityAt": "2026-09-07T08:25:00.000Z",
+      "score": 90,
+      "scoreBreakdown": {
+        "completion": 40,
+        "quality": 20,
+        "consistency": 10
+      },
+      "exercises": [
+        {
+          "exerciseId": 1,
+          "exerciseName": "Bench Press",
+          "orderIndex": 0,
+          "targetSets": 3,
+          "repLow": 6,
+          "repHigh": 10,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 35.0,
+              "reps": 10
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 35.0,
+              "reps": 9
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 35.0,
+              "reps": 8
+            }
+          ]
+        },
+        {
+          "exerciseId": 2,
+          "exerciseName": "Incline Dumbbell Press",
+          "orderIndex": 1,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 37.5,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 37.5,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 37.5,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 3,
+          "exerciseName": "Chest Press Machine",
+          "orderIndex": 2,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 40.0,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 40.0,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 40.0,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 4,
+          "exerciseName": "Dumbbell Chest Fly",
+          "orderIndex": 3,
+          "targetSets": 2,
+          "repLow": 10,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 42.5,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 42.5,
+              "reps": 14
+            }
+          ]
+        },
+        {
+          "exerciseId": 5,
+          "exerciseName": "Dumbbell Bicep Curl",
+          "orderIndex": 4,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 45.0,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 45.0,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 45.0,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 6,
+          "exerciseName": "EZ-Bar Preacher Curl",
+          "orderIndex": 5,
+          "targetSets": 3,
+          "repLow": 10,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 47.5,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 47.5,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 47.5,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 7,
+          "exerciseName": "Hammer Curl",
+          "orderIndex": 6,
+          "targetSets": 2,
+          "repLow": 10,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 50.0,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 50.0,
+              "reps": 14
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 17,
+      "templateDay": 2,
+      "templateName": "Back + Triceps",
+      "status": "completed",
+      "startedAt": "2026-09-09T07:30:00.000Z",
+      "completedAt": "2026-09-09T08:25:00.000Z",
+      "lastActivityAt": "2026-09-09T08:25:00.000Z",
+      "score": 90,
+      "scoreBreakdown": {
+        "completion": 40,
+        "quality": 20,
+        "consistency": 10
+      },
+      "exercises": [
+        {
+          "exerciseId": 8,
+          "exerciseName": "Lat Pulldown",
+          "orderIndex": 0,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 52.5,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 52.5,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 52.5,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 9,
+          "exerciseName": "Seated Cable Row",
+          "orderIndex": 1,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 55.0,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 55.0,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 55.0,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 10,
+          "exerciseName": "Chest-Supported Row Machine",
+          "orderIndex": 2,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 57.5,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 57.5,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 57.5,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 11,
+          "exerciseName": "Straight-Arm Cable Pulldown",
+          "orderIndex": 3,
+          "targetSets": 2,
+          "repLow": 10,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 60.0,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 60.0,
+              "reps": 14
+            }
+          ]
+        },
+        {
+          "exerciseId": 12,
+          "exerciseName": "Face Pull",
+          "orderIndex": 4,
+          "targetSets": 2,
+          "repLow": 12,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 62.5,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 62.5,
+              "reps": 14
+            }
+          ]
+        },
+        {
+          "exerciseId": 13,
+          "exerciseName": "Cable Tricep Pushdown",
+          "orderIndex": 5,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 65.0,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 65.0,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 65.0,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 14,
+          "exerciseName": "Overhead Cable Tricep Extension",
+          "orderIndex": 6,
+          "targetSets": 3,
+          "repLow": 10,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 67.5,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 67.5,
+              "reps": 14
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 67.5,
+              "reps": 13
+            }
+          ]
+        },
+        {
+          "exerciseId": 15,
+          "exerciseName": "Close-Grip Bench Press",
+          "orderIndex": 7,
+          "targetSets": 2,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 70.0,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 70.0,
+              "reps": 11
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 18,
+      "templateDay": 3,
+      "templateName": "Legs + Shoulders",
+      "status": "completed",
+      "startedAt": "2026-09-11T07:30:00.000Z",
+      "completedAt": "2026-09-11T08:25:00.000Z",
+      "lastActivityAt": "2026-09-11T08:25:00.000Z",
+      "score": 90,
+      "scoreBreakdown": {
+        "completion": 40,
+        "quality": 20,
+        "consistency": 10
+      },
+      "exercises": [
+        {
+          "exerciseId": 16,
+          "exerciseName": "Leg Press",
+          "orderIndex": 0,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 72.5,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 72.5,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 72.5,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 17,
+          "exerciseName": "Leg Extension",
+          "orderIndex": 1,
+          "targetSets": 3,
+          "repLow": 10,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 75.0,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 75.0,
+              "reps": 14
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 75.0,
+              "reps": 13
+            }
+          ]
+        },
+        {
+          "exerciseId": 18,
+          "exerciseName": "Lying Leg Curl",
+          "orderIndex": 2,
+          "targetSets": 3,
+          "repLow": 10,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 77.5,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 77.5,
+              "reps": 14
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 77.5,
+              "reps": 13
+            }
+          ]
+        },
+        {
+          "exerciseId": 19,
+          "exerciseName": "Hip Abduction Machine",
+          "orderIndex": 3,
+          "targetSets": 2,
+          "repLow": 12,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 80.0,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 80.0,
+              "reps": 14
+            }
+          ]
+        },
+        {
+          "exerciseId": 20,
+          "exerciseName": "Seated Calf Raise",
+          "orderIndex": 4,
+          "targetSets": 3,
+          "repLow": 12,
+          "repHigh": 20,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 82.5,
+              "reps": 20
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 82.5,
+              "reps": 19
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 82.5,
+              "reps": 18
+            }
+          ]
+        },
+        {
+          "exerciseId": 21,
+          "exerciseName": "Machine Shoulder Press",
+          "orderIndex": 5,
+          "targetSets": 3,
+          "repLow": 8,
+          "repHigh": 12,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 85.0,
+              "reps": 12
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 85.0,
+              "reps": 11
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 85.0,
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "exerciseId": 22,
+          "exerciseName": "Dumbbell Lateral Raise",
+          "orderIndex": 6,
+          "targetSets": 3,
+          "repLow": 10,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 87.5,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 87.5,
+              "reps": 14
+            },
+            {
+              "setNumber": 3,
+              "weightKg": 87.5,
+              "reps": 13
+            }
+          ]
+        },
+        {
+          "exerciseId": 12,
+          "exerciseName": "Face Pull",
+          "orderIndex": 7,
+          "targetSets": 2,
+          "repLow": 12,
+          "repHigh": 15,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 62.5,
+              "reps": 15
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 62.5,
+              "reps": 14
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 19,
+      "templateDay": 3,
+      "templateName": "Legs + Shoulders",
+      "status": "completed",
+      "startedAt": "2026-09-20T09:00:00.000Z",
+      "completedAt": "2026-09-20T10:00:00.000Z",
+      "lastActivityAt": null,
+      "score": null,
+      "scoreBreakdown": null,
+      "exercises": [
+        {
+          "exerciseId": 23,
+          "exerciseName": "Zercher Squat",
+          "orderIndex": 1,
+          "targetSets": 2,
+          "repLow": 5,
+          "repHigh": 8,
+          "status": null,
+          "note": null,
+          "sets": [
+            {
+              "setNumber": 1,
+              "weightKg": 80.0,
+              "reps": 6
+            },
+            {
+              "setNumber": 2,
+              "weightKg": 80.0,
+              "reps": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 20,
+      "templateDay": 1,
+      "templateName": "Chest + Biceps",
+      "status": "abandoned",
+      "startedAt": "2026-09-25T07:00:00.000Z",
+      "completedAt": null,
+      "lastActivityAt": null,
+      "score": null,
+      "scoreBreakdown": null,
+      "exercises": []
+    },
+    {
+      "id": 21,
+      "templateDay": 2,
+      "templateName": "Back + Triceps",
+      "status": "in_progress",
+      "startedAt": "2026-10-02T07:00:00.000Z",
+      "completedAt": null,
+      "lastActivityAt": null,
+      "score": null,
+      "scoreBreakdown": null,
+      "exercises": []
+    }
+  ],
+  "personalRecords": [
+    {
+      "exerciseId": 1,
+      "exerciseName": "Bench Press",
+      "type": "weight",
+      "weightKg": 60.0,
+      "reps": 6,
+      "sessionId": 1,
+      "achievedAt": "2026-08-03T08:00:00.000Z"
+    }
+  ],
+  "achievements": [
+    {
+      "id": "first_pr",
+      "unlockedAt": null
+    },
+    {
+      "id": "first_workout",
+      "unlockedAt": "2026-08-03T09:00:00.000Z"
+    },
+    {
+      "id": "full_week",
+      "unlockedAt": null
+    },
+    {
+      "id": "prs_10",
+      "unlockedAt": null
+    },
+    {
+      "id": "prs_100",
+      "unlockedAt": null
+    },
+    {
+      "id": "streak_10",
+      "unlockedAt": null
+    },
+    {
+      "id": "streak_30",
+      "unlockedAt": null
+    },
+    {
+      "id": "workouts_10",
+      "unlockedAt": null
+    },
+    {
+      "id": "workouts_25",
+      "unlockedAt": null
+    },
+    {
+      "id": "workouts_50",
+      "unlockedAt": null
+    }
+  ]
+}

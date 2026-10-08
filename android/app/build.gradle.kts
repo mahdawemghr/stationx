@@ -16,7 +16,7 @@ val keystoreProps = Properties().apply {
 }
 
 android {
-    namespace = "com.example.stationx"
+    namespace = "dev.mahdi_ramadhan.stationx"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -30,8 +30,7 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.stationx"
+        applicationId = "dev.mahdi_ramadhan.stationx"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         // Health Connect (health plugin) requires API 26+.

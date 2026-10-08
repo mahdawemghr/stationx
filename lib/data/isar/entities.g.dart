@@ -3480,8 +3480,19 @@ const RotationEntitySchema = CollectionSchema(
       name: r'currentIndex',
       type: IsarType.long,
     ),
-    r'workoutIds': PropertySchema(
+    r'syncStatus': PropertySchema(
       id: 1,
+      name: r'syncStatus',
+      type: IsarType.string,
+      enumMap: _RotationEntitysyncStatusEnumValueMap,
+    ),
+    r'updatedAt': PropertySchema(
+      id: 2,
+      name: r'updatedAt',
+      type: IsarType.dateTime,
+    ),
+    r'workoutIds': PropertySchema(
+      id: 3,
       name: r'workoutIds',
       type: IsarType.stringList,
     ),
@@ -3508,6 +3519,7 @@ int _rotationEntityEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
+  bytesCount += 3 + object.syncStatus.name.length * 3;
   bytesCount += 3 + object.workoutIds.length * 3;
   {
     for (var i = 0; i < object.workoutIds.length; i++) {
@@ -3525,7 +3537,9 @@ void _rotationEntitySerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeLong(offsets[0], object.currentIndex);
-  writer.writeStringList(offsets[1], object.workoutIds);
+  writer.writeString(offsets[1], object.syncStatus.name);
+  writer.writeDateTime(offsets[2], object.updatedAt);
+  writer.writeStringList(offsets[3], object.workoutIds);
 }
 
 RotationEntity _rotationEntityDeserialize(
@@ -3537,7 +3551,13 @@ RotationEntity _rotationEntityDeserialize(
   final object = RotationEntity();
   object.currentIndex = reader.readLong(offsets[0]);
   object.id = id;
-  object.workoutIds = reader.readStringList(offsets[1]) ?? [];
+  object.syncStatus =
+      _RotationEntitysyncStatusValueEnumMap[reader.readStringOrNull(
+        offsets[1],
+      )] ??
+      SyncStatus.pending;
+  object.updatedAt = reader.readDateTime(offsets[2]);
+  object.workoutIds = reader.readStringList(offsets[3]) ?? [];
   return object;
 }
 
@@ -3551,11 +3571,30 @@ P _rotationEntityDeserializeProp<P>(
     case 0:
       return (reader.readLong(offset)) as P;
     case 1:
+      return (_RotationEntitysyncStatusValueEnumMap[reader.readStringOrNull(
+                offset,
+              )] ??
+              SyncStatus.pending)
+          as P;
+    case 2:
+      return (reader.readDateTime(offset)) as P;
+    case 3:
       return (reader.readStringList(offset) ?? []) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
 }
+
+const _RotationEntitysyncStatusEnumValueMap = {
+  r'pending': r'pending',
+  r'synced': r'synced',
+  r'failed': r'failed',
+};
+const _RotationEntitysyncStatusValueEnumMap = {
+  r'pending': SyncStatus.pending,
+  r'synced': SyncStatus.synced,
+  r'failed': SyncStatus.failed,
+};
 
 Id _rotationEntityGetId(RotationEntity object) {
   return object.id;
@@ -3760,6 +3799,202 @@ extension RotationEntityQueryFilter
       return query.addFilterCondition(
         FilterCondition.between(
           property: r'id',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<RotationEntity, RotationEntity, QAfterFilterCondition>
+  syncStatusEqualTo(SyncStatus value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'syncStatus',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<RotationEntity, RotationEntity, QAfterFilterCondition>
+  syncStatusGreaterThan(
+    SyncStatus value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'syncStatus',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<RotationEntity, RotationEntity, QAfterFilterCondition>
+  syncStatusLessThan(
+    SyncStatus value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'syncStatus',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<RotationEntity, RotationEntity, QAfterFilterCondition>
+  syncStatusBetween(
+    SyncStatus lower,
+    SyncStatus upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'syncStatus',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<RotationEntity, RotationEntity, QAfterFilterCondition>
+  syncStatusStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'syncStatus',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<RotationEntity, RotationEntity, QAfterFilterCondition>
+  syncStatusEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'syncStatus',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<RotationEntity, RotationEntity, QAfterFilterCondition>
+  syncStatusContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'syncStatus',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<RotationEntity, RotationEntity, QAfterFilterCondition>
+  syncStatusMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'syncStatus',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<RotationEntity, RotationEntity, QAfterFilterCondition>
+  syncStatusIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'syncStatus', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<RotationEntity, RotationEntity, QAfterFilterCondition>
+  syncStatusIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'syncStatus', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<RotationEntity, RotationEntity, QAfterFilterCondition>
+  updatedAtEqualTo(DateTime value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'updatedAt', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<RotationEntity, RotationEntity, QAfterFilterCondition>
+  updatedAtGreaterThan(DateTime value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'updatedAt',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<RotationEntity, RotationEntity, QAfterFilterCondition>
+  updatedAtLessThan(DateTime value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'updatedAt',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<RotationEntity, RotationEntity, QAfterFilterCondition>
+  updatedAtBetween(
+    DateTime lower,
+    DateTime upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'updatedAt',
           lower: lower,
           includeLower: includeLower,
           upper: upper,
@@ -3985,6 +4220,33 @@ extension RotationEntityQuerySortBy
       return query.addSortBy(r'currentIndex', Sort.desc);
     });
   }
+
+  QueryBuilder<RotationEntity, RotationEntity, QAfterSortBy>
+  sortBySyncStatus() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'syncStatus', Sort.asc);
+    });
+  }
+
+  QueryBuilder<RotationEntity, RotationEntity, QAfterSortBy>
+  sortBySyncStatusDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'syncStatus', Sort.desc);
+    });
+  }
+
+  QueryBuilder<RotationEntity, RotationEntity, QAfterSortBy> sortByUpdatedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'updatedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<RotationEntity, RotationEntity, QAfterSortBy>
+  sortByUpdatedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'updatedAt', Sort.desc);
+    });
+  }
 }
 
 extension RotationEntityQuerySortThenBy
@@ -4014,6 +4276,33 @@ extension RotationEntityQuerySortThenBy
       return query.addSortBy(r'id', Sort.desc);
     });
   }
+
+  QueryBuilder<RotationEntity, RotationEntity, QAfterSortBy>
+  thenBySyncStatus() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'syncStatus', Sort.asc);
+    });
+  }
+
+  QueryBuilder<RotationEntity, RotationEntity, QAfterSortBy>
+  thenBySyncStatusDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'syncStatus', Sort.desc);
+    });
+  }
+
+  QueryBuilder<RotationEntity, RotationEntity, QAfterSortBy> thenByUpdatedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'updatedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<RotationEntity, RotationEntity, QAfterSortBy>
+  thenByUpdatedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'updatedAt', Sort.desc);
+    });
+  }
 }
 
 extension RotationEntityQueryWhereDistinct
@@ -4022,6 +4311,21 @@ extension RotationEntityQueryWhereDistinct
   distinctByCurrentIndex() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'currentIndex');
+    });
+  }
+
+  QueryBuilder<RotationEntity, RotationEntity, QDistinct> distinctBySyncStatus({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'syncStatus', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<RotationEntity, RotationEntity, QDistinct>
+  distinctByUpdatedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'updatedAt');
     });
   }
 
@@ -4044,6 +4348,19 @@ extension RotationEntityQueryProperty
   QueryBuilder<RotationEntity, int, QQueryOperations> currentIndexProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'currentIndex');
+    });
+  }
+
+  QueryBuilder<RotationEntity, SyncStatus, QQueryOperations>
+  syncStatusProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'syncStatus');
+    });
+  }
+
+  QueryBuilder<RotationEntity, DateTime, QQueryOperations> updatedAtProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'updatedAt');
     });
   }
 
@@ -10234,25 +10551,36 @@ const ProfileEntitySchema = CollectionSchema(
       name: r'progressionEnabled',
       type: IsarType.bool,
     ),
-    r'themeMode': PropertySchema(
+    r'syncStatus': PropertySchema(
       id: 11,
+      name: r'syncStatus',
+      type: IsarType.string,
+      enumMap: _ProfileEntitysyncStatusEnumValueMap,
+    ),
+    r'themeMode': PropertySchema(
+      id: 12,
       name: r'themeMode',
       type: IsarType.string,
       enumMap: _ProfileEntitythemeModeEnumValueMap,
     ),
     r'unit': PropertySchema(
-      id: 12,
+      id: 13,
       name: r'unit',
       type: IsarType.string,
       enumMap: _ProfileEntityunitEnumValueMap,
     ),
+    r'updatedAt': PropertySchema(
+      id: 14,
+      name: r'updatedAt',
+      type: IsarType.dateTime,
+    ),
     r'weeklySessionTarget': PropertySchema(
-      id: 13,
+      id: 15,
       name: r'weeklySessionTarget',
       type: IsarType.long,
     ),
     r'weightKg': PropertySchema(
-      id: 14,
+      id: 16,
       name: r'weightKg',
       type: IsarType.double,
     ),
@@ -10281,6 +10609,7 @@ int _profileEntityEstimateSize(
   var bytesCount = offsets.last;
   bytesCount += 3 + object.email.length * 3;
   bytesCount += 3 + object.name.length * 3;
+  bytesCount += 3 + object.syncStatus.name.length * 3;
   bytesCount += 3 + object.themeMode.name.length * 3;
   bytesCount += 3 + object.unit.name.length * 3;
   return bytesCount;
@@ -10303,10 +10632,12 @@ void _profileEntitySerialize(
   writer.writeBool(offsets[8], object.isGuest);
   writer.writeString(offsets[9], object.name);
   writer.writeBool(offsets[10], object.progressionEnabled);
-  writer.writeString(offsets[11], object.themeMode.name);
-  writer.writeString(offsets[12], object.unit.name);
-  writer.writeLong(offsets[13], object.weeklySessionTarget);
-  writer.writeDouble(offsets[14], object.weightKg);
+  writer.writeString(offsets[11], object.syncStatus.name);
+  writer.writeString(offsets[12], object.themeMode.name);
+  writer.writeString(offsets[13], object.unit.name);
+  writer.writeDateTime(offsets[14], object.updatedAt);
+  writer.writeLong(offsets[15], object.weeklySessionTarget);
+  writer.writeDouble(offsets[16], object.weightKg);
 }
 
 ProfileEntity _profileEntityDeserialize(
@@ -10328,16 +10659,22 @@ ProfileEntity _profileEntityDeserialize(
   object.isGuest = reader.readBool(offsets[8]);
   object.name = reader.readString(offsets[9]);
   object.progressionEnabled = reader.readBool(offsets[10]);
+  object.syncStatus =
+      _ProfileEntitysyncStatusValueEnumMap[reader.readStringOrNull(
+        offsets[11],
+      )] ??
+      SyncStatus.pending;
   object.themeMode =
       _ProfileEntitythemeModeValueEnumMap[reader.readStringOrNull(
-        offsets[11],
+        offsets[12],
       )] ??
       SxThemeMode.dark;
   object.unit =
-      _ProfileEntityunitValueEnumMap[reader.readStringOrNull(offsets[12])] ??
+      _ProfileEntityunitValueEnumMap[reader.readStringOrNull(offsets[13])] ??
       WeightUnit.kg;
-  object.weeklySessionTarget = reader.readLong(offsets[13]);
-  object.weightKg = reader.readDouble(offsets[14]);
+  object.updatedAt = reader.readDateTime(offsets[14]);
+  object.weeklySessionTarget = reader.readLong(offsets[15]);
+  object.weightKg = reader.readDouble(offsets[16]);
   return object;
 }
 
@@ -10371,24 +10708,42 @@ P _profileEntityDeserializeProp<P>(
     case 10:
       return (reader.readBool(offset)) as P;
     case 11:
+      return (_ProfileEntitysyncStatusValueEnumMap[reader.readStringOrNull(
+                offset,
+              )] ??
+              SyncStatus.pending)
+          as P;
+    case 12:
       return (_ProfileEntitythemeModeValueEnumMap[reader.readStringOrNull(
                 offset,
               )] ??
               SxThemeMode.dark)
           as P;
-    case 12:
+    case 13:
       return (_ProfileEntityunitValueEnumMap[reader.readStringOrNull(offset)] ??
               WeightUnit.kg)
           as P;
-    case 13:
-      return (reader.readLong(offset)) as P;
     case 14:
+      return (reader.readDateTime(offset)) as P;
+    case 15:
+      return (reader.readLong(offset)) as P;
+    case 16:
       return (reader.readDouble(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
 }
 
+const _ProfileEntitysyncStatusEnumValueMap = {
+  r'pending': r'pending',
+  r'synced': r'synced',
+  r'failed': r'failed',
+};
+const _ProfileEntitysyncStatusValueEnumMap = {
+  r'pending': SyncStatus.pending,
+  r'synced': SyncStatus.synced,
+  r'failed': SyncStatus.failed,
+};
 const _ProfileEntitythemeModeEnumValueMap = {
   r'dark': r'dark',
   r'oled': r'oled',
@@ -11232,6 +11587,147 @@ extension ProfileEntityQueryFilter
   }
 
   QueryBuilder<ProfileEntity, ProfileEntity, QAfterFilterCondition>
+  syncStatusEqualTo(SyncStatus value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'syncStatus',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ProfileEntity, ProfileEntity, QAfterFilterCondition>
+  syncStatusGreaterThan(
+    SyncStatus value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'syncStatus',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ProfileEntity, ProfileEntity, QAfterFilterCondition>
+  syncStatusLessThan(
+    SyncStatus value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'syncStatus',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ProfileEntity, ProfileEntity, QAfterFilterCondition>
+  syncStatusBetween(
+    SyncStatus lower,
+    SyncStatus upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'syncStatus',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ProfileEntity, ProfileEntity, QAfterFilterCondition>
+  syncStatusStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'syncStatus',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ProfileEntity, ProfileEntity, QAfterFilterCondition>
+  syncStatusEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'syncStatus',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ProfileEntity, ProfileEntity, QAfterFilterCondition>
+  syncStatusContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'syncStatus',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ProfileEntity, ProfileEntity, QAfterFilterCondition>
+  syncStatusMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'syncStatus',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ProfileEntity, ProfileEntity, QAfterFilterCondition>
+  syncStatusIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'syncStatus', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<ProfileEntity, ProfileEntity, QAfterFilterCondition>
+  syncStatusIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'syncStatus', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<ProfileEntity, ProfileEntity, QAfterFilterCondition>
   themeModeEqualTo(SxThemeMode value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
@@ -11512,6 +12008,61 @@ extension ProfileEntityQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         FilterCondition.greaterThan(property: r'unit', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<ProfileEntity, ProfileEntity, QAfterFilterCondition>
+  updatedAtEqualTo(DateTime value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'updatedAt', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<ProfileEntity, ProfileEntity, QAfterFilterCondition>
+  updatedAtGreaterThan(DateTime value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'updatedAt',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ProfileEntity, ProfileEntity, QAfterFilterCondition>
+  updatedAtLessThan(DateTime value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'updatedAt',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ProfileEntity, ProfileEntity, QAfterFilterCondition>
+  updatedAtBetween(
+    DateTime lower,
+    DateTime upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'updatedAt',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
       );
     });
   }
@@ -11799,6 +12350,19 @@ extension ProfileEntityQuerySortBy
     });
   }
 
+  QueryBuilder<ProfileEntity, ProfileEntity, QAfterSortBy> sortBySyncStatus() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'syncStatus', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ProfileEntity, ProfileEntity, QAfterSortBy>
+  sortBySyncStatusDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'syncStatus', Sort.desc);
+    });
+  }
+
   QueryBuilder<ProfileEntity, ProfileEntity, QAfterSortBy> sortByThemeMode() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'themeMode', Sort.asc);
@@ -11821,6 +12385,19 @@ extension ProfileEntityQuerySortBy
   QueryBuilder<ProfileEntity, ProfileEntity, QAfterSortBy> sortByUnitDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'unit', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ProfileEntity, ProfileEntity, QAfterSortBy> sortByUpdatedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'updatedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ProfileEntity, ProfileEntity, QAfterSortBy>
+  sortByUpdatedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'updatedAt', Sort.desc);
     });
   }
 
@@ -12010,6 +12587,19 @@ extension ProfileEntityQuerySortThenBy
     });
   }
 
+  QueryBuilder<ProfileEntity, ProfileEntity, QAfterSortBy> thenBySyncStatus() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'syncStatus', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ProfileEntity, ProfileEntity, QAfterSortBy>
+  thenBySyncStatusDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'syncStatus', Sort.desc);
+    });
+  }
+
   QueryBuilder<ProfileEntity, ProfileEntity, QAfterSortBy> thenByThemeMode() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'themeMode', Sort.asc);
@@ -12032,6 +12622,19 @@ extension ProfileEntityQuerySortThenBy
   QueryBuilder<ProfileEntity, ProfileEntity, QAfterSortBy> thenByUnitDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'unit', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ProfileEntity, ProfileEntity, QAfterSortBy> thenByUpdatedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'updatedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ProfileEntity, ProfileEntity, QAfterSortBy>
+  thenByUpdatedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'updatedAt', Sort.desc);
     });
   }
 
@@ -12141,6 +12744,14 @@ extension ProfileEntityQueryWhereDistinct
     });
   }
 
+  QueryBuilder<ProfileEntity, ProfileEntity, QDistinct> distinctBySyncStatus({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'syncStatus', caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<ProfileEntity, ProfileEntity, QDistinct> distinctByThemeMode({
     bool caseSensitive = true,
   }) {
@@ -12154,6 +12765,12 @@ extension ProfileEntityQueryWhereDistinct
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'unit', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<ProfileEntity, ProfileEntity, QDistinct> distinctByUpdatedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'updatedAt');
     });
   }
 
@@ -12247,6 +12864,13 @@ extension ProfileEntityQueryProperty
     });
   }
 
+  QueryBuilder<ProfileEntity, SyncStatus, QQueryOperations>
+  syncStatusProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'syncStatus');
+    });
+  }
+
   QueryBuilder<ProfileEntity, SxThemeMode, QQueryOperations>
   themeModeProperty() {
     return QueryBuilder.apply(this, (query) {
@@ -12257,6 +12881,12 @@ extension ProfileEntityQueryProperty
   QueryBuilder<ProfileEntity, WeightUnit, QQueryOperations> unitProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'unit');
+    });
+  }
+
+  QueryBuilder<ProfileEntity, DateTime, QQueryOperations> updatedAtProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'updatedAt');
     });
   }
 
@@ -12751,6 +13381,1767 @@ extension AppMetaEntityQueryProperty
   QueryBuilder<AppMetaEntity, bool, QQueryOperations> signedInProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'signedIn');
+    });
+  }
+}
+
+// coverage:ignore-file
+// ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types
+
+extension GetSyncStateEntityCollection on Isar {
+  IsarCollection<SyncStateEntity> get syncStateEntitys => this.collection();
+}
+
+const SyncStateEntitySchema = CollectionSchema(
+  name: r'SyncStateEntity',
+  id: 3262218820902267707,
+  properties: {
+    r'cursorsJson': PropertySchema(
+      id: 0,
+      name: r'cursorsJson',
+      type: IsarType.string,
+    ),
+    r'lastSyncAt': PropertySchema(
+      id: 1,
+      name: r'lastSyncAt',
+      type: IsarType.dateTime,
+    ),
+    r'userId': PropertySchema(id: 2, name: r'userId', type: IsarType.string),
+  },
+
+  estimateSize: _syncStateEntityEstimateSize,
+  serialize: _syncStateEntitySerialize,
+  deserialize: _syncStateEntityDeserialize,
+  deserializeProp: _syncStateEntityDeserializeProp,
+  idName: r'id',
+  indexes: {},
+  links: {},
+  embeddedSchemas: {},
+
+  getId: _syncStateEntityGetId,
+  getLinks: _syncStateEntityGetLinks,
+  attach: _syncStateEntityAttach,
+  version: '3.3.2',
+);
+
+int _syncStateEntityEstimateSize(
+  SyncStateEntity object,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  var bytesCount = offsets.last;
+  bytesCount += 3 + object.cursorsJson.length * 3;
+  {
+    final value = object.userId;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  return bytesCount;
+}
+
+void _syncStateEntitySerialize(
+  SyncStateEntity object,
+  IsarWriter writer,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  writer.writeString(offsets[0], object.cursorsJson);
+  writer.writeDateTime(offsets[1], object.lastSyncAt);
+  writer.writeString(offsets[2], object.userId);
+}
+
+SyncStateEntity _syncStateEntityDeserialize(
+  Id id,
+  IsarReader reader,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  final object = SyncStateEntity();
+  object.cursorsJson = reader.readString(offsets[0]);
+  object.id = id;
+  object.lastSyncAt = reader.readDateTimeOrNull(offsets[1]);
+  object.userId = reader.readStringOrNull(offsets[2]);
+  return object;
+}
+
+P _syncStateEntityDeserializeProp<P>(
+  IsarReader reader,
+  int propertyId,
+  int offset,
+  Map<Type, List<int>> allOffsets,
+) {
+  switch (propertyId) {
+    case 0:
+      return (reader.readString(offset)) as P;
+    case 1:
+      return (reader.readDateTimeOrNull(offset)) as P;
+    case 2:
+      return (reader.readStringOrNull(offset)) as P;
+    default:
+      throw IsarError('Unknown property with id $propertyId');
+  }
+}
+
+Id _syncStateEntityGetId(SyncStateEntity object) {
+  return object.id;
+}
+
+List<IsarLinkBase<dynamic>> _syncStateEntityGetLinks(SyncStateEntity object) {
+  return [];
+}
+
+void _syncStateEntityAttach(
+  IsarCollection<dynamic> col,
+  Id id,
+  SyncStateEntity object,
+) {
+  object.id = id;
+}
+
+extension SyncStateEntityQueryWhereSort
+    on QueryBuilder<SyncStateEntity, SyncStateEntity, QWhere> {
+  QueryBuilder<SyncStateEntity, SyncStateEntity, QAfterWhere> anyId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(const IdWhereClause.any());
+    });
+  }
+}
+
+extension SyncStateEntityQueryWhere
+    on QueryBuilder<SyncStateEntity, SyncStateEntity, QWhereClause> {
+  QueryBuilder<SyncStateEntity, SyncStateEntity, QAfterWhereClause> idEqualTo(
+    Id id,
+  ) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IdWhereClause.between(lower: id, upper: id));
+    });
+  }
+
+  QueryBuilder<SyncStateEntity, SyncStateEntity, QAfterWhereClause>
+  idNotEqualTo(Id id) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(
+              IdWhereClause.lessThan(upper: id, includeUpper: false),
+            )
+            .addWhereClause(
+              IdWhereClause.greaterThan(lower: id, includeLower: false),
+            );
+      } else {
+        return query
+            .addWhereClause(
+              IdWhereClause.greaterThan(lower: id, includeLower: false),
+            )
+            .addWhereClause(
+              IdWhereClause.lessThan(upper: id, includeUpper: false),
+            );
+      }
+    });
+  }
+
+  QueryBuilder<SyncStateEntity, SyncStateEntity, QAfterWhereClause>
+  idGreaterThan(Id id, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IdWhereClause.greaterThan(lower: id, includeLower: include),
+      );
+    });
+  }
+
+  QueryBuilder<SyncStateEntity, SyncStateEntity, QAfterWhereClause> idLessThan(
+    Id id, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IdWhereClause.lessThan(upper: id, includeUpper: include),
+      );
+    });
+  }
+
+  QueryBuilder<SyncStateEntity, SyncStateEntity, QAfterWhereClause> idBetween(
+    Id lowerId,
+    Id upperId, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IdWhereClause.between(
+          lower: lowerId,
+          includeLower: includeLower,
+          upper: upperId,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+}
+
+extension SyncStateEntityQueryFilter
+    on QueryBuilder<SyncStateEntity, SyncStateEntity, QFilterCondition> {
+  QueryBuilder<SyncStateEntity, SyncStateEntity, QAfterFilterCondition>
+  cursorsJsonEqualTo(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'cursorsJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncStateEntity, SyncStateEntity, QAfterFilterCondition>
+  cursorsJsonGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'cursorsJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncStateEntity, SyncStateEntity, QAfterFilterCondition>
+  cursorsJsonLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'cursorsJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncStateEntity, SyncStateEntity, QAfterFilterCondition>
+  cursorsJsonBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'cursorsJson',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncStateEntity, SyncStateEntity, QAfterFilterCondition>
+  cursorsJsonStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'cursorsJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncStateEntity, SyncStateEntity, QAfterFilterCondition>
+  cursorsJsonEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'cursorsJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncStateEntity, SyncStateEntity, QAfterFilterCondition>
+  cursorsJsonContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'cursorsJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncStateEntity, SyncStateEntity, QAfterFilterCondition>
+  cursorsJsonMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'cursorsJson',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncStateEntity, SyncStateEntity, QAfterFilterCondition>
+  cursorsJsonIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'cursorsJson', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<SyncStateEntity, SyncStateEntity, QAfterFilterCondition>
+  cursorsJsonIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'cursorsJson', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<SyncStateEntity, SyncStateEntity, QAfterFilterCondition>
+  idEqualTo(Id value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'id', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<SyncStateEntity, SyncStateEntity, QAfterFilterCondition>
+  idGreaterThan(Id value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'id',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncStateEntity, SyncStateEntity, QAfterFilterCondition>
+  idLessThan(Id value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'id',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncStateEntity, SyncStateEntity, QAfterFilterCondition>
+  idBetween(
+    Id lower,
+    Id upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'id',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncStateEntity, SyncStateEntity, QAfterFilterCondition>
+  lastSyncAtIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'lastSyncAt'),
+      );
+    });
+  }
+
+  QueryBuilder<SyncStateEntity, SyncStateEntity, QAfterFilterCondition>
+  lastSyncAtIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'lastSyncAt'),
+      );
+    });
+  }
+
+  QueryBuilder<SyncStateEntity, SyncStateEntity, QAfterFilterCondition>
+  lastSyncAtEqualTo(DateTime? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'lastSyncAt', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<SyncStateEntity, SyncStateEntity, QAfterFilterCondition>
+  lastSyncAtGreaterThan(DateTime? value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'lastSyncAt',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncStateEntity, SyncStateEntity, QAfterFilterCondition>
+  lastSyncAtLessThan(DateTime? value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'lastSyncAt',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncStateEntity, SyncStateEntity, QAfterFilterCondition>
+  lastSyncAtBetween(
+    DateTime? lower,
+    DateTime? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'lastSyncAt',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncStateEntity, SyncStateEntity, QAfterFilterCondition>
+  userIdIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'userId'),
+      );
+    });
+  }
+
+  QueryBuilder<SyncStateEntity, SyncStateEntity, QAfterFilterCondition>
+  userIdIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'userId'),
+      );
+    });
+  }
+
+  QueryBuilder<SyncStateEntity, SyncStateEntity, QAfterFilterCondition>
+  userIdEqualTo(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'userId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncStateEntity, SyncStateEntity, QAfterFilterCondition>
+  userIdGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'userId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncStateEntity, SyncStateEntity, QAfterFilterCondition>
+  userIdLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'userId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncStateEntity, SyncStateEntity, QAfterFilterCondition>
+  userIdBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'userId',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncStateEntity, SyncStateEntity, QAfterFilterCondition>
+  userIdStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'userId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncStateEntity, SyncStateEntity, QAfterFilterCondition>
+  userIdEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'userId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncStateEntity, SyncStateEntity, QAfterFilterCondition>
+  userIdContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'userId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncStateEntity, SyncStateEntity, QAfterFilterCondition>
+  userIdMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'userId',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncStateEntity, SyncStateEntity, QAfterFilterCondition>
+  userIdIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'userId', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<SyncStateEntity, SyncStateEntity, QAfterFilterCondition>
+  userIdIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'userId', value: ''),
+      );
+    });
+  }
+}
+
+extension SyncStateEntityQueryObject
+    on QueryBuilder<SyncStateEntity, SyncStateEntity, QFilterCondition> {}
+
+extension SyncStateEntityQueryLinks
+    on QueryBuilder<SyncStateEntity, SyncStateEntity, QFilterCondition> {}
+
+extension SyncStateEntityQuerySortBy
+    on QueryBuilder<SyncStateEntity, SyncStateEntity, QSortBy> {
+  QueryBuilder<SyncStateEntity, SyncStateEntity, QAfterSortBy>
+  sortByCursorsJson() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'cursorsJson', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SyncStateEntity, SyncStateEntity, QAfterSortBy>
+  sortByCursorsJsonDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'cursorsJson', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SyncStateEntity, SyncStateEntity, QAfterSortBy>
+  sortByLastSyncAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastSyncAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SyncStateEntity, SyncStateEntity, QAfterSortBy>
+  sortByLastSyncAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastSyncAt', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SyncStateEntity, SyncStateEntity, QAfterSortBy> sortByUserId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'userId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SyncStateEntity, SyncStateEntity, QAfterSortBy>
+  sortByUserIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'userId', Sort.desc);
+    });
+  }
+}
+
+extension SyncStateEntityQuerySortThenBy
+    on QueryBuilder<SyncStateEntity, SyncStateEntity, QSortThenBy> {
+  QueryBuilder<SyncStateEntity, SyncStateEntity, QAfterSortBy>
+  thenByCursorsJson() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'cursorsJson', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SyncStateEntity, SyncStateEntity, QAfterSortBy>
+  thenByCursorsJsonDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'cursorsJson', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SyncStateEntity, SyncStateEntity, QAfterSortBy> thenById() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'id', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SyncStateEntity, SyncStateEntity, QAfterSortBy> thenByIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'id', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SyncStateEntity, SyncStateEntity, QAfterSortBy>
+  thenByLastSyncAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastSyncAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SyncStateEntity, SyncStateEntity, QAfterSortBy>
+  thenByLastSyncAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastSyncAt', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SyncStateEntity, SyncStateEntity, QAfterSortBy> thenByUserId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'userId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SyncStateEntity, SyncStateEntity, QAfterSortBy>
+  thenByUserIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'userId', Sort.desc);
+    });
+  }
+}
+
+extension SyncStateEntityQueryWhereDistinct
+    on QueryBuilder<SyncStateEntity, SyncStateEntity, QDistinct> {
+  QueryBuilder<SyncStateEntity, SyncStateEntity, QDistinct>
+  distinctByCursorsJson({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'cursorsJson', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<SyncStateEntity, SyncStateEntity, QDistinct>
+  distinctByLastSyncAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'lastSyncAt');
+    });
+  }
+
+  QueryBuilder<SyncStateEntity, SyncStateEntity, QDistinct> distinctByUserId({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'userId', caseSensitive: caseSensitive);
+    });
+  }
+}
+
+extension SyncStateEntityQueryProperty
+    on QueryBuilder<SyncStateEntity, SyncStateEntity, QQueryProperty> {
+  QueryBuilder<SyncStateEntity, int, QQueryOperations> idProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'id');
+    });
+  }
+
+  QueryBuilder<SyncStateEntity, String, QQueryOperations>
+  cursorsJsonProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'cursorsJson');
+    });
+  }
+
+  QueryBuilder<SyncStateEntity, DateTime?, QQueryOperations>
+  lastSyncAtProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'lastSyncAt');
+    });
+  }
+
+  QueryBuilder<SyncStateEntity, String?, QQueryOperations> userIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'userId');
+    });
+  }
+}
+
+// coverage:ignore-file
+// ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types
+
+extension GetSyncDeletionEntityCollection on Isar {
+  IsarCollection<SyncDeletionEntity> get syncDeletionEntitys =>
+      this.collection();
+}
+
+const SyncDeletionEntitySchema = CollectionSchema(
+  name: r'SyncDeletionEntity',
+  id: 3500008217375874400,
+  properties: {
+    r'deletedAt': PropertySchema(
+      id: 0,
+      name: r'deletedAt',
+      type: IsarType.dateTime,
+    ),
+    r'rowId': PropertySchema(id: 1, name: r'rowId', type: IsarType.string),
+    r'table': PropertySchema(id: 2, name: r'table', type: IsarType.string),
+  },
+
+  estimateSize: _syncDeletionEntityEstimateSize,
+  serialize: _syncDeletionEntitySerialize,
+  deserialize: _syncDeletionEntityDeserialize,
+  deserializeProp: _syncDeletionEntityDeserializeProp,
+  idName: r'id',
+  indexes: {
+    r'table_rowId': IndexSchema(
+      id: -7087024248152230144,
+      name: r'table_rowId',
+      unique: true,
+      replace: true,
+      properties: [
+        IndexPropertySchema(
+          name: r'table',
+          type: IndexType.hash,
+          caseSensitive: true,
+        ),
+        IndexPropertySchema(
+          name: r'rowId',
+          type: IndexType.hash,
+          caseSensitive: true,
+        ),
+      ],
+    ),
+  },
+  links: {},
+  embeddedSchemas: {},
+
+  getId: _syncDeletionEntityGetId,
+  getLinks: _syncDeletionEntityGetLinks,
+  attach: _syncDeletionEntityAttach,
+  version: '3.3.2',
+);
+
+int _syncDeletionEntityEstimateSize(
+  SyncDeletionEntity object,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  var bytesCount = offsets.last;
+  bytesCount += 3 + object.rowId.length * 3;
+  bytesCount += 3 + object.table.length * 3;
+  return bytesCount;
+}
+
+void _syncDeletionEntitySerialize(
+  SyncDeletionEntity object,
+  IsarWriter writer,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  writer.writeDateTime(offsets[0], object.deletedAt);
+  writer.writeString(offsets[1], object.rowId);
+  writer.writeString(offsets[2], object.table);
+}
+
+SyncDeletionEntity _syncDeletionEntityDeserialize(
+  Id id,
+  IsarReader reader,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  final object = SyncDeletionEntity();
+  object.deletedAt = reader.readDateTime(offsets[0]);
+  object.id = id;
+  object.rowId = reader.readString(offsets[1]);
+  object.table = reader.readString(offsets[2]);
+  return object;
+}
+
+P _syncDeletionEntityDeserializeProp<P>(
+  IsarReader reader,
+  int propertyId,
+  int offset,
+  Map<Type, List<int>> allOffsets,
+) {
+  switch (propertyId) {
+    case 0:
+      return (reader.readDateTime(offset)) as P;
+    case 1:
+      return (reader.readString(offset)) as P;
+    case 2:
+      return (reader.readString(offset)) as P;
+    default:
+      throw IsarError('Unknown property with id $propertyId');
+  }
+}
+
+Id _syncDeletionEntityGetId(SyncDeletionEntity object) {
+  return object.id;
+}
+
+List<IsarLinkBase<dynamic>> _syncDeletionEntityGetLinks(
+  SyncDeletionEntity object,
+) {
+  return [];
+}
+
+void _syncDeletionEntityAttach(
+  IsarCollection<dynamic> col,
+  Id id,
+  SyncDeletionEntity object,
+) {
+  object.id = id;
+}
+
+extension SyncDeletionEntityByIndex on IsarCollection<SyncDeletionEntity> {
+  Future<SyncDeletionEntity?> getByTableRowId(String table, String rowId) {
+    return getByIndex(r'table_rowId', [table, rowId]);
+  }
+
+  SyncDeletionEntity? getByTableRowIdSync(String table, String rowId) {
+    return getByIndexSync(r'table_rowId', [table, rowId]);
+  }
+
+  Future<bool> deleteByTableRowId(String table, String rowId) {
+    return deleteByIndex(r'table_rowId', [table, rowId]);
+  }
+
+  bool deleteByTableRowIdSync(String table, String rowId) {
+    return deleteByIndexSync(r'table_rowId', [table, rowId]);
+  }
+
+  Future<List<SyncDeletionEntity?>> getAllByTableRowId(
+    List<String> tableValues,
+    List<String> rowIdValues,
+  ) {
+    final len = tableValues.length;
+    assert(
+      rowIdValues.length == len,
+      'All index values must have the same length',
+    );
+    final values = <List<dynamic>>[];
+    for (var i = 0; i < len; i++) {
+      values.add([tableValues[i], rowIdValues[i]]);
+    }
+
+    return getAllByIndex(r'table_rowId', values);
+  }
+
+  List<SyncDeletionEntity?> getAllByTableRowIdSync(
+    List<String> tableValues,
+    List<String> rowIdValues,
+  ) {
+    final len = tableValues.length;
+    assert(
+      rowIdValues.length == len,
+      'All index values must have the same length',
+    );
+    final values = <List<dynamic>>[];
+    for (var i = 0; i < len; i++) {
+      values.add([tableValues[i], rowIdValues[i]]);
+    }
+
+    return getAllByIndexSync(r'table_rowId', values);
+  }
+
+  Future<int> deleteAllByTableRowId(
+    List<String> tableValues,
+    List<String> rowIdValues,
+  ) {
+    final len = tableValues.length;
+    assert(
+      rowIdValues.length == len,
+      'All index values must have the same length',
+    );
+    final values = <List<dynamic>>[];
+    for (var i = 0; i < len; i++) {
+      values.add([tableValues[i], rowIdValues[i]]);
+    }
+
+    return deleteAllByIndex(r'table_rowId', values);
+  }
+
+  int deleteAllByTableRowIdSync(
+    List<String> tableValues,
+    List<String> rowIdValues,
+  ) {
+    final len = tableValues.length;
+    assert(
+      rowIdValues.length == len,
+      'All index values must have the same length',
+    );
+    final values = <List<dynamic>>[];
+    for (var i = 0; i < len; i++) {
+      values.add([tableValues[i], rowIdValues[i]]);
+    }
+
+    return deleteAllByIndexSync(r'table_rowId', values);
+  }
+
+  Future<Id> putByTableRowId(SyncDeletionEntity object) {
+    return putByIndex(r'table_rowId', object);
+  }
+
+  Id putByTableRowIdSync(SyncDeletionEntity object, {bool saveLinks = true}) {
+    return putByIndexSync(r'table_rowId', object, saveLinks: saveLinks);
+  }
+
+  Future<List<Id>> putAllByTableRowId(List<SyncDeletionEntity> objects) {
+    return putAllByIndex(r'table_rowId', objects);
+  }
+
+  List<Id> putAllByTableRowIdSync(
+    List<SyncDeletionEntity> objects, {
+    bool saveLinks = true,
+  }) {
+    return putAllByIndexSync(r'table_rowId', objects, saveLinks: saveLinks);
+  }
+}
+
+extension SyncDeletionEntityQueryWhereSort
+    on QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QWhere> {
+  QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QAfterWhere> anyId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(const IdWhereClause.any());
+    });
+  }
+}
+
+extension SyncDeletionEntityQueryWhere
+    on QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QWhereClause> {
+  QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QAfterWhereClause>
+  idEqualTo(Id id) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IdWhereClause.between(lower: id, upper: id));
+    });
+  }
+
+  QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QAfterWhereClause>
+  idNotEqualTo(Id id) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(
+              IdWhereClause.lessThan(upper: id, includeUpper: false),
+            )
+            .addWhereClause(
+              IdWhereClause.greaterThan(lower: id, includeLower: false),
+            );
+      } else {
+        return query
+            .addWhereClause(
+              IdWhereClause.greaterThan(lower: id, includeLower: false),
+            )
+            .addWhereClause(
+              IdWhereClause.lessThan(upper: id, includeUpper: false),
+            );
+      }
+    });
+  }
+
+  QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QAfterWhereClause>
+  idGreaterThan(Id id, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IdWhereClause.greaterThan(lower: id, includeLower: include),
+      );
+    });
+  }
+
+  QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QAfterWhereClause>
+  idLessThan(Id id, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IdWhereClause.lessThan(upper: id, includeUpper: include),
+      );
+    });
+  }
+
+  QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QAfterWhereClause>
+  idBetween(
+    Id lowerId,
+    Id upperId, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IdWhereClause.between(
+          lower: lowerId,
+          includeLower: includeLower,
+          upper: upperId,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QAfterWhereClause>
+  tableEqualToAnyRowId(String table) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.equalTo(indexName: r'table_rowId', value: [table]),
+      );
+    });
+  }
+
+  QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QAfterWhereClause>
+  tableNotEqualToAnyRowId(String table) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'table_rowId',
+                lower: [],
+                upper: [table],
+                includeUpper: false,
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'table_rowId',
+                lower: [table],
+                includeLower: false,
+                upper: [],
+              ),
+            );
+      } else {
+        return query
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'table_rowId',
+                lower: [table],
+                includeLower: false,
+                upper: [],
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'table_rowId',
+                lower: [],
+                upper: [table],
+                includeUpper: false,
+              ),
+            );
+      }
+    });
+  }
+
+  QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QAfterWhereClause>
+  tableRowIdEqualTo(String table, String rowId) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.equalTo(
+          indexName: r'table_rowId',
+          value: [table, rowId],
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QAfterWhereClause>
+  tableEqualToRowIdNotEqualTo(String table, String rowId) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'table_rowId',
+                lower: [table],
+                upper: [table, rowId],
+                includeUpper: false,
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'table_rowId',
+                lower: [table, rowId],
+                includeLower: false,
+                upper: [table],
+              ),
+            );
+      } else {
+        return query
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'table_rowId',
+                lower: [table, rowId],
+                includeLower: false,
+                upper: [table],
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'table_rowId',
+                lower: [table],
+                upper: [table, rowId],
+                includeUpper: false,
+              ),
+            );
+      }
+    });
+  }
+}
+
+extension SyncDeletionEntityQueryFilter
+    on QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QFilterCondition> {
+  QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QAfterFilterCondition>
+  deletedAtEqualTo(DateTime value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'deletedAt', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QAfterFilterCondition>
+  deletedAtGreaterThan(DateTime value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'deletedAt',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QAfterFilterCondition>
+  deletedAtLessThan(DateTime value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'deletedAt',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QAfterFilterCondition>
+  deletedAtBetween(
+    DateTime lower,
+    DateTime upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'deletedAt',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QAfterFilterCondition>
+  idEqualTo(Id value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'id', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QAfterFilterCondition>
+  idGreaterThan(Id value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'id',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QAfterFilterCondition>
+  idLessThan(Id value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'id',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QAfterFilterCondition>
+  idBetween(
+    Id lower,
+    Id upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'id',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QAfterFilterCondition>
+  rowIdEqualTo(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'rowId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QAfterFilterCondition>
+  rowIdGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'rowId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QAfterFilterCondition>
+  rowIdLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'rowId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QAfterFilterCondition>
+  rowIdBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'rowId',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QAfterFilterCondition>
+  rowIdStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'rowId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QAfterFilterCondition>
+  rowIdEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'rowId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QAfterFilterCondition>
+  rowIdContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'rowId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QAfterFilterCondition>
+  rowIdMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'rowId',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QAfterFilterCondition>
+  rowIdIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'rowId', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QAfterFilterCondition>
+  rowIdIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'rowId', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QAfterFilterCondition>
+  tableEqualTo(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'table',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QAfterFilterCondition>
+  tableGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'table',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QAfterFilterCondition>
+  tableLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'table',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QAfterFilterCondition>
+  tableBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'table',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QAfterFilterCondition>
+  tableStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'table',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QAfterFilterCondition>
+  tableEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'table',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QAfterFilterCondition>
+  tableContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'table',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QAfterFilterCondition>
+  tableMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'table',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QAfterFilterCondition>
+  tableIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'table', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QAfterFilterCondition>
+  tableIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'table', value: ''),
+      );
+    });
+  }
+}
+
+extension SyncDeletionEntityQueryObject
+    on QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QFilterCondition> {}
+
+extension SyncDeletionEntityQueryLinks
+    on QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QFilterCondition> {}
+
+extension SyncDeletionEntityQuerySortBy
+    on QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QSortBy> {
+  QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QAfterSortBy>
+  sortByDeletedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'deletedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QAfterSortBy>
+  sortByDeletedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'deletedAt', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QAfterSortBy>
+  sortByRowId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'rowId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QAfterSortBy>
+  sortByRowIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'rowId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QAfterSortBy>
+  sortByTable() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'table', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QAfterSortBy>
+  sortByTableDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'table', Sort.desc);
+    });
+  }
+}
+
+extension SyncDeletionEntityQuerySortThenBy
+    on QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QSortThenBy> {
+  QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QAfterSortBy>
+  thenByDeletedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'deletedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QAfterSortBy>
+  thenByDeletedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'deletedAt', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QAfterSortBy>
+  thenById() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'id', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QAfterSortBy>
+  thenByIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'id', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QAfterSortBy>
+  thenByRowId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'rowId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QAfterSortBy>
+  thenByRowIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'rowId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QAfterSortBy>
+  thenByTable() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'table', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QAfterSortBy>
+  thenByTableDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'table', Sort.desc);
+    });
+  }
+}
+
+extension SyncDeletionEntityQueryWhereDistinct
+    on QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QDistinct> {
+  QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QDistinct>
+  distinctByDeletedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'deletedAt');
+    });
+  }
+
+  QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QDistinct>
+  distinctByRowId({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'rowId', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QDistinct>
+  distinctByTable({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'table', caseSensitive: caseSensitive);
+    });
+  }
+}
+
+extension SyncDeletionEntityQueryProperty
+    on QueryBuilder<SyncDeletionEntity, SyncDeletionEntity, QQueryProperty> {
+  QueryBuilder<SyncDeletionEntity, int, QQueryOperations> idProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'id');
+    });
+  }
+
+  QueryBuilder<SyncDeletionEntity, DateTime, QQueryOperations>
+  deletedAtProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'deletedAt');
+    });
+  }
+
+  QueryBuilder<SyncDeletionEntity, String, QQueryOperations> rowIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'rowId');
+    });
+  }
+
+  QueryBuilder<SyncDeletionEntity, String, QQueryOperations> tableProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'table');
     });
   }
 }

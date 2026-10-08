@@ -32,7 +32,10 @@ class _StationXAppState extends State<StationXApp> with WidgetsBindingObserver {
   /// Pull fresh wearable data when returning to the app (throttled in the repository).
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) _controller.health.refresh();
+    if (state == AppLifecycleState.resumed) {
+      _controller.health.refresh();
+      _controller.cloud.onResume();
+    }
   }
 
   @override

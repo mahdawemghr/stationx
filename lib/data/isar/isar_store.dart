@@ -5,6 +5,7 @@ import '../data_store.dart';
 import '../health/health_consent_store.dart';
 import '../memory/memory_repositories.dart';
 import '../seed/seed_data.dart';
+import '../sync/sync_tables.dart';
 import 'entities.dart';
 import 'mappers.dart';
 
@@ -29,6 +30,8 @@ class IsarStore implements DataStore {
     CustomActivityEntitySchema,
     ProfileEntitySchema,
     AppMetaEntitySchema,
+    SyncStateEntitySchema,
+    SyncDeletionEntitySchema,
   ];
 
   /// Opens (creating if needed) the database in [directory].
@@ -48,6 +51,22 @@ class IsarStore implements DataStore {
       });
     }
 
+    final d = await _loadAll(db);
+    final cardioRepo = IsarCardioRepository(db, d.cardio, d.goals)..seedCustom(d.custom);
+    return IsarStore._(
+      db,
+      IsarExerciseRepository(db, d.exercises),
+      IsarWorkoutRepository(db, d.workouts, d.rotation),
+      IsarSessionRepository(db, d.sessions),
+      cardioRepo,
+      IsarProfileRepository(db, d.profile),
+      (await db.appMetaEntitys.get(1))?.signedIn ?? false,
+      (await db.appMetaEntitys.get(1))?.healthConnected ?? false,
+    );
+  }
+
+  /// Reads every collection into domain objects (the in-memory read caches).
+  static Future<_Loaded> _loadAll(Isar db) async {
     final exercises = (await db.exerciseEntitys.where().findAll()).map(exerciseFromEntity).toList();
     final wEntities = await db.workoutEntitys.where().findAll()
       ..sort((a, b) => a.position.compareTo(b.position));
@@ -57,22 +76,32 @@ class IsarStore implements DataStore {
     final goals = (await db.cardioGoalEntitys.where().findAll()).map(goalFromEntity).toList();
     final custom = (await db.customActivityEntitys.where().findAll()).map(customActivityFromEntity).toList();
     final profile = await db.profileEntitys.get(1);
-
     final workouts = wEntities.map(workoutFromEntity).toList();
-    final rotation = rot == null ? Rotation(workoutIds: [for (final w in workouts) w.id]) : rotationFromEntity(rot);
-
-    final cardioRepo = IsarCardioRepository(db, cardio, goals)..seedCustom(custom);
-    return IsarStore._(
-      db,
-      IsarExerciseRepository(db, exercises),
-      IsarWorkoutRepository(db, workouts, rotation),
-      IsarSessionRepository(db, sessions),
-      cardioRepo,
-      IsarProfileRepository(db, profile == null ? const UserProfile() : profileFromEntity(profile)),
-      (await db.appMetaEntitys.get(1))?.signedIn ?? false,
-      (await db.appMetaEntitys.get(1))?.healthConnected ?? false,
+    return _Loaded(
+      exercises: exercises,
+      workouts: workouts,
+      rotation: rot == null ? Rotation(workoutIds: [for (final w in workouts) w.id]) : rotationFromEntity(rot),
+      sessions: sessions,
+      cardio: cardio,
+      goals: goals,
+      custom: custom,
+      profile: profile == null ? const UserProfile() : profileFromEntity(profile),
     );
   }
+
+  /// Re-reads the database into the repository caches and notifies listeners.
+  /// Used by cloud sync after it changed rows behind the repositories' backs.
+  Future<void> reloadCaches() async {
+    final d = await _loadAll(_db);
+    exercises.reset(d.exercises);
+    workouts.reset(d.workouts, d.rotation);
+    sessions.reset(d.sessions);
+    cardio.reset(d.cardio, d.goals, d.custom);
+    profile.reset(d.profile);
+  }
+
+  /// The underlying database (sync layer only — the UI never touches Isar).
+  Isar get db => _db;
 
   final Isar _db;
   @override
@@ -113,6 +142,7 @@ class IsarStore implements DataStore {
       await _db.cardioSessionEntitys.clear();
       await _db.cardioGoalEntitys.clear();
       await _db.customActivityEntitys.clear();
+      await _db.syncDeletionEntitys.clear(); // queued tombstones refer to rows that no longer exist
       await _putAll(_db, seed, profile);
     });
     exercises.reset(seed.exercises);
@@ -129,11 +159,50 @@ class IsarStore implements DataStore {
     await db.sessionEntitys.putAll([for (final s in seed.sessions) sessionToEntity(s)]);
     await db.cardioSessionEntitys.putAll([for (final c in seed.cardio) cardioToEntity(c)]);
     await db.cardioGoalEntitys.putAll([for (final g in seed.goals) goalToEntity(g)]);
-    if (!keepProfile) await db.profileEntitys.put(profileToEntity(profile));
+    if (!keepProfile) {
+      // An explicit profile write is a real edit → needs to sync.
+      await db.profileEntitys.put(profileToEntity(profile)
+        ..updatedAt = DateTime.now()
+        ..syncStatus = SyncStatus.pending);
+    }
   }
 
   @override
   Future<void> close() => _db.close();
+}
+
+/// A local edit to the rotation: stamp it so it syncs (and wins over older cloud copies).
+RotationEntity _pendingRotation(Rotation r) => rotationToEntity(r)
+  ..updatedAt = DateTime.now()
+  ..syncStatus = SyncStatus.pending;
+
+/// Remember a local deletion until it has been sent to the cloud. Call inside a write txn.
+Future<void> _queueDeletion(Isar db, SyncTable table, String id) async {
+  await db.syncDeletionEntitys.putByTableRowId(SyncDeletionEntity()
+    ..table = table.name
+    ..rowId = id
+    ..deletedAt = DateTime.now());
+}
+
+class _Loaded {
+  _Loaded({
+    required this.exercises,
+    required this.workouts,
+    required this.rotation,
+    required this.sessions,
+    required this.cardio,
+    required this.goals,
+    required this.custom,
+    required this.profile,
+  });
+  final List<Exercise> exercises;
+  final List<Workout> workouts;
+  final Rotation rotation;
+  final List<WorkoutSession> sessions;
+  final List<CardioSession> cardio;
+  final List<CardioGoal> goals;
+  final List<CustomCardioActivity> custom;
+  final UserProfile profile;
 }
 
 class IsarExerciseRepository extends MemoryExerciseRepository {
@@ -154,7 +223,7 @@ class IsarWorkoutRepository extends MemoryWorkoutRepository {
   Future<void> _persistAll() => _db.writeTxn(() async {
         await _db.workoutEntitys.clear();
         await _db.workoutEntitys.putAll([for (var i = 0; i < workouts.length; i++) workoutToEntity(workouts[i], i)]);
-        await _db.rotationEntitys.put(rotationToEntity(rotation));
+        await _db.rotationEntitys.put(_pendingRotation(rotation));
       });
 
   @override
@@ -167,11 +236,12 @@ class IsarWorkoutRepository extends MemoryWorkoutRepository {
   Future<void> deleteWorkout(String id) async {
     await super.deleteWorkout(id);
     await _persistAll();
+    await _db.writeTxn(() => _queueDeletion(_db, SyncTable.workouts, id));
   }
 
   @override
   Future<void> setRotation(Rotation r) async {
-    await _db.writeTxn(() => _db.rotationEntitys.put(rotationToEntity(r)));
+    await _db.writeTxn(() => _db.rotationEntitys.put(_pendingRotation(r)));
     await super.setRotation(r);
   }
 }
@@ -187,6 +257,12 @@ class IsarSessionRepository extends MemorySessionRepository {
   }
 
   @override
+  Future<void> addAll(List<WorkoutSession> sessions) async {
+    await _db.writeTxn(() => _db.sessionEntitys.putAllByUid([for (final s in sessions) sessionToEntity(s)]));
+    await super.addAll(sessions);
+  }
+
+  @override
   Future<void> update(WorkoutSession s) async {
     await _db.writeTxn(() => _db.sessionEntitys.putByUid(sessionToEntity(s)));
     await super.update(s);
@@ -194,7 +270,10 @@ class IsarSessionRepository extends MemorySessionRepository {
 
   @override
   Future<void> delete(String id) async {
-    await _db.writeTxn(() => _db.sessionEntitys.deleteByUid(id));
+    await _db.writeTxn(() async {
+      await _db.sessionEntitys.deleteByUid(id);
+      await _queueDeletion(_db, SyncTable.workoutSessions, id);
+    });
     await super.delete(id);
   }
 }
@@ -220,7 +299,10 @@ class IsarCardioRepository extends MemoryCardioRepository {
 
   @override
   Future<void> delete(String id) async {
-    await _db.writeTxn(() => _db.cardioSessionEntitys.deleteByUid(id));
+    await _db.writeTxn(() async {
+      await _db.cardioSessionEntitys.deleteByUid(id);
+      await _queueDeletion(_db, SyncTable.cardioSessions, id);
+    });
     await super.delete(id);
   }
 
@@ -232,7 +314,10 @@ class IsarCardioRepository extends MemoryCardioRepository {
 
   @override
   Future<void> deleteGoal(String id) async {
-    await _db.writeTxn(() => _db.cardioGoalEntitys.deleteByUid(id));
+    await _db.writeTxn(() async {
+      await _db.cardioGoalEntitys.deleteByUid(id);
+      await _queueDeletion(_db, SyncTable.cardioGoals, id);
+    });
     await super.deleteGoal(id);
   }
 
@@ -249,7 +334,9 @@ class IsarProfileRepository extends MemoryProfileRepository {
 
   @override
   Future<void> update(UserProfile p) async {
-    await _db.writeTxn(() => _db.profileEntitys.put(profileToEntity(p)));
+    await _db.writeTxn(() => _db.profileEntitys.put(profileToEntity(p)
+      ..updatedAt = DateTime.now()
+      ..syncStatus = SyncStatus.pending));
     await super.update(p);
   }
 }

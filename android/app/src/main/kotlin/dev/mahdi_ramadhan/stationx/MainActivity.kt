@@ -1,4 +1,4 @@
-package com.example.stationx
+package dev.mahdi_ramadhan.stationx
 
 import io.flutter.embedding.android.FlutterFragmentActivity
 

@@ -9,8 +9,10 @@ import '../../core/theme/sx_typography.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/widgets/widgets.dart';
 import '../../domain/domain.dart';
+import '../cloud/cloud_sync_card.dart';
 import '../health/health_actions.dart';
 import '../landing/landing_page.dart';
+import 'gym_tracker_import_flow.dart';
 import 'privacy_page.dart';
 import 'export_builder.dart';
 
@@ -56,7 +58,10 @@ class ProfilePage extends StatelessWidget {
                 final ok = await showSxConfirm(
                   context,
                   title: 'Delete all local data?',
-                  message: 'This permanently removes every workout, cardio session and goal stored on this device. It cannot be undone.',
+                  message: app.cloud.user == null
+                      ? 'This permanently removes every workout, cardio session and goal stored on this device. It cannot be undone.'
+                      : 'This permanently removes every workout, cardio session and goal stored on THIS device and turns cloud sync off here. '
+                          'Your cloud backup is kept — delete it separately under Cloud backup & sync. It cannot be undone.',
                   confirmLabel: 'Delete everything',
                   destructive: true,
                   icon: Icons.delete_forever,
@@ -493,6 +498,7 @@ class _Integrations extends StatelessWidget {
       child: Column(children: [
         const _HealthRow(),
         const SizedBox(height: SxSpace.md),
+        const CloudSyncCard(),
         Row(children: [
           _IconBox(Icons.offline_bolt_outlined, c.primary),
           const SizedBox(width: 12),
@@ -505,6 +511,8 @@ class _Integrations extends StatelessWidget {
         ]),
         const SizedBox(height: SxSpace.md),
         SxButton(label: 'Export CSV / JSON', icon: Icons.file_download_outlined, variant: SxButtonVariant.secondary, height: 48, onPressed: onExport),
+        const SizedBox(height: 8),
+        SxButton(label: 'Import from Gym Tracker', icon: Icons.file_upload_outlined, variant: SxButtonVariant.secondary, height: 48, onPressed: () => importFromGymTracker(context)),
       ]),
     );
   }

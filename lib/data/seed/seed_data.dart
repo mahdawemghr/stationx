@@ -4,6 +4,14 @@ import 'seed_catalog.dart';
 /// MOCK DATA. Everything here is generated relative to "now" so the demo
 /// always looks current. None of it is persisted. A real Isar-backed store
 /// must replace the in-memory repositories; see docs roadmap §0/§H.
+/// Seed rows are "clean": never uploaded to the cloud, and (epoch `updatedAt`) always lose
+/// to a real cloud copy, so a fresh install can never overwrite a user's edited routines.
+SyncMeta _clean([DateTime? createdAt]) => SyncMeta(
+      createdAt: createdAt ?? DateTime.fromMillisecondsSinceEpoch(0),
+      updatedAt: DateTime.fromMillisecondsSinceEpoch(0),
+      syncStatus: SyncStatus.synced,
+    );
+
 class SeedData {
   SeedData({
     required this.exercises,
@@ -24,6 +32,7 @@ class SeedData {
   static List<Workout> defaultWorkouts() => [
         Workout(
           id: 'w1',
+          meta: _clean(),
           name: 'Chest + Biceps',
           description: 'Upper hypertrophy split · Target RPE 8.0',
           exercises: const [
@@ -38,6 +47,7 @@ class SeedData {
         ),
         Workout(
           id: 'w2',
+          meta: _clean(),
           name: 'Back + Triceps',
           description: 'Upper hypertrophy split · Target RPE 8.0',
           exercises: const [
@@ -51,6 +61,7 @@ class SeedData {
         ),
         Workout(
           id: 'w3',
+          meta: _clean(),
           name: 'Legs + Shoulders',
           description: 'Squat & Overhead Press focus',
           exercises: const [
@@ -116,7 +127,7 @@ class SeedData {
         workoutDate: date,
         exercises: logs,
         durationSeconds: (50 + (i * 7) % 20) * 60,
-        meta: SyncMeta(createdAt: date),
+        meta: _clean(date),
       ));
       daysBack += (i % 4 == 3) ? 3 : 2;
     }
@@ -145,7 +156,7 @@ class SeedData {
         inclinePct: p.$1 == CardioKind.treadmill ? 3 : null,
         resistance: p.$1 == CardioKind.rowing ? 6 : null,
         routeName: p.$5,
-        meta: SyncMeta(createdAt: date),
+        meta: _clean(date),
       ));
     }
     return SeedData(
@@ -155,9 +166,9 @@ class SeedData {
       sessions: sessions,
       cardio: cardio,
       goals: [
-        CardioGoal(id: 'g_week', title: 'Weekly Aerobic Duration', metric: GoalMetric.durationMinutes, target: 150, isPrimary: true),
-        CardioGoal(id: 'g_km', title: 'Weekly Running Distance', metric: GoalMetric.distanceKm, target: 25),
-        CardioGoal(id: 'g_freq', title: 'Cardio Frequency', metric: GoalMetric.sessions, target: 4),
+        CardioGoal(id: 'g_week', title: 'Weekly Aerobic Duration', metric: GoalMetric.durationMinutes, target: 150, isPrimary: true, meta: _clean()),
+        CardioGoal(id: 'g_km', title: 'Weekly Running Distance', metric: GoalMetric.distanceKm, target: 25, meta: _clean()),
+        CardioGoal(id: 'g_freq', title: 'Cardio Frequency', metric: GoalMetric.sessions, target: 4, meta: _clean()),
       ],
     );
   }
