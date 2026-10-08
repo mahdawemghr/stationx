@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/sx_spacing.dart';
 import '../theme/sx_theme.dart';
+import 'sx_motion_widgets.dart';
 
 /// Level-1 surface: card with hairline border, 16 radius.
 class SxCard extends StatelessWidget {
@@ -47,6 +48,9 @@ class SxCard extends StatelessWidget {
       borderRadius: shape,
       child: w,
     );
+    if (onTap != null) {
+      w = SxPressable(scale: 0.985, focusRadius: radius, child: w);
+    }
     return margin == null ? w : Padding(padding: margin!, child: w);
   }
 }
@@ -85,6 +89,13 @@ class SxInset extends StatelessWidget {
       child: Container(alignment: alignment, padding: padding, child: child),
     );
     if (onTap != null) w = InkWell(onTap: onTap, borderRadius: shape, child: w);
-    return Material(type: MaterialType.transparency, borderRadius: shape, child: w);
+    w = Material(
+      type: MaterialType.transparency,
+      borderRadius: shape,
+      child: w,
+    );
+    return onTap == null
+        ? w
+        : SxPressable(scale: 0.985, focusRadius: radius, child: w);
   }
 }

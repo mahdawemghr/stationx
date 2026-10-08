@@ -39,6 +39,15 @@ class _EditForm extends StatefulWidget {
   State<_EditForm> createState() => _EditFormState();
 }
 
+CustomCardioActivity? _customFor(CardioRepository repo, CardioSession s) {
+  final id = s.customActivityId;
+  if (id == null) return null;
+  for (final a in repo.customActivities) {
+    if (a.id == id) return a;
+  }
+  return null;
+}
+
 class _EditFormState extends State<_EditForm> {
   late final CardioFormState _form;
   bool _busy = false;
@@ -51,6 +60,7 @@ class _EditFormState extends State<_EditForm> {
       date: widget.session.workoutDate,
       kmUnit: context.app.profile.profile.cardioDistanceUnitKm,
       from: widget.session,
+      custom: _customFor(context.app.cardio, widget.session),
     );
   }
 

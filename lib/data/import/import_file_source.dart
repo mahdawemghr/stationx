@@ -22,7 +22,9 @@ class FilePickerImportSource implements ImportFileSource {
     if (files.isEmpty) return null;
     final file = files.first;
     final size = await file.length();
-    if (size != null && size > GymTrackerImport.maxBytes) throw const ImportException(ImportProblem.tooLarge);
+    if (size != null && size > GymTrackerImport.maxBytes) {
+      throw const ImportException(ImportProblem.tooLarge);
+    }
     return file.xFile.readAsString();
   }
 }

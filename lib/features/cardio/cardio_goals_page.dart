@@ -109,7 +109,7 @@ class _Achievement extends StatelessWidget {
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(d.goal.title, style: SxText.headlineSm.copyWith(color: c.textHigh), maxLines: 1, overflow: TextOverflow.ellipsis),
-            Text('ACHIEVED • ${d.label.toUpperCase()}', style: SxText.labelCaps.copyWith(color: c.primary, fontSize: 10), overflow: TextOverflow.ellipsis),
+            Text('ACHIEVED • ${d.label.toUpperCase()}', style: SxText.labelXs.copyWith(color: c.primary), overflow: TextOverflow.ellipsis),
           ]),
         ),
         Icon(Icons.verified_outlined, color: c.textMuted),
@@ -137,7 +137,7 @@ class _PrimaryCard extends StatelessWidget {
         Row(children: [
           const StatusPill('Primary target', icon: Icons.timer_outlined),
           const SizedBox(width: 8),
-          Expanded(child: Text('$left day${left == 1 ? '' : 's'} left', style: SxText.labelCaps.copyWith(color: c.textBody, fontSize: 10), overflow: TextOverflow.ellipsis)),
+          Expanded(child: Text('$left day${left == 1 ? '' : 's'} left', style: SxText.labelXs.copyWith(color: c.textBody), overflow: TextOverflow.ellipsis)),
           SxIconButton(icon: Icons.more_horiz, tooltip: 'Adjust goal', filled: false, onPressed: () => showCardioGoalSheet(context, goal: goal)),
         ]),
         Text(goalPeriodLabel(goal.period).toUpperCase(), style: SxText.labelCaps.copyWith(color: c.textBody)),
@@ -183,7 +183,7 @@ class _Ticks extends StatelessWidget {
         Flexible(
           child: FittedBox(
             fit: BoxFit.scaleDown,
-            child: Text('${goalNumber(goal.metric, goal.target * i / 5)}$suffix', style: SxText.labelCaps.copyWith(color: c.textMuted, fontSize: 9)),
+            child: Text('${goalNumber(goal.metric, goal.target * i / 5)}$suffix', style: SxText.labelXs.copyWith(color: c.textMuted)),
           ),
         ),
     ]);
@@ -204,7 +204,7 @@ class _DayStrip extends StatelessWidget {
       for (var i = 0; i < 7; i++)
         Expanded(
           child: Builder(builder: (context) {
-            final day = start.add(Duration(days: i));
+            final day = DateTime(start.year, start.month, start.day + i);
             final mins = sessions.where((s) => Fmt.sameDay(s.workoutDate, day)).fold(0, (a, s) => a + s.durationSeconds) ~/ 60;
             final isToday = Fmt.sameDay(day, today);
             final future = day.isAfter(today);
@@ -220,11 +220,11 @@ class _DayStrip extends StatelessWidget {
                   border: Border.all(color: isToday ? c.primary : c.hairline),
                 ),
                 child: Column(mainAxisSize: MainAxisSize.min, children: [
-                  Text(Fmt.dayShort(day.weekday).toUpperCase(), style: SxText.labelCaps.copyWith(fontSize: 9, color: isToday ? c.primary : c.textBody)),
+                  Text(Fmt.dayShort(day.weekday).toUpperCase(), style: SxText.labelXs.copyWith(color: isToday ? c.primary : c.textBody)),
                   const SizedBox(height: 4),
                   Icon(icon, size: 16, color: mins > 0 ? c.primary : c.textMuted),
                   const SizedBox(height: 4),
-                  FittedBox(fit: BoxFit.scaleDown, child: Text(label, style: SxText.labelCaps.copyWith(fontSize: 9, color: mins > 0 ? c.textHigh : c.textMuted))),
+                  FittedBox(fit: BoxFit.scaleDown, child: Text(label, style: SxText.labelXs.copyWith(color: mins > 0 ? c.textHigh : c.textMuted))),
                 ]),
               ),
             );
@@ -302,12 +302,12 @@ class _SubGoalCard extends StatelessWidget {
         Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
           Flexible(
             child: Text(remaining <= 0 ? 'Target met' : '${goalNumber(goal.metric, remaining.toDouble())} ${goalMetricUnit(goal.metric).toLowerCase()} remaining',
-                style: SxText.labelCaps.copyWith(color: c.textBody, fontSize: 10), overflow: TextOverflow.ellipsis),
+                style: SxText.labelXs.copyWith(color: c.textBody), overflow: TextOverflow.ellipsis),
           ),
           const SizedBox(width: 8),
           Flexible(
             child: Text(isFreq ? '$left day${left == 1 ? '' : 's'} left' : '$inPeriod session${inPeriod == 1 ? '' : 's'} logged',
-                style: SxText.labelCaps.copyWith(color: c.textBody, fontSize: 10), overflow: TextOverflow.ellipsis),
+                style: SxText.labelXs.copyWith(color: c.textBody), overflow: TextOverflow.ellipsis),
           ),
         ]),
       ]),

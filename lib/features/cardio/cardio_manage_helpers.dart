@@ -16,6 +16,17 @@ IconData cardioKindIcon(CardioKind k) => switch (k) {
       CardioKind.rowing => Icons.kayaking,
       CardioKind.stairClimber => Icons.stairs,
       CardioKind.jumpRope => Icons.bolt,
+      CardioKind.trailRun => Icons.terrain,
+      CardioKind.hiking => Icons.hiking,
+      CardioKind.spinBike => Icons.directions_bike_outlined,
+      CardioKind.airBike => Icons.air,
+      CardioKind.skiErg => Icons.downhill_skiing,
+      CardioKind.arcTrainer => Icons.sports_gymnastics,
+      CardioKind.verticalClimber => Icons.north,
+      CardioKind.swimming => Icons.pool,
+      CardioKind.handCycle => Icons.back_hand_outlined,
+      CardioKind.hiit => Icons.local_fire_department,
+      CardioKind.boxing => Icons.sports_mma,
       CardioKind.custom => Icons.fitness_center,
     };
 
@@ -99,8 +110,8 @@ String goalPeriodLabel(GoalPeriod p) => p == GoalPeriod.week ? 'Weekly' : 'Month
 (DateTime, DateTime) goalPeriodRange(GoalPeriod p, DateTime now, {int offset = 0}) {
   if (p == GoalPeriod.week) {
     final day = DateTime(now.year, now.month, now.day);
-    final start = day.subtract(Duration(days: day.weekday - 1 + 7 * offset));
-    return (start, start.add(const Duration(days: 7)));
+    final start = DateTime(day.year, day.month, day.day - (day.weekday - 1 + 7 * offset));
+    return (start, DateTime(start.year, start.month, start.day + 7));
   }
   final start = DateTime(now.year, now.month - offset);
   return (start, DateTime(start.year, start.month + 1));
@@ -109,8 +120,15 @@ String goalPeriodLabel(GoalPeriod p) => p == GoalPeriod.week ? 'Weekly' : 'Month
 List<CardioSession> sessionsInRange(List<CardioSession> all, (DateTime, DateTime) r) =>
     all.where((s) => !s.workoutDate.isBefore(r.$1) && s.workoutDate.isBefore(r.$2)).toList();
 
+/// Activity kinds a goal is scoped to. [CardioGoal] has no kind field (no schema change), so the
+/// "Weekly Running Distance" goal is recognised by its title and counts running kinds only.
+Set<CardioKind>? goalKinds(CardioGoal g) =>
+    g.metric == GoalMetric.distanceKm && g.title.toLowerCase().contains('running')
+        ? const {CardioKind.outdoorRun, CardioKind.treadmill, CardioKind.trailRun}
+        : null;
+
 double goalValueForPeriod(CardioGoal g, List<CardioSession> all, DateTime now, {int offset = 0}) =>
-    CardioMetrics.goalValue(g, sessionsInRange(all, goalPeriodRange(g.period, now, offset: offset)));
+    CardioMetrics.goalValue(g, sessionsInRange(all, goalPeriodRange(g.period, now, offset: offset)), kinds: goalKinds(g));
 
 /// "92" / "18.4" — goal numbers without trailing zeros.
 String goalNumber(GoalMetric m, double v) =>

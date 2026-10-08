@@ -6,11 +6,15 @@ import 'health_gateway.dart';
 
 /// [HealthRepository] over a [HealthGateway]. Read-only, opt-in. A failed read
 /// never throws to the UI: the previous snapshot is kept.
-class HealthConnectRepository extends ChangeNotifier implements HealthRepository {
-  HealthConnectRepository(this._gateway,
-      {HealthConsentStore? consent, DateTime Function()? clock, this.minRefresh = const Duration(minutes: 5)})
-      : _consent = consent ?? MemoryHealthConsentStore(),
-        _clock = clock ?? DateTime.now;
+class HealthConnectRepository extends ChangeNotifier
+    implements HealthRepository {
+  HealthConnectRepository(
+    this._gateway, {
+    HealthConsentStore? consent,
+    DateTime Function()? clock,
+    this.minRefresh = const Duration(minutes: 5),
+  }) : _consent = consent ?? MemoryHealthConsentStore(),
+       _clock = clock ?? DateTime.now;
 
   final HealthGateway _gateway;
   final HealthConsentStore _consent;
@@ -30,7 +34,12 @@ class HealthConnectRepository extends ChangeNotifier implements HealthRepository
   @override
   bool get busy => _busy;
 
-  void _set({HealthStatus? status, HealthSnapshot? snapshot, bool clearSnapshot = false, bool? busy}) {
+  void _set({
+    HealthStatus? status,
+    HealthSnapshot? snapshot,
+    bool clearSnapshot = false,
+    bool? busy,
+  }) {
     if (status != null) _status = status;
     if (clearSnapshot) {
       _snapshot = null;
@@ -51,9 +60,14 @@ class HealthConnectRepository extends ChangeNotifier implements HealthRepository
         _set(status: HealthStatus.notInstalled, clearSnapshot: true);
       case GatewayAvailability.available:
         // Android: ask the OS. iOS: the OS can't say, so trust the user's remembered opt-in.
-        final granted = _gateway.canQueryPermissions ? await _gateway.hasPermissions() : _consent.connected;
+        final granted = _gateway.canQueryPermissions
+            ? await _gateway.hasPermissions()
+            : _consent.connected;
         if (_gateway.canQueryPermissions) await _consent.setConnected(granted);
-        _set(status: granted ? HealthStatus.connected : HealthStatus.notConnected, clearSnapshot: !granted);
+        _set(
+          status: granted ? HealthStatus.connected : HealthStatus.notConnected,
+          clearSnapshot: !granted,
+        );
         if (granted) await refresh(force: true);
     }
   }
@@ -66,12 +80,18 @@ class HealthConnectRepository extends ChangeNotifier implements HealthRepository
     try {
       final a = await _gateway.availability();
       if (a != GatewayAvailability.available) {
-        _set(status: a == GatewayAvailability.notInstalled ? HealthStatus.notInstalled : HealthStatus.unsupported);
+        _set(
+          status: a == GatewayAvailability.notInstalled
+              ? HealthStatus.notInstalled
+              : HealthStatus.unsupported,
+        );
         return false;
       }
       granted = await _gateway.requestPermissions();
       await _consent.setConnected(granted);
-      _set(status: granted ? HealthStatus.connected : HealthStatus.notConnected);
+      _set(
+        status: granted ? HealthStatus.connected : HealthStatus.notConnected,
+      );
     } finally {
       _set(busy: false);
     }
@@ -89,19 +109,29 @@ class HealthConnectRepository extends ChangeNotifier implements HealthRepository
     try {
       final night = HealthSummary.lastNightWindow(now);
       final asleep = await _gateway.sleepAsleep(night.from, night.to);
-      final sessions = asleep.isEmpty ? await _gateway.sleepSessions(night.from, night.to) : const <TimeSpan>[];
-      final hr = await _gateway.restingHeartRate(now.subtract(const Duration(days: 7)), now);
+      final sessions = asleep.isEmpty
+          ? await _gateway.sleepSessions(night.from, night.to)
+          : const <TimeSpan>[];
+      final hr = await _gateway.restingHeartRate(
+        now.subtract(const Duration(days: 7)),
+        now,
+      );
       final rhr = HealthSummary.restingHr(hr);
       _set(
         snapshot: HealthSnapshot(
           fetchedAt: now,
-          sleepMinutes: HealthSummary.sleepMinutes(asleep: asleep, sessions: sessions),
+          sleepMinutes: HealthSummary.sleepMinutes(
+            asleep: asleep,
+            sessions: sessions,
+          ),
           restingHr: rhr.latest,
           restingHrAvg7d: rhr.average,
         ),
       );
     } catch (e) {
-      debugPrint('Health refresh failed: ${e.runtimeType}'); // keep previous snapshot
+      debugPrint(
+        'Health refresh failed: ${e.runtimeType}',
+      ); // keep previous snapshot
     } finally {
       _set(busy: false);
     }
@@ -109,7 +139,8 @@ class HealthConnectRepository extends ChangeNotifier implements HealthRepository
 
   @override
   Future<void> disconnect() async {
-    await _gateway.revoke(); // no-op on iOS (user removes access in Settings › Health)
+    await _gateway
+        .revoke(); // no-op on iOS (user removes access in Settings › Health)
     await _consent.setConnected(false);
     _set(status: HealthStatus.notConnected, clearSnapshot: true);
   }

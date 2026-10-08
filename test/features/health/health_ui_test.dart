@@ -93,7 +93,9 @@ void main() {
       await t.pumpAndSettle();
       await t.tap(find.text('CONTINUE'));
       await t.pumpAndSettle();
-      expect(find.text('Access was not granted'), findsOneWidget);
+      // Copy carries the concrete next step, not just the refusal.
+      expect(find.textContaining('Access was not granted'), findsOneWidget);
+      expect(find.textContaining('Health Connect › App permissions'), findsOneWidget);
       expect(h.status, HealthStatus.notConnected);
     });
 

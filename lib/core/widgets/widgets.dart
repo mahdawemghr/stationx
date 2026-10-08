@@ -12,3 +12,5 @@ export 'sx_scaffold.dart';
 export 'sx_sheet.dart';
 export 'sx_states.dart';
 export 'sx_text_field.dart';
+export 'sx_controls.dart';
+export 'sx_motion_widgets.dart';

@@ -36,10 +36,16 @@ class ExerciseThumb extends StatelessWidget {
         children: [
           MuscleMap.exercise(exercise, height: size * 0.58),
           const SizedBox(height: 4),
-          Text(exercise.equipment.label.toUpperCase(),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: SxText.labelCaps.copyWith(fontSize: 9, color: c.textBody)),
+          // Scales down instead of overflowing the fixed tile at large system text.
+          Flexible(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(exercise.equipment.label.toUpperCase(), maxLines: 1, style: SxText.labelXs.copyWith(color: c.textBody)),
+              ),
+            ),
+          ),
         ],
       ),
     );

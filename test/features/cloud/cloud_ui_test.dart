@@ -69,8 +69,8 @@ void main() {
       final (_, auth) = await openAuth(t);
       await t.tap(find.text('SIGN IN').last);
       await t.pump();
-      expect(find.text('INVALID EMAIL'), findsOneWidget);
-      expect(find.text('REQUIRED'), findsOneWidget);
+      expect(find.text('Invalid email'), findsOneWidget);
+      expect(find.text('Required'), findsOneWidget);
       expect(auth.signInCalls, 0);
     });
 
@@ -122,7 +122,7 @@ void main() {
       await t.enterText(find.byType(TextField).at(2), 'weak');
       await t.tap(find.widgetWithText(SxButton, 'CREATE ACCOUNT'));
       await t.pump();
-      expect(find.text('TOO WEAK'), findsOneWidget);
+      expect(find.text('Too weak'), findsOneWidget);
       auth.nextStatus = CloudAuthStatus.needsEmailConfirmation;
       await t.enterText(find.byType(TextField).at(2), 'Strong123');
       await t.tap(find.widgetWithText(SxButton, 'CREATE ACCOUNT'));
@@ -232,6 +232,9 @@ void main() {
     testWidgets('sign out keeps local data', (t) async {
       final (app, _, _) = await signedIn(t);
       final sessions = app.sessions.sessions.length;
+      // The Profile list grew (Health row), so bring the button on screen before tapping.
+      await t.ensureVisible(find.widgetWithText(SxButton, 'SIGN OUT').first);
+      await t.pumpAndSettle();
       await t.tap(find.widgetWithText(SxButton, 'SIGN OUT').first);
       await t.pumpAndSettle();
       expect(app.cloud.user, isNull);

@@ -1,20 +1,103 @@
 import 'sync_meta.dart';
 
 /// Which input fields a cardio activity exposes. Drives the adaptive forms.
-enum CardioField { duration, distance, pace, speed, incline, resistance, calories, heartRate, rpe }
+enum CardioField {
+  duration,
+  distance,
+  pace,
+  speed,
+  incline,
+  resistance,
+  calories,
+  heartRate,
+  rpe,
+}
 
 enum CardioKind {
-  outdoorRun('Outdoor Run', [CardioField.duration, CardioField.distance, CardioField.pace]),
-  outdoorWalk('Outdoor Walk', [CardioField.duration, CardioField.distance, CardioField.pace]),
-  treadmill('Treadmill',
-      [CardioField.duration, CardioField.distance, CardioField.speed, CardioField.incline]),
-  cycling('Cycling', [CardioField.duration, CardioField.distance, CardioField.speed]),
-  stationaryBike('Stationary Bike',
-      [CardioField.duration, CardioField.distance, CardioField.resistance]),
-  elliptical('Elliptical', [CardioField.duration, CardioField.distance, CardioField.resistance]),
-  rowing('Rowing Machine', [CardioField.duration, CardioField.distance, CardioField.resistance]),
+  outdoorRun('Outdoor Run', [
+    CardioField.duration,
+    CardioField.distance,
+    CardioField.pace,
+  ]),
+  outdoorWalk('Outdoor Walk', [
+    CardioField.duration,
+    CardioField.distance,
+    CardioField.pace,
+  ]),
+  treadmill('Treadmill', [
+    CardioField.duration,
+    CardioField.distance,
+    CardioField.speed,
+    CardioField.incline,
+  ]),
+  cycling('Cycling', [
+    CardioField.duration,
+    CardioField.distance,
+    CardioField.speed,
+  ]),
+  stationaryBike('Stationary Bike', [
+    CardioField.duration,
+    CardioField.distance,
+    CardioField.resistance,
+  ]),
+  elliptical('Elliptical', [
+    CardioField.duration,
+    CardioField.distance,
+    CardioField.resistance,
+  ]),
+  rowing('Rowing Machine', [
+    CardioField.duration,
+    CardioField.distance,
+    CardioField.resistance,
+  ]),
   stairClimber('Stair Climber', [CardioField.duration, CardioField.resistance]),
   jumpRope('Jump Rope', [CardioField.duration]),
+  // Added 2026-10 (append-only: stored by `name`, never by index). Watts and
+  // cadence/SPM/stroke rate are NOT stored fields; floors/laps map onto distance.
+  trailRun('Trail Run', [
+    CardioField.duration,
+    CardioField.distance,
+    CardioField.pace,
+  ]),
+  hiking('Hiking', [
+    CardioField.duration,
+    CardioField.distance,
+    CardioField.pace,
+  ]),
+  spinBike('Spin / Indoor Cycle', [
+    CardioField.duration,
+    CardioField.distance,
+    CardioField.resistance,
+  ]),
+  airBike('Air Bike', [
+    CardioField.duration,
+    CardioField.distance,
+    CardioField.calories,
+  ]),
+  skiErg('Ski Erg', [
+    CardioField.duration,
+    CardioField.distance,
+    CardioField.resistance,
+    CardioField.calories,
+  ]),
+  arcTrainer('Arc Trainer', [
+    CardioField.duration,
+    CardioField.distance,
+    CardioField.resistance,
+  ]),
+  verticalClimber('Vertical Climber', [
+    CardioField.duration,
+    CardioField.distance,
+    CardioField.calories,
+  ]),
+  swimming('Swimming', [CardioField.duration, CardioField.distance]),
+  handCycle('Arm Ergometer', [
+    CardioField.duration,
+    CardioField.distance,
+    CardioField.resistance,
+  ]),
+  hiit('HIIT / Circuit', [CardioField.duration, CardioField.calories]),
+  boxing('Boxing / Heavy Bag', [CardioField.duration, CardioField.calories]),
   custom('Custom', [CardioField.duration]);
 
   const CardioKind(this.label, this.fields);
@@ -24,6 +107,52 @@ enum CardioKind {
   final List<CardioField> fields;
 
   bool get hasDistance => fields.contains(CardioField.distance);
+
+  /// How pace is conventionally quoted for this activity (derived, never stored).
+  CardioPaceBasis get paceBasis => switch (this) {
+        CardioKind.rowing || CardioKind.skiErg => CardioPaceBasis.per500m,
+        CardioKind.swimming => CardioPaceBasis.per100m,
+        _ => fields.contains(CardioField.pace) ? CardioPaceBasis.perKm : CardioPaceBasis.none,
+      };
+}
+
+/// Pace convention: running/walking per km (or mi), rowing & ski erg per 500 m,
+/// swimming per 100 m.
+enum CardioPaceBasis {
+  none(0),
+  perKm(1000),
+  per500m(500),
+  per100m(100);
+
+  const CardioPaceBasis(this.meters);
+  final double meters;
+
+  String get unitLabel => switch (this) {
+        none => '',
+        perKm => '/km',
+        per500m => '/500m',
+        per100m => '/100m',
+      };
+}
+
+/// Resolves which input fields a session of [kind] exposes. A `CardioKind.custom`
+/// session follows its [CustomCardioActivity.fields] (when known) and otherwise keeps
+/// distance/speed whenever the session already has them, so editing never hides (and then
+/// erases) a stored distance.
+abstract final class CardioFieldResolver {
+  static List<CardioField> fieldsFor(
+    CardioKind kind, {
+    CustomCardioActivity? custom,
+    double? existingDistanceKm,
+  }) {
+    final base = (kind == CardioKind.custom && custom != null) ? custom.fields : kind.fields;
+    if (kind == CardioKind.custom &&
+        (existingDistanceKm ?? 0) > 0 &&
+        !base.contains(CardioField.distance)) {
+      return [...base, CardioField.distance];
+    }
+    return base;
+  }
 }
 
 /// Target for a planned cardio block (e.g. 20 min treadmill finisher).
@@ -85,11 +214,32 @@ class CardioSession {
   final SyncMeta meta;
 
   /// Seconds per km, derived from duration & distance.
-  double? get paceSecPerKm =>
-      (distanceKm != null && distanceKm! > 0) ? durationSeconds / distanceKm! : null;
+  double? get paceSecPerKm => (distanceKm != null && distanceKm! > 0)
+      ? durationSeconds / distanceKm!
+      : null;
+
+  /// Seconds per 500 m (rowing / ski erg convention), derived. Null without distance.
+  double? get paceSecPer500m => _paceSecPer(500);
+
+  /// Seconds per 100 m (swimming convention), derived. Null without distance.
+  double? get paceSecPer100m => _paceSecPer(100);
+
+  /// Pace in the convention of [kind] (see [CardioKind.paceBasis]); null for `none`.
+  double? get conventionalPaceSec {
+    final b = kind.paceBasis;
+    return b == CardioPaceBasis.none ? null : _paceSecPer(b.meters);
+  }
+
+  double? _paceSecPer(double meters) =>
+      (distanceKm != null && distanceKm! > 0 && durationSeconds > 0)
+          ? durationSeconds / (distanceKm! * 1000 / meters)
+          : null;
 
   double? get avgSpeedKmh =>
-      speedKmh ?? ((distanceKm != null && durationSeconds > 0) ? distanceKm! / (durationSeconds / 3600) : null);
+      speedKmh ??
+      ((distanceKm != null && durationSeconds > 0)
+          ? distanceKm! / (durationSeconds / 3600)
+          : null);
 
   CardioSession copyWith({
     CardioKind? kind,
@@ -104,24 +254,23 @@ class CardioSession {
     double? rpe,
     String? routeName,
     String? notes,
-  }) =>
-      CardioSession(
-        id: id,
-        kind: kind ?? this.kind,
-        workoutDate: workoutDate ?? this.workoutDate,
-        durationSeconds: durationSeconds ?? this.durationSeconds,
-        distanceKm: distanceKm ?? this.distanceKm,
-        speedKmh: speedKmh ?? this.speedKmh,
-        inclinePct: inclinePct ?? this.inclinePct,
-        resistance: resistance ?? this.resistance,
-        calories: calories ?? this.calories,
-        avgHeartRate: avgHeartRate ?? this.avgHeartRate,
-        rpe: rpe ?? this.rpe,
-        routeName: routeName ?? this.routeName,
-        notes: notes ?? this.notes,
-        customActivityId: customActivityId,
-        meta: meta.touched(),
-      );
+  }) => CardioSession(
+    id: id,
+    kind: kind ?? this.kind,
+    workoutDate: workoutDate ?? this.workoutDate,
+    durationSeconds: durationSeconds ?? this.durationSeconds,
+    distanceKm: distanceKm ?? this.distanceKm,
+    speedKmh: speedKmh ?? this.speedKmh,
+    inclinePct: inclinePct ?? this.inclinePct,
+    resistance: resistance ?? this.resistance,
+    calories: calories ?? this.calories,
+    avgHeartRate: avgHeartRate ?? this.avgHeartRate,
+    rpe: rpe ?? this.rpe,
+    routeName: routeName ?? this.routeName,
+    notes: notes ?? this.notes,
+    customActivityId: customActivityId,
+    meta: meta.touched(),
+  );
 }
 
 enum GoalMetric { durationMinutes, distanceKm, sessions, calories }
@@ -147,15 +296,21 @@ class CardioGoal {
   final bool isPrimary;
   final SyncMeta meta;
 
-  CardioGoal copyWith({String? title, GoalMetric? metric, double? target, GoalPeriod? period, bool? isPrimary}) =>
-      CardioGoal(
-          id: id,
-          title: title ?? this.title,
-          metric: metric ?? this.metric,
-          target: target ?? this.target,
-          period: period ?? this.period,
-          isPrimary: isPrimary ?? this.isPrimary,
-          meta: meta.touched());
+  CardioGoal copyWith({
+    String? title,
+    GoalMetric? metric,
+    double? target,
+    GoalPeriod? period,
+    bool? isPrimary,
+  }) => CardioGoal(
+    id: id,
+    title: title ?? this.title,
+    metric: metric ?? this.metric,
+    target: target ?? this.target,
+    period: period ?? this.period,
+    isPrimary: isPrimary ?? this.isPrimary,
+    meta: meta.touched(),
+  );
 }
 
 /// User-defined cardio activity (Create Custom Cardio Activity).

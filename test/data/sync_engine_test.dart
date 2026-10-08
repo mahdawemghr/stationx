@@ -183,6 +183,52 @@ void main() {
     expect(b.store.workouts.rotation.currentIndex, before);
   });
 
+  test('custom exercise muscle targets sync to another device and an edit propagates', () async {
+    final a = await device();
+    final b = await device();
+    final ex = Exercise.custom(
+      id: 'cx1',
+      name: 'Lat Pulldown Variation',
+      equipment: Equipment.cable,
+      targets: const [MuscleTarget.primary(MuscleRegion.back, muscle: Muscle.lats), MuscleTarget.secondary(MuscleRegion.biceps)],
+    );
+    await a.store.exercises.addCustom(ex);
+    await a.sync();
+    await b.sync();
+    final got = b.store.exercises.byId('cx1')!;
+    expect(got.muscleTargets!.map((t) => (t.region, t.muscle, t.role)), [
+      (MuscleRegion.back, Muscle.lats, TargetRole.primary),
+      (MuscleRegion.biceps, null, TargetRole.secondary),
+    ]);
+    expect(server.rows(SyncTable.exercises).single['muscle_targets'], isA<List>());
+    // Edit on A (later updatedAt) reaches B.
+    final edited = Exercise.custom(
+      id: 'cx1',
+      name: 'Lat Pulldown Variation',
+      equipment: Equipment.cable,
+      targets: const [MuscleTarget.primary(MuscleRegion.back, muscle: Muscle.upperBack), MuscleTarget.secondary(MuscleRegion.biceps), MuscleTarget.secondary(MuscleRegion.forearms)],
+      meta: SyncMeta(createdAt: ex.meta.createdAt, updatedAt: DateTime.now().add(const Duration(minutes: 1))),
+    );
+    await a.store.exercises.addCustom(edited);
+    await a.sync();
+    await b.sync();
+    expect(b.store.exercises.byId('cx1')!.muscleTargets!.length, 3);
+    expect(b.store.exercises.byId('cx1')!.muscleTargets!.first.muscle, Muscle.upperBack);
+  });
+
+  test('older-client exercise row without muscle_targets pulls fine (no targets, derived profile)', () async {
+    final a = await device();
+    server.seed(SyncTable.exercises, {
+      'id': 'old1', 'name': 'Old Curl', 'primary_muscle': 'biceps', 'secondary_muscles': <String>[], 'equipment': 'dumbbell',
+      'movement_pattern': '', 'instructions': <Object>[], 'is_custom': true, 'tempo': null,
+      'created_at': '2026-01-01T00:00:00Z', 'updated_at': '2026-01-01T00:00:00Z', 'deleted_at': null,
+    });
+    await a.sync();
+    final e = a.store.exercises.byId('old1')!;
+    expect(e.muscleTargets, isNull);
+    expect(MuscleProfiles.of(e).primaryRegion, MuscleRegion.biceps);
+  });
+
   test('custom exercises, goals and custom activities sync', () async {
     final a = await device();
     final b = await device();

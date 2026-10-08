@@ -9,9 +9,10 @@ import '../../core/widgets/widgets.dart';
 import 'auth_widgets.dart';
 import 'register_page.dart';
 
-/// Sign in (Stitch: login_page). There is no backend: submitting opens a
-/// *local* profile for the email. The password is validated for presence only
-/// and is never stored or logged.
+/// Sign in (Stitch: login_page). There is no backend and NO password: submitting opens the
+/// *local* profile whose email matches. The local profile is stored on this device and is not
+/// password protected, so this screen deliberately has no password field. (Cloud sign-in, which
+/// does use a password, lives in Profile > Cloud backup & sync.)
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -21,14 +22,11 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final _email = TextEditingController();
-  final _password = TextEditingController();
-  bool _showPw = false;
   bool _submitted = false;
 
   @override
   void dispose() {
     _email.dispose();
-    _password.dispose();
     super.dispose();
   }
 
@@ -38,13 +36,10 @@ class _LoginPageState extends State<LoginPage> {
     return isValidEmail(_email.text) ? null : 'Invalid format';
   }
 
-  String? get _pwError => _submitted && _password.text.isEmpty ? 'Required field' : null;
-
   Future<void> _submit() async {
     setState(() => _submitted = true);
-    if (_emailError != null || _pwError != null) return;
+    if (_emailError != null) return;
     final error = await context.app.signInLocal(email: _email.text.trim());
-    _password.clear();
     if (!mounted) return;
     if (error != null) {
       showSxSnack(context, error, icon: Icons.error_outline);
@@ -70,26 +65,13 @@ class _LoginPageState extends State<LoginPage> {
             child: Container(width: 8, height: 8, decoration: BoxDecoration(color: c.primary, shape: BoxShape.circle)),
           ),
         ]),
-        Text('Log in to continue your training rotation. Your data stays on this device.', style: SxText.bodyLg.copyWith(color: c.textBody)),
-        SxCard(
-          padding: const EdgeInsets.all(12),
-          child: Row(children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(color: c.surface2, borderRadius: BorderRadius.circular(SxRadius.md)),
-              child: Icon(Icons.fingerprint, color: c.textMuted),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('Biometric sign-in', style: SxText.headlineSm.copyWith(color: c.textHigh, fontSize: 15)),
-                Text('Not available offline', style: SxText.bodySm.copyWith(color: c.textBody)),
-              ]),
-            ),
-            const SizedBox(width: 8),
-            Flexible(child: StatusPill('Unavailable', color: c.textMuted)),
-          ]),
+        Text('Open the local profile on this device to continue your training rotation.', style: SxText.bodyLg.copyWith(color: c.textBody)),
+        Semantics(
+          container: true,
+          child: Text(
+            'Local profile — stored on this device, not password protected.',
+            style: SxText.bodyMd.copyWith(color: c.textHigh, fontWeight: FontWeight.w600),
+          ),
         ),
         SxTextField(
           label: 'Email address',
@@ -97,37 +79,17 @@ class _LoginPageState extends State<LoginPage> {
           icon: Icons.mail_outline,
           hint: 'you@example.com',
           keyboardType: TextInputType.emailAddress,
-          textInputAction: TextInputAction.next,
+          textInputAction: TextInputAction.done,
           autofillHints: const [AutofillHints.email],
           errorText: _emailError,
           onChanged: (_) => setState(() {}),
+          onSubmitted: (_) => _submit(),
           trailing: _email.text.isEmpty
               ? null
               : IconButton(
                   tooltip: 'Clear email',
                   icon: Icon(Icons.cancel_outlined, color: c.textBody),
                   onPressed: () => setState(_email.clear)),
-        ),
-        SxTextField(
-          label: 'Password',
-          controller: _password,
-          icon: Icons.lock_outline,
-          hint: 'Your password',
-          obscureText: !_showPw,
-          textInputAction: TextInputAction.done,
-          autofillHints: const [AutofillHints.password],
-          errorText: _pwError,
-          onChanged: (_) => setState(() {}),
-          onSubmitted: (_) => _submit(),
-          trailing: VisibilityToggle(visible: _showPw, onToggle: () => setState(() => _showPw = !_showPw)),
-        ),
-        Align(
-          alignment: Alignment.centerRight,
-          child: TextButton(
-            onPressed: () => showSxSnack(context, 'No cloud account — nothing to reset. Data is local.', icon: Icons.info_outline),
-            style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
-            child: Text('Forgot password?', style: SxText.bodyMd.copyWith(color: c.primary, fontWeight: FontWeight.w600)),
-          ),
         ),
         SxButton(label: 'Log in', trailingIcon: Icons.arrow_forward, onPressed: _submit),
         Row(children: [
@@ -146,15 +108,15 @@ class _LoginPageState extends State<LoginPage> {
           },
         ),
         Center(
-          child: Text('Google sign-in needs a connection and is not available offline.',
+          child: Text('Want a cloud backup? Create a cloud account later in Profile › Cloud backup & sync.',
               textAlign: TextAlign.center, style: SxText.bodySm.copyWith(color: c.textMuted)),
         ),
         Wrap(alignment: WrapAlignment.center, crossAxisAlignment: WrapCrossAlignment.center, children: [
-          Text("Don't have an account? ", style: SxText.bodyMd.copyWith(color: c.textBody)),
+          Text("No local profile yet? ", style: SxText.bodyMd.copyWith(color: c.textBody)),
           TextButton(
             onPressed: () => Navigator.of(context).pushReplacement(MaterialPageRoute<void>(builder: (_) => const RegisterPage())),
             style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
-            child: Text('Create Account', style: SxText.headlineSm.copyWith(color: c.primary)),
+            child: Text('Create profile', style: SxText.headlineSm.copyWith(color: c.primary)),
           ),
         ]),
       ],

@@ -9,7 +9,7 @@ import '../../core/theme/sx_typography.dart';
 import '../../core/widgets/widgets.dart';
 
 /// Entry screen (Stitch: landing_page). Local-first: "Continue as Guest" opens
-/// the app with demo data; Create Account / Log In open the local-profile forms.
+/// the app with an empty local profile; Create Account / Log In open the local-profile forms.
 class LandingPage extends StatelessWidget {
   const LandingPage({super.key});
 
@@ -20,25 +20,34 @@ class LandingPage extends StatelessWidget {
       gap: SxSpace.md,
       children: [
         const _Header(),
-        const _Hero(),
-        const SectionHeader('System modules', trailingText: '3 / 3 active'),
-        const _Module(
-          icon: Icons.fitness_center,
-          title: 'Strength',
-          tag: 'Rotation',
-          subtitle: 'Log sets, reps & load with a sequential workout rotation.',
+        const SxStagger(index: 0, child: _Hero()),
+        const SectionHeader('What you get', trailingText: 'Strength · Cardio · Progress'),
+        const SxStagger(
+          index: 1,
+          child: _Module(
+            icon: Icons.fitness_center,
+            title: 'Strength',
+            tag: 'Rotation',
+            subtitle: 'Log sets, reps & load with a sequential workout rotation.',
+          ),
         ),
-        const _Module(
-          icon: Icons.directions_run,
-          title: 'Cardio',
-          tag: 'Adaptive',
-          subtitle: 'Runs, treadmill, bike & more — fields adapt per activity.',
+        const SxStagger(
+          index: 2,
+          child: _Module(
+            icon: Icons.directions_run,
+            title: 'Cardio',
+            tag: 'Adaptive',
+            subtitle: 'Runs, treadmill, bike & more — fields adapt per activity.',
+          ),
         ),
-        const _Module(
-          icon: Icons.trending_up,
-          title: 'Progress',
-          tag: 'PR tracking',
-          subtitle: 'Volume, personal records & estimated 1RM.',
+        const SxStagger(
+          index: 3,
+          child: _Module(
+            icon: Icons.trending_up,
+            title: 'Progress',
+            tag: 'PR tracking',
+            subtitle: 'Volume, personal records & estimated max lifts.',
+          ),
         ),
         const SizedBox(height: SxSpace.xs),
         SxButton(
@@ -87,7 +96,7 @@ class _Header extends StatelessWidget {
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text('StationX', maxLines: 1, overflow: TextOverflow.ellipsis, style: SxText.headlineMd.copyWith(color: c.textHigh, fontWeight: FontWeight.w700)),
-            Text('STRENGTH & CARDIO LOG', maxLines: 1, overflow: TextOverflow.ellipsis, style: SxText.labelCaps.copyWith(color: c.textBody, fontSize: 10)),
+            Text('STRENGTH & CARDIO LOG', maxLines: 1, overflow: TextOverflow.ellipsis, style: SxText.labelXs.copyWith(color: c.textBody)),
           ]),
         ),
         const SizedBox(width: 8),
@@ -224,7 +233,7 @@ class _Footer extends StatelessWidget {
       const SizedBox(width: 8),
       Flexible(
         child: Text('LOCAL-FIRST • WORKS WITHOUT A CONNECTION',
-            textAlign: TextAlign.center, style: SxText.labelCaps.copyWith(color: c.textMuted, fontSize: 10)),
+            textAlign: TextAlign.center, style: SxText.labelXs.copyWith(color: c.textMuted)),
       ),
     ]);
   }

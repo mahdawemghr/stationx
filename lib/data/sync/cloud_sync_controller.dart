@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 
 import 'cloud_auth.dart';
 import 'sync_engine.dart';
+import 'sync_gateway.dart';
 import 'sync_local_store.dart';
 
 enum CloudSyncPhase {
@@ -33,14 +34,15 @@ class CloudSyncController extends ChangeNotifier {
     this.resumeThrottle = const Duration(minutes: 2),
     this.retryAfter = const Duration(minutes: 1),
     DateTime Function()? clock,
-  })  : _engine = engine,
-        _local = local,
-        _clock = clock ?? DateTime.now {
+  }) : _engine = engine,
+       _local = local,
+       _clock = clock ?? DateTime.now {
     auth.addListener(_onAuthChanged);
   }
 
   /// No cloud configured: reports [CloudSyncPhase.unavailable] and does nothing.
-  factory CloudSyncController.unavailable() => CloudSyncController(auth: NoCloudAuth());
+  factory CloudSyncController.unavailable() =>
+      CloudSyncController(auth: NoCloudAuth());
 
   final CloudAuth auth;
   final SyncEngine? _engine;
@@ -116,7 +118,11 @@ class CloudSyncController extends ChangeNotifier {
     return r;
   }
 
-  Future<CloudAuthResult> signUp(String email, String password, {String? name}) async {
+  Future<CloudAuthResult> signUp(
+    String email,
+    String password, {
+    String? name,
+  }) async {
     final r = await auth.signUp(email, password, name: name);
     if (r.ok) await syncNow();
     return r;
@@ -158,9 +164,13 @@ class CloudSyncController extends ChangeNotifier {
   // ───────────────────────── syncing ─────────────────────────
 
   /// Runs a sync now (or queues one if already running). Returns the last result.
-  Future<SyncResult> syncNow({AccountSwitch decision = AccountSwitch.undecided}) async {
+  Future<SyncResult> syncNow({
+    AccountSwitch decision = AccountSwitch.undecided,
+  }) async {
     final u = user;
-    if (!available || u == null) return const SyncResult(error: 'not signed in');
+    if (!available || u == null) {
+      return const SyncResult(error: 'not signed in');
+    }
     if (_running) {
       _again = true;
       return const SyncResult();
@@ -175,7 +185,11 @@ class CloudSyncController extends ChangeNotifier {
     try {
       do {
         _again = false;
-        result = await _engine!.run(userId: u.id, decision: decision, preferCloudSingletons: preferCloudProfile?.call() ?? false);
+        result = await _engine!.run(
+          userId: u.id,
+          decision: decision,
+          preferCloudSingletons: preferCloudProfile?.call() ?? false,
+        );
         if (result.needsAccountDecision) break;
         if (!result.ok) break;
       } while (_again);
@@ -191,25 +205,46 @@ class CloudSyncController extends ChangeNotifier {
       _phase = CloudSyncPhase.idle;
     } else {
       _problem = _classify(result.error);
-      _phase = CloudSyncPhase.error;
-      _scheduleRetry();
+      if (_problem == CloudSyncProblem.signedOut) {
+        // The session is gone: a retry can never succeed, so drop the local session (data stays
+        // on the device), stop every timer and let the UI ask the user to sign in again.
+        _debounceTimer?.cancel();
+        _retryTimer?.cancel();
+        _phase = CloudSyncPhase.signedOut;
+        _needsDecision = false;
+        try {
+          await auth.signOut();
+        } catch (_) {}
+      } else {
+        _phase = CloudSyncPhase.error;
+        _scheduleRetry();
+      }
     }
     _pending = await _local!.pendingCount();
     _notify();
     return result;
   }
 
-  CloudSyncProblem _classify(Object? e) {
-    if (e is SocketException || e is TimeoutException || e is HttpException) return CloudSyncProblem.offline;
-    final text = '$e'.toLowerCase();
-    if (text.contains('socket') || text.contains('failed host lookup') || text.contains('connection') || text.contains('network')) {
+  /// Typed classification first. The text fallback is only for transport exceptions whose type we
+  /// cannot name here (e.g. wrapped client errors); it can only ever say "offline".
+  @visibleForTesting
+  static CloudSyncProblem classify(Object? e) {
+    if (e is SyncAuthLostException) return CloudSyncProblem.signedOut;
+    if (e is SocketException || e is TimeoutException || e is HttpException) {
       return CloudSyncProblem.offline;
     }
-    if (text.contains('jwt') || text.contains('401') || text.contains('not signed in') || text.contains('pgrst30')) {
-      return CloudSyncProblem.signedOut;
+    final text = '${e.runtimeType} $e'.toLowerCase();
+    if (text.contains('socket') ||
+        text.contains('failed host lookup') ||
+        text.contains('clientexception') ||
+        text.contains('retryablefetch') ||
+        text.contains('network')) {
+      return CloudSyncProblem.offline;
     }
     return CloudSyncProblem.server;
   }
+
+  CloudSyncProblem _classify(Object? e) => classify(e);
 
   void _scheduleRetry() {
     _retryTimer?.cancel();
@@ -220,13 +255,16 @@ class CloudSyncController extends ChangeNotifier {
   }
 
   /// The user chose what to do after [needsAccountDecision].
-  Future<SyncResult> resolveAccountDecision(AccountSwitch decision) => syncNow(decision: decision);
+  Future<SyncResult> resolveAccountDecision(AccountSwitch decision) =>
+      syncNow(decision: decision);
 
   // ───────────────────────── triggers ─────────────────────────
 
   /// Call when local data changed. Debounced; only pushes when something is pending.
   void onLocalChange() {
-    if (!available || user == null || _running) return; // changes caused by a sync reload are ignored
+    if (!available || user == null || _running) {
+      return; // changes caused by a sync reload are ignored
+    }
     _debounceTimer?.cancel();
     _debounceTimer = Timer(debounce, () async {
       if (_disposed || user == null) return;

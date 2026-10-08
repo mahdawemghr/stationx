@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../cardio/cardio_pace.dart';
 import '../../app/app_controller.dart';
 import '../../app/app_scope.dart';
 import '../../app/nav.dart';
@@ -156,7 +157,10 @@ class _CalendarPageState extends State<CalendarPage> {
           children: _insetExceptGrid([
             _MonthHeader(month: _month, showToday: !isCurrentMonth || _selected != today, onPrev: () => _shiftMonth(-1), onNext: () => _shiftMonth(1), onToday: _goToday),
             _FilterRow(index: _filter, counts: counts, onChanged: (i) => setState(() => _filter = i)),
-            _MonthGrid(month: _month, selected: _selected, today: today, data: data, filter: _filter, onSelect: (d) => setState(() => _selected = d)),
+            SxSwap(
+              alignment: Alignment.topCenter,
+              child: _MonthGrid(key: ValueKey(_month), month: _month, selected: _selected, today: today, data: data, filter: _filter, onSelect: (d) => setState(() => _selected = d)),
+            ),
             SxCard(
               child: Row(children: [
                 Container(
@@ -175,24 +179,34 @@ class _CalendarPageState extends State<CalendarPage> {
                 if (weekCount >= target) const StatusPill('Goal met', icon: Icons.check),
               ]),
             ),
-            _DayHeader(date: _selected, isToday: _selected == today, sessionCount: sessionCount, seconds: totalSeconds),
-            if (sessionCount == 0)
-              SxCard(
-                child: Column(children: [
-                  Icon(isFuture ? Icons.event_outlined : Icons.event_busy_outlined, size: 32, color: c.textMuted),
-                  const SizedBox(height: 8),
-                  Text(isFuture ? 'Upcoming day' : (day.isEmpty ? 'Rest day' : 'Nothing matches this filter'),
-                      style: SxText.headlineSm.copyWith(color: c.textHigh)),
-                  const SizedBox(height: 4),
-                  Text(
-                    isFuture ? 'Future dates can\'t be logged. Your rotation, not the calendar, decides the next workout.' : (day.isEmpty ? 'No sessions logged. Add a past workout below if you trained.' : 'Change the filter to see this day\'s sessions.'),
-                    textAlign: TextAlign.center,
-                    style: SxText.bodySm.copyWith(color: c.textBody),
-                  ),
-                ]),
+            SxSwap(
+              alignment: Alignment.topCenter,
+              child: Column(
+                key: ValueKey('$_selected-$_filter'),
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _DayHeader(date: _selected, isToday: _selected == today, sessionCount: sessionCount, seconds: totalSeconds),
+                  const SizedBox(height: SxSpace.md),
+                  if (sessionCount == 0)
+                    SxCard(
+                      child: Column(children: [
+                        Icon(isFuture ? Icons.event_outlined : Icons.event_busy_outlined, size: 32, color: c.textMuted),
+                        const SizedBox(height: 8),
+                        Text(isFuture ? 'Upcoming day' : (day.isEmpty ? 'Rest day' : 'Nothing matches this filter'),
+                            style: SxText.headlineSm.copyWith(color: c.textHigh)),
+                        const SizedBox(height: 4),
+                        Text(
+                          isFuture ? 'Future dates can\'t be logged. Your rotation, not the calendar, decides the next workout.' : (day.isEmpty ? 'No sessions logged. Add a past workout below if you trained.' : 'Change the filter to see this day\'s sessions.'),
+                          textAlign: TextAlign.center,
+                          style: SxText.bodySm.copyWith(color: c.textBody),
+                        ),
+                      ]),
+                    ),
+                  for (final (i, s) in strengthList.indexed) Padding(padding: const EdgeInsets.only(bottom: SxSpace.md), child: SxStagger(index: i, child: _StrengthCard(session: s))),
+                  for (final (i, x) in cardioList.indexed) Padding(padding: const EdgeInsets.only(bottom: SxSpace.md), child: SxStagger(index: strengthList.length + i, child: _CardioCard(session: x))),
+                ],
               ),
-            for (final s in strengthList) _StrengthCard(session: s),
-            for (final x in cardioList) _CardioCard(session: x),
+            ),
             const SectionHeader('Record retroactive data'),
             Row(children: [
               Expanded(child: SxButton(label: 'Log lift', icon: Icons.fitness_center, variant: SxButtonVariant.secondary, height: 52, onPressed: isFuture ? null : _logHistoricalLift)),
@@ -208,7 +222,7 @@ class _CalendarPageState extends State<CalendarPage> {
 }
 
 List<Widget> _insetExceptGrid(List<Widget> kids) => [
-      for (final w in kids) w is _MonthGrid ? w : Padding(padding: const EdgeInsets.symmetric(horizontal: 8), child: w),
+      for (final w in kids) w is SxSwap ? w : Padding(padding: const EdgeInsets.symmetric(horizontal: 8), child: w),
     ];
 
 class _MonthHeader extends StatelessWidget {
@@ -228,11 +242,11 @@ class _MonthHeader extends StatelessWidget {
         SxIconButton(icon: Icons.chevron_left, tooltip: 'Previous month', onPressed: onPrev),
         Expanded(
           child: Column(children: [
-            Text('HISTORICAL LOG', style: SxText.labelCaps.copyWith(color: c.textBody, fontSize: 10)),
+            Text('HISTORICAL LOG', style: SxText.labelXs.copyWith(color: c.textBody)),
             const SizedBox(height: 2),
             FittedBox(fit: BoxFit.scaleDown, child: Text('${Fmt.monthName(month.month)} ${month.year}', style: SxText.headlineMd.copyWith(color: c.textHigh))),
             if (showToday)
-              TextButton(onPressed: onToday, style: TextButton.styleFrom(minimumSize: const Size(48, 32), padding: const EdgeInsets.symmetric(horizontal: 12)), child: Text('TODAY', style: SxText.labelCaps.copyWith(color: c.primary))),
+              TextButton(onPressed: onToday, style: TextButton.styleFrom(minimumSize: const Size(48, 48), padding: const EdgeInsets.symmetric(horizontal: 12)), child: Text('TODAY', style: SxText.labelCaps.copyWith(color: c.primary))),
           ]),
         ),
         SxIconButton(icon: Icons.chevron_right, tooltip: 'Next month', onPressed: onNext),
@@ -252,7 +266,7 @@ class _FilterRow extends StatelessWidget {
     const labels = ['All activity', 'Strength only', 'Cardio only', 'Mixed'];
     final c = context.sx;
     return SizedBox(
-      height: 40,
+      height: 48,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: labels.length,
@@ -282,7 +296,7 @@ class _FilterRow extends StatelessWidget {
 }
 
 class _MonthGrid extends StatelessWidget {
-  const _MonthGrid({required this.month, required this.selected, required this.today, required this.data, required this.filter, required this.onSelect});
+  const _MonthGrid({super.key, required this.month, required this.selected, required this.today, required this.data, required this.filter, required this.onSelect});
   final DateTime month;
   final DateTime selected;
   final DateTime today;
@@ -341,7 +355,7 @@ class _Legend extends StatelessWidget {
         _Dot(color),
         if (second != null) ...[const SizedBox(width: 2), _Dot(second!)],
         const SizedBox(width: 6),
-        Text(label, style: SxText.labelCaps.copyWith(color: context.sx.textBody, fontSize: 10)),
+        Text(label, style: SxText.labelXs.copyWith(color: context.sx.textBody)),
       ]);
 }
 
@@ -447,6 +461,7 @@ class _StrengthCard extends StatelessWidget {
     final firstPr = prIds.isEmpty ? null : byId[prIds.first]?.name;
     final hasTime = session.workoutDate.hour != 0 || session.workoutDate.minute != 0;
     final cardio = session.cardio;
+    final miles = !app.profile.profile.cardioDistanceUnitKm;
     return SxCard(
       onTap: () => AppNav.viewWorkoutSession(context, session.id),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -456,7 +471,7 @@ class _StrengthCard extends StatelessWidget {
           const Spacer(),
           if (firstPr != null)
             Flexible(
-              child: FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerRight, child: PrBadge(prIds.length > 1 ? '$firstPr +${prIds.length - 1}' : '$firstPr PR')),
+              child: FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerRight, child: SxPop(child: PrBadge(prIds.length > 1 ? '$firstPr +${prIds.length - 1}' : '$firstPr PR'))),
             ),
         ]),
         const SizedBox(height: 10),
@@ -474,8 +489,8 @@ class _StrengthCard extends StatelessWidget {
         ]),
         const SizedBox(height: 14),
         Row(children: [
-          Expanded(child: Text('EXERCISE TELEMETRY (${logs.length})', style: SxText.labelCaps.copyWith(color: c.textBody, fontSize: 10))),
-          Text('TOTAL LOAD', style: SxText.labelCaps.copyWith(color: c.textBody, fontSize: 10)),
+          Expanded(child: Text('EXERCISE TELEMETRY (${logs.length})', style: SxText.labelXs.copyWith(color: c.textBody))),
+          Text('TOTAL LOAD', style: SxText.labelXs.copyWith(color: c.textBody)),
         ]),
         const SizedBox(height: 8),
         for (var i = 0; i < logs.length; i++)
@@ -488,7 +503,7 @@ class _StrengthCard extends StatelessWidget {
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     Row(children: [
                       Flexible(child: Text('${i + 1}. ${byId[logs[i].exerciseId]?.name ?? logs[i].exerciseId}', overflow: TextOverflow.ellipsis, style: SxText.bodyMd.copyWith(color: c.textHigh, fontWeight: FontWeight.w600))),
-                      if (prIds.contains(logs[i].exerciseId)) ...[const SizedBox(width: 6), const PrBadge()],
+                      if (prIds.contains(logs[i].exerciseId)) ...[const SizedBox(width: 6), const SxPop(child: PrBadge())],
                     ]),
                     Builder(builder: (_) {
                       final top = logs[i].doneSets.reduce((a, b) => b.weightKg > a.weightKg ? b : a);
@@ -509,7 +524,7 @@ class _StrengthCard extends StatelessWidget {
             child: Row(children: [
               Icon(Icons.directions_run, size: 18, color: c.primary),
               const SizedBox(width: 8),
-              Expanded(child: Text('${cardio.kind.label} finisher · ${Fmt.durationShort(cardio.durationSeconds)}${cardio.distanceKm != null ? ' · ${Fmt.km(cardio.distanceKm)} km' : ''}', style: SxText.bodySm.copyWith(color: c.textHigh))),
+              Expanded(child: Text('${cardio.kind.label} finisher · ${Fmt.durationShort(cardio.durationSeconds)}${cardio.distanceKm != null ? ' · ${Fmt.km(cardio.distanceKm! * (miles ? 0.621371 : 1))} ${miles ? 'mi' : 'km'}' : ''}', style: SxText.bodySm.copyWith(color: c.textHigh))),
             ]),
           ),
       ]),
@@ -528,7 +543,7 @@ class _Mini extends StatelessWidget {
     return SxInset(
       padding: const EdgeInsets.all(10),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(label.toUpperCase(), style: SxText.labelCaps.copyWith(color: c.textBody, fontSize: 10)),
+        Text(label.toUpperCase(), style: SxText.labelXs.copyWith(color: c.textBody)),
         const SizedBox(height: 4),
         FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerLeft, child: MetricValue(value, unit: unit.isEmpty ? null : unit)),
       ]),
@@ -564,7 +579,7 @@ class _CardioCard extends StatelessWidget {
         Row(children: [
           Expanded(child: _Mini(label: 'Time', value: Fmt.clock(session.durationSeconds), unit: 'min')),
           if (dist != null) ...[const SizedBox(width: 8), Expanded(child: _Mini(label: 'Distance', value: Fmt.km(miles ? dist * 0.621371 : dist), unit: miles ? 'mi' : 'km'))],
-          if (pace != null) ...[const SizedBox(width: 8), Expanded(child: _Mini(label: 'Pace', value: Fmt.pace(miles ? pace * 1.609344 : pace), unit: '/${miles ? 'mi' : 'km'}'))],
+          if (pace != null && CardioPace.has(session.kind)) ...[const SizedBox(width: 8), Expanded(child: _Mini(label: 'Pace', value: CardioPace.text(session.kind, pace, miles: miles), unit: CardioPace.unit(session.kind, miles: miles)))],
         ]),
       ]),
     );

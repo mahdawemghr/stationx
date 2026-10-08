@@ -1,5 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
+import '../../core/utils/formatters.dart';
+import '../../data/device/device_services.dart';
 import '../../domain/domain.dart';
 
 /// One working set while the workout is in progress.
@@ -11,7 +15,7 @@ class SetDraft {
 }
 
 /// One exercise slot of the running workout.
-class ExerciseDraft {
+class ExerciseDraft extends ChangeNotifier {
   ExerciseDraft({
     required this.exercise,
     required this.sets,
@@ -20,6 +24,7 @@ class ExerciseDraft {
     this.prevSets = const [],
     this.recommendation,
     this.expanded = false,
+    this.suggestionUsed = false,
   });
 
   Exercise exercise;
@@ -30,9 +35,12 @@ class ExerciseDraft {
   /// Done sets of the most recent earlier session (PREV column).
   List<SetLog> prevSets;
 
-  /// From ProgressionService — null hides the Smart Overload card.
+  /// From ProgressionService — null (thin/stale/untracked history) shows last performance only.
   ProgressionRecommendation? recommendation;
   bool expanded;
+
+  /// The user already tapped "Use ..." (hides the suggestion chip).
+  bool suggestionUsed;
 
   int get doneCount => sets.where((s) => s.done).length;
   bool get complete => sets.isNotEmpty && doneCount == sets.length;
@@ -41,6 +49,24 @@ class ExerciseDraft {
 
   /// Index of the first set not yet done (the "active" row), or -1.
   int get activeSetIndex => sets.indexWhere((s) => !s.done);
+
+  /// Tells this exercise's own widgets that something inside it changed, so only
+  /// that block rebuilds (the controller notifies the page-level summaries).
+  void touch() => notifyListeners();
+}
+
+/// A run of consecutive exercises that train the same muscle (see WorkoutSections).
+/// [label] is empty for the flat fallback (no header).
+class DraftSection {
+  const DraftSection({required this.label, required this.drafts, required this.startIndex});
+  final String label;
+  final List<ExerciseDraft> drafts;
+  final int startIndex;
+
+  int get exercisesDone => drafts.where((d) => d.complete).length;
+  int get setsDone => drafts.fold(0, (a, d) => a + d.doneCount);
+  int get setsTotal => drafts.fold(0, (a, d) => a + d.sets.length);
+  bool get complete => drafts.isNotEmpty && exercisesDone == drafts.length;
 }
 
 class RestState {
@@ -136,9 +162,20 @@ class CardioDraft extends ChangeNotifier {
   }
 }
 
+/// A workout that is not in the catalogue any more (deleted/archived) is rebuilt from its draft.
+Workout workoutFromDraft(WorkoutDraft d) => Workout(
+      id: d.workoutId,
+      name: d.workoutName,
+      exercises: [
+        for (final e in d.exercises)
+          RoutineExercise(exerciseId: e.exerciseId, sets: e.sets.length, repMin: e.repMin, repMax: e.repMax),
+      ],
+    );
+
 /// State of a running workout. Pure logic, no widgets. Per-second clocks live
 /// in their own widgets (see widgets/timers.dart) so this only notifies on real
-/// changes (set logged, exercise swapped, ...).
+/// changes (set logged, exercise swapped, ...). Every change is also persisted
+/// (debounced) to [draftStore] so the workout survives the app being killed.
 class ActiveWorkoutController extends ChangeNotifier {
   ActiveWorkoutController({
     required this.workout,
@@ -146,13 +183,38 @@ class ActiveWorkoutController extends ChangeNotifier {
     required SessionRepository sessions,
     required this.profile,
     DateTime Function()? clock,
-  })  : _clock = clock ?? DateTime.now,
-        startedAt = (clock ?? DateTime.now)() {
+    DeviceFeedback? feedback,
+    this.draftStore,
+    WorkoutDraft? restoreFrom,
+    this.backdate,
+    this.draftDebounce = const Duration(milliseconds: 500),
+  })  : _catalog = catalog,
+        _clock = clock ?? DateTime.now,
+        feedback = feedback ?? const HapticDeviceFeedback(),
+        startedAt = restoreFrom?.startedAt ?? (clock ?? DateTime.now)() {
     final byId = {for (final e in catalog) e.id: e};
-    for (final re in workout.exercises) {
-      final ex = byId[re.exerciseId];
+    final routine = restoreFrom == null
+        ? workout.exercises
+        : [
+            for (final e in restoreFrom.exercises)
+              RoutineExercise(exerciseId: e.exerciseId, sets: e.sets.length, repMin: e.repMin, repMax: e.repMax),
+          ];
+    for (var i = 0; i < routine.length; i++) {
+      final ex = byId[routine[i].exerciseId];
       if (ex == null) continue;
-      drafts.add(_build(re, ex, sessions));
+      final d = _build(routine[i], ex, sessions);
+      if (restoreFrom != null) {
+        final snap = restoreFrom.exercises[i];
+        for (var k = 0; k < snap.sets.length && k < d.sets.length; k++) {
+          d.sets[k]
+            ..weightKg = snap.sets[k].weightKg
+            ..reps = snap.sets[k].reps
+            ..done = snap.sets[k].done;
+        }
+        d.expanded = snap.expanded;
+        d.suggestionUsed = snap.suggestionUsed;
+      }
+      drafts.add(d);
     }
     final t = workout.cardioFinisher;
     if (t != null) {
@@ -165,35 +227,61 @@ class ActiveWorkoutController extends ChangeNotifier {
         clock: _clock,
       )..addListener(notifyListeners);
     }
-    _expandFirstIncomplete();
+    if (restoreFrom == null || !drafts.any((d) => d.expanded)) _expandFirstIncomplete();
+    notes = restoreFrom?.notes ?? '';
+    persistEnabled = true;
   }
 
   final Workout workout;
   final UserProfile profile;
+  final List<Exercise> _catalog;
   final DateTime Function() _clock;
   final DateTime startedAt;
+  final DeviceFeedback feedback;
+  final WorkoutDraftStore? draftStore;
+  final DateTime? backdate;
+  final Duration draftDebounce;
   final List<ExerciseDraft> drafts = [];
   final ValueNotifier<RestState?> rest = ValueNotifier(null);
-  CardioDraft? cardio;
 
-  static ExerciseDraft _buildStatic(RoutineExercise re, Exercise ex, SessionRepository sessions, UserProfile profile) {
+  /// Fires only when the page structure changes (cardio block added / removed),
+  /// not on every edit, so the page shell does not rebuild per set.
+  final ValueNotifier<int> layout = ValueNotifier(0);
+  CardioDraft? cardio;
+  String notes = '';
+
+  Timer? _draftTimer;
+  Timer? _restTimer;
+  /// Lets the page hold persistence back while a conflicting older draft is being resolved.
+  bool persistEnabled = false;
+  bool _closed = false;
+
+  static ExerciseDraft _buildStatic(RoutineExercise re, Exercise ex, SessionRepository sessions, UserProfile profile,
+      {DateTime? now}) {
     final last = sessions.lastWithExercise(ex.id);
     final prev = last == null
         ? <SetLog>[]
         : last.exercises.firstWhere((l) => l.exerciseId == ex.id).doneSets.toList();
-    final rec = profile.progressionEnabled
+    final priorSessions = sessions.sessions
+        .where((s) => s.exercises.any((l) => l.exerciseId == ex.id && l.doneSets.isNotEmpty))
+        .length;
+    final rec = profile.progressionEnabled && last != null
         ? ProgressionService.recommend(
             lastSets: prev,
             repMin: re.repMin,
             repMax: re.repMax,
-            incrementKg: ProgressionService.incrementFor(ex),
+            increment: ProgressionService.incrementFor(ex, profile.unit),
+            unit: profile.unit,
+            priorSessions: priorSessions,
+            lastSessionDate: last.workoutDate,
+            now: now,
+            exercise: ex,
           )
         : null;
+    // Always prefill LAST time's numbers; an increase is only ever a tappable suggestion.
     final sets = <SetDraft>[];
     for (var i = 0; i < re.sets; i++) {
-      if (rec != null) {
-        sets.add(SetDraft(weightKg: rec.weightKg, reps: rec.repMin));
-      } else if (prev.isNotEmpty) {
+      if (prev.isNotEmpty) {
         final p = prev[i < prev.length ? i : prev.length - 1];
         sets.add(SetDraft(weightKg: p.weightKg, reps: p.reps));
       } else {
@@ -205,9 +293,31 @@ class ActiveWorkoutController extends ChangeNotifier {
   }
 
   ExerciseDraft _build(RoutineExercise re, Exercise ex, SessionRepository sessions) =>
-      _buildStatic(re, ex, sessions, profile);
+      _buildStatic(re, ex, sessions, profile, now: _clock());
 
   bool get isMixed => cardio != null;
+
+  List<DraftSection>? _sections;
+
+  /// Muscle sections of the running workout (order preserved, grouping rule lives in
+  /// [WorkoutSections]). Memoized; recomputed only when an exercise is swapped.
+  List<DraftSection> get sections => _sections ??= _computeSections();
+
+  List<DraftSection> _computeSections() {
+    final routine = [
+      for (final d in drafts) RoutineExercise(exerciseId: d.exercise.id, sets: d.sets.length, repMin: d.repMin, repMax: d.repMax),
+    ];
+    final groups = WorkoutSections.group(routine, _catalog);
+    final covered = groups.fold<int>(0, (a, g) => a + g.items.length);
+    if (covered != drafts.length) {
+      // Some exercise is missing from the catalog: never drop it, show one flat section.
+      return [DraftSection(label: '', drafts: List.unmodifiable(drafts), startIndex: 0)];
+    }
+    return [
+      for (final g in groups)
+        DraftSection(label: g.label, drafts: List.unmodifiable(drafts.sublist(g.startIndex, g.startIndex + g.items.length)), startIndex: g.startIndex),
+    ];
+  }
 
   int get elapsedSeconds => _clock().difference(startedAt).inSeconds;
 
@@ -228,45 +338,190 @@ class ActiveWorkoutController extends ChangeNotifier {
   int get itemsTotal => drafts.length + (cardio == null ? 0 : 1);
   int get itemsDone => completedExercises + ((cardio?.complete ?? false) ? 1 : 0);
 
-  // ── mutations ──
-  void _expandFirstIncomplete() {
-    final i = drafts.indexWhere((d) => !d.complete);
-    for (var k = 0; k < drafts.length; k++) {
-      drafts[k].expanded = k == i;
+  // ── draft persistence ──
+  WorkoutDraft toDraft() => WorkoutDraft(
+        workoutId: workout.id,
+        workoutName: workout.name,
+        startedAt: startedAt,
+        savedAt: _clock(),
+        currentIndex: currentIndex,
+        notes: notes,
+        backdate: backdate,
+        exercises: [
+          for (final d in drafts)
+            DraftExercise(
+              exerciseId: d.exercise.id,
+              repMin: d.repMin,
+              repMax: d.repMax,
+              expanded: d.expanded,
+              suggestionUsed: d.suggestionUsed,
+              sets: [for (final s in d.sets) DraftSet(weightKg: s.weightKg, reps: s.reps, done: s.done)],
+            ),
+        ],
+      );
+
+  /// Lets the page hold persistence back while a conflicting older draft is being resolved.
+
+  /// The controller's clock (injectable in tests).
+  DateTime now() => _clock();
+
+  @override
+  void notifyListeners() {
+    super.notifyListeners();
+    _scheduleDraftSave();
+  }
+
+  void _scheduleDraftSave() {
+    if (draftStore == null || !persistEnabled || _closed) return;
+    _draftTimer?.cancel();
+    _draftTimer = Timer(draftDebounce, () {
+      _draftTimer = null;
+      _writeDraft();
+    });
+  }
+
+  Future<void> _writeDraft() async {
+    final store = draftStore;
+    if (store == null || _closed || !persistEnabled) return;
+    try {
+      // A workout with nothing logged is not worth resuming.
+      if (hasLoggedAnything) {
+        await store.save(toDraft());
+      } else if (store.current != null) {
+        await store.clear();
+      }
+    } catch (_) {
+      // Best effort: a failed draft write must never break logging.
     }
+  }
+
+  /// Writes any pending change now (app going to background, page closing).
+  Future<void> flushDraft() async {
+    if (_draftTimer == null) return;
+    _draftTimer!.cancel();
+    _draftTimer = null;
+    await _writeDraft();
+  }
+
+  /// Finished or discarded: drop the draft and stop persisting.
+  Future<void> discardDraft() async {
+    _closed = true;
+    _draftTimer?.cancel();
+    _draftTimer = null;
+    try {
+      await draftStore?.clear();
+    } catch (_) {}
+  }
+
+  // ── mutations ──
+  /// Opens the first unfinished exercise and collapses the rest; returns the drafts that changed.
+  List<ExerciseDraft> _expandFirstIncomplete() {
+    final i = drafts.indexWhere((d) => !d.complete);
+    final changed = <ExerciseDraft>[];
+    for (var k = 0; k < drafts.length; k++) {
+      final want = k == i;
+      if (drafts[k].expanded != want) {
+        drafts[k].expanded = want;
+        changed.add(drafts[k]);
+      }
+    }
+    return changed;
   }
 
   void toggleExpanded(ExerciseDraft d) {
     d.expanded = !d.expanded;
+    d.touch();
     notifyListeners();
   }
 
-  void toggleSet(ExerciseDraft d, int i) {
+  /// Weighted work must not be logged at 0 kg: the caller opens the weight keypad instead.
+  bool needsWeight(ExerciseDraft d, int i) =>
+      !d.sets[i].done && d.sets[i].weightKg <= 0 && d.exercise.equipment != Equipment.bodyweight;
+
+  /// Toggles a set. Returns false (nothing changed) when [needsWeight].
+  bool toggleSet(ExerciseDraft d, int i) {
+    if (needsWeight(d, i)) return false;
     final s = d.sets[i];
     s.done = !s.done;
     if (s.done) {
+      feedback.setDone();
       final secs = profile.autoRestSeconds;
-      if (!d.complete && secs > 0) {
-        rest.value = RestState(endsAt: _clock().add(Duration(seconds: secs)), totalSeconds: secs);
+      // Rest also runs between exercises; only the very last set of the workout skips it.
+      if (remainingSets > 0 && secs > 0) {
+        _startRest(secs);
       } else {
-        rest.value = null;
+        _stopRest();
       }
       if (d.complete) {
         // Collapse the finished exercise and open the next unfinished one.
         d.expanded = false;
-        _expandFirstIncomplete();
+        for (final o in _expandFirstIncomplete()) {
+          if (!identical(o, d)) o.touch();
+        }
       }
     }
+    d.touch();
     notifyListeners();
+    return true;
   }
 
   void setWeight(ExerciseDraft d, int i, double kg) {
-    d.sets[i].weightKg = kg < 0 ? 0 : kg;
+    final old = d.sets[i].weightKg;
+    final v = kg < 0 ? 0.0 : kg;
+    d.sets[i].weightKg = v;
+    if (!d.sets[i].done) {
+      for (var j = i + 1; j < d.sets.length; j++) {
+        if (!d.sets[j].done && d.sets[j].weightKg == old) d.sets[j].weightKg = v;
+      }
+    }
+    d.touch();
     notifyListeners();
   }
 
   void setReps(ExerciseDraft d, int i, int reps) {
-    d.sets[i].reps = reps < 0 ? 0 : reps;
+    final old = d.sets[i].reps;
+    final v = reps < 0 ? 0 : reps;
+    d.sets[i].reps = v;
+    if (!d.sets[i].done) {
+      for (var j = i + 1; j < d.sets.length; j++) {
+        if (!d.sets[j].done && d.sets[j].reps == old) d.sets[j].reps = v;
+      }
+    }
+    d.touch();
+    notifyListeners();
+  }
+
+  /// ± stepper: moves the weight by one unit-appropriate step (2.5 kg / 5 lb).
+  void stepWeight(ExerciseDraft d, int i, int direction, WeightUnit unit) {
+    final step = unit == WeightUnit.kg ? 2.5 : 5.0;
+    final shown = Fmt.toDisplayWeight(d.sets[i].weightKg, unit) + direction * step;
+    final rounded = (shown * 2).round() / 2;
+    setWeight(d, i, Fmt.fromDisplayWeight(rounded < 0 ? 0 : rounded, unit));
+  }
+
+  void stepReps(ExerciseDraft d, int i, int direction) => setReps(d, i, d.sets[i].reps + direction);
+
+  /// "Same as last set": copies weight and reps of the previous set.
+  void sameAsLast(ExerciseDraft d, int i) {
+    if (i <= 0) return;
+    d.sets[i]
+      ..weightKg = d.sets[i - 1].weightKg
+      ..reps = d.sets[i - 1].reps;
+    d.touch();
+    notifyListeners();
+  }
+
+  /// Applies the progression suggestion to every set not yet done.
+  void useSuggestion(ExerciseDraft d) {
+    final r = d.recommendation;
+    if (r == null) return;
+    for (final s in d.sets) {
+      if (s.done) continue;
+      s.weightKg = r.weightKg;
+      s.reps = r.repMin;
+    }
+    d.suggestionUsed = true;
+    d.touch();
     notifyListeners();
   }
 
@@ -274,25 +529,38 @@ class ActiveWorkoutController extends ChangeNotifier {
     final last = d.sets.isEmpty ? null : d.sets.last;
     d.sets.add(SetDraft(weightKg: last?.weightKg ?? 0, reps: last?.reps ?? d.repMin));
     d.expanded = true;
+    d.touch();
     notifyListeners();
   }
 
-  void removeSet(ExerciseDraft d, int i) {
-    if (d.sets.length <= 1) return;
-    d.sets.removeAt(i);
+  /// Removes set [i] and returns it (for undo), or null when it is the last remaining set.
+  SetDraft? removeSet(ExerciseDraft d, int i) {
+    if (d.sets.length <= 1) return null;
+    final s = d.sets.removeAt(i);
+    d.touch();
+    notifyListeners();
+    return s;
+  }
+
+  void insertSet(ExerciseDraft d, int i, SetDraft s) {
+    d.sets.insert(i.clamp(0, d.sets.length), s);
+    d.touch();
     notifyListeners();
   }
 
   /// Swap [d]'s exercise for [replacement] inside this session only.
   void replaceExercise(ExerciseDraft d, Exercise replacement, SessionRepository sessions) {
+    final before = [for (final x in sections) '${x.label}:${x.drafts.length}'].join('|');
     final fresh = _buildStatic(
         RoutineExercise(exerciseId: replacement.id, sets: d.sets.length, repMin: d.repMin, repMax: d.repMax),
         replacement,
         sessions,
-        profile);
+        profile,
+        now: _clock());
     d.exercise = replacement;
     d.prevSets = fresh.prevSets;
     d.recommendation = fresh.recommendation;
+    d.suggestionUsed = false;
     for (var i = 0; i < d.sets.length; i++) {
       d.sets[i]
         ..done = false
@@ -300,22 +568,49 @@ class ActiveWorkoutController extends ChangeNotifier {
         ..reps = fresh.sets[i].reps;
     }
     d.expanded = true;
+    d.touch();
+    _sections = null;
+    if ([for (final x in sections) '${x.label}:${x.drafts.length}'].join('|') != before) layout.value++;
     notifyListeners();
   }
 
-  void skipRest() {
+  // ── rest ──
+  void _startRest(int secs) {
+    rest.value = RestState(endsAt: _clock().add(Duration(seconds: secs)), totalSeconds: secs);
+    _scheduleRestEnd();
+  }
+
+  void _stopRest() {
+    _restTimer?.cancel();
+    _restTimer = null;
     rest.value = null;
   }
+
+  void _scheduleRestEnd() {
+    _restTimer?.cancel();
+    final r = rest.value;
+    if (r == null) return;
+    var wait = r.endsAt.difference(_clock());
+    if (wait.isNegative) wait = Duration.zero;
+    _restTimer = Timer(wait, () {
+      _restTimer = null;
+      if (rest.value != null) feedback.restEnded();
+    });
+  }
+
+  void skipRest() => _stopRest();
 
   void addRest(int seconds) {
     final r = rest.value;
     if (r == null) return;
     rest.value = RestState(endsAt: r.endsAt.add(Duration(seconds: seconds)), totalSeconds: r.totalSeconds + seconds);
+    _scheduleRestEnd();
   }
 
   void addCardio(CardioKind kind) {
     cardio?.removeListener(notifyListeners);
     cardio = CardioDraft(kind: kind, clock: _clock)..addListener(notifyListeners);
+    layout.value++;
     notifyListeners();
   }
 
@@ -323,6 +618,7 @@ class ActiveWorkoutController extends ChangeNotifier {
     cardio?.removeListener(notifyListeners);
     cardio?.dispose();
     cardio = null;
+    layout.value++;
     notifyListeners();
   }
 
@@ -352,9 +648,21 @@ class ActiveWorkoutController extends ChangeNotifier {
 
   @override
   void dispose() {
+    _restTimer?.cancel();
+    // Persist a pending change that the debounce has not written yet.
+    if (_draftTimer != null && !_closed) {
+      _draftTimer!.cancel();
+      _draftTimer = null;
+      _writeDraft();
+    }
+    _closed = true;
     cardio?.removeListener(notifyListeners);
     cardio?.dispose();
     rest.dispose();
+    layout.dispose();
+    for (final d in drafts) {
+      d.dispose();
+    }
     super.dispose();
   }
 }

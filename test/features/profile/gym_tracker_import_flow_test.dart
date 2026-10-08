@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/material.dart' show SingleChildScrollView, Offset, Scrollable;
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:stationx/app/app_controller.dart';
@@ -26,15 +28,19 @@ class FakeSource implements ImportFileSource {
 
 final fixtureText = File('test/fixtures/gym_tracker_export_sample.json').readAsStringSync();
 
-Future<AppController> open(WidgetTester tester, FakeSource src, {double textScale = 1.0}) async {
+Future<AppController> open(WidgetTester tester, FakeSource src, {double textScale = 1.0, Size size = const Size(390, 3200)}) async {
   final app = AppController(store: MemoryStore(SeedData.fresh()), importSource: src);
   await app.startGuest();
-  await pumpPage(tester, const ProfilePage(), controller: app, textScale: textScale, size: const Size(390, 3200));
+  await pumpPage(tester, const ProfilePage(), controller: app, textScale: textScale, size: size);
   return app;
 }
 
 Future<void> startImport(WidgetTester tester, String choice) async {
+  await tester.scrollUntilVisible(find.text('IMPORT FROM GYM TRACKER'), 300, scrollable: find.byType(Scrollable).first);
+  await tester.pumpAndSettle();
   await tester.tap(find.text('IMPORT FROM GYM TRACKER'));
+  await tester.pumpAndSettle();
+  await tester.ensureVisible(find.text(choice));
   await tester.pumpAndSettle();
   await tester.tap(find.text(choice));
   await tester.pumpAndSettle();
@@ -109,6 +115,20 @@ void main() {
     expect(find.text('Couldn\'t read the file'), findsOneWidget);
   });
 
+  testWidgets('pasting an oversized clipboard is refused before any parsing', (tester) async {
+    final huge = 'x' * (GymTrackerImport.maxBytes + 1);
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
+      if (call.method == 'Clipboard.getData') return {'text': huge};
+      return null;
+    });
+    addTearDown(() => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform, null));
+    final app = await open(tester, FakeSource(null));
+    await startImport(tester, 'PASTE COPIED DATA');
+    expect(find.textContaining('too large'), findsOneWidget);
+    expect(find.textContaining('10 MB'), findsOneWidget);
+    expect(app.sessions.sessions, isEmpty);
+  });
+
   testWidgets('paste copied data uses the clipboard', (tester) async {
     tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
       if (call.method == 'Clipboard.getData') return {'text': fixtureText};
@@ -136,9 +156,35 @@ void main() {
   });
 
   testWidgets('preview dialog does not overflow at 2x text on a small phone', (tester) async {
-    await open(tester, FakeSource(fixtureText), textScale: 2.0);
+    await open(tester, FakeSource(fixtureText), textScale: 2.0, size: const Size(360, 640));
     await startImport(tester, 'CHOOSE FILE');
     expect(find.text('IMPORT'), findsOneWidget);
     expect(tester.takeException(), isNull);
+    // The whole preview can be scrolled to the end.
+    await tester.drag(find.byType(SingleChildScrollView).last, const Offset(0, -2000));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('preview lists exercises whose muscles need a check', (tester) async {
+    final doc = jsonEncode({
+      'format': 'gym_tracker_export', 'version': 1,
+      'exercises': [{'name': 'Mystery Move Zz'}],
+      'sessions': [
+        {'id': 1, 'status': 'completed', 'startedAt': '2026-01-01T10:00:00Z', 'exercises': [
+          {'exerciseName': 'Mystery Move Zz', 'sets': [{'setNumber': 1, 'weightKg': 10, 'reps': 5}]},
+        ]},
+      ],
+    });
+    await open(tester, FakeSource(doc));
+    await startImport(tester, 'CHOOSE FILE');
+    expect(find.textContaining('Check muscles for: Mystery Move Zz'), findsOneWidget);
+    expect(find.textContaining('edit them later'), findsOneWidget);
+  });
+
+  testWidgets('no review note when every muscle is known', (tester) async {
+    await open(tester, FakeSource(fixtureText));
+    await startImport(tester, 'CHOOSE FILE');
+    expect(find.textContaining('Check muscles for'), findsNothing);
   });
 }

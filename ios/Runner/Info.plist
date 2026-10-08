@@ -25,7 +25,9 @@
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>NSHealthShareUsageDescription</key>
-	<string>StationX reads your sleep and resting heart rate from Apple Health to show a recovery summary. Nothing is written to Apple Health and the data never leaves your device.</string>
+	<string>StationX reads your sleep and resting heart rate from Apple Health to show a recovery summary. If you enable the optional features, StationX also reads workouts and heart rate. The data never leaves your device through StationX.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>If you turn on "Save workouts to Apple Health", StationX saves your finished workouts (type, start, duration and the distance or calories you logged) to Apple Health. Nothing is saved unless you enable it.</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UIApplicationSceneManifest</key>

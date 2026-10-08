@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../theme/sx_spacing.dart';
 import '../theme/sx_theme.dart';
 import '../theme/sx_typography.dart';
+import 'sx_motion_widgets.dart';
 
 /// Line chart with gradient fade. [values] evenly spaced; optional x labels.
 /// Painting is isolated by a RepaintBoundary and only repaints on data change.
@@ -41,7 +42,16 @@ class SxLineChart extends StatelessWidget {
           height: height,
           width: double.infinity,
           child: CustomPaint(
-            painter: _LinePainter(values, labels, color ?? c.primary, c.hairline, c.textMuted, highlightLast, minY, maxY),
+            painter: _LinePainter(
+              values,
+              labels,
+              color ?? c.primary,
+              c.hairline,
+              c.textMuted,
+              highlightLast,
+              minY,
+              maxY,
+            ),
           ),
         ),
       ),
@@ -50,7 +60,16 @@ class SxLineChart extends StatelessWidget {
 }
 
 class _LinePainter extends CustomPainter {
-  _LinePainter(this.v, this.labels, this.color, this.grid, this.labelColor, this.hl, this.minY, this.maxY);
+  _LinePainter(
+    this.v,
+    this.labels,
+    this.color,
+    this.grid,
+    this.labelColor,
+    this.hl,
+    this.minY,
+    this.maxY,
+  );
   final List<double> v;
   final List<String>? labels;
   final Color color;
@@ -63,7 +82,12 @@ class _LinePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final labelH = labels == null ? 0.0 : 18.0;
-    final area = Rect.fromLTWH(8, 8, size.width - 16, size.height - 16 - labelH);
+    final area = Rect.fromLTWH(
+      8,
+      8,
+      size.width - 16,
+      size.height - 16 - labelH,
+    );
     final gp = Paint()
       ..color = grid
       ..strokeWidth = 1;
@@ -83,8 +107,11 @@ class _LinePainter extends CustomPainter {
       hi += pad;
     }
     Offset pt(int i) => Offset(
-        v.length == 1 ? area.center.dx : area.left + area.width * i / (v.length - 1),
-        area.bottom - area.height * ((v[i] - lo) / (hi - lo)));
+      v.length == 1
+          ? area.center.dx
+          : area.left + area.width * i / (v.length - 1),
+      area.bottom - area.height * ((v[i] - lo) / (hi - lo)),
+    );
     final path = Path()..moveTo(pt(0).dx, pt(0).dy);
     for (var i = 1; i < v.length; i++) {
       final p0 = pt(i - 1), p1 = pt(i);
@@ -96,11 +123,22 @@ class _LinePainter extends CustomPainter {
       ..lineTo(pt(0).dx, area.bottom)
       ..close();
     canvas.drawPath(
-        fill,
-        Paint()
-          ..shader = LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [color.withValues(alpha: 0.18), color.withValues(alpha: 0)])
-              .createShader(area));
-    canvas.drawPath(path, Paint()..color = color..style = PaintingStyle.stroke..strokeWidth = 2..strokeCap = StrokeCap.round);
+      fill,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [color.withValues(alpha: 0.18), color.withValues(alpha: 0)],
+        ).createShader(area),
+    );
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = color
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2
+        ..strokeCap = StrokeCap.round,
+    );
     if (hl) {
       final p = pt(v.length - 1);
       canvas.drawCircle(p, 6, Paint()..color = color.withValues(alpha: 0.25));
@@ -109,7 +147,10 @@ class _LinePainter extends CustomPainter {
     if (labels != null) {
       for (var i = 0; i < labels!.length && i < v.length; i++) {
         final tp = TextPainter(
-          text: TextSpan(text: labels![i], style: SxText.labelCaps.copyWith(fontSize: 9, color: labelColor)),
+          text: TextSpan(
+            text: labels![i],
+            style: SxText.labelXs.copyWith(color: labelColor),
+          ),
           textDirection: TextDirection.ltr,
         )..layout();
         final x = (pt(i).dx - tp.width / 2).clamp(0.0, size.width - tp.width);
@@ -119,7 +160,8 @@ class _LinePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_LinePainter o) => o.v != v || o.color != color || o.labels != labels;
+  bool shouldRepaint(_LinePainter o) =>
+      o.v != v || o.color != color || o.labels != labels;
 }
 
 /// Simple vertical bar chart. [target] draws a dashed horizontal goal line.
@@ -148,7 +190,8 @@ class SxBarChart extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.sx;
     final maxV = [...values, target ?? 0, 1.0].reduce((a, b) => a > b ? a : b);
-    final spoken = semanticLabel ??
+    final spoken =
+        semanticLabel ??
         'Bar chart. ${[for (var i = 0; i < values.length; i++) '${labels[i]} ${_n(values[i])}'].join(', ')}'
             '${target == null ? '' : '. Target ${_n(target!)}'}';
     return Semantics(
@@ -156,60 +199,94 @@ class SxBarChart extends StatelessWidget {
       image: true,
       excludeSemantics: true,
       child: RepaintBoundary(
-      child: SizedBox(
-        height: height,
-        child: Stack(children: [
-          if (target != null)
-            Positioned.fill(
-              bottom: 22,
-              child: CustomPaint(painter: _TargetLine(target! / maxV, c.textMuted)),
-            ),
-          Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
-            for (var i = 0; i < values.length; i++)
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: Column(mainAxisAlignment: MainAxisAlignment.end, children: [
-                    if (valueLabels != null && valueLabels![i].isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 4),
-                        child: Text(valueLabels![i], style: SxText.labelCaps.copyWith(fontSize: 9, color: c.textBody)),
-                      ),
-                    Flexible(
-                      child: LayoutBuilder(
-                        builder: (_, cons) => TweenAnimationBuilder<double>(
-                          tween: Tween(end: values[i] / maxV),
-                          duration: SxMotion.of(context, const Duration(milliseconds: 320)),
-                          curve: Curves.easeOut,
-                          builder: (_, f, _) => Container(
-                            height: (cons.maxHeight * f).clamp(values[i] > 0 ? 4.0 : 2.0, double.infinity),
-                            decoration: BoxDecoration(
-                              color: values[i] <= 0
-                                  ? c.surface3
-                                  : (highlightIndex == null || highlightIndex == i ? (color ?? c.primary) : (color ?? c.primary).withValues(alpha: 0.45)),
-                              borderRadius: BorderRadius.circular(4),
+        child: SizedBox(
+          height: height,
+          child: Stack(
+            children: [
+              if (target != null)
+                Positioned.fill(
+                  bottom: 22,
+                  child: CustomPaint(
+                    painter: _TargetLine(target! / maxV, c.textMuted),
+                  ),
+                ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  for (var i = 0; i < values.length; i++)
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            if (valueLabels != null &&
+                                valueLabels![i].isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 4),
+                                child: Text(
+                                  valueLabels![i],
+                                  style: SxText.labelXs.copyWith(
+                                    color: c.textBody,
+                                  ),
+                                ),
+                              ),
+                            Flexible(
+                              child: LayoutBuilder(
+                                builder: (_, cons) => SxGrow(
+                                  value: values[i] / maxV,
+                                  delay: SxMotion.staggerDelay(i),
+                                  builder: (_, f) => Container(
+                                    height: (cons.maxHeight * f).clamp(
+                                      values[i] > 0 ? 4.0 : 2.0,
+                                      double.infinity,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: values[i] <= 0
+                                          ? c.surface3
+                                          : (highlightIndex == null ||
+                                                    highlightIndex == i
+                                                ? (color ?? c.primary)
+                                                : (color ?? c.primary)
+                                                      .withValues(alpha: 0.45)),
+                                      borderRadius: BorderRadius.circular(
+                                        SxRadius.sm,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
                             ),
-                          ),
+                            const SizedBox(height: 6),
+                            Text(
+                              labels[i],
+                              style: SxText.labelXs.copyWith(
+                                color: highlightIndex == i
+                                    ? c.primary
+                                    : c.textBody,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
-                    const SizedBox(height: 6),
-                    Text(labels[i], style: SxText.labelCaps.copyWith(fontSize: 10, color: highlightIndex == i ? c.primary : c.textBody)),
-                  ]),
-                ),
+                ],
               ),
-          ]),
-        ]),
+            ],
+          ),
+        ),
       ),
-    ));
+    );
   }
 }
 
-String _n(num v) => v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toStringAsFixed(1);
+String _n(num v) =>
+    v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toStringAsFixed(1);
 
 String _summary(List<double> v) {
   if (v.isEmpty) return 'Line chart with no data';
-  final lo = v.reduce((a, b) => a < b ? a : b), hi = v.reduce((a, b) => a > b ? a : b);
+  final lo = v.reduce((a, b) => a < b ? a : b),
+      hi = v.reduce((a, b) => a > b ? a : b);
   return 'Line chart, ${v.length} points, from ${_n(v.first)} to ${_n(v.last)}, low ${_n(lo)}, high ${_n(hi)}';
 }
 
@@ -220,7 +297,9 @@ class _TargetLine extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final y = size.height * (1 - f);
-    final p = Paint()..color = color..strokeWidth = 1;
+    final p = Paint()
+      ..color = color
+      ..strokeWidth = 1;
     for (double x = 0; x < size.width; x += 8) {
       canvas.drawLine(Offset(x, y), Offset(x + 4, y), p);
     }
@@ -232,7 +311,13 @@ class _TargetLine extends CustomPainter {
 
 /// Tiny inline trend line.
 class SxSparkline extends StatelessWidget {
-  const SxSparkline({super.key, required this.values, this.width = 80, this.height = 28, this.color});
+  const SxSparkline({
+    super.key,
+    required this.values,
+    this.width = 80,
+    this.height = 28,
+    this.color,
+  });
   final List<double> values;
   final double width;
   final double height;
@@ -240,8 +325,19 @@ class SxSparkline extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => SizedBox(
-        width: width,
-        height: height,
-        child: CustomPaint(painter: _LinePainter(values, null, color ?? context.sx.primary, Colors.transparent, Colors.transparent, false, null, null)),
-      );
+    width: width,
+    height: height,
+    child: CustomPaint(
+      painter: _LinePainter(
+        values,
+        null,
+        color ?? context.sx.primary,
+        Colors.transparent,
+        Colors.transparent,
+        false,
+        null,
+        null,
+      ),
+    ),
+  );
 }

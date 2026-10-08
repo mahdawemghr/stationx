@@ -22,6 +22,10 @@ abstract class WorkoutRepository implements Listenable {
   Workout? get nextWorkout;
 
   Future<void> saveWorkout(Workout w);
+
+  /// Removes the workout from the list AND the rotation. The rotation keeps pointing at the same
+  /// CURRENT workout (index shifts); if the current one is deleted its successor becomes current.
+  /// Deleting a workout that is not in the rotation never moves the pointer.
   Future<void> deleteWorkout(String id);
   Future<void> setRotation(Rotation r);
 
@@ -40,6 +44,9 @@ abstract class SessionRepository implements Listenable {
 
   /// Adds many sessions in ONE write (one notification) — used by data import.
   Future<void> addAll(List<WorkoutSession> sessions);
+
+  /// Replaces the session with the same id. A missing id is a silent no-op (never resurrects a
+  /// deleted session, never upserts) — identical in every implementation.
   Future<void> update(WorkoutSession s);
   Future<void> delete(String id);
 
@@ -54,6 +61,8 @@ abstract class CardioRepository implements Listenable {
   List<CardioSession> get sessions; // newest workoutDate first
   CardioSession? byId(String id);
   Future<void> add(CardioSession s);
+
+  /// Replaces the session with the same id; a missing id is a no-op (see [SessionRepository.update]).
   Future<void> update(CardioSession s);
   Future<void> delete(String id);
   List<CardioSession> between(DateTime from, DateTime to);
@@ -101,4 +110,12 @@ abstract class HealthRepository implements Listenable {
 
   /// Opens the Play Store page for Health Connect (when [HealthStatus.notInstalled]).
   Future<void> installProvider();
+}
+
+/// Local-only store for the single in-progress workout draft. Never synced.
+/// A corrupt/unreadable stored draft reads as "no draft".
+abstract class WorkoutDraftStore implements Listenable {
+  WorkoutDraft? get current;
+  Future<void> save(WorkoutDraft draft);
+  Future<void> clear();
 }

@@ -2,7 +2,7 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<!-- HealthKit: READ-ONLY sleep + resting heart rate (see lib/data/health). -->
+	<!-- HealthKit: opt-in read (sleep, resting HR, workouts, heart rate, energy) and write (workouts). See lib/data/health. -->
 	<key>com.apple.developer.healthkit</key>
 	<true/>
 	<key>com.apple.developer.healthkit.access</key>

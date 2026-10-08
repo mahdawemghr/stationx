@@ -8,8 +8,8 @@ import '../../core/widgets/widgets.dart';
 import '../../domain/domain.dart';
 import '../../core/utils/equipment_icons.dart';
 
-/// Smart Swap bottom sheet. Alternatives are ranked by [SmartSwapService]
-/// (primary muscle, movement pattern, secondary overlap, equipment) and the
+/// Smart Swap bottom sheet. Alternatives are ranked by [ExerciseRecommender]
+/// (muscle subgroup, movement pattern, purpose, equipment, history) and the
 /// match % shown is the computed score. Resolves to the chosen replacement, or
 /// null when dismissed.
 Future<Exercise?> showSwapExerciseSheet(
@@ -21,6 +21,7 @@ Future<Exercise?> showSwapExerciseSheet(
   Set<String> excludeIds = const {},
 }) {
   final catalog = context.app.exercises.all;
+  final history = context.app.sessions.sessions;
   return showSxSheet<Exercise>(
     context,
     builder: (ctx) => SizedBox(
@@ -32,6 +33,7 @@ Future<Exercise?> showSwapExerciseSheet(
         repRange: repRange,
         slotLabel: slotLabel,
         excludeIds: excludeIds,
+        history: history,
         onClose: () => Navigator.pop(ctx),
         onReplace: (e) => Navigator.pop(ctx, e),
       ),
@@ -62,6 +64,7 @@ class SwapExerciseBody extends StatefulWidget {
     required this.onReplace,
     this.slotLabel,
     this.excludeIds = const {},
+    this.history = const [],
   });
 
   final Exercise current;
@@ -70,6 +73,7 @@ class SwapExerciseBody extends StatefulWidget {
   final String repRange;
   final String? slotLabel;
   final Set<String> excludeIds;
+  final List<WorkoutSession> history;
   final VoidCallback onClose;
   final ValueChanged<Exercise> onReplace;
 
@@ -83,9 +87,10 @@ class _SwapExerciseBodyState extends State<SwapExerciseBody> {
 
   List<SwapCandidate> get _alts {
     final allowed = _filters.isEmpty ? null : {for (final f in _filters) ...f.equipment};
-    return SmartSwapService.alternatives(
+    return ExerciseRecommender.replacements(
       current: widget.current,
       catalog: widget.catalog,
+      history: widget.history,
       allowedEquipment: allowed,
       excludeIds: widget.excludeIds,
     );
@@ -290,14 +295,15 @@ class _AltCard extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             AnimatedContainer(
-              duration: SxMotion.fast,
+              duration: SxMotion.of(context, SxMotion.short),
+              curve: SxMotion.enter,
               width: 28,
               height: 28,
               decoration: BoxDecoration(
                 color: selected ? c.primary : c.surface3,
                 shape: BoxShape.circle,
               ),
-              child: selected ? Icon(Icons.check, size: 18, color: c.onAccent) : null,
+              child: selected ? SxPop(child: Icon(Icons.check, size: 18, color: c.onAccent)) : null,
             ),
           ],
         ),
@@ -333,7 +339,7 @@ class _MonoTag extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(color: c.surface3, borderRadius: BorderRadius.circular(SxRadius.sm)),
-      child: Text(text, style: SxText.metricSm.copyWith(color: c.textBody, fontSize: 11)),
+      child: Text(text, style: SxText.labelXs.copyWith(color: c.textBody)),
     );
   }
 }

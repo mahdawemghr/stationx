@@ -22,6 +22,36 @@ extension SxContext on BuildContext {
   SxColors get sx => Theme.of(this).extension<SxTheme>()!.colors;
 }
 
+/// Wraps a platform transition so it is skipped when the user disabled animations.
+class _SxPageTransitions extends PageTransitionsBuilder {
+  const _SxPageTransitions(this.inner);
+  final PageTransitionsBuilder inner;
+
+  @override
+  Duration get transitionDuration => inner.transitionDuration;
+
+  @override
+  Duration get reverseTransitionDuration => inner.reverseTransitionDuration;
+
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    if (MediaQuery.disableAnimationsOf(context)) return child;
+    return inner.buildTransitions<T>(
+      route,
+      context,
+      animation,
+      secondaryAnimation,
+      child,
+    );
+  }
+}
+
 ThemeData buildStationXTheme(SxColors c) {
   final scheme = ColorScheme.dark(
     primary: c.primary,
@@ -30,7 +60,7 @@ ThemeData buildStationXTheme(SxColors c) {
     surface: c.canvas,
     onSurface: c.textHigh,
     error: c.danger,
-    onError: const Color(0xFF690005),
+    onError: c.onDangerSoft,
     outline: c.hairline,
   );
   final base = ThemeData(
@@ -45,7 +75,10 @@ ThemeData buildStationXTheme(SxColors c) {
     extensions: [SxTheme(c)],
   );
   return base.copyWith(
-    textTheme: base.textTheme.apply(bodyColor: c.textHigh, displayColor: c.textHigh),
+    textTheme: base.textTheme.apply(
+      bodyColor: c.textHigh,
+      displayColor: c.textHigh,
+    ),
     appBarTheme: AppBarTheme(
       backgroundColor: c.canvas,
       surfaceTintColor: Colors.transparent,
@@ -58,27 +91,63 @@ ThemeData buildStationXTheme(SxColors c) {
       surfaceTintColor: Colors.transparent,
       modalBackgroundColor: c.surface3,
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(SxRadius.xl))),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(SxRadius.xl)),
+      ),
     ),
     dialogTheme: DialogThemeData(
       backgroundColor: c.surface3,
       surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(SxRadius.xl),
-          side: BorderSide(color: c.hairline)),
+        borderRadius: BorderRadius.circular(SxRadius.xl),
+        side: BorderSide(color: c.hairline),
+      ),
     ),
     snackBarTheme: SnackBarThemeData(
       backgroundColor: c.surface3,
       contentTextStyle: SxText.bodyMd.copyWith(color: c.textHigh),
       behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(SxRadius.md)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(SxRadius.md),
+      ),
     ),
-    pageTransitionsTheme: PageTransitionsTheme(builders: {
-      TargetPlatform.android: const FadeForwardsPageTransitionsBuilder(),
-      TargetPlatform.iOS: const CupertinoPageTransitionsBuilder(),
-      TargetPlatform.linux: const FadeForwardsPageTransitionsBuilder(),
-      TargetPlatform.macOS: const CupertinoPageTransitionsBuilder(),
-      TargetPlatform.windows: const FadeForwardsPageTransitionsBuilder(),
-    }),
+    switchTheme: SwitchThemeData(
+      thumbColor: WidgetStateProperty.resolveWith((s) {
+        if (s.contains(WidgetState.disabled)) return c.textMuted;
+        return s.contains(WidgetState.selected) ? c.onAccent : c.textBody;
+      }),
+      trackColor: WidgetStateProperty.resolveWith((s) {
+        if (s.contains(WidgetState.disabled)) return c.surface2;
+        return s.contains(WidgetState.selected) ? c.primary : c.surface3;
+      }),
+      trackOutlineColor: WidgetStateProperty.resolveWith((s) {
+        if (s.contains(WidgetState.selected)) return Colors.transparent;
+        return c.hairline;
+      }),
+      overlayColor: WidgetStateProperty.all(c.primarySoft),
+    ),
+    progressIndicatorTheme: ProgressIndicatorThemeData(
+      color: c.primary,
+      circularTrackColor: c.surface3,
+      linearTrackColor: c.surface3,
+    ),
+    pageTransitionsTheme: const PageTransitionsTheme(
+      builders: {
+        TargetPlatform.android: _SxPageTransitions(
+          FadeForwardsPageTransitionsBuilder(),
+        ),
+        TargetPlatform.iOS: _SxPageTransitions(
+          CupertinoPageTransitionsBuilder(),
+        ),
+        TargetPlatform.linux: _SxPageTransitions(
+          FadeForwardsPageTransitionsBuilder(),
+        ),
+        TargetPlatform.macOS: _SxPageTransitions(
+          CupertinoPageTransitionsBuilder(),
+        ),
+        TargetPlatform.windows: _SxPageTransitions(
+          FadeForwardsPageTransitionsBuilder(),
+        ),
+      },
+    ),
   );
 }

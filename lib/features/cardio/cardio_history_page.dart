@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'cardio_pace.dart';
 import '../../app/app_scope.dart';
 import '../../app/nav.dart';
 import '../../core/theme/sx_spacing.dart';
@@ -121,7 +122,7 @@ class _CardioHistoryPageState extends State<CardioHistoryPage> {
                     itemBuilder: (context, i) {
                       final r = rows[i];
                       if (r.header != null) return _MonthHeader(r.header!, r.count);
-                      return _SessionCard(session: r.session!, all: all, units: units);
+                      return SxStagger(index: i, enabled: i < SxMotion.staggerCap, child: _SessionCard(session: r.session!, all: all, units: units));
                     },
                   ),
                 ),
@@ -346,7 +347,7 @@ class _Summary extends StatelessWidget {
         const SizedBox(height: SxSpace.md),
         Row(children: [
           Expanded(child: Text(month == null ? 'Minutes per month' : 'Volume distribution', style: SxText.bodySm.copyWith(color: c.textBody))),
-          if (delta != null) Text(delta, style: SxText.labelCaps.copyWith(color: c.primary, fontSize: 10)),
+          if (delta != null) Text(delta, style: SxText.labelXs.copyWith(color: c.primary)),
         ]),
         const SizedBox(height: 8),
         SxBarChart(values: bars, labels: labels, height: 96, highlightIndex: bars.every((b) => b == 0) ? null : maxI),
@@ -367,7 +368,7 @@ class _MonthHeader extends StatelessWidget {
       Icon(Icons.calendar_month, size: 18, color: c.primary),
       const SizedBox(width: 8),
       Expanded(child: Text(title.toUpperCase(), style: SxText.headlineSm.copyWith(color: c.textHigh), overflow: TextOverflow.ellipsis)),
-      Text('$count logged', style: SxText.labelCaps.copyWith(color: c.textBody, fontSize: 10)),
+      Text('$count logged', style: SxText.labelXs.copyWith(color: c.textBody)),
     ]);
   }
 }
@@ -387,8 +388,8 @@ class _SessionCard extends StatelessWidget {
     final cols = <(String, String, String?, bool)>[
       ('Time', '${(s.durationSeconds / 60).round()}', 'min', false),
       if (s.distanceKm != null) ('Distance', units.distanceText(s.distanceKm), units.distanceUnit, true),
-      if (f.contains(CardioField.pace) && s.paceSecPerKm != null)
-        ('Pace', units.paceText(s.paceSecPerKm), null, false)
+      if (CardioPace.has(s.kind) && s.paceSecPerKm != null)
+        ('Pace', CardioPace.text(s.kind, s.paceSecPerKm, miles: !units.km), CardioPace.unit(s.kind, miles: !units.km), false)
       else if (s.avgSpeedKmh != null && (f.contains(CardioField.speed)))
         ('Speed', units.speedText(s.avgSpeedKmh), units.speedUnit, false),
       if (s.inclinePct != null) ('Incline', Fmt.number(s.inclinePct!), '%', false),
@@ -412,7 +413,7 @@ class _SessionCard extends StatelessWidget {
               Text('${Fmt.dateMedium(s.workoutDate)} • ${Fmt.time(s.workoutDate)}', style: SxText.bodySm.copyWith(color: c.textBody), maxLines: 1, overflow: TextOverflow.ellipsis),
             ]),
           ),
-          if (pr != null) Flexible(flex: 0, child: PrBadge(pr)),
+          if (pr != null) Flexible(flex: 0, child: SxPop(child: PrBadge(pr))),
         ]),
         const SizedBox(height: 12),
         SxInset(

@@ -18,7 +18,13 @@ enum AccountSwitch {
 }
 
 class SyncResult {
-  const SyncResult({this.pushed = 0, this.deleted = 0, this.pulled = 0, this.needsAccountDecision = false, this.error});
+  const SyncResult({
+    this.pushed = 0,
+    this.deleted = 0,
+    this.pulled = 0,
+    this.needsAccountDecision = false,
+    this.error,
+  });
   final int pushed;
   final int deleted;
   final int pulled;
@@ -35,8 +41,13 @@ class SyncResult {
 /// apply that rule), so running it twice, or from two devices, always converges.
 /// Never throws: failures are returned in [SyncResult.error]; progress made so far is kept.
 class SyncEngine {
-  SyncEngine(this.local, this.gateway, {this.pushBatch = 100, this.pullPage = 500, DateTime Function()? clock})
-      : _clock = clock ?? DateTime.now;
+  SyncEngine(
+    this.local,
+    this.gateway, {
+    this.pushBatch = 100,
+    this.pullPage = 500,
+    DateTime Function()? clock,
+  }) : _clock = clock ?? DateTime.now;
 
   final SyncLocalStore local;
   final SyncGateway gateway;
@@ -62,7 +73,8 @@ class SyncEngine {
         if (decision == AccountSwitch.replaceWithCloud) {
           await local.resetForAccountSwitch();
         } else {
-          await local.markAllUserDataDirty(); // merge: re-upload everything to the new account
+          await local
+              .markAllUserDataDirty(); // merge: re-upload everything to the new account
         }
         state = const SyncState(); // cursors belong to the previous account
       }
@@ -81,7 +93,10 @@ class SyncEngine {
       for (final table in SyncTable.values) {
         final dirty = await local.dirtyRows(table);
         for (var i = 0; i < dirty.length; i += pushBatch) {
-          final batch = dirty.sublist(i, i + pushBatch > dirty.length ? dirty.length : i + pushBatch);
+          final batch = dirty.sublist(
+            i,
+            i + pushBatch > dirty.length ? dirty.length : i + pushBatch,
+          );
           await gateway.upsert(table, [for (final d in batch) d.row]);
           await local.markPushed(table, batch);
           pushed += batch.length;
@@ -107,7 +122,11 @@ class SyncEngine {
       final cursors = Map<String, String>.of(state.cursors);
       for (final table in SyncTable.values) {
         while (true) {
-          final rows = await gateway.pull(table, sinceIso: cursors[table.name], limit: pullPage);
+          final rows = await gateway.pull(
+            table,
+            sinceIso: cursors[table.name],
+            limit: pullPage,
+          );
           if (rows.isEmpty) break;
           pulled += await local.applyRemote(table, rows);
           final last = rows.last['server_updated_at'] as String;
@@ -118,7 +137,9 @@ class SyncEngine {
         }
       }
 
-      await local.saveState(state.copyWith(cursors: cursors, lastSyncAt: _clock()));
+      await local.saveState(
+        state.copyWith(cursors: cursors, lastSyncAt: _clock()),
+      );
       if (pushed + deleted + pulled > 0) await local.reloadCaches();
       return SyncResult(pushed: pushed, deleted: deleted, pulled: pulled);
     } catch (e) {
@@ -126,7 +147,12 @@ class SyncEngine {
       try {
         if (pushed + deleted + pulled > 0) await local.reloadCaches();
       } catch (_) {}
-      return SyncResult(pushed: pushed, deleted: deleted, pulled: pulled, error: e);
+      return SyncResult(
+        pushed: pushed,
+        deleted: deleted,
+        pulled: pulled,
+        error: e,
+      );
     }
   }
 }

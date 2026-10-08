@@ -26,7 +26,12 @@ enum HealthStatus {
 /// What the app reads from Health Connect. Read-only: sleep and resting heart
 /// rate. Nothing is written back and nothing leaves the device.
 class HealthSnapshot {
-  const HealthSnapshot({required this.fetchedAt, this.sleepMinutes, this.restingHr, this.restingHrAvg7d});
+  const HealthSnapshot({
+    required this.fetchedAt,
+    this.sleepMinutes,
+    this.restingHr,
+    this.restingHrAvg7d,
+  });
 
   final DateTime fetchedAt;
 
@@ -42,5 +47,7 @@ class HealthSnapshot {
   bool get hasData => sleepMinutes != null || restingHr != null;
 
   /// Today's resting HR minus the 7-day average (negative = lower/better).
-  int? get restingHrDelta => (restingHr != null && restingHrAvg7d != null) ? restingHr! - restingHrAvg7d! : null;
+  int? get restingHrDelta => (restingHr != null && restingHrAvg7d != null)
+      ? restingHr! - restingHrAvg7d!
+      : null;
 }

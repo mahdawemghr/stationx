@@ -50,6 +50,7 @@ dependencies:
 
   # Pick a Gym Tracker export file to import. Read-only; nothing is uploaded.
   file_picker: ^13.1.0
+  wakelock_plus: ^1.8.1
 
 dev_dependencies:
   flutter_test:

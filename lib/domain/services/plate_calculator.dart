@@ -17,6 +17,9 @@ abstract final class PlateCalculator {
         perSideKg -= p;
       }
     }
-    return (perSide: out, remainderKg: double.parse((perSideKg * 2).toStringAsFixed(2)));
+    return (
+      perSide: out,
+      remainderKg: double.parse((perSideKg * 2).toStringAsFixed(2)),
+    );
   }
 }

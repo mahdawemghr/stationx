@@ -87,11 +87,14 @@ class ExerciseDetailsPage extends StatelessWidget {
         final prs = PrService.forExercise(ex.id, sessions);
         final stats = statsFor(ex.id, sessions);
         final heaviest = prs[PrType.heaviestWeight];
-        final e1rm = prs[PrType.estimated1Rm];
+        final e1rmPr = prs[PrType.estimated1Rm];
+        // value 0 = no reliable estimate: treated as missing, never shown or compared.
+        final e1rm = e1rmPr != null && e1rmPr.value > 0 ? e1rmPr : null;
         final totalVolume = stats.fold(0.0, (a, s) => a + s.volume);
         final totalReps = stats.fold(0, (a, s) => a + s.sets.fold(0, (b, x) => b + x.reps));
 
         return SxScaffold(
+          animateIn: true,
           topBar: SxTopBar(title: 'Exercise Details', subtitle: ex.isCustom ? 'CUSTOM EXERCISE' : 'LIBRARY'),
           bottom: Row(children: [
             Expanded(flex: 2, child: SxButton(label: 'History', icon: Icons.insights, variant: SxButtonVariant.secondary, onPressed: () => AppNav.exerciseHistory(context, ex.id))),
@@ -132,7 +135,7 @@ class ExerciseDetailsPage extends StatelessWidget {
                   icon: Icons.calculate_outlined,
                   value: e1rm == null ? '—' : Fmt.weight(e1rm.value, unit),
                   unit: e1rm == null ? null : u,
-                  caption: e1rm?.delta == null ? 'Epley estimate' : '+${Fmt.weight(e1rm!.delta!, unit)} vs prev PR',
+                  caption: (e1rm?.delta ?? 0) <= 0 ? 'Epley estimate' : '+${Fmt.weight(e1rm!.delta!, unit)} vs prev PR',
                   accent: e1rm != null,
                   height: 104,
                 ),
@@ -225,9 +228,18 @@ class _MuscleProfile extends StatelessWidget {
   const _MuscleProfile({required this.exercise});
   final Exercise exercise;
 
+  static String _label(MuscleTarget t) => t.muscle?.label ?? t.region.label;
+
   @override
   Widget build(BuildContext context) {
     final c = context.sx;
+    final profile = MuscleProfiles.of(exercise);
+    // De-duplicate by label; keep the first emphasis note.
+    final primary = <String, String?>{};
+    for (final t in profile.primary) {
+      primary.putIfAbsent(_label(t), () => t.emphasis);
+    }
+    final secondary = <String>{for (final t in profile.secondary) _label(t)}..removeAll(primary.keys);
     return SxCard(
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
@@ -236,22 +248,53 @@ class _MuscleProfile extends StatelessWidget {
           Expanded(child: Text('Musculoskeletal Profile', style: SxText.headlineSm.copyWith(color: c.textHigh))),
         ]),
         const SizedBox(height: 14),
-        Row(children: [
-          Container(width: 8, height: 8, decoration: BoxDecoration(color: c.primary, shape: BoxShape.circle)),
-          const SizedBox(width: 8),
-          Expanded(child: Text(exercise.primaryMuscle.label, style: SxText.bodyMd.copyWith(color: c.textHigh))),
-          Text('PRIMARY', style: SxText.labelCaps.copyWith(color: c.primary)),
-        ]),
-        const SizedBox(height: 8),
-        const SxLinearMeter(value: 1, height: 8),
-        if (exercise.secondaryMuscles.isNotEmpty) ...[
-          const SizedBox(height: 16),
-          Text('SECONDARY SYNERGY', style: SxText.labelCaps.copyWith(color: c.positive)),
-          const SizedBox(height: 8),
-          Wrap(spacing: 8, runSpacing: 8, children: [
-            for (final m in exercise.secondaryMuscles) _Tag(icon: Icons.circle, label: m.label),
+        Semantics(
+          container: true,
+          label: 'Primary muscles: ${primary.keys.join(', ')}',
+          excludeSemantics: true,
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            for (final entry in primary.entries)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Row(children: [
+                    Container(width: 8, height: 8, decoration: BoxDecoration(color: c.primary, shape: BoxShape.circle)),
+                    const SizedBox(width: 8),
+                    Expanded(child: Text(entry.key, style: SxText.bodyMd.copyWith(color: c.textHigh))),
+                    Text('PRIMARY', style: SxText.labelCaps.copyWith(color: c.primary)),
+                  ]),
+                  if (entry.value != null)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 16, top: 2),
+                      child: Text(entry.value!, style: SxText.bodySm.copyWith(color: c.textMuted)),
+                    ),
+                ]),
+              ),
           ]),
+        ),
+        const SizedBox(height: 2),
+        const SxLinearMeter(value: 1, height: 8),
+        if (secondary.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          Text('SECONDARY', style: SxText.labelCaps.copyWith(color: c.textBody)),
+          const SizedBox(height: 8),
+          Semantics(
+            container: true,
+            label: 'Secondary muscles: ${secondary.join(', ')}',
+            excludeSemantics: true,
+            child: Wrap(spacing: 6, runSpacing: 6, children: [
+              for (final m in secondary)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(color: c.surface2, borderRadius: BorderRadius.circular(SxRadius.base)),
+                  child: Text(m, style: SxText.bodySm.copyWith(color: c.textBody)),
+                ),
+            ]),
+          ),
         ],
+        const SizedBox(height: 10),
+        Text('Muscles share the work in every lift — this shows where the emphasis tends to fall.',
+            style: SxText.bodySm.copyWith(color: c.textMuted)),
       ]),
     );
   }

@@ -186,6 +186,38 @@ void main() {
     await s.close();
   });
 
+  test('custom exercise muscle targets persist across restart; exercise without targets stays null', () async {
+    var s = await open();
+    await s.exercises.addCustom(Exercise.custom(
+      id: 'cx_t',
+      name: 'Lat Variation',
+      equipment: Equipment.cable,
+      targets: const [
+        MuscleTarget.primary(MuscleRegion.back, muscle: Muscle.lats, emphasis: 'Stretch'),
+        MuscleTarget.secondary(MuscleRegion.biceps),
+        MuscleTarget(MuscleRegion.core, role: TargetRole.secondary, weight: 0.25),
+      ],
+    ));
+    // Simulates a row written before the field existed (muscleTargetsJson == null).
+    await s.exercises.addCustom(Exercise(id: 'cx_old', name: 'Old Custom', primaryMuscle: MuscleGroup.legs, equipment: Equipment.machine, isCustom: true));
+    s = await reopen(s);
+    final t = s.exercises.byId('cx_t')!;
+    expect(t.primaryMuscle, MuscleGroup.back);
+    expect(t.secondaryMuscles, [MuscleGroup.biceps, MuscleGroup.core]);
+    expect(t.muscleTargets!.map((x) => (x.region, x.muscle, x.role, x.emphasis, x.weight)), [
+      (MuscleRegion.back, Muscle.lats, TargetRole.primary, 'Stretch', null),
+      (MuscleRegion.biceps, null, TargetRole.secondary, null, null),
+      (MuscleRegion.core, null, TargetRole.secondary, null, 0.25),
+    ]);
+    final old = s.exercises.byId('cx_old')!;
+    expect(old.muscleTargets, isNull);
+    expect(MuscleProfiles.of(old).primaryRegion, MuscleRegion.quadriceps);
+    // Seeded built-ins are untouched.
+    expect(s.exercises.byId('lat_pulldown')!.muscleTargets, isNull);
+    expect(MuscleProfiles.of(s.exercises.byId('lat_pulldown')!).lead.muscle, Muscle.lats);
+    await s.close();
+  });
+
   test('replaceAll(demo) persists; wipe returns to an empty account keeping the profile', () async {
     var s = await open();
     final demo = SeedData.demo();

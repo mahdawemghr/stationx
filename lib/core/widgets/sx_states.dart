@@ -38,24 +38,43 @@ class EmptyState extends StatelessWidget {
           Container(
             width: 72,
             height: 72,
-            decoration: BoxDecoration(color: c.surface2, borderRadius: BorderRadius.circular(SxRadius.xl), border: Border.all(color: c.hairline)),
+            decoration: BoxDecoration(
+              color: c.surface2,
+              borderRadius: BorderRadius.circular(SxRadius.xl),
+              border: Border.all(color: c.hairline),
+            ),
             child: Icon(icon, size: 32, color: c.primary),
           ),
           const SizedBox(height: SxSpace.md),
           if (eyebrow != null) ...[
-            Text(eyebrow!.toUpperCase(), style: SxText.labelCaps.copyWith(color: c.primary)),
+            Text(
+              eyebrow!.toUpperCase(),
+              style: SxText.labelCaps.copyWith(color: c.primary),
+            ),
             const SizedBox(height: 6),
           ],
-          Text(title, textAlign: TextAlign.center, style: SxText.headlineMd.copyWith(color: c.textHigh)),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: SxText.headlineMd.copyWith(color: c.textHigh),
+          ),
           const SizedBox(height: 8),
-          Text(message, textAlign: TextAlign.center, style: SxText.bodyMd.copyWith(color: c.textBody)),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: SxText.bodyMd.copyWith(color: c.textBody),
+          ),
           if (actionLabel != null) ...[
             const SizedBox(height: SxSpace.lg),
             SxButton(label: actionLabel!, onPressed: onAction),
           ],
           if (secondaryLabel != null) ...[
             const SizedBox(height: 8),
-            SxButton(label: secondaryLabel!, onPressed: onSecondary, variant: SxButtonVariant.ghost),
+            SxButton(
+              label: secondaryLabel!,
+              onPressed: onSecondary,
+              variant: SxButtonVariant.ghost,
+            ),
           ],
         ],
       ),
@@ -64,23 +83,32 @@ class EmptyState extends StatelessWidget {
 }
 
 class ErrorState extends StatelessWidget {
-  const ErrorState({super.key, this.message = 'Something went wrong.', this.onRetry});
+  const ErrorState({
+    super.key,
+    this.message = 'Something went wrong.',
+    this.onRetry,
+  });
   final String message;
   final VoidCallback? onRetry;
 
   @override
   Widget build(BuildContext context) => EmptyState(
-        icon: Icons.error_outline,
-        title: 'Unable to load',
-        message: message,
-        actionLabel: onRetry == null ? null : 'Retry',
-        onAction: onRetry,
-      );
+    icon: Icons.error_outline,
+    title: 'Unable to load',
+    message: message,
+    actionLabel: onRetry == null ? null : 'Retry',
+    onAction: onRetry,
+  );
 }
 
 /// Pulsing skeleton block for loading placeholders (single shared controller).
 class SxSkeleton extends StatefulWidget {
-  const SxSkeleton({super.key, this.height = 72, this.width, this.radius = SxRadius.lg});
+  const SxSkeleton({
+    super.key,
+    this.height = 72,
+    this.width,
+    this.radius = SxRadius.lg,
+  });
   final double height;
   final double? width;
   final double radius;
@@ -89,9 +117,24 @@ class SxSkeleton extends StatefulWidget {
   State<SxSkeleton> createState() => _SxSkeletonState();
 }
 
-class _SxSkeletonState extends State<SxSkeleton> with SingleTickerProviderStateMixin {
-  late final AnimationController _ctl =
-      AnimationController(vsync: this, duration: const Duration(milliseconds: 1100))..repeat(reverse: true);
+class _SxSkeletonState extends State<SxSkeleton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctl = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1100),
+  );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final r = SxMotion.reduced(context);
+    if (r) {
+      _ctl.stop();
+      _ctl.value = 0.5; // static mid tone
+    } else if (!_ctl.isAnimating) {
+      _ctl.repeat(reverse: true);
+    }
+  }
 
   @override
   void dispose() {
@@ -123,11 +166,17 @@ class LoadingList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.all(SxSpace.screenMargin),
-        child: Column(children: [
-          for (var i = 0; i < count; i++) Padding(padding: const EdgeInsets.only(bottom: 12), child: SxSkeleton(height: itemHeight)),
-        ]),
-      );
+    padding: const EdgeInsets.all(SxSpace.screenMargin),
+    child: Column(
+      children: [
+        for (var i = 0; i < count; i++)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: SxSkeleton(height: itemHeight),
+          ),
+      ],
+    ),
+  );
 }
 
 /// Confirmation dialog. Returns true when confirmed.
@@ -158,25 +207,45 @@ Future<bool> showSxConfirm(
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                    color: (destructive ? c.dangerContainer : c.primarySoft).withValues(alpha: destructive ? 0.6 : 1),
-                    borderRadius: BorderRadius.circular(SxRadius.md)),
+                  color: (destructive ? c.dangerContainer : c.primarySoft)
+                      .withValues(alpha: destructive ? 0.6 : 1),
+                  borderRadius: BorderRadius.circular(SxRadius.md),
+                ),
                 child: Icon(icon, color: destructive ? c.danger : c.primary),
               ),
             if (icon != null) const SizedBox(height: SxSpace.md),
-            Text(title.toUpperCase(), style: SxText.headlineMd.copyWith(color: c.textHigh)),
+            Text(
+              title.toUpperCase(),
+              style: SxText.headlineMd.copyWith(color: c.textHigh),
+            ),
             const SizedBox(height: 8),
             Text(message, style: SxText.bodyMd.copyWith(color: c.textBody)),
-            if (preview != null) ...[const SizedBox(height: SxSpace.md), preview],
+            if (preview != null) ...[
+              const SizedBox(height: SxSpace.md),
+              preview,
+            ],
             const SizedBox(height: SxSpace.lg),
-            Row(children: [
-              Expanded(child: SxButton(label: cancelLabel, variant: SxButtonVariant.secondary, onPressed: () => Navigator.pop(ctx, false))),
-              const SizedBox(width: 12),
-              Expanded(
+            Row(
+              children: [
+                Expanded(
                   child: SxButton(
-                      label: confirmLabel,
-                      variant: destructive ? SxButtonVariant.danger : SxButtonVariant.primary,
-                      onPressed: () => Navigator.pop(ctx, true))),
-            ]),
+                    label: cancelLabel,
+                    variant: SxButtonVariant.secondary,
+                    onPressed: () => Navigator.pop(ctx, false),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: SxButton(
+                    label: confirmLabel,
+                    variant: destructive
+                        ? SxButtonVariant.danger
+                        : SxButtonVariant.primary,
+                    onPressed: () => Navigator.pop(ctx, true),
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),
@@ -185,16 +254,29 @@ Future<bool> showSxConfirm(
   return res ?? false;
 }
 
-void showSxSnack(BuildContext context, String message, {IconData icon = Icons.check_circle}) {
+void showSxSnack(
+  BuildContext context,
+  String message, {
+  IconData icon = Icons.check_circle,
+  Duration? duration,
+}) {
   final c = context.sx;
   final m = ScaffoldMessenger.of(context);
+  // Longer messages need more reading time (~16 chars/second, min 2 s, max 8 s).
+  final dur =
+      duration ??
+      Duration(milliseconds: (message.length * 60).clamp(2000, 8000).toInt());
   m.hideCurrentSnackBar();
-  m.showSnackBar(SnackBar(
-    duration: const Duration(seconds: 2),
-    content: Row(children: [
-      Icon(icon, size: 18, color: c.primary),
-      const SizedBox(width: 10),
-      Expanded(child: Text(message)),
-    ]),
-  ));
+  m.showSnackBar(
+    SnackBar(
+      duration: dur,
+      content: Row(
+        children: [
+          Icon(icon, size: 18, color: c.primary),
+          const SizedBox(width: 10),
+          Expanded(child: Text(message)),
+        ],
+      ),
+    ),
+  );
 }

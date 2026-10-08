@@ -58,56 +58,71 @@ class SxTextField extends StatelessWidget {
     final c = context.sx;
     final hasError = errorText != null;
     OutlineInputBorder border(Color col) => OutlineInputBorder(
-        borderRadius: BorderRadius.circular(SxRadius.md), borderSide: BorderSide(color: col));
+      borderRadius: BorderRadius.circular(SxRadius.md),
+      borderSide: BorderSide(color: col),
+    );
+    // The visible caption is excluded from semantics; the field itself carries
+    // the label (and the error, via InputDecoration.errorText) as one node.
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(label.toUpperCase(),
-                  style: SxText.labelCaps.copyWith(color: c.textBody), overflow: TextOverflow.ellipsis),
-            ),
-            if (hasError)
-              Flexible(
-                child: Text(errorText!.toUpperCase(),
-                    style: SxText.labelCaps.copyWith(color: c.danger, fontSize: 10),
-                    overflow: TextOverflow.ellipsis),
-              ),
-          ],
+        ExcludeSemantics(
+          child: Text(
+            label.toUpperCase(),
+            style: SxText.labelCaps.copyWith(color: c.textBody),
+          ),
         ),
         const SizedBox(height: 6),
-        TextField(
-          controller: controller,
-          focusNode: focusNode,
-          enabled: enabled,
-          obscureText: obscureText,
-          keyboardType: keyboardType,
-          textInputAction: textInputAction,
-          onChanged: onChanged,
-          onSubmitted: onSubmitted,
-          inputFormatters: inputFormatters,
-          maxLines: obscureText ? 1 : maxLines,
-          textAlign: textAlign,
-          autofillHints: autofillHints,
-          cursorColor: c.primary,
-          style: (mono ? SxText.metricMd : SxText.bodyLg).copyWith(color: c.textHigh),
-          decoration: InputDecoration(
-            isDense: true,
-            filled: true,
-            fillColor: c.surface2,
-            hintText: hint,
-            hintStyle: SxText.bodyLg.copyWith(color: c.textMuted),
-            prefixIcon: icon == null ? null : Icon(icon, size: 20, color: c.textMuted),
-            suffixIcon: trailing ??
-                (valid ? Icon(Icons.check_circle, size: 20, color: c.primary) : null),
-            suffixText: suffixText,
-            suffixStyle: SxText.metricSm.copyWith(color: c.textBody),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-            enabledBorder: border(hasError ? c.danger : c.hairline),
-            focusedBorder: border(hasError ? c.danger : c.primary),
-            disabledBorder: border(c.hairline),
-            border: border(c.hairline),
+        Semantics(
+          label: label,
+          textField: true,
+          child: TextField(
+            controller: controller,
+            focusNode: focusNode,
+            enabled: enabled,
+            obscureText: obscureText,
+            keyboardType: keyboardType,
+            textInputAction: textInputAction,
+            onChanged: onChanged,
+            onSubmitted: onSubmitted,
+            inputFormatters: inputFormatters,
+            maxLines: obscureText ? 1 : maxLines,
+            textAlign: textAlign,
+            autofillHints: autofillHints,
+            cursorColor: c.primary,
+            style: (mono ? SxText.metricMd : SxText.bodyLg).copyWith(
+              color: c.textHigh,
+            ),
+            decoration: InputDecoration(
+              isDense: true,
+              filled: true,
+              fillColor: c.surface2,
+              hintText: hint,
+              hintStyle: SxText.bodyLg.copyWith(color: c.textMuted),
+              prefixIcon: icon == null
+                  ? null
+                  : Icon(icon, size: 20, color: c.textMuted),
+              suffixIcon:
+                  trailing ??
+                  (valid
+                      ? Icon(Icons.check_circle, size: 20, color: c.primary)
+                      : null),
+              suffixText: suffixText,
+              suffixStyle: SxText.metricSm.copyWith(color: c.textBody),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 14,
+              ),
+              enabledBorder: border(hasError ? c.danger : c.hairline),
+              focusedBorder: border(hasError ? c.danger : c.primary),
+              disabledBorder: border(c.hairline),
+              border: border(c.hairline),
+              errorText: errorText,
+              errorMaxLines: 3,
+              errorStyle: SxText.bodySm.copyWith(color: c.danger),
+              errorBorder: border(c.danger),
+              focusedErrorBorder: border(c.danger),
+            ),
           ),
         ),
       ],

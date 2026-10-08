@@ -159,9 +159,21 @@ class _CreateCustomCardioActivityPageState extends State<CreateCustomCardioActiv
           CardioFormLike(
             title: '03 / Round & interval template',
             children: [
-              _Stepper(label: 'Round duration', sub: 'Active work cycle', text: Fmt.clock(_round), onMinus: () => setState(() => _round = (_round - 15).clamp(15, 3600)), onPlus: () => setState(() => _round = (_round + 15).clamp(15, 3600))),
-              _Stepper(label: 'Rest interval', sub: 'Recovery between rounds', text: Fmt.clock(_rest), onMinus: () => setState(() => _rest = (_rest - 15).clamp(0, 3600)), onPlus: () => setState(() => _rest = (_rest + 15).clamp(0, 3600))),
-              _Stepper(label: 'Total rounds', sub: 'Default session target', text: '$_rounds Rnds', onMinus: () => setState(() => _rounds = (_rounds - 1).clamp(1, 99)), onPlus: () => setState(() => _rounds = (_rounds + 1).clamp(1, 99))),
+              _StepperRow(
+                label: 'Round duration',
+                sub: 'Active work cycle',
+                stepper: SxStepper.int(label: 'Round duration', value: _round, min: 15, max: 3600, step: 15, longPressRepeat: false, formatter: (v) => Fmt.clock(v.round()), onChanged: (v) => setState(() => _round = v)),
+              ),
+              _StepperRow(
+                label: 'Rest interval',
+                sub: 'Recovery between rounds',
+                stepper: SxStepper.int(label: 'Rest interval', value: _rest, min: 0, max: 3600, step: 15, longPressRepeat: false, formatter: (v) => Fmt.clock(v.round()), onChanged: (v) => setState(() => _rest = v)),
+              ),
+              _StepperRow(
+                label: 'Total rounds',
+                sub: 'Default session target',
+                stepper: SxStepper.int(label: 'Total rounds', value: _rounds, min: 1, max: 99, longPressRepeat: false, formatter: (v) => '${v.round()} Rnds', onChanged: (v) => setState(() => _rounds = v)),
+              ),
               SxInset(
                 child: Row(children: [
                   Icon(Icons.timelapse, size: 18, color: c.primary),
@@ -226,7 +238,7 @@ class _MetricRow extends StatelessWidget {
               Text(desc, style: SxText.bodySm.copyWith(color: c.textBody)),
             ]),
           ),
-          if (locked) Padding(padding: const EdgeInsets.only(right: 6), child: Text('LOCK', style: SxText.labelCaps.copyWith(color: c.textMuted, fontSize: 10))),
+          if (locked) Padding(padding: const EdgeInsets.only(right: 6), child: Text('LOCK', style: SxText.labelXs.copyWith(color: c.textMuted))),
           Switch(
             value: value,
             onChanged: onChanged,
@@ -241,13 +253,12 @@ class _MetricRow extends StatelessWidget {
   }
 }
 
-class _Stepper extends StatelessWidget {
-  const _Stepper({required this.label, required this.sub, required this.text, required this.onMinus, required this.onPlus});
+/// Label + sub-label on the left, a shared [SxStepper] on the right.
+class _StepperRow extends StatelessWidget {
+  const _StepperRow({required this.label, required this.sub, required this.stepper});
   final String label;
   final String sub;
-  final String text;
-  final VoidCallback onMinus;
-  final VoidCallback onPlus;
+  final Widget stepper;
 
   @override
   Widget build(BuildContext context) {
@@ -262,9 +273,7 @@ class _Stepper extends StatelessWidget {
               Text(sub, style: SxText.bodySm.copyWith(color: c.textBody)),
             ]),
           ),
-          SxIconButton(icon: Icons.remove, tooltip: 'Decrease $label', onPressed: onMinus),
-          ConstrainedBox(constraints: const BoxConstraints(minWidth: 56), child: Text(text, textAlign: TextAlign.center, style: SxText.metricMd.copyWith(color: c.textHigh))),
-          SxIconButton(icon: Icons.add, tooltip: 'Increase $label', onPressed: onPlus),
+          stepper,
         ]),
       ),
     );

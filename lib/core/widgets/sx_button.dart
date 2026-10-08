@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import '../theme/sx_spacing.dart';
 import '../theme/sx_theme.dart';
 import '../theme/sx_typography.dart';
+import 'sx_controls.dart';
+import 'sx_motion_widgets.dart';
 
 enum SxButtonVariant { primary, secondary, ghost, danger }
 
-/// Primary action pill / secondary / ghost / destructive. Press scales to 0.99.
+/// Primary action pill / secondary / ghost / destructive. Press scales to 0.97 (SxPressable); focusable via keyboard when enabled.
 class SxButton extends StatefulWidget {
   const SxButton({
     super.key,
@@ -57,10 +59,12 @@ class _SxButtonState extends State<SxButton> {
         fg = c.textBody;
       case SxButtonVariant.danger:
         bg = c.dangerContainer;
-        fg = const Color(0xFFFFDAD6);
+        fg = c.onDanger;
     }
     if (!enabled) {
-      bg = widget.variant == SxButtonVariant.primary ? c.surface3 : bg.withValues(alpha: 0.5);
+      bg = widget.variant == SxButtonVariant.primary
+          ? c.surface3
+          : bg.withValues(alpha: 0.5);
       fg = c.textMuted;
     }
     final child = Row(
@@ -68,7 +72,7 @@ class _SxButtonState extends State<SxButton> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         if (widget.loading)
-          SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: fg))
+          SxSpinner(size: 18, color: fg)
         else if (widget.icon != null) ...[
           Icon(widget.icon, size: 20, color: fg),
           const SizedBox(width: 8),
@@ -79,7 +83,11 @@ class _SxButtonState extends State<SxButton> {
             overflow: TextOverflow.ellipsis,
             maxLines: 1,
             style: SxText.headlineSm.copyWith(
-                color: fg, fontWeight: FontWeight.w700, letterSpacing: 0.6, fontSize: 16),
+              color: fg,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.6,
+              fontSize: 16,
+            ),
           ),
         ),
         if (widget.trailingIcon != null) ...[
@@ -90,33 +98,25 @@ class _SxButtonState extends State<SxButton> {
     );
     // Minimum 48dp touch target (Material/WCAG), whatever height the call site asks for.
     final h = widget.height < 48 ? 48.0 : widget.height;
-    return Semantics(
-      container: true,
-      button: true,
+    return SxPressable(
       enabled: enabled,
-      label: widget.label,
-      excludeSemantics: true, // the visible text is the label; don't announce it twice
+      scale: 0.97,
+      focusRadius: widget.radius,
+      semanticLabel: widget.label,
+      excludeChildSemantics:
+          true, // the visible text is the label; don't announce it twice
       onTap: enabled ? widget.onPressed : null,
-      child: GestureDetector(
-        onTapDown: enabled ? (_) => setState(() => _down = true) : null,
-        onTapCancel: () => setState(() => _down = false),
-        onTapUp: (_) => setState(() => _down = false),
-        onTap: enabled ? widget.onPressed : null,
-        child: AnimatedScale(
-          scale: _down ? 0.99 : 1,
-          duration: SxMotion.fast,
-          child: AnimatedContainer(
-            duration: SxMotion.fast,
-            height: h,
-            padding: const EdgeInsets.symmetric(horizontal: SxSpace.md),
-            decoration: BoxDecoration(
-              color: bg,
-              borderRadius: BorderRadius.circular(widget.radius),
-              border: side == null ? null : Border.fromBorderSide(side),
-            ),
-            child: child,
-          ),
+      onPressedChanged: (v) => setState(() => _down = v),
+      child: AnimatedContainer(
+        duration: SxMotion.of(context, SxMotion.micro),
+        height: h,
+        padding: const EdgeInsets.symmetric(horizontal: SxSpace.md),
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(widget.radius),
+          border: side == null ? null : Border.fromBorderSide(side),
         ),
+        child: child,
       ),
     );
   }
@@ -151,21 +151,24 @@ class SxIconButton extends StatelessWidget {
       excludeSemantics: true,
       onTap: onPressed,
       child: Tooltip(
-      message: tooltip ?? '',
-      excludeFromSemantics: true,
-      child: Material(
-        color: filled ? c.surface2 : Colors.transparent,
-        borderRadius: BorderRadius.circular(SxRadius.md),
-        child: InkWell(
+        message: tooltip ?? '',
+        excludeFromSemantics: true,
+        child: Material(
+          color: filled ? c.surface2 : Colors.transparent,
           borderRadius: BorderRadius.circular(SxRadius.md),
-          onTap: onPressed,
-          child: SizedBox(
-            width: size < 48 ? 48 : size,
-            height: size < 48 ? 48 : size,
-            child: Center(child: Icon(icon, size: 20, color: iconColor ?? c.textBody)),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(SxRadius.md),
+            onTap: onPressed,
+            child: SizedBox(
+              width: size < 48 ? 48 : size,
+              height: size < 48 ? 48 : size,
+              child: Center(
+                child: Icon(icon, size: 20, color: iconColor ?? c.textBody),
+              ),
+            ),
           ),
         ),
       ),
-    ));
+    );
   }
 }

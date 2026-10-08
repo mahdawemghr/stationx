@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'cardio_pace.dart';
 import 'package:flutter/material.dart';
 
 import '../../app/app_scope.dart';
@@ -92,6 +93,7 @@ class _ActiveCardioPageState extends State<ActiveCardioPage> {
       return;
     }
     _clock.pause();
+    sxHaptic();
     final id = 'cardio_${DateTime.now().microsecondsSinceEpoch}';
     final fields = _fields(repo);
     await repo.add(CardioSession(
@@ -167,7 +169,7 @@ class _ActiveCardioPageState extends State<ActiveCardioPage> {
               title: 'Active Session',
               subtitle: name.toUpperCase(),
               onBack: _confirmDiscard,
-              pill: StatusPill(_paused ? 'Paused' : 'Tracking', dot: true, color: _paused ? c.textBody : c.primary),
+              pill: SxSwap(child: StatusPill(_paused ? 'Paused' : 'Tracking', key: ValueKey(_paused), dot: true, color: _paused ? c.textBody : c.primary)),
             ),
             gap: SxSpace.md,
             bottom: _Controls(
@@ -181,36 +183,50 @@ class _ActiveCardioPageState extends State<ActiveCardioPage> {
               onUnlock: () => setState(() => _locked = false),
             ),
             children: [
-              if (_paused)
-                _PausedBanner(tick: _tick, clock: _clock)
-              else
-                _HeroCard(
-                  tick: _tick,
-                  clock: _clock,
-                  label: name,
-                  km: hasDistance ? (_km ?? 0) : null,
-                  miles: miles,
-                  onEditDistance: _locked ? null : () => _editDistance(miles),
+              // Running <-> paused cross-fade. The 1 s clock digits themselves never animate.
+              SxSwap(
+                alignment: Alignment.topCenter,
+                child: Column(
+                  key: ValueKey(_paused),
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (_paused) ...[
+                      _PausedBanner(tick: _tick, clock: _clock),
+                      const SizedBox(height: SxSpace.md),
+                      _PausedHero(tick: _tick, clock: _clock, km: hasDistance ? _km : null, miles: miles, kind: widget.kind, fields: fields, onEditDistance: _locked ? null : () => _editDistance(miles)),
+                    ] else ...[
+                      _HeroCard(
+                        tick: _tick,
+                        clock: _clock,
+                        label: name,
+                        km: hasDistance ? (_km ?? 0) : null,
+                        miles: miles,
+                        onEditDistance: _locked ? null : () => _editDistance(miles),
+                      ),
+                      if (hasTarget) ...[
+                        const SizedBox(height: SxSpace.md),
+                        _GoalCard(tick: _tick, clock: _clock, targetMinutes: widget.targetMinutes, targetKm: widget.targetKm, km: _km ?? 0, miles: miles),
+                      ],
+                      const SizedBox(height: SxSpace.md),
+                      _MetricGrid(
+                        tick: _tick,
+                        clock: _clock,
+                        km: _km,
+                        miles: miles,
+                        fields: fields,
+                        kind: widget.kind,
+                        speed: isTreadmill ? _speed : null,
+                        incline: _incline,
+                        resistance: _resistance,
+                        locked: _locked,
+                        onEditSpeed: _editSpeed,
+                        onEditIncline: _editIncline,
+                        onEditResistance: _editResistance,
+                      ),
+                    ],
+                  ],
                 ),
-              if (_paused)
-                _PausedHero(tick: _tick, clock: _clock, km: hasDistance ? _km : null, miles: miles, kind: widget.kind, fields: fields, onEditDistance: _locked ? null : () => _editDistance(miles)),
-              if (hasTarget && !_paused) _GoalCard(tick: _tick, clock: _clock, targetMinutes: widget.targetMinutes, targetKm: widget.targetKm, km: _km ?? 0, miles: miles),
-              if (!_paused)
-                _MetricGrid(
-                  tick: _tick,
-                  clock: _clock,
-                  km: _km,
-                  miles: miles,
-                  fields: fields,
-                  kind: widget.kind,
-                  speed: isTreadmill ? _speed : null,
-                  incline: _incline,
-                  resistance: _resistance,
-                  locked: _locked,
-                  onEditSpeed: _editSpeed,
-                  onEditIncline: _editIncline,
-                  onEditResistance: _editResistance,
-                ),
+              ),
               _SensorNote(hasDistance: hasDistance),
             ],
           ),
@@ -255,7 +271,14 @@ class _HeroCard extends StatelessWidget {
               child: FittedBox(
                 fit: BoxFit.scaleDown,
                 child: Row(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
-                  Text(Fmt.km(km, miles: miles) == '0' ? '0.00' : Fmt.km(km, miles: miles), style: SxText.metricXl.copyWith(color: c.textHigh)),
+                  // Distance only changes when the user edits it (not per tick): animate it.
+                  SxCountUp(
+                    value: km!,
+                    fromZero: false,
+                    duration: SxMotion.standard,
+                    formatter: (v) => Fmt.km(v, miles: miles) == '0' ? '0.00' : Fmt.km(v, miles: miles),
+                    style: SxText.metricXl.copyWith(color: c.textHigh),
+                  ),
                   const SizedBox(width: 6),
                   Text(miles ? 'MI' : 'KM', style: SxText.metricMd.copyWith(color: c.textBody)),
                   const SizedBox(width: 8),
@@ -264,7 +287,7 @@ class _HeroCard extends StatelessWidget {
               ),
             ),
           ),
-          Text('TAP TO UPDATE DISTANCE', style: SxText.labelCaps.copyWith(color: c.textMuted, fontSize: 10)),
+          Text('TAP TO UPDATE DISTANCE', style: SxText.labelXs.copyWith(color: c.textMuted)),
         ],
       ]),
     );
@@ -320,7 +343,8 @@ class _PausedHero extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.sx;
     final secs = clock.activeSeconds;
-    final pace = CardioMetrics.paceSecPerKm(secs, km);
+    final paceKm = CardioMetrics.paceSecPerKm(secs, km);
+    final pace = CardioPace.convert(kind, paceKm, miles: miles);
     return SxCard(
       child: Column(children: [
         SxInset(
@@ -343,22 +367,22 @@ class _PausedHero extends StatelessWidget {
               child: SxInset(
                 onTap: onEditDistance,
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text('DISTANCE', style: SxText.labelCaps.copyWith(color: c.textBody, fontSize: 10)),
+                  Text('DISTANCE', style: SxText.labelXs.copyWith(color: c.textBody)),
                   const SizedBox(height: 6),
                   FittedBox(fit: BoxFit.scaleDown, child: Text(km == null ? '—' : Fmt.km(km, miles: miles), style: SxText.metricLg.copyWith(color: c.textHigh))),
-                  Text(miles ? 'MILES' : 'KILOMETERS', style: SxText.labelCaps.copyWith(color: c.textMuted, fontSize: 10)),
+                  Text(miles ? 'MILES' : 'KILOMETERS', style: SxText.labelXs.copyWith(color: c.textMuted)),
                 ]),
               ),
             ),
-            if (fields.contains(CardioField.pace)) ...[
+            if (CardioPace.has(kind)) ...[ 
               const SizedBox(width: 8),
               Expanded(
                 child: SxInset(
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text('AVG PACE', style: SxText.labelCaps.copyWith(color: c.textBody, fontSize: 10)),
+                    Text('AVG PACE', style: SxText.labelXs.copyWith(color: c.textBody)),
                     const SizedBox(height: 6),
                     FittedBox(fit: BoxFit.scaleDown, child: Text(Fmt.pace(pace), style: SxText.metricLg.copyWith(color: c.textHigh))),
-                    Text('/ KM', style: SxText.labelCaps.copyWith(color: c.textMuted, fontSize: 10)),
+                    Text(CardioPace.unit(kind, miles: miles).replaceFirst('/', '/ ').toUpperCase(), style: SxText.labelXs.copyWith(color: c.textMuted)),
                   ]),
                 ),
               ),
@@ -406,9 +430,9 @@ class _GoalCard extends StatelessWidget {
             SxLinearMeter(value: pct, height: 8),
             const SizedBox(height: SxSpace.sm),
             Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              Text(byTime ? 'ELAPSED: ${Fmt.clock(secs)}' : 'DONE: ${Fmt.km(km, miles: miles)}', style: SxText.labelCaps.copyWith(color: c.textBody, fontSize: 10)),
+              Text(byTime ? 'ELAPSED: ${Fmt.clock(secs)}' : 'DONE: ${Fmt.km(km, miles: miles)}', style: SxText.labelXs.copyWith(color: c.textBody)),
               Text(byTime ? 'REMAINING: ${Fmt.clock(left.round())}' : 'REMAINING: ${Fmt.km(left.toDouble(), miles: miles)}',
-                  style: SxText.labelCaps.copyWith(color: c.textBody, fontSize: 10)),
+                  style: SxText.labelXs.copyWith(color: c.textBody)),
             ]),
           ]);
         },
@@ -455,10 +479,9 @@ class _MetricGrid extends StatelessWidget {
       builder: (context, _, _) {
         final secs = clock.activeSeconds;
         final tiles = <Widget>[];
-        if (fields.contains(CardioField.pace)) {
+        if (CardioPace.has(kind)) {
           final p = CardioMetrics.paceSecPerKm(secs, km);
-          final shown = p == null ? null : (miles ? p * 1.609344 : p);
-          tiles.add(_Tile(label: 'Avg pace', icon: Icons.timer_outlined, value: Fmt.pace(shown), unit: miles ? '/mi' : '/km', caption: km == null ? 'Enter distance' : null));
+          tiles.add(_Tile(label: 'Avg pace', icon: Icons.timer_outlined, value: CardioPace.text(kind, p, miles: miles), unit: CardioPace.unit(kind, miles: miles), caption: km == null ? 'Enter distance' : null));
         }
         if (fields.contains(CardioField.speed)) {
           if (kind == CardioKind.treadmill) {
@@ -517,7 +540,7 @@ class _Tile extends StatelessWidget {
         ),
         if (caption != null) ...[
           const SizedBox(height: 6),
-          Text(caption!.toUpperCase(), maxLines: 1, overflow: TextOverflow.ellipsis, style: SxText.labelCaps.copyWith(color: c.textMuted, fontSize: 10)),
+          Text(caption!.toUpperCase(), maxLines: 1, overflow: TextOverflow.ellipsis, style: SxText.labelXs.copyWith(color: c.textMuted)),
         ],
       ]),
     );
@@ -573,8 +596,9 @@ class _Controls extends StatelessWidget {
     return Column(mainAxisSize: MainAxisSize.min, children: [
       AbsorbPointer(
         absorbing: locked,
-        child: Opacity(
-          opacity: locked ? 0.45 : 1,
+        // Locked controls are dimmed with a translucent scrim (no saveLayer like Opacity).
+        child: _Dim(
+          dim: locked,
           child: paused
               ? Column(mainAxisSize: MainAxisSize.min, children: [
                   SxButton(key: const Key('cardio-resume'), label: 'Resume', icon: Icons.play_arrow, onPressed: onTogglePause),
@@ -595,6 +619,32 @@ class _Controls extends StatelessWidget {
       ),
       const SizedBox(height: 8),
       _LockRow(locked: locked, onLock: onLock, onUnlock: onUnlock),
+    ]);
+  }
+}
+
+/// Dims [child] by painting a translucent canvas-coloured scrim on top.
+class _Dim extends StatelessWidget {
+  const _Dim({required this.dim, required this.child});
+  final bool dim;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.sx;
+    return Stack(fit: StackFit.passthrough, children: [
+      child,
+      Positioned.fill(
+        child: IgnorePointer(
+          child: AnimatedContainer(
+            duration: SxMotion.of(context, SxMotion.short),
+            decoration: BoxDecoration(
+              color: dim ? c.canvas.withValues(alpha: 0.55) : c.canvas.withValues(alpha: 0),
+              borderRadius: BorderRadius.circular(SxRadius.lg),
+            ),
+          ),
+        ),
+      ),
     ]);
   }
 }
@@ -655,7 +705,7 @@ class _LockRowState extends State<_LockRow> with SingleTickerProviderStateMixin 
           const SizedBox(width: 8),
           Flexible(
             child: Text(widget.locked ? 'LOCKED • HOLD TO UNLOCK' : 'TAP TO LOCK SCREEN CONTROLS',
-                maxLines: 1, overflow: TextOverflow.ellipsis, style: SxText.labelCaps.copyWith(color: widget.locked ? c.primary : c.textBody, fontSize: 10)),
+                maxLines: 1, overflow: TextOverflow.ellipsis, style: SxText.labelXs.copyWith(color: widget.locked ? c.primary : c.textBody)),
           ),
         ]),
       ),

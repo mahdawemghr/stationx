@@ -48,7 +48,13 @@ class ProgressionRecommendation {
 enum CardioPrType { longestDuration, longestDistance, fastestPace }
 
 class CardioPr {
-  const CardioPr({required this.type, required this.sessionId, required this.value, required this.date, required this.kindLabel});
+  const CardioPr({
+    required this.type,
+    required this.sessionId,
+    required this.value,
+    required this.date,
+    required this.kindLabel,
+  });
   final CardioPrType type;
   final String sessionId;
 

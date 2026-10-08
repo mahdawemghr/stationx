@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'cardio_pace.dart';
 import '../../app/app_scope.dart';
 import '../../app/nav.dart';
 import '../../core/theme/sx_colors.dart';
@@ -115,7 +116,7 @@ class _CardioPreparePageState extends State<CardioPreparePage> {
                 ),
               ],
             ]),
-            if (_obj == _Objective.time) _timeTarget(c, last),
+            if (_obj == _Objective.time) _timeTarget(c, last, miles),
             if (_obj == _Objective.distance) _distanceTarget(c, last, miles),
             if (_obj == _Objective.open)
               SxCard(
@@ -135,7 +136,7 @@ class _CardioPreparePageState extends State<CardioPreparePage> {
     );
   }
 
-  Widget _timeTarget(SxColors c, CardioSession? last) {
+  Widget _timeTarget(SxColors c, CardioSession? last, bool miles) {
     final pace = last?.paceSecPerKm;
     return SxCard(
       child: Column(children: [
@@ -167,7 +168,7 @@ class _CardioPreparePageState extends State<CardioPreparePage> {
             Icon(Icons.analytics_outlined, size: 18, color: c.primary),
             const SizedBox(width: 8),
             Expanded(
-              child: Text('Estimated ~${Fmt.number(_minutes * 60 / pace, decimals: 1)} km at ${Fmt.pace(pace)}/km (your last pace)',
+              child: Text('Estimated ~${Fmt.number(_minutes * 60 / pace * (miles ? 0.621371 : 1), decimals: 1)} ${miles ? 'mi' : 'km'} at ${Fmt.pace(miles ? pace * 1.609344 : pace)}/${miles ? 'mi' : 'km'} (your last pace)',
                   style: SxText.bodyMd.copyWith(color: c.textBody)),
             ),
           ]),
@@ -211,7 +212,7 @@ class _CardioPreparePageState extends State<CardioPreparePage> {
             Icon(Icons.analytics_outlined, size: 18, color: c.primary),
             const SizedBox(width: 8),
             Expanded(
-              child: Text('Estimated ~${Fmt.durationShort((_km * pace).round())} at ${Fmt.pace(pace)}/km (your last pace)',
+              child: Text('Estimated ~${Fmt.durationShort((_km * pace).round())} at ${Fmt.pace(miles ? pace * 1.609344 : pace)}/${miles ? 'mi' : 'km'} (your last pace)',
                   style: SxText.bodyMd.copyWith(color: c.textBody)),
             ),
           ]),
@@ -316,8 +317,8 @@ class _HintCard extends StatelessWidget {
     final pace = last.paceSecPerKm;
     final parts = <String>['${(last.durationSeconds / 60).round()} min'];
     if (last.distanceKm != null) parts.add('${Fmt.km(last.distanceKm, miles: miles)} ${miles ? 'mi' : 'km'}');
-    final tip = (pace != null && kind.fields.contains(CardioField.pace))
-        ? ' Try holding ${Fmt.pace(pace)} /km again for a steady aerobic session.'
+    final tip = (pace != null && CardioPace.has(kind))
+        ? ' Try holding ${CardioPace.withUnit(kind, pace, miles: miles)} again for a steady aerobic session.'
         : '';
     return SxCard(
       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [

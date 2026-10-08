@@ -20,7 +20,10 @@ import '../features/cardio/select_activity_page.dart';
 import '../features/exercises/exercise_details_page.dart';
 import '../features/exercises/exercise_history_page.dart';
 import '../features/exercises/exercise_library_page.dart';
+import '../features/health/health_import_page.dart';
+import '../features/health/health_sync_settings_page.dart';
 import '../features/history/calendar_page.dart';
+import '../features/onboarding/schedule_setup_flow.dart';
 import '../features/progress/personal_records_page.dart';
 import '../features/shell/main_shell.dart';
 import '../features/workouts/workout_editor_page.dart';
@@ -44,10 +47,19 @@ abstract final class AppNav {
   static void enterApp(BuildContext c) => Navigator.of(c).pushAndRemoveUntil(
       MaterialPageRoute<void>(builder: (_) => const MainShell()), (_) => false);
 
+  /// Schedule setup. [afterSignup] replaces the whole stack (skip/finish then enters the app).
+  static Future<void> scheduleSetup(BuildContext c, {bool afterSignup = false}) {
+    if (!afterSignup) return _push(c, const ScheduleSetupFlow());
+    return Navigator.of(c).pushAndRemoveUntil(
+        MaterialPageRoute<void>(builder: (_) => const ScheduleSetupFlow(afterSignup: true)), (_) => false);
+  }
+
   // ── tabs ──
   static void switchTab(BuildContext c, int index) => MainShell.switchTab(c, index);
 
   // ── workouts ──
+  static Future<void> healthSyncSettings(BuildContext c) => _push(c, const HealthSyncSettingsPage());
+  static Future<void> healthImport(BuildContext c) => _push(c, const HealthImportPage());
   static Future<void> workoutPreview(BuildContext c, String workoutId) => _push(c, WorkoutPreviewPage(workoutId: workoutId));
   static Future<void> workoutEditor(BuildContext c, String workoutId) => _push(c, WorkoutEditorPage(workoutId: workoutId));
 

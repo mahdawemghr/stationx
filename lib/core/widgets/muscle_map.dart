@@ -22,8 +22,18 @@ class MuscleMap extends StatelessWidget {
   });
 
   /// Convenience for a single exercise.
-  MuscleMap.exercise(Exercise e, {Key? key, double height = 120, MuscleView view = MuscleView.auto})
-      : this(key: key, primary: {e.primaryMuscle}, secondary: e.secondaryMuscles.toSet(), height: height, view: view);
+  MuscleMap.exercise(
+    Exercise e, {
+    Key? key,
+    double height = 120,
+    MuscleView view = MuscleView.auto,
+  }) : this(
+         key: key,
+         primary: {e.primaryMuscle},
+         secondary: e.secondaryMuscles.toSet(),
+         height: height,
+         view: view,
+       );
 
   final Set<MuscleGroup> primary;
   final Set<MuscleGroup> secondary;
@@ -36,8 +46,12 @@ class MuscleMap extends StatelessWidget {
 
   MuscleView get _resolved {
     if (view != MuscleView.auto) return view;
-    final backish = primary.where((m) => m == MuscleGroup.back || m == MuscleGroup.triceps).length;
-    return backish * 2 >= primary.length && primary.isNotEmpty ? MuscleView.back : MuscleView.front;
+    final backish = primary
+        .where((m) => m == MuscleGroup.back || m == MuscleGroup.triceps)
+        .length;
+    return backish * 2 >= primary.length && primary.isNotEmpty
+        ? MuscleView.back
+        : MuscleView.front;
   }
 
   @override
@@ -49,7 +63,8 @@ class MuscleMap extends StatelessWidget {
     return Semantics(
       container: true,
       image: true,
-      label: 'Muscle map. Primary: ${primary.map((m) => m.label).join(', ')}'
+      label:
+          'Muscle map. Primary: ${primary.map((m) => m.label).join(', ')}'
           '${secondary.isEmpty ? '' : '. Secondary: ${secondary.map((m) => m.label).join(', ')}'}',
       child: ExcludeSemantics(
         child: RepaintBoundary(
@@ -72,7 +87,13 @@ class MuscleMap extends StatelessWidget {
 }
 
 class _Region {
-  const _Region(this.rect, this.group, {this.front = false, this.back = false, this.radius = 3});
+  const _Region(
+    this.rect,
+    this.group, {
+    this.front = false,
+    this.back = false,
+    this.radius = 3,
+  });
   final Rect rect;
   final MuscleGroup? group;
   final bool front;
@@ -83,34 +104,150 @@ class _Region {
 // Regions in a 60 × 130 figure space.
 const _regions = <_Region>[
   // Shoulders (both sides of the figure, front + back).
-  _Region(Rect.fromLTWH(9.5, 19.5, 11, 12), MuscleGroup.shoulders, front: true, back: true, radius: 5.5),
-  _Region(Rect.fromLTWH(39.5, 19.5, 11, 12), MuscleGroup.shoulders, front: true, back: true, radius: 5.5),
+  _Region(
+    Rect.fromLTWH(9.5, 19.5, 11, 12),
+    MuscleGroup.shoulders,
+    front: true,
+    back: true,
+    radius: 5.5,
+  ),
+  _Region(
+    Rect.fromLTWH(39.5, 19.5, 11, 12),
+    MuscleGroup.shoulders,
+    front: true,
+    back: true,
+    radius: 5.5,
+  ),
   // Chest (front).
-  _Region(Rect.fromLTWH(19, 21.5, 10.5, 13), MuscleGroup.chest, front: true, radius: 4.5),
-  _Region(Rect.fromLTWH(30.5, 21.5, 10.5, 13), MuscleGroup.chest, front: true, radius: 4.5),
+  _Region(
+    Rect.fromLTWH(19, 21.5, 10.5, 13),
+    MuscleGroup.chest,
+    front: true,
+    radius: 4.5,
+  ),
+  _Region(
+    Rect.fromLTWH(30.5, 21.5, 10.5, 13),
+    MuscleGroup.chest,
+    front: true,
+    radius: 4.5,
+  ),
   // Core (front).
-  _Region(Rect.fromLTWH(23, 35, 14, 24), MuscleGroup.core, front: true, radius: 4),
+  _Region(
+    Rect.fromLTWH(23, 35, 14, 24),
+    MuscleGroup.core,
+    front: true,
+    radius: 4,
+  ),
   // Back: traps, lats, lower back.
-  _Region(Rect.fromLTWH(22, 17, 16, 7), MuscleGroup.back, back: true, radius: 3.5),
-  _Region(Rect.fromLTWH(18.5, 26, 10.5, 20), MuscleGroup.back, back: true, radius: 4),
-  _Region(Rect.fromLTWH(31, 26, 10.5, 20), MuscleGroup.back, back: true, radius: 4),
-  _Region(Rect.fromLTWH(24, 47, 12, 11), MuscleGroup.back, back: true, radius: 3.5),
+  _Region(
+    Rect.fromLTWH(22, 17, 16, 7),
+    MuscleGroup.back,
+    back: true,
+    radius: 3.5,
+  ),
+  _Region(
+    Rect.fromLTWH(18.5, 26, 10.5, 20),
+    MuscleGroup.back,
+    back: true,
+    radius: 4,
+  ),
+  _Region(
+    Rect.fromLTWH(31, 26, 10.5, 20),
+    MuscleGroup.back,
+    back: true,
+    radius: 4,
+  ),
+  _Region(
+    Rect.fromLTWH(24, 47, 12, 11),
+    MuscleGroup.back,
+    back: true,
+    radius: 3.5,
+  ),
   // Arms: biceps (front) / triceps (back).
-  _Region(Rect.fromLTWH(6, 31, 8, 19), MuscleGroup.biceps, front: true, radius: 4),
-  _Region(Rect.fromLTWH(46, 31, 8, 19), MuscleGroup.biceps, front: true, radius: 4),
-  _Region(Rect.fromLTWH(6, 31, 8, 19), MuscleGroup.triceps, back: true, radius: 4),
-  _Region(Rect.fromLTWH(46, 31, 8, 19), MuscleGroup.triceps, back: true, radius: 4),
+  _Region(
+    Rect.fromLTWH(6, 31, 8, 19),
+    MuscleGroup.biceps,
+    front: true,
+    radius: 4,
+  ),
+  _Region(
+    Rect.fromLTWH(46, 31, 8, 19),
+    MuscleGroup.biceps,
+    front: true,
+    radius: 4,
+  ),
+  _Region(
+    Rect.fromLTWH(6, 31, 8, 19),
+    MuscleGroup.triceps,
+    back: true,
+    radius: 4,
+  ),
+  _Region(
+    Rect.fromLTWH(46, 31, 8, 19),
+    MuscleGroup.triceps,
+    back: true,
+    radius: 4,
+  ),
   // Legs: quads (front), glutes + hamstrings (back), calves (both).
-  _Region(Rect.fromLTWH(18.5, 62, 10.5, 36), MuscleGroup.legs, front: true, radius: 5),
-  _Region(Rect.fromLTWH(31, 62, 10.5, 36), MuscleGroup.legs, front: true, radius: 5),
-  _Region(Rect.fromLTWH(18.5, 58, 22, 12), MuscleGroup.legs, back: true, radius: 5),
-  _Region(Rect.fromLTWH(18.5, 72, 10.5, 26), MuscleGroup.legs, back: true, radius: 5),
-  _Region(Rect.fromLTWH(31, 72, 10.5, 26), MuscleGroup.legs, back: true, radius: 5),
-  _Region(Rect.fromLTWH(19.5, 101, 8.5, 22), MuscleGroup.legs, front: true, back: true, radius: 4),
-  _Region(Rect.fromLTWH(32, 101, 8.5, 22), MuscleGroup.legs, front: true, back: true, radius: 4),
+  _Region(
+    Rect.fromLTWH(18.5, 62, 10.5, 36),
+    MuscleGroup.legs,
+    front: true,
+    radius: 5,
+  ),
+  _Region(
+    Rect.fromLTWH(31, 62, 10.5, 36),
+    MuscleGroup.legs,
+    front: true,
+    radius: 5,
+  ),
+  _Region(
+    Rect.fromLTWH(18.5, 58, 22, 12),
+    MuscleGroup.legs,
+    back: true,
+    radius: 5,
+  ),
+  _Region(
+    Rect.fromLTWH(18.5, 72, 10.5, 26),
+    MuscleGroup.legs,
+    back: true,
+    radius: 5,
+  ),
+  _Region(
+    Rect.fromLTWH(31, 72, 10.5, 26),
+    MuscleGroup.legs,
+    back: true,
+    radius: 5,
+  ),
+  _Region(
+    Rect.fromLTWH(19.5, 101, 8.5, 22),
+    MuscleGroup.legs,
+    front: true,
+    back: true,
+    radius: 4,
+  ),
+  _Region(
+    Rect.fromLTWH(32, 101, 8.5, 22),
+    MuscleGroup.legs,
+    front: true,
+    back: true,
+    radius: 4,
+  ),
   // Non-tracked parts (forearms) are drawn as silhouette only.
-  _Region(Rect.fromLTWH(4, 52, 7, 19), null, front: true, back: true, radius: 3.5),
-  _Region(Rect.fromLTWH(49, 52, 7, 19), null, front: true, back: true, radius: 3.5),
+  _Region(
+    Rect.fromLTWH(4, 52, 7, 19),
+    null,
+    front: true,
+    back: true,
+    radius: 3.5,
+  ),
+  _Region(
+    Rect.fromLTWH(49, 52, 7, 19),
+    null,
+    front: true,
+    back: true,
+    radius: 3.5,
+  ),
 ];
 
 class _MusclePainter extends CustomPainter {
@@ -135,7 +272,9 @@ class _MusclePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final scale = size.height / MuscleMap._figH;
-    final sides = view == MuscleView.both ? [true, false] : [view == MuscleView.front];
+    final sides = view == MuscleView.both
+        ? [true, false]
+        : [view == MuscleView.front];
     for (var i = 0; i < sides.length; i++) {
       canvas.save();
       canvas.translate(i * (MuscleMap._figW + MuscleMap._gap) * scale, 0);
@@ -155,9 +294,18 @@ class _MusclePainter extends CustomPainter {
     canvas.drawCircle(const Offset(30, 8), 6.2, fill);
     canvas.drawCircle(const Offset(30, 8), 6.2, stroke);
     final body = [
-      RRect.fromRectAndRadius(const Rect.fromLTWH(27, 13, 6, 6), const Radius.circular(2)),
-      RRect.fromRectAndRadius(const Rect.fromLTWH(15, 18, 30, 44), const Radius.circular(8)),
-      RRect.fromRectAndRadius(const Rect.fromLTWH(17.5, 56, 25, 16), const Radius.circular(6)),
+      RRect.fromRectAndRadius(
+        const Rect.fromLTWH(27, 13, 6, 6),
+        const Radius.circular(2),
+      ),
+      RRect.fromRectAndRadius(
+        const Rect.fromLTWH(15, 18, 30, 44),
+        const Radius.circular(8),
+      ),
+      RRect.fromRectAndRadius(
+        const Rect.fromLTWH(17.5, 56, 25, 16),
+        const Radius.circular(6),
+      ),
     ];
     for (final r in body) {
       canvas.drawRRect(r, fill);
@@ -177,16 +325,24 @@ class _MusclePainter extends CustomPainter {
       }
       canvas.drawRRect(rr, Paint()..color = col);
       if (g != null && primary.contains(g)) {
-        canvas.drawRRect(rr, Paint()
-          ..color = accent.withValues(alpha: 0.35)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.4
-          ..maskFilter = const MaskFilter.blur(BlurStyle.outer, 1.6));
+        canvas.drawRRect(
+          rr,
+          Paint()
+            ..color = accent.withValues(alpha: 0.35)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 1.4
+            ..maskFilter = const MaskFilter.blur(BlurStyle.outer, 1.6),
+        );
       }
     }
   }
 
   @override
   bool shouldRepaint(_MusclePainter o) =>
-      o.view != view || o.primary != primary || o.secondary != secondary || o.accent != accent || o.base != base || o.idle != idle;
+      o.view != view ||
+      o.primary != primary ||
+      o.secondary != secondary ||
+      o.accent != accent ||
+      o.base != base ||
+      o.idle != idle;
 }

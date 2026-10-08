@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'cardio_pace.dart';
 import '../../app/app_controller.dart';
 import '../../app/app_scope.dart';
 import '../../app/nav.dart';
@@ -95,7 +96,7 @@ class _CardioSessionDetailsPageState extends State<CardioSessionDetailsPage> {
               Icon(cardioKindIcon(s.kind), color: c.primary),
               const SizedBox(width: 8),
               Expanded(child: Text(s.kind.label, style: SxText.headlineMd.copyWith(color: c.textHigh), overflow: TextOverflow.ellipsis)),
-              if (pr != null) PrBadge(pr),
+              if (pr != null) SxPop(child: PrBadge(pr)),
             ]),
             const SizedBox(height: 6),
             Row(children: [
@@ -110,7 +111,7 @@ class _CardioSessionDetailsPageState extends State<CardioSessionDetailsPage> {
               Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: Text('BACKDATED • ENTERED ${Fmt.dateMedium(s.meta.createdAt).toUpperCase()}',
-                    style: SxText.labelCaps.copyWith(color: c.primary, fontSize: 10)),
+                    style: SxText.labelXs.copyWith(color: c.primary)),
               ),
             const SizedBox(height: SxSpace.md),
             _grid(context, tiles),
@@ -159,8 +160,8 @@ class _CardioSessionDetailsPageState extends State<CardioSessionDetailsPage> {
     final f = s.kind.fields;
     final out = <_Tile>[_Tile('Duration', Fmt.clock(s.durationSeconds), s.durationSeconds >= 3600 ? 'H:M:S' : 'MIN', false)];
     if (s.distanceKm != null) out.add(_Tile('Distance', u.distanceText(s.distanceKm), u.distanceUnit.toUpperCase(), true));
-    if (f.contains(CardioField.pace) && s.paceSecPerKm != null) {
-      out.add(_Tile('Avg pace', u.paceText(s.paceSecPerKm), u.paceUnit.toUpperCase(), false));
+    if (CardioPace.has(s.kind) && s.paceSecPerKm != null) {
+      out.add(_Tile('Avg pace', CardioPace.text(s.kind, s.paceSecPerKm, miles: !u.km), CardioPace.unit(s.kind, miles: !u.km).toUpperCase(), false));
     }
     final speed = s.kind == CardioKind.treadmill ? (s.speedKmh ?? s.avgSpeedKmh) : (f.contains(CardioField.speed) ? s.avgSpeedKmh : null);
     if (speed != null) out.add(_Tile('Avg speed', u.speedText(speed), u.speedUnit.toUpperCase(), false));
@@ -183,7 +184,7 @@ class _CardioSessionDetailsPageState extends State<CardioSessionDetailsPage> {
             child: SxInset(
               padding: const EdgeInsets.all(12),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(t.label.toUpperCase(), style: SxText.labelCaps.copyWith(color: c.textBody, fontSize: 10), overflow: TextOverflow.ellipsis),
+                Text(t.label.toUpperCase(), style: SxText.labelXs.copyWith(color: c.textBody), overflow: TextOverflow.ellipsis),
                 const SizedBox(height: 6),
                 FittedBox(
                   fit: BoxFit.scaleDown,
@@ -214,14 +215,14 @@ class _CardioSessionDetailsPageState extends State<CardioSessionDetailsPage> {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(color: col.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(SxRadius.sm)),
-        child: Text(text, style: SxText.labelCaps.copyWith(color: col, fontSize: 11, fontWeight: FontWeight.w700)),
+        child: Text(text, style: SxText.labelCaps.copyWith(color: col, fontWeight: FontWeight.w700)),
       );
     }
 
     final sp = s.paceSecPerKm, pp = p.paceSecPerKm;
-    if (sp != null && pp != null && s.kind.fields.contains(CardioField.pace)) {
-      final d = ((sp - pp) * (u.km ? 1 : 1.609344)).round();
-      if (d != 0) rows.add(chip('${d.abs()}s${u.paceUnit} ${d < 0 ? 'faster' : 'slower'}', d < 0));
+    if (sp != null && pp != null && CardioPace.has(s.kind)) {
+      final d = (CardioPace.convert(s.kind, sp, miles: !u.km)! - CardioPace.convert(s.kind, pp, miles: !u.km)!).round();
+      if (d != 0) rows.add(chip('${d.abs()}s${CardioPace.unit(s.kind, miles: !u.km)} ${d < 0 ? 'faster' : 'slower'}', d < 0));
     }
     if (s.distanceKm != null && p.distanceKm != null) {
       final d = u.distance(s.distanceKm!) - u.distance(p.distanceKm!);

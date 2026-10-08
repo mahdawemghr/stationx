@@ -55,13 +55,19 @@ class NoCloudAuth extends ChangeNotifier implements CloudAuth {
   @override
   CloudUser? get user => null;
   @override
-  Future<CloudAuthResult> signIn(String email, String password) async => const CloudAuthResult(CloudAuthStatus.unavailable);
+  Future<CloudAuthResult> signIn(String email, String password) async =>
+      const CloudAuthResult(CloudAuthStatus.unavailable);
   @override
-  Future<CloudAuthResult> signUp(String email, String password, {String? name}) async => const CloudAuthResult(CloudAuthStatus.unavailable);
+  Future<CloudAuthResult> signUp(
+    String email,
+    String password, {
+    String? name,
+  }) async => const CloudAuthResult(CloudAuthStatus.unavailable);
   @override
   Future<void> signOut() async {}
   @override
-  Future<CloudAuthResult> deleteAccount() async => const CloudAuthResult(CloudAuthStatus.unavailable);
+  Future<CloudAuthResult> deleteAccount() async =>
+      const CloudAuthResult(CloudAuthStatus.unavailable);
 }
 
 class SupabaseCloudAuth extends ChangeNotifier implements CloudAuth {
@@ -98,10 +104,16 @@ class SupabaseCloudAuth extends ChangeNotifier implements CloudAuth {
         case 'over_email_send_rate_limit':
           return CloudAuthResult(CloudAuthStatus.rateLimited, e.code);
       }
-      if (e is AuthRetryableFetchException) return CloudAuthResult(CloudAuthStatus.network, 'network');
+      if (e is AuthRetryableFetchException) {
+        return CloudAuthResult(CloudAuthStatus.network, 'network');
+      }
       // Older server responses without a code.
-      if (e.statusCode == '400' && e.message.toLowerCase().contains('invalid login')) {
-        return const CloudAuthResult(CloudAuthStatus.invalidCredentials, 'invalid login');
+      if (e.statusCode == '400' &&
+          e.message.toLowerCase().contains('invalid login')) {
+        return const CloudAuthResult(
+          CloudAuthStatus.invalidCredentials,
+          'invalid login',
+        );
       }
       return CloudAuthResult(CloudAuthStatus.unknown, e.code ?? e.statusCode);
     }
@@ -114,15 +126,24 @@ class SupabaseCloudAuth extends ChangeNotifier implements CloudAuth {
   @override
   Future<CloudAuthResult> signIn(String email, String password) async {
     try {
-      final r = await _client.auth.signInWithPassword(email: email.trim(), password: password);
-      return r.session != null ? const CloudAuthResult(CloudAuthStatus.ok) : const CloudAuthResult(CloudAuthStatus.unknown, 'no session');
+      final r = await _client.auth.signInWithPassword(
+        email: email.trim(),
+        password: password,
+      );
+      return r.session != null
+          ? const CloudAuthResult(CloudAuthStatus.ok)
+          : const CloudAuthResult(CloudAuthStatus.unknown, 'no session');
     } catch (e) {
       return _fail(e);
     }
   }
 
   @override
-  Future<CloudAuthResult> signUp(String email, String password, {String? name}) async {
+  Future<CloudAuthResult> signUp(
+    String email,
+    String password, {
+    String? name,
+  }) async {
     try {
       final r = await _client.auth.signUp(
         email: email.trim(),
@@ -133,7 +154,10 @@ class SupabaseCloudAuth extends ChangeNotifier implements CloudAuth {
       // With e-mail confirmation on, an existing address comes back as a user with no identities
       // (so the API does not reveal which e-mails are registered).
       if (r.user != null && (r.user!.identities?.isEmpty ?? false)) {
-        return const CloudAuthResult(CloudAuthStatus.userExists, 'obfuscated existing user');
+        return const CloudAuthResult(
+          CloudAuthStatus.userExists,
+          'obfuscated existing user',
+        );
       }
       return const CloudAuthResult(CloudAuthStatus.needsEmailConfirmation);
     } catch (e) {
@@ -146,7 +170,9 @@ class SupabaseCloudAuth extends ChangeNotifier implements CloudAuth {
     try {
       await _client.auth.signOut();
     } catch (_) {
-      await _client.auth.signOut(scope: SignOutScope.local); // offline: still drop the local session
+      await _client.auth.signOut(
+        scope: SignOutScope.local,
+      ); // offline: still drop the local session
     }
   }
 
@@ -159,7 +185,9 @@ class SupabaseCloudAuth extends ChangeNotifier implements CloudAuth {
       } catch (_) {}
       return const CloudAuthResult(CloudAuthStatus.ok);
     } catch (e) {
-      if (e is PostgrestException) return CloudAuthResult(CloudAuthStatus.unknown, e.code);
+      if (e is PostgrestException) {
+        return CloudAuthResult(CloudAuthStatus.unknown, e.code);
+      }
       return _fail(e);
     }
   }

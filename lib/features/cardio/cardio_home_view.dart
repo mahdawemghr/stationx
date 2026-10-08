@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'cardio_pace.dart';
 import 'package:flutter/semantics.dart' show CustomSemanticsAction;
 
 import '../../app/app_scope.dart';
@@ -11,6 +12,7 @@ import '../../core/widgets/widgets.dart';
 import '../../domain/domain.dart';
 import 'cardio_delete_dialog.dart';
 import 'cardio_home_support.dart';
+import 'cardio_manage_helpers.dart' show goalKinds;
 
 /// Body of the Cardio side of the Workouts tab. No Scaffold / bottom nav: it is
 /// hosted by the Workouts hub. Scrolls inside the host's scroll view if given
@@ -86,7 +88,7 @@ class _CardioHomeViewState extends State<CardioHomeView> {
           ),
           itemCount: children.length,
           separatorBuilder: (_, _) => const SizedBox(height: SxSpace.md),
-          itemBuilder: (_, i) => children[i],
+          itemBuilder: (_, i) => SxStagger(index: i, enabled: i < SxMotion.staggerCap, child: children[i]),
         );
       },
     );
@@ -118,7 +120,7 @@ class _QuickStart extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'CARDIO ENGINE',
+                      'CARDIO',
                       style: SxText.labelCaps.copyWith(color: c.primary),
                     ),
                     const SizedBox(height: 2),
@@ -138,7 +140,7 @@ class _QuickStart extends StatelessWidget {
           ),
           const SizedBox(height: SxSpace.md),
           SizedBox(
-            height: 40,
+            height: 48,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: kinds.length,
@@ -191,7 +193,7 @@ class _WeekCard extends StatelessWidget {
           : (minutes >= expected * 0.8 ? 'ON TRACK' : 'BEHIND');
     }
     final tiles = <Widget>[
-      _MiniStat('Sessions', '${week.length}'),
+      _MiniStat('Sessions', '${week.length}', null, false, week.length.toDouble()),
       _MiniStat('Time', Fmt.durationShort(minutes * 60)),
       _MiniStat('Dist', Fmt.km(km, miles: miles), miles ? 'mi' : 'km'),
       if (kcal > 0) _MiniStat('Energy', Fmt.thousands(kcal), 'kcal', true),
@@ -242,9 +244,18 @@ class _WeekCard extends StatelessWidget {
 }
 
 class _MiniStat extends StatelessWidget {
-  const _MiniStat(this.label, this.value, [this.unit, this.accent = false]);
+  const _MiniStat(
+    this.label,
+    this.value, [
+    this.unit,
+    this.accent = false,
+    this.count,
+  ]);
   final String label;
   final String value;
+
+  /// When set, the value counts up to this number on first build.
+  final double? count;
   final String? unit;
   final bool accent;
 
@@ -261,17 +272,24 @@ class _MiniStat extends StatelessWidget {
             label.toUpperCase(),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: SxText.labelCaps.copyWith(color: c.textBody, fontSize: 10),
+            style: SxText.labelXs.copyWith(color: c.textBody),
           ),
           const SizedBox(height: 6),
           FittedBox(
             fit: BoxFit.scaleDown,
             alignment: Alignment.centerLeft,
-            child: MetricValue(
-              value,
-              unit: unit,
-              color: accent ? c.primary : c.textHigh,
-            ),
+            child: count == null
+                ? MetricValue(
+                    value,
+                    unit: unit,
+                    color: accent ? c.primary : c.textHigh,
+                  )
+                : SxCountUp(
+                    value: count!,
+                    style: SxText.metricMd.copyWith(
+                      color: accent ? c.primary : c.textHigh,
+                    ),
+                  ),
           ),
         ],
       ),
@@ -289,7 +307,7 @@ class _WeeklyGoalCard extends StatelessWidget {
     final c = context.sx;
     final w = cardioWeek(DateTime.now());
     final week = VolumeService.cardioIn(sessions, w.from, w.to);
-    final done = CardioMetrics.goalValue(goal, week);
+    final done = CardioMetrics.goalValue(goal, week, kinds: goalKinds(goal));
     final pct = goal.target <= 0 ? 0.0 : done / goal.target;
     final remaining = (goal.target - done).clamp(0, double.infinity);
     final days = {
@@ -325,8 +343,9 @@ class _WeeklyGoalCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
             children: [
-              Text(
-                Fmt.number(done.roundToDouble()),
+              SxCountUp(
+                value: done.roundToDouble(),
+                formatter: Fmt.number,
                 style: SxText.metricXl.copyWith(color: c.textHigh),
               ),
               const SizedBox(width: 6),
@@ -480,16 +499,18 @@ class _RecentCard extends StatelessWidget {
       }
     }
 
+    // Long-press delete is exposed to screen readers as a named action (and as
+    // the standard long-press semantics) instead of an unlabeled gesture.
     return Semantics(
-      // Long-press delete is not discoverable by screen readers: expose it as a named action.
+      onLongPress: delete,
+      onLongPressHint: 'Delete session',
       customSemanticsActions: {
         const CustomSemanticsAction(label: 'Delete session'): delete,
       },
-      child: SxCard(
-        onTap: () => AppNav.cardioDetails(context, session.id),
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onLongPress: delete,
+      child: GestureDetector(
+        onLongPress: delete,
+        child: SxCard(
+          onTap: () => AppNav.cardioDetails(context, session.id),
           child: Column(
             children: [
               Row(
@@ -523,12 +544,20 @@ class _RecentCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  if (session.paceSecPerKm != null &&
-                      session.kind.fields.contains(CardioField.pace))
+                  if (session.paceSecPerKm != null && CardioPace.has(session.kind))
                     StatusPill(
-                      '${Fmt.pace(session.paceSecPerKm)} /km',
+                      CardioPace.withUnit(session.kind, session.paceSecPerKm, miles: miles),
                       icon: Icons.speed,
                     ),
+                  // Visible alternative to long-press (also reachable by keyboard / switch access).
+                  SxIconButton(
+                    icon: Icons.delete_outline,
+                    tooltip: 'Delete session',
+                    filled: false,
+                    iconColor: c.textMuted,
+                    size: 44,
+                    onPressed: delete,
+                  ),
                 ],
               ),
               const SizedBox(height: SxSpace.sm),
@@ -547,9 +576,8 @@ class _RecentCard extends StatelessWidget {
                               metrics[i].label.toUpperCase(),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: SxText.labelCaps.copyWith(
+                              style: SxText.labelXs.copyWith(
                                 color: c.textBody,
-                                fontSize: 10,
                               ),
                             ),
                             const SizedBox(height: 4),

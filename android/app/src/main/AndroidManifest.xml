@@ -3,13 +3,32 @@
          Without signing in the app makes no network requests. -->
     <uses-permission android:name="android.permission.INTERNET"/>
 
-    <!-- Health Connect: READ-ONLY, opt-in. Sleep and resting heart rate only.
-         Nothing is written back and nothing leaves the device. -->
+    <!-- Health Connect. Everything is opt-in and OFF until the user turns it on in Profile >
+         Health, after an explanation screen. Each block belongs to one capability:
+         (base) sleep + resting heart rate, read-only recovery summary.
+         (write workouts) save finished workouts: exercise session + the distance / calories the
+             user logged.
+         (enrich cardio) read heart rate + calories to suggest values for a cardio session.
+         (import workouts) read exercise sessions from other apps (e.g. Samsung Health). The plugin's
+             workout reader also sums distance, calories and steps inside each session, hence
+             READ_STEPS; steps are not stored or used. -->
     <uses-permission android:name="android.permission.health.READ_SLEEP"/>
     <uses-permission android:name="android.permission.health.READ_RESTING_HEART_RATE"/>
+    <uses-permission android:name="android.permission.health.WRITE_EXERCISE"/>
+    <uses-permission android:name="android.permission.health.WRITE_DISTANCE"/>
+    <uses-permission android:name="android.permission.health.WRITE_TOTAL_CALORIES_BURNED"/>
+    <uses-permission android:name="android.permission.health.READ_EXERCISE"/>
+    <uses-permission android:name="android.permission.health.READ_DISTANCE"/>
+    <uses-permission android:name="android.permission.health.READ_TOTAL_CALORIES_BURNED"/>
+    <uses-permission android:name="android.permission.health.READ_ACTIVE_CALORIES_BURNED"/>
+    <uses-permission android:name="android.permission.health.READ_HEART_RATE"/>
+    <uses-permission android:name="android.permission.health.READ_STEPS"/>
 
     <application
         android:label="StationX"
+        android:allowBackup="false"
+        android:fullBackupContent="@xml/backup_rules"
+        android:dataExtractionRules="@xml/data_extraction_rules"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

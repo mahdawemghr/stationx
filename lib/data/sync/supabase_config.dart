@@ -16,10 +16,18 @@ class SupabaseConfig {
   static String? validate(String url, String key) {
     if (url.isEmpty || key.isEmpty) return 'not configured';
     final uri = Uri.tryParse(url);
-    if (uri == null || uri.scheme != 'https' || uri.host.isEmpty) return 'URL must be https';
-    if (key.startsWith('sbp_')) return 'a personal access token must never be embedded in the app';
-    if (key.startsWith('sb_secret_')) return 'a secret key must never be embedded in the app';
-    if (key.startsWith('eyJ') && _looksLikeServiceRole(key)) return 'a service_role key must never be embedded in the app';
+    if (uri == null || uri.scheme != 'https' || uri.host.isEmpty) {
+      return 'URL must be https';
+    }
+    if (key.startsWith('sbp_')) {
+      return 'a personal access token must never be embedded in the app';
+    }
+    if (key.startsWith('sb_secret_')) {
+      return 'a secret key must never be embedded in the app';
+    }
+    if (key.startsWith('eyJ') && _looksLikeServiceRole(key)) {
+      return 'a service_role key must never be embedded in the app';
+    }
     return null;
   }
 
@@ -39,7 +47,8 @@ class SupabaseConfig {
   }
 
   static List<int> _b64(String s) {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+    const chars =
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
     final out = <int>[];
     var buf = 0, bits = 0;
     for (final c in s.split('')) {

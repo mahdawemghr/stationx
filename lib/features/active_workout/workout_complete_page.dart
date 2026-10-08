@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../app/app_scope.dart';
@@ -8,6 +10,7 @@ import '../../core/theme/sx_typography.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/widgets/widgets.dart';
 import '../../domain/domain.dart';
+import '../today/today_page.dart' show AutoEndNoticeCard;
 import 'session_analysis.dart';
 import 'widgets/cardio_block.dart' show cardioIcon;
 
@@ -30,7 +33,7 @@ class _WorkoutCompletePageState extends State<WorkoutCompletePage> {
     if (_details) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         final ctx = _detailsKey.currentContext;
-        if (ctx != null) Scrollable.ensureVisible(ctx, duration: SxMotion.slow, curve: Curves.easeOut);
+        if (ctx != null) Scrollable.ensureVisible(ctx, duration: SxMotion.of(ctx, SxMotion.standard), curve: SxMotion.enter);
       });
     }
   }
@@ -39,7 +42,7 @@ class _WorkoutCompletePageState extends State<WorkoutCompletePage> {
   Widget build(BuildContext context) {
     final app = context.app;
     return ListenableBuilder(
-      listenable: Listenable.merge([app.sessions, app.profile]),
+      listenable: Listenable.merge([app, app.sessions, app.profile]),
       builder: (context, _) {
         final s = app.sessions.byId(widget.sessionId);
         if (s == null) {
@@ -74,7 +77,15 @@ class _WorkoutCompletePageState extends State<WorkoutCompletePage> {
             ),
           ]),
           children: [
-            if (mixed) _MixedHeader(session: s, number: SessionAnalysis.sessionNumber(s, all)) else _Header(session: s, unit: unit, planned: planned, number: SessionAnalysis.sessionNumber(s, all)),
+            if (app.pendingAutoEndNotice?.sessionId == s.id)
+              AutoEndNoticeCard(notice: app.pendingAutoEndNotice!, onDismiss: app.clearAutoEndNotice),
+            RepaintBoundary(
+              child: SxFadeSlideIn(
+                child: mixed
+                    ? _MixedHeader(session: s, number: SessionAnalysis.sessionNumber(s, all))
+                    : _Header(session: s, unit: unit, planned: planned, number: SessionAnalysis.sessionNumber(s, all)),
+              ),
+            ),
             if (mixed) _StrengthCardioTiles(session: s, unit: unit),
             if (empty)
               const EmptyState(icon: Icons.inbox_outlined, title: 'Nothing logged', message: 'No sets or cardio were saved for this session.'),
@@ -83,9 +94,44 @@ class _WorkoutCompletePageState extends State<WorkoutCompletePage> {
             if (prs.isNotEmpty) _PrSection(prs: prs, names: names, unit: unit),
             if (prog.isNotEmpty) _ProgressionIndex(items: prog, names: names),
             if (_details && !empty) _DetailsLog(key: _detailsKey, session: s, names: names, unit: unit),
+            if (_isFresh(s)) _NextUp(workout: app.workouts.currentWorkout),
           ],
         );
       },
+    );
+  }
+}
+
+/// Just saved (not a past session opened from history): the "Next up" line is only useful then.
+bool _isFresh(WorkoutSession s) {
+  final created = s.meta.createdAt;
+  return DateTime.now().difference(created).inMinutes.abs() < 10;
+}
+
+/// "Next up: (workout name)" cross-fades when the rotation moves on.
+class _NextUp extends StatelessWidget {
+  const _NextUp({required this.workout});
+  final Workout? workout;
+
+  @override
+  Widget build(BuildContext context) {
+    final w = workout;
+    if (w == null) return const SizedBox.shrink();
+    final c = context.sx;
+    return SxFadeSlideIn(
+      delay: SxMotion.standard,
+      child: SxSwap(
+        child: Row(
+          key: ValueKey<String>(w.id),
+          children: [
+            Icon(Icons.event_repeat, size: 18, color: c.textBody),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text('Next up: ${w.name}', maxLines: 2, overflow: TextOverflow.ellipsis, style: SxText.bodyMd.copyWith(color: c.textBody)),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -129,12 +175,20 @@ class _Header extends StatelessWidget {
         ]),
         const SizedBox(height: 16),
         Row(children: [
-          Expanded(child: _HeroTile(label: 'Duration', value: _durMin(session.durationSeconds), unit: 'min')),
+          Expanded(
+            child: _HeroTile(
+              label: 'Duration',
+              value: _durMin(session.durationSeconds),
+              number: session.durationSeconds < 60 ? null : (session.durationSeconds / 60).round().toDouble(),
+              unit: 'min',
+            ),
+          ),
           const SizedBox(width: 8),
           Expanded(
             child: _HeroTile(
               label: 'Volume',
               value: Fmt.thousands(Fmt.toDisplayWeight(session.volume, unit)),
+              number: Fmt.toDisplayWeight(session.volume, unit),
               unit: Fmt.unit(unit),
               accent: true,
             ),
@@ -144,6 +198,7 @@ class _Header extends StatelessWidget {
             child: _HeroTile(
               label: 'Sets hit',
               value: '$done',
+              number: done.toDouble(),
               unit: planned != null && planned! >= done && planned! > 0 ? '/$planned' : null,
             ),
           ),
@@ -154,9 +209,12 @@ class _Header extends StatelessWidget {
 }
 
 class _HeroTile extends StatelessWidget {
-  const _HeroTile({required this.label, required this.value, this.unit, this.accent = false});
+  const _HeroTile({required this.label, required this.value, this.number, this.unit, this.accent = false});
   final String label;
   final String value;
+
+  /// Numeric form of [value]: counts up on entry (the final text is always [value]).
+  final double? number;
   final String? unit;
   final bool accent;
 
@@ -168,13 +226,20 @@ class _HeroTile extends StatelessWidget {
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(color: c.surface2, borderRadius: BorderRadius.circular(SxRadius.md), border: Border.all(color: c.hairline)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(label.toUpperCase(), maxLines: 1, overflow: TextOverflow.ellipsis, style: SxText.labelCaps.copyWith(color: c.textBody, fontSize: 10)),
+        Text(label.toUpperCase(), maxLines: 1, overflow: TextOverflow.ellipsis, style: SxText.labelXs.copyWith(color: c.textBody)),
         const SizedBox(height: 6),
         FittedBox(
           fit: BoxFit.scaleDown,
           alignment: Alignment.centerLeft,
           child: Row(crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, mainAxisSize: MainAxisSize.min, children: [
-            Text(value, style: SxText.metricLg.copyWith(color: accent ? c.primary : c.textHigh, fontSize: 26)),
+            if (number == null)
+              Text(value, style: SxText.metricLg.copyWith(color: accent ? c.primary : c.textHigh, fontSize: 26))
+            else
+              SxCountUp(
+                value: number!,
+                formatter: (v) => v >= number! ? value : Fmt.thousands(v),
+                style: SxText.metricLg.copyWith(color: accent ? c.primary : c.textHigh, fontSize: 26),
+              ),
             if (unit != null) Text(' $unit', style: SxText.bodySm.copyWith(color: c.textBody)),
           ]),
         ),
@@ -192,11 +257,20 @@ class _MixedHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.sx;
     return Column(children: [
-      Container(
-        width: 64,
-        height: 64,
-        decoration: BoxDecoration(color: c.primary, shape: BoxShape.circle, boxShadow: [BoxShadow(color: c.primary.withValues(alpha: 0.25), blurRadius: 20, offset: const Offset(0, 4))]),
-        child: Icon(Icons.check, size: 36, color: c.onPrimary),
+      // Cheap glow: a flat soft ring instead of a blurred shadow.
+      SxPop(
+        child: Container(
+          width: 80,
+          height: 80,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(color: c.primarySoft, shape: BoxShape.circle),
+          child: Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(color: c.primary, shape: BoxShape.circle),
+            child: Icon(Icons.check, size: 36, color: c.onPrimary),
+          ),
+        ),
       ),
       const SizedBox(height: 12),
       Text('SESSION COMPLETE', style: SxText.labelCaps.copyWith(color: c.primary, letterSpacing: 1.4)),
@@ -228,7 +302,7 @@ class _StrengthCardioTiles extends StatelessWidget {
               Row(children: [
                 Icon(icon, size: 16, color: color),
                 const SizedBox(width: 6),
-                Expanded(child: Text(title.toUpperCase(), maxLines: 1, overflow: TextOverflow.ellipsis, style: SxText.labelCaps.copyWith(color: c.textBody, fontSize: 10))),
+                Expanded(child: Text(title.toUpperCase(), maxLines: 1, overflow: TextOverflow.ellipsis, style: SxText.labelXs.copyWith(color: c.textBody))),
               ]),
               const SizedBox(height: 8),
               FittedBox(
@@ -345,7 +419,7 @@ class _CardioSummary extends StatelessWidget {
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(cardio.kind.label, style: SxText.headlineSm.copyWith(color: c.textHigh)),
-              Text('Cardio block • Completed', style: SxText.labelCaps.copyWith(color: c.positive, fontSize: 10)),
+              Text('Cardio block • Completed', style: SxText.labelXs.copyWith(color: c.positive)),
             ]),
           ),
         ]),
@@ -384,8 +458,12 @@ class _PrSection extends StatelessWidget {
         StatusPill('${prs.length} new PR${prs.length == 1 ? '' : 's'}'),
       ]),
       const SizedBox(height: 12),
-      for (final p in prs) ...[
-        SxCard(
+      for (var i = 0; i < prs.length; i++) ...[
+        _PrPop(
+          index: i,
+          child: Builder(builder: (context) {
+        final p = prs[i];
+        return SxCard(
           padding: const EdgeInsets.all(14),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(children: [
@@ -403,10 +481,57 @@ class _PrSection extends StatelessWidget {
               ),
             ]),
           ]),
+        );
+          }),
         ),
         const SizedBox(height: 8),
       ],
     ]);
+  }
+}
+
+/// PR card entrance: a staggered pop (<= 450 ms in total, one haptic for the first PR only).
+class _PrPop extends StatefulWidget {
+  const _PrPop({required this.index, required this.child});
+  final int index;
+  final Widget child;
+
+  @override
+  State<_PrPop> createState() => _PrPopState();
+}
+
+class _PrPopState extends State<_PrPop> {
+  Timer? _t;
+  bool _on = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final delay = SxMotion.stagger * (widget.index > 3 ? 3 : widget.index);
+    if (delay == Duration.zero) {
+      _on = true;
+    } else {
+      _t = Timer(delay, () {
+        if (mounted) setState(() => _on = true);
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _t?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SxPop(
+      active: _on,
+      haptic: widget.index == 0,
+      peak: 1.03,
+      duration: SxMotion.short,
+      child: widget.child,
+    );
   }
 }
 
@@ -459,7 +584,7 @@ class _ProgressionIndex extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(child: Text(names[p.exerciseId]?.name ?? 'Exercise', maxLines: 2, overflow: TextOverflow.ellipsis, style: SxText.bodyMd.copyWith(color: c.textHigh))),
               const SizedBox(width: 8),
-              Text(_label(p), style: SxText.labelCaps.copyWith(color: p.improved ? c.primary : c.textBody, fontSize: 10, fontWeight: FontWeight.w700)),
+              Text(_label(p), style: SxText.labelXs.copyWith(color: p.improved ? c.primary : c.textBody, fontWeight: FontWeight.w700)),
             ]),
           ),
       ]),

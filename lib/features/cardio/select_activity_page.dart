@@ -35,9 +35,10 @@ class _SelectCardioActivityPageState extends State<SelectCardioActivityPage> {
     final c = context.sx;
     final app = context.app;
     return ListenableBuilder(
-      listenable: app.cardio,
+      listenable: Listenable.merge([app.cardio, app.profile]),
       builder: (context, _) {
         final sessions = app.cardio.sessions;
+        final miles = !app.profile.profile.cardioDistanceUnitKm;
         final recent = sessions.isEmpty ? null : sessions.first;
         final q = _search.text.trim().toLowerCase();
         final group = _groups[_filter];
@@ -97,7 +98,7 @@ class _SelectCardioActivityPageState extends State<SelectCardioActivityPage> {
                 blurb: cardioKindBlurb(k),
                 metrics: cardioMetricsLine(k),
                 recent: recent != null && recent.kind == k && recent.customActivityId == null,
-                last: _lastLabel(lastOfKind(sessions, k)),
+                last: _lastLabel(lastOfKind(sessions, k), miles),
                 onTap: () => AppNav.cardioPrepare(context, k),
               ),
             for (final a in customs)
@@ -107,7 +108,7 @@ class _SelectCardioActivityPageState extends State<SelectCardioActivityPage> {
                 blurb: a.category,
                 metrics: 'METRICS: ${a.fields.map(cardioFieldLabel).join(' • ')}',
                 recent: recent?.customActivityId == a.id,
-                last: _lastLabel(lastOfKind(sessions, CardioKind.custom, customId: a.id)),
+                last: _lastLabel(lastOfKind(sessions, CardioKind.custom, customId: a.id), miles),
                 onTap: () => AppNav.cardioPrepare(context, CardioKind.custom, customActivityId: a.id),
               ),
             SxCard(
@@ -136,9 +137,9 @@ class _SelectCardioActivityPageState extends State<SelectCardioActivityPage> {
     );
   }
 
-  String? _lastLabel(CardioSession? s) {
+  String? _lastLabel(CardioSession? s, bool miles) {
     if (s == null) return null;
-    final d = s.distanceKm != null ? '${Fmt.km(s.distanceKm)} km' : Fmt.durationShort(s.durationSeconds);
+    final d = s.distanceKm != null ? '${Fmt.km(s.distanceKm, miles: miles)} ${miles ? 'mi' : 'km'}' : Fmt.durationShort(s.durationSeconds);
     return 'LAST: $d';
   }
 }
@@ -155,7 +156,7 @@ class _SensorBanner extends StatelessWidget {
         const SizedBox(width: 8),
         Expanded(
           child: Text('NO SENSORS CONNECTED • ENTER DISTANCE MANUALLY',
-              style: SxText.labelCaps.copyWith(color: c.textBody, fontSize: 10), maxLines: 2, overflow: TextOverflow.ellipsis),
+              style: SxText.labelXs.copyWith(color: c.textBody), maxLines: 2, overflow: TextOverflow.ellipsis),
         ),
       ]),
     );
@@ -208,10 +209,10 @@ class _ActivityTile extends StatelessWidget {
         ]),
         const SizedBox(height: 10),
         Row(children: [
-          Expanded(child: Text(metrics, maxLines: 2, overflow: TextOverflow.ellipsis, style: SxText.labelCaps.copyWith(color: c.textMuted, fontSize: 10))),
+          Expanded(child: Text(metrics, maxLines: 2, overflow: TextOverflow.ellipsis, style: SxText.labelXs.copyWith(color: c.textMuted))),
           if (last != null) ...[
             const SizedBox(width: 8),
-            Text(last!, style: SxText.labelCaps.copyWith(color: c.primary, fontSize: 10)),
+            Text(last!, style: SxText.labelXs.copyWith(color: c.primary)),
           ],
         ]),
       ]),

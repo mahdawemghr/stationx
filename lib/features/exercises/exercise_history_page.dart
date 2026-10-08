@@ -49,11 +49,15 @@ class _ExerciseHistoryPageState extends State<ExerciseHistoryPage> {
         final stats = statsFor(ex.id, all);
         final prs = PrService.forExercise(ex.id, all);
         final best = prs[PrType.heaviestWeight];
-        final e1rm = prs[PrType.estimated1Rm];
+        final e1rmPr = prs[PrType.estimated1Rm];
+        final e1rm = e1rmPr != null && e1rmPr.value > 0 ? e1rmPr : null;
         final routine = app.workouts.workouts.where((w) => w.exercises.any((r) => r.exerciseId == ex.id)).toList();
         final recent = stats.reversed.toList();
 
-        final chartStats = stats.length > _maxChartPoints ? stats.sublist(stats.length - _maxChartPoints) : stats;
+        // A 0 estimate means "no reliable estimate" (e.g. > 12 reps): such sessions are left out of the
+        // e1RM chart and trend instead of being plotted as 0 or compared with a real value.
+        final plotted = _metric == _Metric.e1rm ? [for (final s in stats) if (s.e1rm > 0) s] : stats;
+        final chartStats = plotted.length > _maxChartPoints ? plotted.sublist(plotted.length - _maxChartPoints) : plotted;
         final values = [for (final s in chartStats) _value(s, unit)];
         final labels = [
           for (var i = 0; i < chartStats.length; i++)
@@ -142,7 +146,7 @@ class _Milestones extends StatelessWidget {
             child: SxInset(
               padding: const EdgeInsets.all(14),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('CURRENT BEST', style: SxText.labelCaps.copyWith(color: c.textBody, fontSize: 10)),
+                Text('CURRENT BEST', style: SxText.labelXs.copyWith(color: c.textBody)),
                 const SizedBox(height: 6),
                 FittedBox(
                   fit: BoxFit.scaleDown,
@@ -159,7 +163,7 @@ class _Milestones extends StatelessWidget {
             child: SxInset(
               padding: const EdgeInsets.all(14),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('ESTIMATED 1RM', style: SxText.labelCaps.copyWith(color: c.textBody, fontSize: 10)),
+                Text('ESTIMATED 1RM', style: SxText.labelXs.copyWith(color: c.textBody)),
                 const SizedBox(height: 6),
                 FittedBox(
                   fit: BoxFit.scaleDown,
@@ -167,7 +171,7 @@ class _Milestones extends StatelessWidget {
                   child: MetricValue(e1rm == null ? '—' : Fmt.weight(e1rm!.value, unit), unit: e1rm == null ? null : u, style: SxText.metricLg),
                 ),
                 const SizedBox(height: 4),
-                if (e1rm?.delta != null)
+                if ((e1rm?.delta ?? 0) > 0)
                   FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerLeft, child: DeltaBadge('+${Fmt.weight(e1rm!.delta!, unit)} $u'))
                 else
                   Text('Epley estimate', style: SxText.bodySm.copyWith(color: c.textBody)),
@@ -210,7 +214,7 @@ class _SessionCard extends StatelessWidget {
               child: SxInset(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                 child: Column(children: [
-                  Text('SET ${i + 1}', style: SxText.labelCaps.copyWith(color: c.textBody, fontSize: 10)),
+                  Text('SET ${i + 1}', style: SxText.labelXs.copyWith(color: c.textBody)),
                   const SizedBox(height: 4),
                   FittedBox(
                     fit: BoxFit.scaleDown,
@@ -222,8 +226,8 @@ class _SessionCard extends StatelessWidget {
         ]),
         const SizedBox(height: 10),
         Row(children: [
-          Expanded(child: Text('${sets.length} sets completed', style: SxText.labelCaps.copyWith(color: c.textBody, fontSize: 10))),
-          Flexible(child: Text('Total volume: ${Fmt.volume(stat.volume, u: unit)}', style: SxText.labelCaps.copyWith(color: c.primary, fontSize: 10), overflow: TextOverflow.ellipsis)),
+          Expanded(child: Text('${sets.length} sets completed', style: SxText.labelXs.copyWith(color: c.textBody))),
+          Flexible(child: Text('Total volume: ${Fmt.volume(stat.volume, u: unit)}', style: SxText.labelXs.copyWith(color: c.primary), overflow: TextOverflow.ellipsis)),
         ]),
       ]),
     );

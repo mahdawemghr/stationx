@@ -12,9 +12,12 @@ import '../active_workout_controller.dart';
 /// Rebuilds only [builder]'s subtree once per second. Keeps per-second work
 /// out of the page so the workout list never rebuilds because of a clock.
 class SecondTicker extends StatefulWidget {
-  const SecondTicker({super.key, required this.builder, this.active = true});
+  const SecondTicker({super.key, required this.builder, this.active = true, this.onTick});
   final Widget Function(BuildContext context, DateTime now) builder;
   final bool active;
+
+  /// Called once per second after the clock advanced (side effects belong here, never in [builder]).
+  final void Function(DateTime now)? onTick;
 
   @override
   State<SecondTicker> createState() => _SecondTickerState();
@@ -41,7 +44,9 @@ class _SecondTickerState extends State<SecondTicker> {
     _timer = null;
     if (widget.active) {
       _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-        if (mounted) setState(() => _now = DateTime.now());
+        if (!mounted) return;
+        setState(() => _now = DateTime.now());
+        widget.onTick?.call(_now);
       });
     }
   }
@@ -58,34 +63,56 @@ class _SecondTickerState extends State<SecondTicker> {
 
 /// ELAPSED tile (strength layout).
 class ElapsedTile extends StatelessWidget {
-  const ElapsedTile({super.key, required this.startedAt});
+  const ElapsedTile({super.key, required this.startedAt, this.dense = false});
   final DateTime startedAt;
+
+  /// Short screens: a 48dp tile instead of 64dp.
+  final bool dense;
 
   @override
   Widget build(BuildContext context) {
     final c = context.sx;
     return Container(
-      constraints: const BoxConstraints(minHeight: 72),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      constraints: BoxConstraints(minHeight: dense ? 48 : 64),
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: dense ? 2 : 6),
       decoration: BoxDecoration(
-          color: c.surface1, borderRadius: BorderRadius.circular(SxRadius.lg), border: Border.all(color: c.hairline)),
-      child: Row(children: [
-        Icon(Icons.timer_outlined, color: c.textBody, size: 24),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-            Text('ELAPSED', style: SxText.labelCaps.copyWith(color: c.textBody, fontSize: 10)),
-            SecondTicker(
-              builder: (_, now) => FittedBox(
-                fit: BoxFit.scaleDown,
-                alignment: Alignment.centerLeft,
-                child: Text(Fmt.clock(now.difference(startedAt).inSeconds),
-                    style: SxText.metricLg.copyWith(color: c.textHigh, fontSize: 28)),
-              ),
+        color: c.surface1,
+        borderRadius: BorderRadius.circular(SxRadius.lg),
+        border: Border.all(color: c.hairline),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.timer_outlined, color: c.textBody, size: 22),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'ELAPSED',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: SxText.labelXs.copyWith(color: c.textBody),
+                ),
+                SecondTicker(
+                  builder: (_, now) => FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      Fmt.clock(now.difference(startedAt).inSeconds),
+                      style: SxText.metricLg.copyWith(
+                        color: c.textHigh,
+                        fontSize: dense ? 22 : 26,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ]),
-        ),
-      ]),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -101,25 +128,45 @@ class ElapsedPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-          color: c.surface2, borderRadius: BorderRadius.circular(SxRadius.md), border: Border.all(color: c.hairline)),
-      child: Row(mainAxisSize: MainAxisSize.min, children: [
-        Icon(Icons.timer_outlined, size: 16, color: c.primary),
-        const SizedBox(width: 6),
-        SecondTicker(
-          builder: (_, now) => Text(Fmt.clockHms(now.difference(startedAt).inSeconds),
-              style: SxText.metricSm.copyWith(color: c.primary, fontWeight: FontWeight.w700)),
-        ),
-      ]),
+        color: c.surface2,
+        borderRadius: BorderRadius.circular(SxRadius.md),
+        border: Border.all(color: c.hairline),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.timer_outlined, size: 16, color: c.primary),
+          const SizedBox(width: 6),
+          SecondTicker(
+            builder: (_, now) => Text(
+              Fmt.clockHms(now.difference(startedAt).inSeconds),
+              style: SxText.metricSm.copyWith(
+                color: c.primary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
 
-/// REST tile: idle shows "--:--"; running shows the countdown, SKIP and +30s.
+/// REST tile: idle shows "--:--"; while resting it only says so, because the pinned [RestChip]
+/// in the footer owns the countdown, +30s and SKIP (never two rest UIs).
 class RestTile extends StatelessWidget {
-  const RestTile({super.key, required this.controller, this.compactWhenIdle = false});
+  const RestTile({
+    super.key,
+    required this.controller,
+    this.compactWhenIdle = false,
+    this.dense = false,
+  });
   final ActiveWorkoutController controller;
 
-  /// Mixed layout: render nothing while no rest is running.
+  /// Short screens: a 48dp tile instead of 64dp.
+  final bool dense;
+
+  /// Mixed layout: render nothing (the pinned chip is the only rest UI).
   final bool compactWhenIdle;
 
   @override
@@ -128,69 +175,54 @@ class RestTile extends StatelessWidget {
     return ValueListenableBuilder<RestState?>(
       valueListenable: controller.rest,
       builder: (context, rest, _) {
-        if (rest == null && compactWhenIdle) return const SizedBox.shrink();
+        if (compactWhenIdle) return const SizedBox.shrink();
         final active = rest != null;
         return AnimatedSize(
-          duration: SxMotion.of(context, SxMotion.base),
+          duration: SxMotion.of(context, SxMotion.short),
           alignment: Alignment.topCenter,
+          curve: SxMotion.enter,
           child: Container(
-            constraints: const BoxConstraints(minHeight: 72),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            constraints: BoxConstraints(minHeight: dense ? 48 : 64),
+            padding: EdgeInsets.symmetric(horizontal: 12, vertical: dense ? 2 : 6),
             decoration: BoxDecoration(
               color: c.surface3,
               borderRadius: BorderRadius.circular(SxRadius.lg),
               border: Border.all(color: active ? c.primaryBorder : c.hairline),
             ),
-            child: Column(mainAxisSize: MainAxisSize.min, children: [
-              Row(children: [
-                Icon(Icons.snooze, color: active ? c.primary : c.textMuted, size: 24),
-                const SizedBox(width: 10),
+            child: Row(
+              children: [
+                Icon(Icons.snooze, color: active ? c.primary : c.textMuted, size: 22),
+                const SizedBox(width: 8),
                 Expanded(
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-                    Text('REST', style: SxText.labelCaps.copyWith(color: active ? c.primary : c.textBody, fontSize: 10)),
-                    if (!active)
-                      Text('--:--', style: SxText.metricLg.copyWith(color: c.textMuted, fontSize: 28))
-                    else
-                      SecondTicker(
-                        builder: (_, now) {
-                          final left = rest.endsAt.difference(now).inSeconds;
-                          final frac = rest.totalSeconds == 0 ? 0.0 : (left / rest.totalSeconds).clamp(0.0, 1.0);
-                          return Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-                            // Spoken on focus only; a once-only live region announces the end (below).
-                            Semantics(
-                              label: left > 0 ? 'Rest remaining ${Fmt.clock(left)}' : 'Rest over',
-                              excludeSemantics: true,
-                              child: FittedBox(
-                                fit: BoxFit.scaleDown,
-                                alignment: Alignment.centerLeft,
-                                child: Text(left > 0 ? Fmt.clock(left) : 'GO',
-                                    style: SxText.metricLg.copyWith(color: left > 0 ? c.primary : c.positive, fontSize: 28)),
-                              ),
-                            ),
-                            // Live region: empty while resting, becomes text exactly once when the rest
-                            // ends, so TalkBack announces it once instead of every second.
-                            Semantics(
-                              liveRegion: true,
-                              label: left <= 0 ? 'Rest over. Start your next set.' : '',
-                              child: const SizedBox.shrink(),
-                            ),
-                            const SizedBox(height: 4),
-                            SizedBox(height: 3, child: SxLinearMeter(value: frac, height: 3, semanticLabel: 'Rest')),
-                          ]);
-                        },
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'REST',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: SxText.labelXs.copyWith(color: active ? c.primary : c.textBody),
                       ),
-                  ]),
+                      // While resting, the pinned RestChip (footer) owns the countdown, +30s and
+                      // SKIP: one rest UI only. The tile just says a rest is running.
+                      if (!active)
+                        Text('--:--', style: SxText.metricLg.copyWith(color: c.textMuted, fontSize: dense ? 22 : 26))
+                      else
+                        Semantics(
+                          label: 'Rest running. Countdown and skip are at the bottom.',
+                          excludeSemantics: true,
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text('RESTING', style: SxText.metricMd.copyWith(color: c.primary)),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
-              ]),
-              if (active) ...[
-                const SizedBox(height: 6),
-                Row(children: [
-                  Expanded(child: _MiniAction(label: '+30s', semanticLabel: 'Add 30 seconds', onTap: () => controller.addRest(30))),
-                  const SizedBox(width: 8),
-                  Expanded(child: _MiniAction(label: 'SKIP', semanticLabel: 'Skip rest', onTap: controller.skipRest)),
-                ]),
               ],
-            ]),
+            ),
           ),
         );
       },
@@ -199,7 +231,11 @@ class RestTile extends StatelessWidget {
 }
 
 class _MiniAction extends StatelessWidget {
-  const _MiniAction({required this.label, required this.onTap, this.semanticLabel});
+  const _MiniAction({
+    required this.label,
+    required this.onTap,
+    this.semanticLabel,
+  });
   final String label;
   final String? semanticLabel;
   final VoidCallback onTap;
@@ -213,17 +249,99 @@ class _MiniAction extends StatelessWidget {
       label: semanticLabel ?? label,
       excludeSemantics: true,
       onTap: onTap,
-      child: InkWell(
+      child: SxPressable(
+        semantics: false,
         onTap: onTap,
-        borderRadius: BorderRadius.circular(SxRadius.base),
+        scale: 0.94,
+        focusRadius: SxRadius.base,
         child: Container(
           constraints: const BoxConstraints(minWidth: 52, minHeight: 48),
           alignment: Alignment.center,
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(color: c.surface2, borderRadius: BorderRadius.circular(SxRadius.base), border: Border.all(color: c.hairline)),
-          child: Text(label, style: SxText.labelCaps.copyWith(color: c.textBody, fontSize: 10, fontWeight: FontWeight.w700)),
+          decoration: BoxDecoration(
+            color: c.surface2,
+            borderRadius: BorderRadius.circular(SxRadius.base),
+            border: Border.all(color: c.hairline),
+          ),
+          child: Text(
+            label,
+            style: SxText.labelXs.copyWith(
+              color: c.textBody,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
         ),
       ),
+    );
+  }
+}
+
+/// Compact rest countdown pinned above the Finish button: time, +30s and Skip.
+class RestChip extends StatelessWidget {
+  const RestChip({super.key, required this.controller});
+  final ActiveWorkoutController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.sx;
+    return ValueListenableBuilder<RestState?>(
+      valueListenable: controller.rest,
+      builder: (context, rest, _) {
+        if (rest == null) return const SizedBox.shrink();
+        return SxFadeSlideIn(
+          duration: SxMotion.short,
+          dy: 8,
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(
+                color: c.surface3,
+                borderRadius: BorderRadius.circular(SxRadius.lg),
+                border: Border.all(color: c.primaryBorder),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.snooze, color: c.primary, size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: SecondTicker(
+                      builder: (_, now) {
+                        final left = rest.endsAt.difference(now).inSeconds;
+                        return Semantics(
+                          label: left > 0
+                              ? 'Rest remaining ${Fmt.clock(left)}'
+                              : 'Rest over',
+                          excludeSemantics: true,
+                          child: Text(
+                            left > 0 ? 'REST ${Fmt.clock(left)}' : 'REST OVER',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: SxText.metricMd.copyWith(
+                              color: left > 0 ? c.primary : c.positive,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  _MiniAction(
+                    label: '+30s',
+                    semanticLabel: 'Add 30 seconds',
+                    onTap: () => controller.addRest(30),
+                  ),
+                  const SizedBox(width: 8),
+                  _MiniAction(
+                    label: 'SKIP',
+                    semanticLabel: 'Skip rest',
+                    onTap: controller.skipRest,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

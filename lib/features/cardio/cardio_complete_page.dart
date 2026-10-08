@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'cardio_pace.dart';
 import '../../app/app_scope.dart';
 import '../../app/nav.dart';
 import '../../core/theme/sx_spacing.dart';
@@ -8,6 +9,7 @@ import '../../core/theme/sx_typography.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/widgets/widgets.dart';
 import '../../domain/domain.dart';
+import '../health/health_enrichment_card.dart';
 import 'cardio_home_support.dart';
 
 /// Summary shown right after a cardio session is saved (session already
@@ -46,11 +48,12 @@ class CardioCompletePage extends StatelessWidget {
           ]),
           gap: SxSpace.md,
           children: [
-            _Header(session: s, number: all.length - all.indexWhere((x) => x.id == s.id), name: custom ?? s.kind.label),
-            _Totals(session: s, miles: miles),
-            _Tiles(session: s),
-            _PrRow(session: s, all: all),
-            _WeeklyTarget(session: s, repo: app.cardio),
+            SxStagger(index: 0, child: _Header(session: s, number: all.length - all.indexWhere((x) => x.id == s.id), name: custom ?? s.kind.label)),
+            SxStagger(index: 1, child: _Totals(session: s, miles: miles)),
+            SxStagger(index: 2, child: _Tiles(session: s, miles: miles)),
+            SxStagger(index: 3, child: HealthEnrichmentCard(key: ValueKey('enrich-${s.id}'), sessionId: s.id)),
+            SxStagger(index: 3, child: _PrRow(session: s, all: all, miles: miles)),
+            SxStagger(index: 4, child: _WeeklyTarget(session: s, repo: app.cardio)),
           ],
         );
       },
@@ -83,11 +86,16 @@ class _Header extends StatelessWidget {
         ]),
         const SizedBox(height: SxSpace.sm),
         Row(children: [
-          Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(color: c.primary, borderRadius: BorderRadius.circular(SxRadius.md)),
-            child: Icon(Icons.done_all, color: c.onAccent, size: 30),
+          // Completion moment: one pop + haptic (no-op scale under reduced motion).
+          SxPop(
+            haptic: true,
+            peak: 1.2,
+            child: Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(color: c.primary, borderRadius: BorderRadius.circular(SxRadius.md)),
+              child: Icon(Icons.done_all, color: c.onAccent, size: 30),
+            ),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -136,14 +144,27 @@ class _Totals extends StatelessWidget {
               FittedBox(
                 fit: BoxFit.scaleDown,
                 alignment: Alignment.centerLeft,
-                child: MetricValue(Fmt.km(session.distanceKm, miles: miles), unit: miles ? 'MI' : 'KM', style: SxText.metricXl),
+                child: Row(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
+                  SxCountUp(
+                    value: session.distanceKm!,
+                    formatter: (v) => Fmt.km(v, miles: miles),
+                    style: SxText.metricXl.copyWith(color: c.textHigh),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(miles ? 'MI' : 'KM', style: SxText.bodySm.copyWith(color: c.textBody)),
+                ]),
               ),
             ]),
           ),
         Column(crossAxisAlignment: hasDist ? CrossAxisAlignment.end : CrossAxisAlignment.start, children: [
           Text('DURATION', style: SxText.labelCaps.copyWith(color: c.textBody)),
           const SizedBox(height: 6),
-          Text(Fmt.clock(session.durationSeconds), key: const Key('complete-duration'), style: (hasDist ? SxText.metricLg : SxText.metricXl).copyWith(color: c.primary)),
+          SxCountUp(
+            key: const Key('complete-duration'),
+            value: session.durationSeconds.toDouble(),
+            formatter: (v) => Fmt.clock(v.round()),
+            style: (hasDist ? SxText.metricLg : SxText.metricXl).copyWith(color: c.primary),
+          ),
         ]),
       ]),
     );
@@ -152,18 +173,19 @@ class _Totals extends StatelessWidget {
 
 /// Only tiles the session actually has data for (adapted to the activity).
 class _Tiles extends StatelessWidget {
-  const _Tiles({required this.session});
+  const _Tiles({required this.session, required this.miles});
   final CardioSession session;
+  final bool miles;
 
   @override
   Widget build(BuildContext context) {
     final f = session.kind.fields;
     final tiles = <Widget>[];
-    if (f.contains(CardioField.pace) && session.paceSecPerKm != null) {
-      tiles.add(StatTile(label: 'Avg pace', value: Fmt.pace(session.paceSecPerKm), unit: '/km', icon: Icons.speed));
+    if (CardioPace.has(session.kind) && session.paceSecPerKm != null) {
+      tiles.add(StatTile(label: 'Avg pace', value: CardioPace.text(session.kind, session.paceSecPerKm, miles: miles), unit: CardioPace.unit(session.kind, miles: miles), icon: Icons.speed));
     }
     if (f.contains(CardioField.speed) && session.avgSpeedKmh != null) {
-      tiles.add(StatTile(label: 'Avg speed', value: Fmt.number(session.avgSpeedKmh!), unit: 'km/h', icon: Icons.speed));
+      tiles.add(StatTile(label: 'Avg speed', value: Fmt.number(miles ? session.avgSpeedKmh! * 0.621371 : session.avgSpeedKmh!), unit: miles ? 'mph' : 'km/h', icon: Icons.speed));
     }
     if (session.inclinePct != null) tiles.add(StatTile(label: 'Incline', value: Fmt.number(session.inclinePct!), unit: '%', icon: Icons.landscape_outlined));
     if (session.resistance != null) tiles.add(StatTile(label: 'Resistance', value: '${session.resistance}', unit: 'lvl', icon: Icons.tune));
@@ -180,9 +202,10 @@ class _Tiles extends StatelessWidget {
 
 /// PR badges for records this session holds (needs at least two sessions to be meaningful).
 class _PrRow extends StatelessWidget {
-  const _PrRow({required this.session, required this.all});
+  const _PrRow({required this.session, required this.all, required this.miles});
   final CardioSession session;
   final List<CardioSession> all;
+  final bool miles;
 
   @override
   Widget build(BuildContext context) {
@@ -201,11 +224,13 @@ class _PrRow extends StatelessWidget {
         const SizedBox(height: SxSpace.sm),
         Wrap(spacing: 8, runSpacing: 8, children: [
           for (final p in prs)
-            PrBadge(switch (p.type) {
-              CardioPrType.longestDuration => 'Longest • ${Fmt.durationShort(p.value.round())}',
-              CardioPrType.longestDistance => 'Longest • ${Fmt.number(p.value, decimals: 2)} km',
-              CardioPrType.fastestPace => 'Fastest • ${Fmt.pace(p.value)} /km',
-            }),
+            SxPop(
+              child: PrBadge(switch (p.type) {
+                CardioPrType.longestDuration => 'Longest • ${Fmt.durationShort(p.value.round())}',
+                CardioPrType.longestDistance => 'Longest • ${Fmt.km(p.value, miles: miles)} ${miles ? 'mi' : 'km'}',
+                CardioPrType.fastestPace => 'Fastest • ${CardioPace.withUnit(CardioKind.values.firstWhere((k) => k.label == p.kindLabel, orElse: () => CardioKind.custom), p.value, miles: miles)}',
+              }),
+            ),
         ]),
       ]),
     );
@@ -266,16 +291,20 @@ class _TwoToneMeter extends StatelessWidget {
     final c = context.sx;
     final p = previous.clamp(0.0, 1.0);
     final a = added.clamp(0.0, 1.0 - p);
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(SxRadius.full),
-      child: Container(
-        height: 8,
-        color: c.surface3,
-        child: Row(children: [
-          if (p > 0) Expanded(flex: (p * 1000).round(), child: Container(color: c.primary.withValues(alpha: 0.5))),
-          if (a > 0) Expanded(flex: (a * 1000).round(), child: Container(color: c.primary)),
-          Expanded(flex: ((1 - p - a) * 1000).round() + 1, child: const SizedBox.shrink()),
-        ]),
+    return SxGrow(
+      value: 1,
+      duration: SxMotion.emphasis,
+      builder: (_, g) => ClipRRect(
+        borderRadius: BorderRadius.circular(SxRadius.full),
+        child: Container(
+          height: 8,
+          color: c.surface3,
+          alignment: Alignment.centerLeft,
+          child: Stack(children: [
+            FractionallySizedBox(widthFactor: (p + a) * g, child: Container(height: 8, color: c.primary)),
+            FractionallySizedBox(widthFactor: p * g, child: Container(height: 8, color: Color.alphaBlend(c.primary.withValues(alpha: 0.5), c.surface3))),
+          ]),
+        ),
       ),
     );
   }

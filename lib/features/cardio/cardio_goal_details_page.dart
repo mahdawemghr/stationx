@@ -52,7 +52,7 @@ class _Body extends StatelessWidget {
     final g = goal;
     final range = goalPeriodRange(g.period, now);
     final inPeriod = sessionsInRange(sessions, range)..sort((a, b) => b.workoutDate.compareTo(a.workoutDate));
-    final value = CardioMetrics.goalValue(g, inPeriod);
+    final value = CardioMetrics.goalValue(g, inPeriod, kinds: goalKinds(g));
     final frac = g.target <= 0 ? 0.0 : value / g.target;
     final status = goalPaceStatus(g, value, now);
     final left = daysLeftInPeriod(g.period, now);
@@ -107,7 +107,7 @@ class _Body extends StatelessWidget {
             ]),
             const SizedBox(height: 10),
             Text(g.title, style: SxText.headlineLg.copyWith(color: c.textHigh)),
-            Text('TARGET: ${goalNumber(g.metric, g.target)} $unit / ${periodWord.toUpperCase()}', style: SxText.labelCaps.copyWith(color: c.textBody, fontSize: 10)),
+            Text('TARGET: ${goalNumber(g.metric, g.target)} $unit / ${periodWord.toUpperCase()}', style: SxText.labelXs.copyWith(color: c.textBody)),
             const SizedBox(height: SxSpace.md),
             Wrap(crossAxisAlignment: WrapCrossAlignment.end, spacing: 12, runSpacing: 8, children: [
               Row(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
@@ -116,7 +116,7 @@ class _Body extends StatelessWidget {
               ]),
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text('${(frac * 100).round()}%', style: SxText.metricLg.copyWith(color: c.primary)),
-                Text('COMPLETED', style: SxText.labelCaps.copyWith(color: c.textBody, fontSize: 9)),
+                Text('COMPLETED', style: SxText.labelXs.copyWith(color: c.textBody)),
               ]),
             ]),
             const SizedBox(height: 12),
@@ -152,7 +152,7 @@ class _Body extends StatelessWidget {
               Icon(Icons.show_chart, color: c.primary, size: 20),
               const SizedBox(width: 8),
               Expanded(child: Text('Last $_periods ${periodWord}s', style: SxText.headlineSm.copyWith(color: c.textHigh))),
-              Text(unit, style: SxText.labelCaps.copyWith(color: c.textBody, fontSize: 10)),
+              Text(unit, style: SxText.labelXs.copyWith(color: c.textBody)),
             ]),
             const SizedBox(height: SxSpace.md),
             SxBarChart(values: values, labels: labels, target: g.target, highlightIndex: _periods - 1, height: 120),
@@ -235,7 +235,7 @@ class _Mile extends StatelessWidget {
     return SxInset(
       padding: const EdgeInsets.all(12),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(label.toUpperCase(), style: SxText.labelCaps.copyWith(color: c.textBody, fontSize: 10), overflow: TextOverflow.ellipsis),
+        Text(label.toUpperCase(), style: SxText.labelXs.copyWith(color: c.textBody), overflow: TextOverflow.ellipsis),
         const SizedBox(height: 6),
         FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerLeft, child: MetricValue(value, unit: unit, style: SxText.metricLg, color: c.primary)),
         Text(sub, style: SxText.bodySm.copyWith(color: c.textBody), overflow: TextOverflow.ellipsis),

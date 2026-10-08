@@ -51,3 +51,8 @@ app.*.map.json
 
 # Local Supabase client config (publishable key). Copy env/supabase.example.json -> env/supabase.json
 /env/supabase.json
+
+# Android release signing - NEVER commit keystores or key.properties
+*.jks
+*.keystore
+key.properties

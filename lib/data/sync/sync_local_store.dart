@@ -31,11 +31,16 @@ class SyncState {
   final Map<String, String> cursors;
   final DateTime? lastSyncAt;
 
-  SyncState copyWith({String? userId, Map<String, String>? cursors, DateTime? lastSyncAt, bool clearUser = false}) => SyncState(
-        userId: clearUser ? null : (userId ?? this.userId),
-        cursors: cursors ?? this.cursors,
-        lastSyncAt: lastSyncAt ?? this.lastSyncAt,
-      );
+  SyncState copyWith({
+    String? userId,
+    Map<String, String>? cursors,
+    DateTime? lastSyncAt,
+    bool clearUser = false,
+  }) => SyncState(
+    userId: clearUser ? null : (userId ?? this.userId),
+    cursors: cursors ?? this.cursors,
+    lastSyncAt: lastSyncAt ?? this.lastSyncAt,
+  );
 }
 
 /// The device side of sync. The engine only talks to this and to a gateway,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../app/app_controller.dart';
 import '../../app/app_scope.dart';
 import '../../app/nav.dart';
 import '../../core/theme/sx_spacing.dart';
@@ -8,52 +9,168 @@ import '../../core/theme/sx_typography.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/widgets/widgets.dart';
 import '../../domain/domain.dart';
+import '../active_workout/active_workout_page.dart' show autoEndMessage;
 import '../health/health_actions.dart';
+import '../onboarding/schedule_setup_entry.dart';
 
 /// Today tab (Stitch: today_home). The hero is the *next workout in the
 /// rotation* (index based, never date based).
-class TodayPage extends StatelessWidget {
+///
+/// Perf: the week range, the week's sessions, the PR count and the "recent
+/// progress" lookup are computed once and re-computed only when the sessions or
+/// the exercise catalog change (or the calendar day rolls over), never per build.
+class TodayPage extends StatefulWidget {
   const TodayPage({super.key});
+
+  @override
+  State<TodayPage> createState() => _TodayPageState();
+}
+
+class _TodayData {
+  const _TodayData({required this.day, required this.weekStart, required this.weekEnd, required this.week, required this.prCount, required this.recent});
+  final DateTime day;
+  final DateTime weekStart;
+  final DateTime weekEnd;
+  final List<WorkoutSession> week;
+  final int prCount;
+  final _Recent? recent;
+}
+
+class _TodayPageState extends State<TodayPage> with WidgetsBindingObserver {
+  _TodayData? _data;
+  Listenable? _watched;
+  AppController? _app;
+
+  void _invalidate() => _data = null;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _app?.onAppResumed();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final app = context.app;
+    if (identical(app, _app)) return;
+    _watched?.removeListener(_invalidate);
+    _app = app;
+    // A workout past the maximum length must never show up as resumable.
+    app.onAppResumed();
+    _watched = Listenable.merge([app.sessions, app.exercises])..addListener(_invalidate);
+    _data = null;
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _watched?.removeListener(_invalidate);
+    super.dispose();
+  }
+
+  _TodayData _derive(AppController app, DateTime now) {
+    final today = DateTime(now.year, now.month, now.day);
+    final cached = _data;
+    if (cached != null && cached.day == today) return cached;
+    final weekStart = VolumeService.startOfWeek(now);
+    final weekEnd = weekStart.add(const Duration(days: 7));
+    final all = app.sessions.sessions;
+    return _data = _TodayData(
+      day: today,
+      weekStart: weekStart,
+      weekEnd: weekEnd,
+      week: app.sessions.between(weekStart, weekEnd),
+      prCount: PrService.setBetween(all, weekStart, weekEnd).length,
+      recent: _recentProgress(all, app.exercises),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final app = context.app;
     return ListenableBuilder(
-      listenable: Listenable.merge([app.workouts, app.sessions, app.exercises, app.profile, app.health]),
+      listenable: Listenable.merge([app, app.workouts, app.sessions, app.exercises, app.profile, app.health, app.workoutDraft, ScheduleSetupPrompt.dismissed]),
       builder: (context, _) {
         final profile = app.profile.profile;
         final now = DateTime.now();
         final workout = app.workouts.currentWorkout;
         final next = app.workouts.nextWorkout;
         final rotation = app.workouts.rotation;
-        final weekStart = VolumeService.startOfWeek(now);
-        final weekEnd = weekStart.add(const Duration(days: 7));
-        final week = app.sessions.between(weekStart, weekEnd);
-        final recent = _recentProgress(app.sessions.sessions, app.exercises);
+        final data = _derive(app, now);
+        final week = data.week;
+        final recent = data.recent;
+        final draft = app.workoutDraft.current;
+        final notice = app.pendingAutoEndNotice;
         final c = context.sx;
 
         return SxScaffold(
           topBar: _TodayBar(name: profile.name, onAvatarTap: () => AppNav.switchTab(context, 3)),
           gap: SxSpace.md,
+          animateIn: true,
           children: [
             _DateHeader(now: now, name: profile.name.split(' ').first, workout: workout),
-            if (workout == null)
-              EmptyState(
-                icon: Icons.fitness_center,
-                title: 'No workouts yet',
-                message: 'Create a workout to start your rotation.',
-                actionLabel: 'Open Workouts',
-                onAction: () => AppNav.switchTab(context, 1),
-              )
-            else
-              _HeroCard(workout: workout, rotation: rotation),
+            // Omitted (not a zero-height child) when hidden so it adds no extra gap.
+            if (ScheduleSetupPromptCard.shouldShow(app)) const ScheduleSetupPromptCard(),
+            // Resume card + hero share one slot so the card can animate in/out without leaving a gap.
+            Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              AnimatedSize(
+                duration: SxMotion.of(context, SxMotion.short),
+                curve: SxMotion.enter,
+                alignment: Alignment.topCenter,
+                child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                  if (notice != null)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: SxSpace.md),
+                      child: SxFadeSlideIn(child: AutoEndNoticeCard(notice: notice, onDismiss: app.clearAutoEndNotice)),
+                    ),
+                  SxSwap(
+                  alignment: Alignment.topCenter,
+                  child: draft == null
+                      ? const SizedBox(key: ValueKey('no-resume'), width: double.infinity)
+                      : Padding(
+                          key: const ValueKey('resume'),
+                          padding: const EdgeInsets.only(bottom: SxSpace.md),
+                          child: ResumeWorkoutCard(draft: draft),
+                        ),
+                  ),
+                ]),
+              ),
+              SxSwap(
+                alignment: Alignment.topCenter,
+                child: workout == null
+                    ? EmptyState(
+                        key: const ValueKey('empty'),
+                        icon: Icons.fitness_center,
+                        title: 'No workouts yet',
+                        message: 'Create a workout to start your rotation.',
+                        actionLabel: 'Open Workouts',
+                        onAction: () => AppNav.switchTab(context, 1),
+                      )
+                    : RepaintBoundary(key: ValueKey('hero-${workout.id}'), child: _HeroCard(workout: workout, rotation: rotation)),
+              ),
+            ]),
             SectionHeader('This week', icon: Icons.calendar_view_week, trailingText: 'Target: ${profile.weeklySessionTarget} sessions'),
             Row(children: [
-              Expanded(child: StatTile(label: 'Done', value: '${week.length}', unit: 'ses', icon: Icons.check_circle_outline)),
+              Expanded(child: _CountStat(label: 'Done', icon: Icons.check_circle_outline, unit: 'ses', value: week.length.toDouble(), format: (v) => '${v.round()}')),
               const SizedBox(width: 8),
-              Expanded(child: _VolumeTile(sessions: week, unit: profile.unit)),
+              Expanded(child: _volumeTile(week, profile.unit)),
               const SizedBox(width: 8),
-              Expanded(child: _PrTile(sessions: app.sessions.sessions, from: weekStart, to: weekEnd)),
+              Expanded(
+                child: _CountStat(
+                  label: 'Records',
+                  icon: Icons.emoji_events_outlined,
+                  unit: 'PRs',
+                  accent: data.prCount > 0,
+                  value: data.prCount.toDouble(),
+                  format: (v) => '${v.round()}',
+                ),
+              ),
             ]),
             if (recent != null)
               _RecentProgress(data: recent, unit: profile.unit, onTap: () => AppNav.exerciseHistory(context, recent.exercise.id))
@@ -77,6 +194,18 @@ class TodayPage extends StatelessWidget {
     );
   }
 
+  Widget _volumeTile(List<WorkoutSession> sessions, WeightUnit unit) {
+    final display = Fmt.toDisplayWeight(VolumeService.totalVolume(sessions), unit);
+    final big = display >= 1000;
+    return _CountStat(
+      label: 'Volume',
+      icon: Icons.equalizer,
+      unit: big ? 't' : Fmt.unit(unit),
+      value: big ? display / 1000 : display,
+      format: (v) => big ? Fmt.number(v) : Fmt.number(v, decimals: 0),
+    );
+  }
+
   /// Latest estimated-1RM PR that improved on a previous best.
   _Recent? _recentProgress(List<WorkoutSession> sessions, ExerciseRepository ex) {
     for (final pr in PrService.all(PrType.estimated1Rm, sessions)) {
@@ -86,6 +215,51 @@ class TodayPage extends StatelessWidget {
       return _Recent(e, pr, (pr.value - prev) / prev * 100);
     }
     return null;
+  }
+}
+
+/// StatTile look-alike whose number counts up on first build and on later changes.
+class _CountStat extends StatelessWidget {
+  const _CountStat({required this.label, required this.icon, required this.unit, required this.value, required this.format, this.accent = false});
+  final String label;
+  final IconData icon;
+  final String unit;
+  final double value;
+  final String Function(double) format;
+  final bool accent;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.sx;
+    final valueColor = accent ? c.primary : c.textHigh;
+    return Semantics(
+      container: true,
+      label: '$label: ${format(value)} $unit',
+      excludeSemantics: true,
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 96),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(color: c.surface1, borderRadius: BorderRadius.circular(SxRadius.lg), border: Border.all(color: c.hairline)),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+          Row(children: [
+            Expanded(child: Text(label.toUpperCase(), overflow: TextOverflow.ellipsis, style: SxText.labelCaps.copyWith(color: c.textBody))),
+            Icon(icon, size: 18, color: accent ? c.primary : c.textBody),
+          ]),
+          const SizedBox(height: 8),
+          Row(crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
+            Flexible(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: SxCountUp(value: value, formatter: format, fromZero: true, style: SxText.metricLg.copyWith(color: valueColor)),
+              ),
+            ),
+            const SizedBox(width: 4),
+            Text(unit, style: SxText.bodySm.copyWith(color: accent ? c.primary : c.textBody)),
+          ]),
+        ]),
+      ),
+    );
   }
 }
 
@@ -166,7 +340,7 @@ class _HeroCard extends StatelessWidget {
         color: c.surface1,
         borderRadius: BorderRadius.circular(SxRadius.xl),
         border: Border.all(color: c.hairline),
-        gradient: RadialGradient(center: const Alignment(1.0, -1.0), radius: 1.2, colors: [c.primary.withValues(alpha: 0.05), c.surface1]),
+        gradient: RadialGradient(center: const Alignment(1.0, -1.0), radius: 1.2, colors: [c.primary.withValues(alpha: 0.035), c.surface1]),
       ),
       padding: const EdgeInsets.all(SxSpace.md),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -236,43 +410,11 @@ class _Pill extends StatelessWidget {
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             FittedBox(fit: BoxFit.scaleDown, child: Text(value, style: SxText.metricMd.copyWith(color: c.textHigh))),
-            Text(label.toUpperCase(), maxLines: 1, overflow: TextOverflow.ellipsis, style: SxText.labelCaps.copyWith(color: c.textBody, fontSize: 9)),
+            Text(label.toUpperCase(), maxLines: 1, overflow: TextOverflow.ellipsis, style: SxText.labelXs.copyWith(color: c.textBody)),
           ]),
         ),
       ]),
     );
-  }
-}
-
-class _VolumeTile extends StatelessWidget {
-  const _VolumeTile({required this.sessions, required this.unit});
-  final List<WorkoutSession> sessions;
-  final WeightUnit unit;
-
-  @override
-  Widget build(BuildContext context) {
-    final kg = VolumeService.totalVolume(sessions);
-    final display = Fmt.toDisplayWeight(kg, unit);
-    final big = display >= 1000;
-    return StatTile(
-      label: 'Volume',
-      value: big ? Fmt.number(display / 1000) : Fmt.number(display, decimals: 0),
-      unit: big ? 't' : Fmt.unit(unit),
-      icon: Icons.equalizer,
-    );
-  }
-}
-
-class _PrTile extends StatelessWidget {
-  const _PrTile({required this.sessions, required this.from, required this.to});
-  final List<WorkoutSession> sessions;
-  final DateTime from;
-  final DateTime to;
-
-  @override
-  Widget build(BuildContext context) {
-    final n = PrService.setBetween(sessions, from, to).length;
-    return StatTile(label: 'Records', value: '$n', unit: 'PRs', icon: Icons.emoji_events_outlined, accent: n > 0);
   }
 }
 
@@ -465,6 +607,85 @@ class _TodayBar extends StatelessWidget implements PreferredSizeWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// "Your workout ended automatically ..." (maximum workout length). Dismissible; the notice
+/// survives an app restart until dismissed.
+class AutoEndNoticeCard extends StatelessWidget {
+  const AutoEndNoticeCard({super.key, required this.notice, required this.onDismiss});
+  final AutoEndResult notice;
+  final VoidCallback onDismiss;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.sx;
+    return SxCard(
+      padding: const EdgeInsets.fromLTRB(12, 4, 4, 4),
+      child: Row(children: [
+        Icon(Icons.timer_off_outlined, color: c.primary),
+        const SizedBox(width: 10),
+        Expanded(child: Text(autoEndMessage(notice), style: SxText.bodyMd.copyWith(color: c.textHigh))),
+        SxIconButton(icon: Icons.close, tooltip: 'Dismiss', onPressed: onDismiss),
+      ]),
+    );
+  }
+}
+
+/// "Resume workout": an unfinished session survived (app closed / killed). Resume reopens the
+/// logger with everything restored; Discard drops it after a confirmation.
+class ResumeWorkoutCard extends StatelessWidget {
+  const ResumeWorkoutCard({super.key, required this.draft});
+  final WorkoutDraft draft;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.sx;
+    final app = context.app;
+    final name = app.workouts.byId(draft.workoutId)?.name ?? draft.workoutName;
+    void resume() => AppNav.activeWorkout(context, draft.workoutId, backdate: draft.backdate);
+    return SxCard(
+      borderColor: c.primaryBorder,
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Icon(Icons.play_circle_outline, color: c.primary),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text('Resume workout', style: SxText.headlineSm.copyWith(color: c.textHigh)),
+              const SizedBox(height: 2),
+              Text('$name · ${draft.doneSets} of ${draft.totalSets} sets done',
+                  maxLines: 2, overflow: TextOverflow.ellipsis, style: SxText.bodySm.copyWith(color: c.textBody)),
+            ]),
+          ),
+        ]),
+        const SizedBox(height: 12),
+        Row(children: [
+          Expanded(child: SxButton(label: 'Resume', icon: Icons.play_arrow, height: 48, onPressed: resume)),
+          const SizedBox(width: 8),
+          Expanded(
+            child: SxButton(
+              label: 'Discard',
+              icon: Icons.delete_outline,
+              variant: SxButtonVariant.secondary,
+              height: 48,
+              onPressed: () async {
+                final ok = await showSxConfirm(
+                  context,
+                  title: 'Discard workout?',
+                  message: 'Everything logged in this unfinished session will be lost.',
+                  confirmLabel: 'Discard',
+                  cancelLabel: 'Keep it',
+                  destructive: true,
+                  icon: Icons.delete_forever,
+                );
+                if (ok) await app.workoutDraft.clear();
+              },
+            ),
+          ),
+        ]),
+      ]),
     );
   }
 }

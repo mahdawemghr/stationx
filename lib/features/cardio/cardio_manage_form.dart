@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'cardio_pace.dart';
 import 'package:flutter/services.dart';
 
 import '../../core/theme/sx_spacing.dart';
@@ -12,8 +13,9 @@ import 'cardio_manage_helpers.dart';
 /// Editable cardio session state shared by Edit and Backdate. Fields shown are
 /// driven by [CardioKind.fields]; pace/speed are always derived, never typed.
 class CardioFormState extends ChangeNotifier {
-  CardioFormState({required this.kind, required this.date, required this.kmUnit, CardioSession? from}) {
+  CardioFormState({required this.kind, required this.date, required this.kmUnit, CardioSession? from, this.custom}) {
     final s = from;
+    _existingDistanceKm = s?.distanceKm;
     if (s != null) {
       final d = s.durationSeconds;
       hours.text = d ~/ 3600 == 0 ? '' : '${d ~/ 3600}';
@@ -35,6 +37,16 @@ class CardioFormState extends ChangeNotifier {
   }
 
   CardioKind kind;
+
+  /// The user's custom activity this session belongs to (null for built-in kinds).
+  final CustomCardioActivity? custom;
+  double? _existingDistanceKm;
+
+  /// Input fields this session exposes; a custom session that already has a
+  /// distance keeps the field so editing never hides and erases it.
+  List<CardioField> get fields =>
+      CardioFieldResolver.fieldsFor(kind, custom: custom, existingDistanceKm: _existingDistanceKm);
+  bool get hasDistance => fields.contains(CardioField.distance);
   DateTime date;
   bool kmUnit;
   double? rpe;
@@ -63,7 +75,7 @@ class CardioFormState extends ChangeNotifier {
   /// Distance entered, converted to km.
   double? get distanceKm {
     final v = _d(distance.text);
-    if (v == null || !kind.hasDistance) return null;
+    if (v == null || !hasDistance) return null;
     return kmUnit ? v : v * 1.609344;
   }
 
@@ -105,7 +117,7 @@ class CardioFormState extends ChangeNotifier {
 
   /// Builds the session. Optional fields not shown for [kind] are dropped.
   CardioSession build({required String id, SyncMeta? meta, String? customActivityId}) {
-    final f = kind.fields;
+    final f = fields;
     final dist = distanceKm;
     final spd = f.contains(CardioField.speed) && kind == CardioKind.treadmill ? _d(speed.text) : null;
     return CardioSession(
@@ -191,10 +203,14 @@ class CardioUnitToggle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.sx;
-    Widget seg(String label, bool value) => GestureDetector(
-          behavior: HitTestBehavior.opaque,
+    Widget seg(String label, bool value) => SxPressable(
           onTap: () => onChanged(value),
-          child: Container(
+          selected: km == value,
+          semanticLabel: value ? 'Kilometers' : 'Miles',
+          excludeChildSemantics: true,
+          focusRadius: SxRadius.sm,
+          child: AnimatedContainer(
+            duration: SxMotion.of(context, SxMotion.micro),
             constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
             alignment: Alignment.center,
             padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -220,12 +236,12 @@ class CardioMetricsSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.sx;
     final units = CardioUnits(form.kmUnit);
-    final f = form.kind.fields;
+    final f = form.fields;
     final err = form.durationError;
     return CardioFormCard(
       title: title,
       icon: Icons.speed,
-      trailing: form.kind.hasDistance ? CardioUnitToggle(km: form.kmUnit, onChanged: form.setUnit) : null,
+      trailing: form.hasDistance ? CardioUnitToggle(km: form.kmUnit, onChanged: form.setUnit) : null,
       children: [
         Text('DURATION (HH : MM : SS)', style: SxText.labelCaps.copyWith(color: c.textBody)),
         const SizedBox(height: 6),
@@ -236,12 +252,17 @@ class CardioMetricsSection extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(child: _numBox('Sec', form.seconds, _digits, maxLen: 2)),
         ]),
-        if (err != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 6),
-            child: Text(err.toUpperCase(), style: SxText.labelCaps.copyWith(color: c.danger, fontSize: 10)),
-          ),
-        if (form.kind.hasDistance) ...[
+        AnimatedSize(
+          duration: SxMotion.of(context, SxMotion.short),
+          alignment: Alignment.topLeft,
+          child: err == null
+              ? const SizedBox(width: double.infinity)
+              : Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Text(err.toUpperCase(), style: SxText.labelXs.copyWith(color: c.danger)),
+                ),
+        ),
+        if (form.hasDistance) ...[
           const SizedBox(height: SxSpace.md),
           SxTextField(
             label: 'Distance covered',
@@ -306,12 +327,12 @@ class _DerivedTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.sx;
-    final showsPace = form.kind.fields.contains(CardioField.pace);
-    final showsSpeed = !showsPace && form.kind.hasDistance;
+    final showsPace = CardioPace.has(form.kind);
+    final showsSpeed = !showsPace && form.hasDistance;
     if (!showsPace && !showsSpeed) return const SizedBox.shrink();
     final label = showsPace ? 'Calculated avg pace' : 'Calculated avg speed';
-    final value = showsPace ? units.paceText(form.paceSecPerKm) : units.speedText(form.derivedSpeedKmh);
-    final unit = showsPace ? units.paceUnit : units.speedUnit;
+    final value = showsPace ? CardioPace.text(form.kind, form.paceSecPerKm, miles: !units.km) : units.speedText(form.derivedSpeedKmh);
+    final unit = showsPace ? CardioPace.unit(form.kind, miles: !units.km) : units.speedUnit;
     return SxInset(
       color: c.canvas,
       child: Row(children: [
@@ -354,12 +375,7 @@ class CardioBiometricsSection extends StatelessWidget {
           Text(rpe == null ? 'Not set' : Fmt.number(rpe), style: SxText.metricMd.copyWith(color: rpe == null ? c.textMuted : c.primary)),
           if (rpe != null) Text(' / 10', style: SxText.bodySm.copyWith(color: c.textBody)),
           if (rpe != null)
-            IconButton(
-              tooltip: 'Clear effort',
-              visualDensity: VisualDensity.compact,
-              icon: Icon(Icons.close, size: 16, color: c.textMuted),
-              onPressed: () => form.setRpe(null),
-            ),
+            SxIconButton(icon: Icons.close, tooltip: 'Clear effort', filled: false, iconColor: c.textMuted, onPressed: () => form.setRpe(null)),
         ]),
         SliderTheme(
           data: SliderTheme.of(context).copyWith(
@@ -387,7 +403,7 @@ class CardioContextSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final showRoute = form.kind.fields.contains(CardioField.pace) || form.kind == CardioKind.cycling;
+    final showRoute = form.fields.contains(CardioField.pace) || form.kind == CardioKind.cycling;
     return CardioFormCard(
       title: 'Context & Notes',
       icon: Icons.explore_outlined,
@@ -449,7 +465,7 @@ class CardioDateTimeRow extends StatelessWidget {
             : Column(children: [dateTile, const SizedBox(height: 12), timeTile]),
       ),
       if (err != null)
-        Padding(padding: const EdgeInsets.only(top: 6), child: Text(err.toUpperCase(), style: SxText.labelCaps.copyWith(color: c.danger, fontSize: 10))),
+        Padding(padding: const EdgeInsets.only(top: 6), child: Text(err.toUpperCase(), style: SxText.labelXs.copyWith(color: c.danger))),
       if (footer != null) Padding(padding: const EdgeInsets.only(top: 8), child: footer),
     ]);
   }

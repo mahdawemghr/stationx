@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 
 import '../../domain/domain.dart';
@@ -7,10 +9,11 @@ import '../seed/seed_data.dart';
 /// In-memory implementations of the repository contracts.
 /// MOCK persistence: data resets on app restart. Swap for Isar-backed classes.
 
-class MemoryExerciseRepository extends ChangeNotifier implements ExerciseRepository {
+class MemoryExerciseRepository extends ChangeNotifier
+    implements ExerciseRepository {
   MemoryExerciseRepository(List<Exercise> seed)
-      : _items = [...seed],
-        _index = {for (final e in seed) e.id: e};
+    : _items = [...seed],
+      _index = {for (final e in seed) e.id: e};
   final List<Exercise> _items;
   final Map<String, Exercise> _index;
 
@@ -37,8 +40,10 @@ class MemoryExerciseRepository extends ChangeNotifier implements ExerciseReposit
   }
 }
 
-class MemoryWorkoutRepository extends ChangeNotifier implements WorkoutRepository {
-  MemoryWorkoutRepository(List<Workout> workouts, this._rotation) : _items = [...workouts];
+class MemoryWorkoutRepository extends ChangeNotifier
+    implements WorkoutRepository {
+  MemoryWorkoutRepository(List<Workout> workouts, this._rotation)
+    : _items = [...workouts];
   final List<Workout> _items;
   Rotation _rotation;
 
@@ -63,28 +68,54 @@ class MemoryWorkoutRepository extends ChangeNotifier implements WorkoutRepositor
   @override
   Rotation get rotation => _rotation;
   @override
-  Workout? get currentWorkout => _rotation.currentWorkoutId == null ? null : byId(_rotation.currentWorkoutId!);
+  Workout? get currentWorkout => _rotation.currentWorkoutId == null
+      ? null
+      : byId(_rotation.currentWorkoutId!);
   @override
-  Workout? get nextWorkout => _rotation.nextWorkoutId == null ? null : byId(_rotation.nextWorkoutId!);
+  Workout? get nextWorkout =>
+      _rotation.nextWorkoutId == null ? null : byId(_rotation.nextWorkoutId!);
+
+  /// Pure plan for saving [w]: the resulting workout list + rotation (a NEW workout is appended to
+  /// the rotation). Persistence layers write the plan FIRST and call [reset] afterwards.
+  @protected
+  (List<Workout>, Rotation) planSave(Workout w) {
+    final items = [..._items];
+    final i = items.indexWhere((x) => x.id == w.id);
+    if (i >= 0) {
+      items[i] = w;
+      return (items, _rotation);
+    }
+    items.add(w);
+    return (items, _rotation.copyWith(workoutIds: [..._rotation.workoutIds, w.id]));
+  }
+
+  /// Pure plan for deleting [id]. The CURRENT workout keeps its identity: removing an entry before
+  /// it shifts the index down; removing the current one hands over to its successor (same index,
+  /// wrapped); removing one after it, or one that is not in the rotation (archived), leaves the
+  /// pointer on the same workout.
+  @protected
+  (List<Workout>, Rotation) planDelete(String id) {
+    final items = _items.where((x) => x.id != id).toList();
+    final old = _rotation.workoutIds;
+    final r = old.indexOf(id);
+    if (r < 0) return (items, _rotation);
+    final ids = [...old]..removeAt(r);
+    if (ids.isEmpty) return (items, const Rotation(workoutIds: []));
+    final cur = _rotation.currentIndex % old.length;
+    final idx = r < cur ? cur - 1 : (r == cur ? cur % ids.length : cur);
+    return (items, Rotation(workoutIds: ids, currentIndex: idx));
+  }
 
   @override
   Future<void> saveWorkout(Workout w) async {
-    final i = _items.indexWhere((x) => x.id == w.id);
-    if (i >= 0) {
-      _items[i] = w;
-    } else {
-      _items.add(w);
-      _rotation = _rotation.copyWith(workoutIds: [..._rotation.workoutIds, w.id]);
-    }
-    notifyListeners();
+    final (items, rot) = planSave(w);
+    reset(items, rot);
   }
 
   @override
   Future<void> deleteWorkout(String id) async {
-    _items.removeWhere((x) => x.id == id);
-    final ids = _rotation.workoutIds.where((x) => x != id).toList();
-    _rotation = Rotation(workoutIds: ids, currentIndex: ids.isEmpty ? 0 : _rotation.currentIndex % ids.length);
-    notifyListeners();
+    final (items, rot) = planDelete(id);
+    reset(items, rot);
   }
 
   @override
@@ -94,13 +125,16 @@ class MemoryWorkoutRepository extends ChangeNotifier implements WorkoutRepositor
   }
 
   @override
-  Future<void> setCurrentWorkout(String workoutId) => setRotation(RotationService.pointAt(_rotation, workoutId));
+  Future<void> setCurrentWorkout(String workoutId) =>
+      setRotation(RotationService.pointAt(_rotation, workoutId));
 
   @override
-  Future<void> advanceRotation() => setRotation(RotationService.advance(_rotation));
+  Future<void> advanceRotation() =>
+      setRotation(RotationService.advance(_rotation));
 }
 
-class MemorySessionRepository extends ChangeNotifier implements SessionRepository {
+class MemorySessionRepository extends ChangeNotifier
+    implements SessionRepository {
   MemorySessionRepository(List<WorkoutSession> seed) : _items = [...seed] {
     _sort();
   }
@@ -142,7 +176,8 @@ class MemorySessionRepository extends ChangeNotifier implements SessionRepositor
   @override
   Future<void> update(WorkoutSession s) async {
     final i = _items.indexWhere((x) => x.id == s.id);
-    if (i >= 0) _items[i] = s;
+    if (i < 0) return; // never resurrects a deleted row (same as the Isar repositories)
+    _items[i] = s;
     _sort();
     notifyListeners();
   }
@@ -154,23 +189,29 @@ class MemorySessionRepository extends ChangeNotifier implements SessionRepositor
   }
 
   @override
-  List<WorkoutSession> between(DateTime from, DateTime to) =>
-      _items.where((s) => !s.workoutDate.isBefore(from) && s.workoutDate.isBefore(to)).toList();
+  List<WorkoutSession> between(DateTime from, DateTime to) => _items
+      .where((s) => !s.workoutDate.isBefore(from) && s.workoutDate.isBefore(to))
+      .toList();
 
   @override
   WorkoutSession? lastWithExercise(String exerciseId, {String? excludeId}) {
     for (final s in _items) {
       if (s.id == excludeId) continue;
-      if (s.exercises.any((e) => e.exerciseId == exerciseId && e.doneSets.isNotEmpty)) return s;
+      if (s.exercises.any(
+        (e) => e.exerciseId == exerciseId && e.doneSets.isNotEmpty,
+      )) {
+        return s;
+      }
     }
     return null;
   }
 }
 
-class MemoryCardioRepository extends ChangeNotifier implements CardioRepository {
+class MemoryCardioRepository extends ChangeNotifier
+    implements CardioRepository {
   MemoryCardioRepository(List<CardioSession> sessions, List<CardioGoal> goals)
-      : _items = [...sessions],
-        _goals = [...goals] {
+    : _items = [...sessions],
+      _goals = [...goals] {
     _sort();
   }
   final List<CardioSession> _items;
@@ -178,7 +219,11 @@ class MemoryCardioRepository extends ChangeNotifier implements CardioRepository 
   final List<CustomCardioActivity> _custom = [];
   void _sort() => _items.sort((a, b) => b.workoutDate.compareTo(a.workoutDate));
 
-  void reset(List<CardioSession> sessions, List<CardioGoal> goals, List<CustomCardioActivity> custom) {
+  void reset(
+    List<CardioSession> sessions,
+    List<CardioGoal> goals,
+    List<CustomCardioActivity> custom,
+  ) {
     _items
       ..clear()
       ..addAll(sessions);
@@ -212,7 +257,8 @@ class MemoryCardioRepository extends ChangeNotifier implements CardioRepository 
   @override
   Future<void> update(CardioSession s) async {
     final i = _items.indexWhere((x) => x.id == s.id);
-    if (i >= 0) _items[i] = s;
+    if (i < 0) return; // never resurrects a deleted row (same as the Isar repositories)
+    _items[i] = s;
     _sort();
     notifyListeners();
   }
@@ -224,8 +270,9 @@ class MemoryCardioRepository extends ChangeNotifier implements CardioRepository 
   }
 
   @override
-  List<CardioSession> between(DateTime from, DateTime to) =>
-      _items.where((s) => !s.workoutDate.isBefore(from) && s.workoutDate.isBefore(to)).toList();
+  List<CardioSession> between(DateTime from, DateTime to) => _items
+      .where((s) => !s.workoutDate.isBefore(from) && s.workoutDate.isBefore(to))
+      .toList();
 
   @override
   List<CardioGoal> get goals => List.unmodifiable(_goals);
@@ -255,7 +302,8 @@ class MemoryCardioRepository extends ChangeNotifier implements CardioRepository 
   }
 }
 
-class MemoryProfileRepository extends ChangeNotifier implements ProfileRepository {
+class MemoryProfileRepository extends ChangeNotifier
+    implements ProfileRepository {
   MemoryProfileRepository([this._profile = const UserProfile()]);
   UserProfile _profile;
   void reset(UserProfile p) {
@@ -273,13 +321,49 @@ class MemoryProfileRepository extends ChangeNotifier implements ProfileRepositor
 }
 
 /// Volatile store (tests / previews). Production uses IsarStore.
-class MemoryStore implements DataStore {
+/// Holds the draft as a JSON string (like the persistent store) so tests exercise
+/// the real serialisation. Unreadable data reads as "no draft".
+class MemoryWorkoutDraftStore extends ChangeNotifier implements WorkoutDraftStore {
+  MemoryWorkoutDraftStore([this._json]);
+  String? _json;
+
+  /// Raw stored value (persistence layers mirror this).
+  String? get rawJson => _json;
+
+  static WorkoutDraft? decode(String? json) {
+    if (json == null) return null;
+    try {
+      return WorkoutDraft.fromJson((jsonDecode(json) as Map).cast<String, Object?>());
+    } catch (_) {
+      return null;
+    }
+  }
+
+  @override
+  WorkoutDraft? get current => decode(_json);
+
+  @override
+  Future<void> save(WorkoutDraft draft) async {
+    _json = jsonEncode(draft.toJson());
+    notifyListeners();
+  }
+
+  @override
+  Future<void> clear() async {
+    if (_json == null) return;
+    _json = null;
+    notifyListeners();
+  }
+}
+
+class MemoryStore implements DataStore, LocalSettingsStore {
   MemoryStore(SeedData seed, {UserProfile profile = const UserProfile()})
-      : exercises = MemoryExerciseRepository(seed.exercises),
-        workouts = MemoryWorkoutRepository(seed.workouts, seed.rotation),
-        sessions = MemorySessionRepository(seed.sessions),
-        cardio = MemoryCardioRepository(seed.cardio, seed.goals),
-        profile = MemoryProfileRepository(profile);
+    : exercises = MemoryExerciseRepository(seed.exercises),
+      workouts = MemoryWorkoutRepository(seed.workouts, seed.rotation),
+      sessions = MemorySessionRepository(seed.sessions),
+      cardio = MemoryCardioRepository(seed.cardio, seed.goals),
+      profile = MemoryProfileRepository(profile),
+      workoutDraft = MemoryWorkoutDraftStore();
 
   @override
   final MemoryExerciseRepository exercises;
@@ -291,12 +375,25 @@ class MemoryStore implements DataStore {
   final MemoryCardioRepository cardio;
   @override
   final MemoryProfileRepository profile;
+  @override
+  final MemoryWorkoutDraftStore workoutDraft;
 
   bool _signedIn = false;
   @override
   bool get signedIn => _signedIn;
   @override
   Future<void> setSignedIn(bool v) async => _signedIn = v;
+
+  int? _maxRaw;
+  String? _noticeJson;
+  @override
+  int? get maxWorkoutMinutesRaw => _maxRaw;
+  @override
+  Future<void> setMaxWorkoutMinutesRaw(int? raw) async => _maxRaw = raw;
+  @override
+  String? get autoEndNoticeJson => _noticeJson;
+  @override
+  Future<void> setAutoEndNoticeJson(String? json) async => _noticeJson = json;
 
   @override
   Future<void> replaceAll(SeedData seed, UserProfile profile) async {
@@ -305,6 +402,7 @@ class MemoryStore implements DataStore {
     sessions.reset(seed.sessions);
     cardio.reset(seed.cardio, seed.goals, const []);
     this.profile.reset(profile);
+    await workoutDraft.clear(); // a draft of the replaced data would be orphaned
   }
 
   @override

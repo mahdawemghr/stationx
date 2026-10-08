@@ -95,6 +95,9 @@ class ExerciseEntity {
   List<StepEmb> instructions = [];
   bool isCustom = false;
   String? tempo;
+
+  /// JSON of the custom exercise's MuscleTargets (null = none; added after v1, nullable so old DBs open).
+  String? muscleTargetsJson;
   MetaEmb meta = MetaEmb();
 }
 
@@ -227,6 +230,17 @@ class AppMetaEntity {
   /// User opted in to the platform health store (needed on iOS, where the OS
   /// cannot report read access). Additive field: existing databases default to false.
   bool healthConnected = false;
+
+  /// JSON of the in-progress workout draft (see WorkoutDraft). Local-only: never synced.
+  /// Additive nullable field: existing databases read it as null.
+  String? workoutDraftJson;
+
+  /// Local-only device preference: maximum workout length in minutes. null = never chosen
+  /// (default 180), 0 = explicitly off. Additive nullable field; never synced.
+  int? maxWorkoutMinutesRaw;
+
+  /// JSON of the pending "workout ended automatically" notice (local-only, until shown).
+  String? autoEndNoticeJson;
 }
 
 /// Singleton (id = 1): cloud-sync bookkeeping. Never contains credentials.

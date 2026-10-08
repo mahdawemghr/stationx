@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../app/app_scope.dart';
 import '../../core/theme/sx_theme.dart';
 import '../../core/theme/sx_typography.dart';
 import '../../core/utils/formatters.dart';
@@ -29,6 +30,7 @@ class _SessionPreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.sx;
+    final miles = !context.app.profile.profile.cardioDistanceUnitKm;
     return SxInset(
       child: Row(children: [
         Icon(Icons.directions_run, color: c.primary, size: 22),
@@ -44,7 +46,7 @@ class _SessionPreview extends StatelessWidget {
         Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
           Text(Fmt.clock(session.durationSeconds), style: SxText.metricSm.copyWith(color: c.textHigh)),
           if (session.distanceKm != null)
-            Text('${Fmt.km(session.distanceKm)} km', style: SxText.bodySm.copyWith(color: c.textBody)),
+            Text('${Fmt.km(session.distanceKm, miles: miles)} ${miles ? 'mi' : 'km'}', style: SxText.bodySm.copyWith(color: c.textBody)),
         ]),
       ]),
     );

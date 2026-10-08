@@ -9,6 +9,7 @@ import '../../core/theme/sx_typography.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/widgets/widgets.dart';
 import '../../domain/domain.dart';
+import 'workout_section_header.dart';
 import 'workout_stats.dart';
 
 /// Workout preview: day header, rotation note, target sequence with last
@@ -74,7 +75,6 @@ class _Preview extends StatelessWidget {
             label: 'Edit workout structure',
             icon: Icons.tune,
             variant: SxButtonVariant.ghost,
-            height: 44,
             onPressed: () => AppNav.workoutEditor(context, workout.id),
           ),
         ],
@@ -111,7 +111,7 @@ class _Preview extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         child: Column(children: [
                           Text('${idx + 1}'.padLeft(2, '0'), style: SxText.metricMd.copyWith(color: c.primary)),
-                          Text('DAY', style: SxText.labelCaps.copyWith(color: c.textBody, fontSize: 10)),
+                          Text('DAY', style: SxText.labelXs.copyWith(color: c.textBody)),
                         ]),
                       ),
                     ],
@@ -135,7 +135,7 @@ class _Preview extends StatelessWidget {
                 ],
                 const SizedBox(height: SxSpace.md),
                 SxInset(
-                  color: Colors.black.withValues(alpha: 0.3),
+                  color: context.sx.ink.withValues(alpha: 0.3),
                   padding: const EdgeInsets.all(12),
                   child: Row(
                     children: [
@@ -169,17 +169,12 @@ class _Preview extends StatelessWidget {
               ),
             )
           else
-            for (var i = 0; i < workout.exercises.length; i++)
-              Padding(
-                padding: const EdgeInsets.only(bottom: SxSpace.sm),
-                child: _SequenceRow(
-                  index: i,
-                  re: workout.exercises[i],
-                  exercise: exercises.byId(workout.exercises[i].exerciseId),
-                  lastSet: _lastSet(sessions, workout.exercises[i].exerciseId),
-                  unit: unit,
-                ),
-              ),
+            _SectionedSequence(
+              sections: WorkoutSections.group(workout.exercises, exercises.all),
+              exercises: exercises,
+              unit: unit,
+              lastSet: (id) => _lastSet(sessions, id),
+            ),
         ],
       ),
     );
@@ -188,6 +183,80 @@ class _Preview extends StatelessWidget {
   SetLog? _lastSet(SessionRepository sessions, String exerciseId) {
     final s = sessions.lastWithExercise(exerciseId);
     return s == null ? null : WorkoutStats.topSet(s, exerciseId);
+  }
+}
+
+/// Target sequence grouped into muscle sections (grouping comes from [WorkoutSections]; order is
+/// the workout's own). Sections can be collapsed; the height change is animated.
+class _SectionedSequence extends StatefulWidget {
+  const _SectionedSequence({required this.sections, required this.exercises, required this.unit, required this.lastSet});
+  final List<WorkoutSection> sections;
+  final ExerciseRepository exercises;
+  final WeightUnit unit;
+  final SetLog? Function(String exerciseId) lastSet;
+
+  @override
+  State<_SectionedSequence> createState() => _SectionedSequenceState();
+}
+
+class _SectionedSequenceState extends State<_SectionedSequence> {
+  final _collapsed = <String>{};
+
+  @override
+  Widget build(BuildContext context) {
+    final seen = <String, int>{};
+    var n = 0;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (final s in widget.sections)
+          Builder(builder: (context) {
+            final ord = seen.update(s.label, (v) => v + 1, ifAbsent: () => 0);
+            final key = '${s.label}#$ord';
+            final collapsed = _collapsed.contains(key);
+            final first = n;
+            n += s.items.length;
+            return Column(
+              key: ValueKey('section_$key'),
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                WorkoutSectionHeader(
+                  section: s,
+                  collapsed: collapsed,
+                  onToggle: () => setState(() => collapsed ? _collapsed.remove(key) : _collapsed.add(key)),
+                ),
+                AnimatedSize(
+                  duration: SxMotion.of(context, SxMotion.short),
+                  curve: SxMotion.enter,
+                  alignment: Alignment.topCenter,
+                  child: collapsed
+                      ? const SizedBox(width: double.infinity)
+                      : Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            for (var j = 0; j < s.items.length; j++)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: SxSpace.sm),
+                                child: SxStagger(
+                                  index: first + j,
+                                  child: _SequenceRow(
+                                    index: s.startIndex + j,
+                                    re: s.items[j],
+                                    exercise: widget.exercises.byId(s.items[j].exerciseId),
+                                    lastSet: widget.lastSet(s.items[j].exerciseId),
+                                    unit: widget.unit,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                ),
+                const SizedBox(height: SxSpace.xs),
+              ],
+            );
+          }),
+      ],
+    );
   }
 }
 
@@ -211,14 +280,13 @@ class _Fact extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label.toUpperCase(), style: SxText.labelCaps.copyWith(color: c.textMuted, fontSize: 9)),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
+                Text(label.toUpperCase(), style: SxText.labelXs.copyWith(color: c.textMuted)),
+                Wrap(
+                  spacing: 4,
+                  crossAxisAlignment: WrapCrossAlignment.end,
                   children: [
                     Text(value, style: SxText.metricMd.copyWith(color: c.textHigh)),
-                    const SizedBox(width: 4),
-                    Flexible(child: Text(unit, style: SxText.bodySm.copyWith(color: c.textBody), overflow: TextOverflow.ellipsis)),
+                    Text(unit, style: SxText.bodySm.copyWith(color: c.textBody)),
                   ],
                 ),
               ],
@@ -295,12 +363,12 @@ class _SequenceRow extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           SxInset(
-            color: Colors.black.withValues(alpha: 0.25),
+            color: context.sx.ink.withValues(alpha: 0.25),
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text('LAST SESSION', style: SxText.labelCaps.copyWith(color: c.textMuted, fontSize: 8)),
+                Text('LAST SESSION', style: SxText.labelXs.copyWith(color: c.textMuted)),
                 const SizedBox(height: 2),
                 Text(lastSet == null ? 'No history' : Fmt.setLabel(lastSet!.weightKg, lastSet!.reps, unit),
                     style: SxText.metricSm.copyWith(color: lastSet == null ? c.textMuted : c.textHigh, fontSize: 12)),

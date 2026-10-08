@@ -11,7 +11,8 @@ import '../../helpers/pump.dart';
 
 /// Pumps a launcher screen with a button that pushes [page], so back-navigation
 /// (and PopScope) behave as in the app.
-Future<AppController> pumpPushed(WidgetTester t, Widget page, {Size size = const Size(390, 844), double textScale = 1}) async {
+Future<AppController> pumpPushed(WidgetTester t, Widget page,
+    {Size size = const Size(390, 844), double textScale = 1, AppController? controller}) async {
   final app = await pumpPage(
     t,
     Builder(
@@ -23,6 +24,7 @@ Future<AppController> pumpPushed(WidgetTester t, Widget page, {Size size = const
     ),
     size: size,
     textScale: textScale,
+    controller: controller,
   );
   await t.tap(find.text('launch'));
   await t.pumpAndSettle();
@@ -80,6 +82,8 @@ void main() {
 
   testWidgets('editing weight via the keypad', (t) async {
     await pumpPage(t, const ActiveWorkoutPage(workoutId: 'w2'));
+    await t.ensureVisible(find.text('47.5').first);
+    await t.pump();
     await t.tap(find.text('47.5').first);
     await t.pumpAndSettle();
     final sheet = find.byType(BottomSheet);
@@ -94,8 +98,12 @@ void main() {
 
   testWidgets('add set and swipe-remove a set', (t) async {
     await pumpPage(t, const ActiveWorkoutPage(workoutId: 'w2'));
+    await t.ensureVisible(find.text('Add Set'));
+    await t.pump();
     await t.tap(find.text('Add Set'));
     await t.pumpAndSettle();
+    await t.ensureVisible(find.text('04'));
+    await t.pump();
     expect(find.text('04'), findsOneWidget);
     expect(find.text('19 OF 19 SETS REMAINING'), findsOneWidget);
     await t.drag(find.text('04'), const Offset(-400, 0));
@@ -160,6 +168,7 @@ void main() {
     final app = await pumpPushed(t, const ActiveWorkoutPage(workoutId: 'w2'));
     final n = app.sessions.sessions.length;
     final idx = app.workouts.rotation.currentIndex;
+    await tapDone(t, 1); // something logged: back must ask
     await t.tap(find.byIcon(Icons.arrow_back));
     await t.pumpAndSettle();
     expect(find.text('DISCARD WORKOUT?'), findsOneWidget);
@@ -277,7 +286,21 @@ void main() {
       }
       expect(c.drafts[0].expanded, isFalse);
       expect(c.drafts[1].expanded, isTrue);
-      expect(c.rest.value, isNull); // no rest after the last set of an exercise
+      expect(c.rest.value, isNotNull); // rest continues between exercises
+      c.dispose();
+    });
+
+    test('no rest after the very last set of the workout', () {
+      final app = AppController()..startDemo();
+      final w = app.workouts.byId('w2')!;
+      final c = ActiveWorkoutController(workout: w, catalog: app.exercises.all, sessions: app.sessions, profile: app.profile.profile);
+      for (final d in c.drafts) {
+        for (var i = 0; i < d.sets.length; i++) {
+          c.toggleSet(d, i);
+        }
+      }
+      expect(c.remainingSets, 0);
+      expect(c.rest.value, isNull);
       c.dispose();
     });
   });

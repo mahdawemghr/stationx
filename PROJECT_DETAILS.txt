@@ -42,6 +42,34 @@ Entry
   * Landing page, local account (create / log in), "Continue as Guest (Offline Mode)".
   * Optional cloud sign-in and "Restore from cloud backup" on a new phone.
 
+Workout sections & limits
+  * Workout preview, editor and the live logger group exercises into muscle sections (for example
+    Legs, Shoulders) from the muscle metadata, keeping your exercise order.
+  * Maximum workout length (Profile > Workout configuration: 2 h / 3 h / 4 h / Off, default 3 h,
+    device-only). When it is reached the workout ends and saves automatically (only sets you marked
+    done; duration capped; rotation advances once) - also if the app was closed meanwhile.
+  * An in-progress workout survives the app being killed ("Resume workout" on Today).
+
+Health apps (opt-in, off by default; Profile > Health & workouts)
+  * Samsung Health works through Android Health Connect (Apple Health on iOS): save your cardio and
+    strength sessions there, fill heart rate / calories from your watch (you confirm), and import
+    workouts recorded elsewhere (preview first, never duplicated).
+
+Schedule setup (after registering; optional for guests; also in Workouts and Profile)
+  * Choose a program: Full Body, Upper / Lower, Push / Pull / Legs, Bro split, or Custom.
+  * "Quick start" takes a preset as is: pick, answer "How many days a week?", review, save.
+    "Customize exercises" lets you tick exercises per day and per muscle, grouped into
+    practical sub-sections (for example Back -> Lats, Upper back & traps, Lower back), with
+    a one-line reason per suggestion and sets/reps steppers.
+  * "+ Add exercise" inside the flow creates your own exercise and ticks it immediately.
+  * Custom: name your days, choose muscles per day; suggestions come from the recommender.
+  * Days per week only sets the weekly session goal. The program is a SEQUENCE: if you miss
+    a day you simply continue with the next workout.
+  * Review shows sets and minutes per day plus a collapsible "Muscle coverage" summary and
+    calm optional hints. Skip is available everywhere; leaving midway asks first.
+  * Saving a new schedule archives the previous workouts (never deletes them) and keeps all
+    history. Guests get a dismissible prompt on Today while they have no schedule or history.
+
 Today (home)
   * Next workout from the rotation, with exercise/set/minute estimates, Start / Preview.
   * Weekly summary (sessions done, volume, records), recent progress, recovery summary
@@ -50,7 +78,11 @@ Today (home)
 Workouts
   * Workout library and detail, create / edit / delete workouts, reorder exercises.
   * "Change next workout" (move the rotation pointer).
-  * Smart Swap: suggests equivalent replacement exercises (same muscle, similar movement).
+  * Replace / Smart Swap: ranks replacement exercises with the muscle-aware recommender
+    (same muscle subgroup first, then movement, purpose, equipment, your history).
+  * "Archived" section: workouts that are no longer in the rotation (for example after you
+    change your schedule). They stay openable, editable and startable, can be added back to
+    the rotation, and are only deleted if you delete them yourself.
 
 Active workout (strength logger)
   * Per-exercise set rows (weight, reps, done), numeric keypad, previous performance,
@@ -58,8 +90,11 @@ Active workout (strength logger)
   * Finishing a workout advances the rotation; backdated sessions are supported.
 
 Exercises
-  * Library with search/filters, exercise details (muscle map, history, PRs, e1RM chart),
-    custom exercises.
+  * Library of 212 built-in exercises with search, muscle filter, sub-muscle filter (for
+    example Back -> Lats / Upper back / Traps / Lower back), equipment filter and a
+    "Common" quick filter.
+  * Exercise details: muscle map, primary and assisting muscles (from the muscle profile),
+    history, PRs, e1RM chart. Custom exercises can be created.
 
 Progress
   * Volume and strength trends, estimated 1RM chart, personal records, muscle-group
@@ -69,6 +104,9 @@ History
   * Session list, calendar view, session details, edit and delete.
 
 Cardio
+  * 20 activity types (treadmill, outdoor/trail run, hiking, bikes incl. spin and air bike, rowing,
+    ski erg, elliptical, arc trainer, stair/vertical climber, swimming, arm ergometer, HIIT, boxing,
+    jump rope, custom); rowing/ski erg show pace per 500 m, swimming per 100 m.
   * Live cardio session and manual logging for run / treadmill / bike / row / etc.
     Fields adapt to the activity type (distance, duration, pace, incline, resistance, heart
     rate, calories...). Cardio goals, records, history, edit and delete.
@@ -116,10 +154,29 @@ lib/
     sync/     Supabase sync: config guard, auth, gateway, SyncEngine, controller
     import/   Gym Tracker importer (plan -> apply), exercise alias map, file source
   features/   one folder per area: landing, auth, today, workouts, active_workout,
-              exercises, progress, history, cardio, profile, cloud, health, shell
+              exercises, progress, history, cardio, profile, cloud, health, shell,
+              onboarding (schedule setup flow)
 
 The UI depends only on repository interfaces and domain services, so storage can change
 without touching screens.
+
+Muscle and recommendation layer (all pure Dart, in lib/domain):
+  models/muscle.dart ........ taxonomy: MuscleRegion (11) -> Muscle (practical subdivisions),
+                              MuscleTarget (region, optional subgroup, primary/assisting role,
+                              optional emphasis/weight), ExerciseMuscleProfile (many targets),
+                              MuscleWeights (primary 1.0, assisting 0.5 - one place)
+  services/muscle_profiles .. detailed profile for each of the 212 built-in exercises; broad
+                              fallback derived from the stored fields when nothing else exists
+  services/muscle_coverage .. coverage of a workout, a program or logged history: direct sets
+                              (primary only) vs weighted sets (plus assisting), High /
+                              Moderate / Low levels per week (practical guideline numbers)
+  services/exercise_recommender  one engine for day generation, replacement ranking and
+                              informational gap hints; SmartSwapService delegates to it
+  services/split_catalog .... presets, sub-sections, "common" list, suggestions
+  services/split_models + schedule_builder .. the designed days and saving them as workouts
+                              and a rotation (never deletes, can restore archived workouts)
+The simplified 7-way MuscleGroup stays as the broad layer used by storage, sync and simple
+UI, so the detailed taxonomy needed no schema change for built-in exercises.
 
 
 6. DATA & PERSISTENCE
@@ -129,7 +186,38 @@ without touching screens.
   * Every record carries SyncMeta (createdAt, updatedAt, syncStatus) so sync is possible
     without changing the data model.
   * Batch writes (for example imports) use a single transaction and a single notification.
+  * Opening the app tops up the exercise catalog: seed exercises that are missing are added;
+    existing and custom exercises are never overwritten or deleted.
 
+
+6b. MUSCLE TAXONOMY & RECOMMENDATIONS
+-------------------------------------
+  * Taxonomy: Chest (upper / mid / lower), Back (lats, upper back, traps, lower back),
+    Shoulders (front / side / rear delts), Biceps (long head, short head, brachialis),
+    Triceps (long / lateral / medial head), Forearms, Quadriceps, Hamstrings, Glutes, Calves,
+    Core (abs, obliques, deep core). It is practical gym terminology, not an anatomy claim.
+  * Every built-in exercise has structured targets: primary and assisting muscles, with a
+    subgroup only where it is defensible; otherwise the whole region (no fake precision).
+    Examples: Lat Pulldown = Back -> Lats (assisting: biceps, upper back); Incline DB Press =
+    Chest -> Upper chest (assisting: triceps, front delts); Romanian Deadlift = hamstrings
+    (assisting: glutes, lower back).
+  * Primary vs assisting is never treated the same: a primary set counts 1.0, an assisting set
+    0.5. "Direct" coverage counts only primary work, so Bench Press is direct chest work and
+    only assisting work for triceps and front delts.
+  * Used for: schedule/day generation (a day stops adding exercises to a muscle once it is
+    covered), replacement ranking, muscle coverage (workout, program, history), weekly volume
+    levels and informational "might be under-trained" hints. Hints are optional suggestions,
+    never commands.
+  * Equipment filtering is supported by the engine (allowedEquipment) but there is no
+    equipment question in onboarding yet (planned for later).
+  * Custom exercises use the SAME structure as built-ins: region, optional subgroup, role
+    (primary / assisting) and optional emphasis, stored in a new nullable field (Isar
+    muscleTargetsJson, Supabase column muscle_targets jsonb). The create-exercise sheet has a
+    "Muscles trained" editor. The same 1.0 / 0.5 weighting and recommender apply. Exercises
+    created before this change keep working with broad, region-level targets.
+    IMPORTANT: apply supabase/migrations/20261009000000_exercise_muscle_targets.sql to the
+    Supabase project BEFORE shipping this build; without the column, exercise sync shows the
+    normal sync error and retries (nothing is lost).
 
 7. OPTIONAL CLOUD SYNC (SUPABASE)
 ---------------------------------
@@ -194,7 +282,7 @@ Profile > Integrations > "Import from Gym Tracker" -> choose the file (or paste 
 
 12. TESTING
 -----------
-About 420 tests across test/{domain,data,features,a11y,perf,app,core,store,helpers,e2e}:
+About 540 tests across test/{domain,data,features,a11y,perf,app,core,store,helpers,e2e}:
   * unit tests for the domain services, mappers and sync engine (two simulated phones plus a
     fake server with the same last-write-wins rules);
   * widget tests for every feature, including overflow and empty states;
@@ -203,7 +291,9 @@ About 420 tests across test/{domain,data,features,a11y,perf,app,core,store,helpe
     (SUPABASE_E2E=1 flutter test test/e2e ...);
   * a store-screenshot generator (STORE_SHOTS=1 flutter test test/store) producing
     1080x2400 phone screenshots into docs/store/screenshots.
-Latest status: flutter analyze clean, all tests passing, debug APK builds.
+  * schedule setup, archive/restore, muscle profiles/coverage and the recommender have their
+    own unit and widget tests (including overflow checks at 320x568 with 2x text).
+Latest status: flutter analyze clean, 536 tests passing.
 
 
 13. RUNNING / BUILDING
@@ -235,6 +325,11 @@ Release steps (signing, store listing, data-safety form) are in docs/RELEASE.md.
   * Not yet tested on a real phone: sign-in/sync over flaky networks, long-idle token
     refresh, Health Connect on device, the Gym Tracker file import with real data, and iOS
     (never built).
+  * The Supabase migration for custom-exercise muscle targets (see 6b) has NOT been applied
+    to the live project and must be run by the owner before shipping; its SQL checks were
+    written but not executed.
+  * The Workouts tab header overflows at 320 px width with 2x text (pre-existing).
+  * Swap match percentages changed with the new ranking; they are a ranking aid, not a claim.
   * Cloud conflicts are resolved per row (newest wins), not per field.
   * Password reset needs a hosted page; Supabase Site URL, min password length and SMTP
     settings are owner decisions.

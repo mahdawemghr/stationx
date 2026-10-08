@@ -5,6 +5,7 @@ import '../theme/sx_theme.dart';
 import '../theme/sx_typography.dart';
 import 'sx_button.dart';
 import 'sx_logo.dart';
+import 'sx_motion_widgets.dart';
 
 /// Top bar used on pushed screens: back button, title, optional status pill and
 /// trailing actions. Kept as a plain widget (not AppBar) for exact Stitch metrics.
@@ -88,10 +89,7 @@ class SxTopBar extends StatelessWidget implements PreferredSizeWidget {
                             subtitle!,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: SxText.labelCaps.copyWith(
-                              color: c.textBody,
-                              fontSize: 10,
-                            ),
+                            style: SxText.labelXs.copyWith(color: c.textBody),
                           ),
                       ],
                     ),
@@ -129,6 +127,7 @@ class SxScaffold extends StatelessWidget {
     this.controller,
     this.resizeToAvoidBottomInset = true,
     this.onRefresh,
+    this.animateIn = false,
   }) : assert(children != null || body != null);
 
   final PreferredSizeWidget? topBar;
@@ -146,6 +145,9 @@ class SxScaffold extends StatelessWidget {
   final bool resizeToAvoidBottomInset;
   final Future<void> Function()? onRefresh;
 
+  /// Wrap the [children] in a first-build [SxStagger] entry.
+  final bool animateIn;
+
   @override
   Widget build(BuildContext context) {
     final c = context.sx;
@@ -154,9 +156,12 @@ class SxScaffold extends StatelessWidget {
         ListView.separated(
           controller: controller,
           padding: padding,
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           itemCount: children!.length,
           separatorBuilder: (_, _) => SizedBox(height: gap),
-          itemBuilder: (_, i) => children![i],
+          itemBuilder: (_, i) => animateIn
+              ? SxStagger(index: i, child: children![i])
+              : children![i],
         );
     if (onRefresh != null && body == null) {
       content = RefreshIndicator(
@@ -296,7 +301,7 @@ class _LocalPill extends StatelessWidget {
             child: Text(
               'LOCAL',
               overflow: TextOverflow.ellipsis,
-              style: SxText.labelCaps.copyWith(color: c.textBody, fontSize: 10),
+              style: SxText.labelXs.copyWith(color: c.textBody),
             ),
           ),
         ],
@@ -339,10 +344,7 @@ class SxBottomCta extends StatelessWidget {
                     child: Text(
                       caption!,
                       overflow: TextOverflow.ellipsis,
-                      style: SxText.labelCaps.copyWith(
-                        color: c.textBody,
-                        fontSize: 10,
-                      ),
+                      style: SxText.labelXs.copyWith(color: c.textBody),
                     ),
                   ),
                 if (captionRight != null)
@@ -350,10 +352,7 @@ class SxBottomCta extends StatelessWidget {
                     child: Text(
                       captionRight!,
                       overflow: TextOverflow.ellipsis,
-                      style: SxText.labelCaps.copyWith(
-                        color: c.primary,
-                        fontSize: 10,
-                      ),
+                      style: SxText.labelXs.copyWith(color: c.primary),
                     ),
                   ),
               ],

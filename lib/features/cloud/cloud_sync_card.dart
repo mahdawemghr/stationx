@@ -49,7 +49,7 @@ class CloudSyncCard extends StatelessWidget {
                   if (ctl.phase == CloudSyncPhase.syncing)
                     Padding(
                       padding: const EdgeInsets.only(right: 8),
-                      child: SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: c.primary)),
+                      child: SxSpinner(size: 14, color: c.primary, semanticLabel: 'Syncing'),
                     ),
                   Expanded(child: Text(subtitle, style: SxText.bodySm.copyWith(color: color))),
                 ]),

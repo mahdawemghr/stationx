@@ -77,6 +77,38 @@ void main() {
   });
 
   group('Edit', () {
+    testWidgets('custom activity session keeps its distance when the activity has no distance field', (t) async {
+      final app = await pumpPage(t, _onTop(const EditCardioSessionPage(sessionId: 'cust1')), size: const Size(390, 1600), demo: false);
+      await app.cardio.addCustomActivity(CustomCardioActivity(id: 'ca', name: 'Stroll', fields: const [CardioField.duration]));
+      await app.cardio.add(CardioSession(
+        id: 'cust1',
+        kind: CardioKind.custom,
+        workoutDate: DateTime.now().subtract(const Duration(days: 1)),
+        durationSeconds: 1800,
+        distanceKm: 3.5,
+        customActivityId: 'ca',
+      ));
+      await _open(t);
+      expect(find.text('DISTANCE COVERED'), findsOneWidget);
+      await t.tap(find.text('SAVE CHANGES'));
+      await t.pumpAndSettle();
+      expect(app.cardio.byId('cust1')!.distanceKm, closeTo(3.5, 1e-9));
+    });
+
+    testWidgets('custom session without a distance stays distance-free', (t) async {
+      final app = await pumpPage(t, _onTop(const EditCardioSessionPage(sessionId: 'cust2')), size: const Size(390, 1600), demo: false);
+      await app.cardio.addCustomActivity(CustomCardioActivity(id: 'cb', name: 'Yoga flow', fields: const [CardioField.duration]));
+      await app.cardio.add(CardioSession(
+        id: 'cust2',
+        kind: CardioKind.custom,
+        workoutDate: DateTime.now().subtract(const Duration(days: 1)),
+        durationSeconds: 1800,
+        customActivityId: 'cb',
+      ));
+      await _open(t);
+      expect(find.text('DISTANCE COVERED'), findsNothing);
+    });
+
     testWidgets('recomputes pace live and saves, keeping createdAt', (t) async {
       final app = await pumpPage(t, _onTop(const EditCardioSessionPage(sessionId: 'seed_c0')), size: const Size(390, 1600));
       final original = app.cardio.byId('seed_c0')!;

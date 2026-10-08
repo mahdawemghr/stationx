@@ -106,7 +106,7 @@ class _BackdateCardioPageState extends State<BackdateCardioPage> {
               const SizedBox(width: 6),
               Expanded(
                 child: Text('LOGGED TODAY (${Fmt.dateMedium(DateTime.now()).toUpperCase()})',
-                    style: SxText.labelCaps.copyWith(color: c.primary, fontSize: 10), overflow: TextOverflow.ellipsis),
+                    style: SxText.labelXs.copyWith(color: c.primary), overflow: TextOverflow.ellipsis),
               ),
             ]),
           ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../app/app_scope.dart';
+import '../../app/nav.dart';
 import '../../app/app_version.dart';
 import '../../core/theme/sx_spacing.dart';
 import '../../core/theme/sx_theme.dart';
@@ -12,7 +13,10 @@ import '../../domain/domain.dart';
 import '../cloud/cloud_sync_card.dart';
 import '../health/health_actions.dart';
 import '../landing/landing_page.dart';
+import '../onboarding/schedule_setup_entry.dart';
+import 'export_saver.dart';
 import 'gym_tracker_import_flow.dart';
+import 'sync_status_pill.dart';
 import 'privacy_page.dart';
 import 'export_builder.dart';
 
@@ -20,7 +24,10 @@ import 'export_builder.dart';
 /// Profile & settings tab (Stitch: profile_app_settings). Every control is
 /// persisted through [ProfileRepository.update].
 class ProfilePage extends StatelessWidget {
-  const ProfilePage({super.key});
+  const ProfilePage({super.key, this.exportSaver = saveExportWithFilePicker});
+
+  /// Injectable so tests (and platforms without a save dialog) can replace the file save.
+  final ExportSaver exportSaver;
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +38,7 @@ class ProfilePage extends StatelessWidget {
         final p = app.profile.profile;
         Future<void> save(UserProfile n) => app.profile.update(n);
         return SxScaffold(
-          topBar: const SxTopBar(title: 'Profile', showBack: false, showLogo: true, pill: StatusPill('Local', dot: true)),
+          topBar: const SxTopBar(title: 'Profile', showBack: false, showLogo: true, pill: SyncStatusPill()),
           gap: SxSpace.sm,
           padding: const EdgeInsets.fromLTRB(SxSpace.md, SxSpace.md, SxSpace.md, SxSpace.xl),
           children: [
@@ -40,7 +47,15 @@ class ProfilePage extends StatelessWidget {
             SectionHeader('Your data', icon: Icons.straighten, trailingText: 'Tap to edit'),
             _MetricsRow(profile: p, onSave: save),
             const SizedBox(height: SxSpace.sm),
-            const SectionHeader('Workout configuration', icon: Icons.tune),
+            SectionHeader(
+              'Workout configuration',
+              icon: Icons.tune,
+              trailing: TextButton(
+                onPressed: () => startScheduleSetup(context),
+                style: TextButton.styleFrom(minimumSize: const Size(48, 48), padding: const EdgeInsets.symmetric(horizontal: 8)),
+                child: Text('Set up my schedule', style: SxText.labelUi.copyWith(color: context.sx.primary)),
+              ),
+            ),
             _WorkoutConfig(profile: p, onSave: save),
             const SizedBox(height: SxSpace.sm),
             const SectionHeader('Preferences', icon: Icons.palette_outlined),
@@ -53,6 +68,22 @@ class ProfilePage extends StatelessWidget {
             const SizedBox(height: SxSpace.sm),
             SectionHeader('App & safety', icon: Icons.terminal, trailing: const _VersionLabel()),
             _Safety(
+              signedInToCloud: app.cloud.user != null,
+              hasDemoData: app.hasDemoData,
+              onRemoveDemo: () async {
+                final ok = await showSxConfirm(
+                  context,
+                  title: 'Remove demo data?',
+                  message: 'Removes only the sample workouts and cardio. Anything you logged yourself, your routines and your profile are kept.',
+                  confirmLabel: 'Remove demo data',
+                  destructive: true,
+                  icon: Icons.science_outlined,
+                );
+                if (ok && context.mounted) {
+                  await app.removeDemoData();
+                  if (context.mounted) showSxSnack(context, 'Demo data removed');
+                }
+              },
               onPrivacy: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const PrivacyPage())),
               onWipe: () async {
                 final ok = await showSxConfirm(
@@ -72,17 +103,23 @@ class ProfilePage extends StatelessWidget {
                 }
               },
               onLoadDemo: () async {
+                if (!app.canLoadDemo) {
+                  showSxSnack(context, 'Demo data would replace your cloud-synced data. Sign out of cloud sync first.', icon: Icons.info_outline);
+                  return;
+                }
                 final ok = await showSxConfirm(
                   context,
                   title: 'Load demo data?',
-                  message: 'Replaces ALL data on this device with about 8 weeks of sample workouts and cardio, so you can explore the app. Your profile is kept. This cannot be undone.',
+                  message: app.hasRealTrainingData
+                      ? 'WARNING: you have workouts you logged yourself. Loading demo data permanently replaces ALL of them on this device with about 8 weeks of sample history. Your profile is kept. This cannot be undone.'
+                      : 'Replaces ALL data on this device with about 8 weeks of sample workouts and cardio, so you can explore the app. Your profile is kept. This cannot be undone.',
                   confirmLabel: 'Replace with demo data',
                   destructive: true,
                   icon: Icons.science_outlined,
                 );
                 if (ok && context.mounted) {
-                  await app.loadDemoData();
-                  if (context.mounted) showSxSnack(context, 'Demo data loaded');
+                  final loaded = await app.loadDemoData(replaceExisting: true); // explicit confirm above
+                  if (context.mounted) showSxSnack(context, loaded ? 'Demo data loaded' : 'Demo data was not loaded');
                 }
               },
               onSignOut: () async {
@@ -94,7 +131,7 @@ class ProfilePage extends StatelessWidget {
             const SizedBox(height: SxSpace.md),
             Center(
               child: Text('STATIONX • LOCAL-FIRST STRENGTH & CARDIO LOG',
-                  textAlign: TextAlign.center, style: SxText.labelCaps.copyWith(color: context.sx.textMuted, fontSize: 10)),
+                  textAlign: TextAlign.center, style: SxText.labelXs.copyWith(color: context.sx.textMuted)),
             ),
           ],
         );
@@ -103,25 +140,42 @@ class ProfilePage extends StatelessWidget {
   }
 
   Future<void> _editName(BuildContext context, UserProfile p, Future<void> Function(UserProfile) save) async {
-    final ctl = TextEditingController(text: p.name);
-    final name = await showSxSheet<String>(
-      context,
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.all(SxSpace.md),
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          SxTextField(label: 'Display name', controller: ctl, icon: Icons.person_outline, textInputAction: TextInputAction.done, onSubmitted: (v) => Navigator.pop(ctx, v)),
-          const SizedBox(height: SxSpace.md),
-          SxButton(label: 'Save', onPressed: () => Navigator.pop(ctx, ctl.text)),
-        ]),
-      ),
-    );
-    ctl.dispose();
+    final name = await showSxSheet<String>(context, builder: (ctx) => _EditNameSheet(initial: p.name));
     if (name != null && name.trim().isNotEmpty) await save(p.copyWith(name: name.trim()));
   }
 
   void _showExport(BuildContext context, UserProfile p, List<WorkoutSession> s, List<CardioSession> c) {
-    showSxSheet<void>(context, builder: (_) => _ExportSheet(profile: p, sessions: s, cardio: c));
+    showSxSheet<void>(context, builder: (_) => _ExportSheet(profile: p, sessions: s, cardio: c, saver: exportSaver));
   }
+}
+
+/// Owns (and disposes) its own controller; scrolls when the keyboard or large text needs room.
+class _EditNameSheet extends StatefulWidget {
+  const _EditNameSheet({required this.initial});
+  final String initial;
+
+  @override
+  State<_EditNameSheet> createState() => _EditNameSheetState();
+}
+
+class _EditNameSheetState extends State<_EditNameSheet> {
+  late final TextEditingController _ctl = TextEditingController(text: widget.initial);
+
+  @override
+  void dispose() {
+    _ctl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => SingleChildScrollView(
+        padding: const EdgeInsets.all(SxSpace.md),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          SxTextField(label: 'Display name', controller: _ctl, icon: Icons.person_outline, textInputAction: TextInputAction.done, onSubmitted: (v) => Navigator.pop(context, v)),
+          const SizedBox(height: SxSpace.md),
+          SxButton(label: 'Save', onPressed: () => Navigator.pop(context, _ctl.text)),
+        ]),
+      );
 }
 
 class _IdentityCard extends StatelessWidget {
@@ -145,7 +199,7 @@ class _IdentityCard extends StatelessWidget {
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(profile.name, maxLines: 2, overflow: TextOverflow.ellipsis, style: SxText.headlineMd.copyWith(color: c.textHigh)),
               const SizedBox(height: 4),
-              Text(profile.isGuest ? 'Guest · demo data' : (profile.email.isEmpty ? 'Local profile' : profile.email),
+              Text(profile.isGuest ? 'Guest · local only' : (profile.email.isEmpty ? 'Local profile' : profile.email),
                   maxLines: 1, overflow: TextOverflow.ellipsis, style: SxText.bodySm.copyWith(color: c.textBody)),
             ]),
           ),
@@ -178,7 +232,7 @@ class _MiniStat extends StatelessWidget {
         const SizedBox(width: 8),
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(label.toUpperCase(), maxLines: 1, overflow: TextOverflow.ellipsis, style: SxText.labelCaps.copyWith(color: c.textBody, fontSize: 9)),
+            Text(label.toUpperCase(), maxLines: 1, overflow: TextOverflow.ellipsis, style: SxText.labelXs.copyWith(color: c.textBody)),
             FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerLeft, child: Text(value, style: SxText.metricSm.copyWith(color: c.textHigh))),
           ]),
         ),
@@ -252,7 +306,7 @@ class _MetricTile extends StatelessWidget {
       onTap: onTap,
       padding: const EdgeInsets.all(12),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(label.toUpperCase(), maxLines: 1, overflow: TextOverflow.ellipsis, style: SxText.labelCaps.copyWith(color: c.textBody, fontSize: 10)),
+        Text(label.toUpperCase(), maxLines: 1, overflow: TextOverflow.ellipsis, style: SxText.labelXs.copyWith(color: c.textBody)),
         const SizedBox(height: 8),
         Row(crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
           Flexible(child: FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerLeft, child: Text(value, style: SxText.metricLg.copyWith(color: c.textHigh)))),
@@ -280,11 +334,7 @@ class _WorkoutConfig extends StatelessWidget {
         _Row(
           title: 'Default working sets',
           subtitle: 'Baseline for new exercises',
-          trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-            _Step(icon: Icons.remove, label: 'Decrease sets', onTap: p.defaultSets > 1 ? () => onSave(p.copyWith(defaultSets: p.defaultSets - 1)) : null),
-            SizedBox(width: 32, child: Center(child: Text('${p.defaultSets}', style: SxText.metricMd.copyWith(color: c.primary)))),
-            _Step(icon: Icons.add, label: 'Increase sets', onTap: p.defaultSets < 10 ? () => onSave(p.copyWith(defaultSets: p.defaultSets + 1)) : null),
-          ]),
+          trailing: SxStepper.int(label: 'sets', value: p.defaultSets, min: 1, max: 10, onChanged: (v) => onSave(p.copyWith(defaultSets: v))),
         ),
         Divider(height: 1, color: c.hairline),
         _Row(
@@ -295,8 +345,8 @@ class _WorkoutConfig extends StatelessWidget {
         ),
         Divider(height: 1, color: c.hairline),
         _Row(
-          title: 'Progression engine',
-          subtitle: 'Recommends weight & reps from your last session',
+          title: 'Suggest weights & reps',
+          subtitle: 'Recommends your next weight and reps from your last session',
           trailing: Switch(
             value: p.progressionEnabled,
             onChanged: (v) => onSave(p.copyWith(progressionEnabled: v)),
@@ -315,14 +365,12 @@ class _WorkoutConfig extends StatelessWidget {
           ]),
         ),
         Divider(height: 1, color: c.hairline),
+        const _MaxLengthRow(),
+        Divider(height: 1, color: c.hairline),
         _Row(
           title: 'Weekly session target',
           subtitle: 'Shown on Today',
-          trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-            _Step(icon: Icons.remove, label: 'Decrease target', onTap: p.weeklySessionTarget > 1 ? () => onSave(p.copyWith(weeklySessionTarget: p.weeklySessionTarget - 1)) : null),
-            SizedBox(width: 32, child: Center(child: Text('${p.weeklySessionTarget}', style: SxText.metricMd.copyWith(color: c.primary)))),
-            _Step(icon: Icons.add, label: 'Increase target', onTap: p.weeklySessionTarget < 14 ? () => onSave(p.copyWith(weeklySessionTarget: p.weeklySessionTarget + 1)) : null),
-          ]),
+          trailing: SxStepper.int(label: 'target', value: p.weeklySessionTarget, min: 1, max: 14, onChanged: (v) => onSave(p.copyWith(weeklySessionTarget: v))),
         ),
       ]),
     );
@@ -338,9 +386,9 @@ class _WorkoutConfig extends StatelessWidget {
           child: Column(mainAxisSize: MainAxisSize.min, children: [
             Text('DEFAULT REP WINDOW', style: SxText.labelCaps.copyWith(color: ctx.sx.textBody)),
             const SizedBox(height: SxSpace.md),
-            _Stepper(label: 'Min reps', value: lo, onChanged: (v) => set(() { lo = v.clamp(1, hi); })),
+            _StepperRow(label: 'Min reps', value: lo, min: 1, max: hi, onChanged: (v) => set(() => lo = v)),
             const SizedBox(height: 8),
-            _Stepper(label: 'Max reps', value: hi, onChanged: (v) => set(() { hi = v.clamp(lo, 50); })),
+            _StepperRow(label: 'Max reps', value: hi, min: lo, max: 50, onChanged: (v) => set(() => hi = v)),
             const SizedBox(height: SxSpace.md),
             SxButton(label: 'Save', onPressed: () => Navigator.pop(ctx, (lo, hi))),
           ]),
@@ -377,47 +425,46 @@ class _WorkoutConfig extends StatelessWidget {
   }
 }
 
-class _Stepper extends StatelessWidget {
-  const _Stepper({required this.label, required this.value, required this.onChanged});
-  final String label;
-  final int value;
-  final ValueChanged<int> onChanged;
+/// Maximum workout length: a workout ends and saves automatically at this length.
+class _MaxLengthRow extends StatelessWidget {
+  const _MaxLengthRow();
+
+  static const _options = [120, 180, 240, null];
+  static const _labels = ['2 h', '3 h', '4 h', 'Off'];
 
   @override
   Widget build(BuildContext context) {
     final c = context.sx;
-    return Row(children: [
-      Expanded(child: Text(label, style: SxText.bodyLg.copyWith(color: c.textHigh))),
-      _Step(icon: Icons.remove, label: 'Decrease $label', onTap: () => onChanged(value - 1)),
-      SizedBox(width: 44, child: Center(child: Text('$value', style: SxText.metricMd.copyWith(color: c.primary)))),
-      _Step(icon: Icons.add, label: 'Increase $label', onTap: () => onChanged(value + 1)),
-    ]);
+    final app = context.app;
+    final current = app.maxWorkoutMinutes;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: SxSpace.md, vertical: 12),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text('Maximum workout length', style: SxText.bodyLg.copyWith(color: c.textHigh, fontWeight: FontWeight.w600)),
+        const SizedBox(height: 2),
+        Text('A workout ends and saves automatically when it reaches this length. Sets you logged are kept.', style: SxText.bodySm.copyWith(color: c.textBody)),
+        const SizedBox(height: 10),
+        SxSegmented(
+          labels: _labels,
+          index: _options.contains(current) ? _options.indexOf(current) : 1,
+          onChanged: (i) => app.setMaxWorkoutMinutes(_options[i]),
+        ),
+      ]),
+    );
   }
 }
 
-class _Step extends StatelessWidget {
-  const _Step({required this.icon, required this.label, required this.onTap});
-  final IconData icon;
+class _StepperRow extends StatelessWidget {
+  const _StepperRow({required this.label, required this.value, required this.min, required this.max, required this.onChanged});
   final String label;
-  final VoidCallback? onTap;
+  final int value, min, max;
+  final ValueChanged<int> onChanged;
 
   @override
-  Widget build(BuildContext context) {
-    final c = context.sx;
-    return Semantics(
-      button: true,
-      label: label,
-      child: Material(
-        color: c.surface2,
-        borderRadius: BorderRadius.circular(SxRadius.base),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(SxRadius.base),
-          onTap: onTap,
-          child: SizedBox(width: 48, height: 48, child: Icon(icon, size: 20, color: onTap == null ? c.textMuted : c.textHigh)),
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => Row(children: [
+        Expanded(child: Text(label, style: SxText.bodyLg.copyWith(color: context.sx.textHigh))),
+        SxStepper.int(label: label, value: value, min: min, max: max, onChanged: onChanged),
+      ]);
 }
 
 class _Row extends StatelessWidget {
@@ -439,7 +486,7 @@ class _Row extends StatelessWidget {
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(title, style: SxText.bodyLg.copyWith(color: c.textHigh, fontWeight: FontWeight.w600)),
               const SizedBox(height: 2),
-              Text(subtitle, style: SxText.bodySm.copyWith(color: c.textBody)),
+              SxSwap(alignment: Alignment.centerLeft, child: Text(subtitle, key: ValueKey(subtitle), style: SxText.bodySm.copyWith(color: c.textBody))),
             ]),
           ),
           const SizedBox(width: 12),
@@ -463,7 +510,7 @@ class _Preferences extends StatelessWidget {
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
           Expanded(child: Text('Measurement unit', style: SxText.bodyLg.copyWith(color: c.textHigh, fontWeight: FontWeight.w600))),
-          Text('METRIC / IMPERIAL', style: SxText.labelCaps.copyWith(color: c.textMuted, fontSize: 10)),
+          Text('METRIC / IMPERIAL', style: SxText.labelXs.copyWith(color: c.textMuted)),
         ]),
         const SizedBox(height: 10),
         SxSegmented(
@@ -498,19 +545,21 @@ class _Integrations extends StatelessWidget {
       child: Column(children: [
         const _HealthRow(),
         const SizedBox(height: SxSpace.md),
+        const _HealthSyncRow(),
+        const SizedBox(height: SxSpace.md),
         const CloudSyncCard(),
         Row(children: [
           _IconBox(Icons.offline_bolt_outlined, c.primary),
           const SizedBox(width: 12),
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('Local-first engine', style: SxText.bodyLg.copyWith(color: c.textHigh, fontWeight: FontWeight.w600)),
-              Text('Offline ready • Isar database stored on this device', style: SxText.bodySm.copyWith(color: c.textBody)),
+              Text('Stored on this phone', style: SxText.bodyLg.copyWith(color: c.textHigh, fontWeight: FontWeight.w600)),
+              Text('Works offline · your data is stored on this phone', style: SxText.bodySm.copyWith(color: c.textBody)),
             ]),
           ),
         ]),
         const SizedBox(height: SxSpace.md),
-        SxButton(label: 'Export CSV / JSON', icon: Icons.file_download_outlined, variant: SxButtonVariant.secondary, height: 48, onPressed: onExport),
+        SxButton(label: 'Export your data', icon: Icons.file_download_outlined, variant: SxButtonVariant.secondary, height: 48, onPressed: onExport),
         const SizedBox(height: 8),
         SxButton(label: 'Import from Gym Tracker', icon: Icons.file_upload_outlined, variant: SxButtonVariant.secondary, height: 48, onPressed: () => importFromGymTracker(context)),
       ]),
@@ -564,6 +613,41 @@ class _HealthRow extends StatelessWidget {
   }
 }
 
+/// Opens the opt-in "Health & workouts" sync settings.
+class _HealthSyncRow extends StatelessWidget {
+  const _HealthSyncRow();
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.sx;
+    final sync = context.app.healthSync;
+    return ListenableBuilder(
+      listenable: sync,
+      builder: (context, _) {
+        final on = HealthFeature.values.where(sync.isEnabled).length;
+        return InkWell(
+          onTap: () => AppNav.healthSyncSettings(context),
+          borderRadius: BorderRadius.circular(SxRadius.md),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 48),
+            child: Row(children: [
+              _IconBox(Icons.sync_alt, on > 0 ? c.primary : c.textMuted),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text('Health & workouts', style: SxText.bodyLg.copyWith(color: c.textHigh, fontWeight: FontWeight.w600)),
+                  Text(on == 0 ? 'Off · save, fill in and import workouts' : '$on of 3 turned on', style: SxText.bodySm.copyWith(color: c.textBody)),
+                ]),
+              ),
+              Icon(Icons.chevron_right, color: c.textMuted),
+            ]),
+          ),
+        );
+      },
+    );
+  }
+}
+
 class _IconBox extends StatelessWidget {
   const _IconBox(this.icon, this.color);
   final IconData icon;
@@ -579,7 +663,10 @@ class _IconBox extends StatelessWidget {
 }
 
 class _Safety extends StatelessWidget {
-  const _Safety({required this.onWipe, required this.onSignOut, required this.onLoadDemo, required this.onPrivacy});
+  const _Safety({required this.signedInToCloud, required this.hasDemoData, required this.onRemoveDemo, required this.onWipe, required this.onSignOut, required this.onLoadDemo, required this.onPrivacy});
+  final bool signedInToCloud;
+  final bool hasDemoData;
+  final VoidCallback onRemoveDemo;
   final VoidCallback onWipe;
   final VoidCallback onSignOut;
   final VoidCallback onLoadDemo;
@@ -599,8 +686,10 @@ class _Safety extends StatelessWidget {
         ),
         Divider(height: 1, color: c.hairline),
         _Row(
-          title: 'Sign out',
-          subtitle: 'Return to the welcome screen',
+          title: 'Switch profile',
+          subtitle: signedInToCloud
+              ? 'Back to the welcome screen. To stop syncing, use Sign out under Cloud backup — data stays on this phone'
+              : 'Back to the welcome screen. Your data stays on this phone',
           onTap: onSignOut,
           trailing: Icon(Icons.logout, color: c.textBody),
         ),
@@ -611,16 +700,28 @@ class _Safety extends StatelessWidget {
           onTap: onLoadDemo,
           trailing: Icon(Icons.science_outlined, color: c.textBody),
         ),
+        AnimatedSize(
+          duration: SxMotion.of(context, SxMotion.short),
+          curve: SxMotion.enter,
+          alignment: Alignment.topCenter,
+          child: !hasDemoData
+              ? const SizedBox(width: double.infinity)
+              : Column(children: [
+                  Divider(height: 1, color: c.hairline),
+                  _Row(
+                    title: 'Remove demo data',
+                    subtitle: 'Deletes only the sample history; your own logs are kept',
+                    onTap: onRemoveDemo,
+                    trailing: Icon(Icons.layers_clear_outlined, color: c.textBody),
+                  ),
+                ]),
+        ),
         Divider(height: 1, color: c.hairline),
         _Row(
           title: 'Delete all local data',
           subtitle: 'Wipes workouts, cardio and goals from this device',
           onTap: onWipe,
-          trailing: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: BoxDecoration(color: c.dangerContainer.withValues(alpha: 0.5), borderRadius: BorderRadius.circular(SxRadius.base), border: Border.all(color: c.danger.withValues(alpha: 0.4))),
-            child: Text('PURGE', style: SxText.labelCaps.copyWith(color: c.danger, fontWeight: FontWeight.w700)),
-          ),
+          trailing: Icon(Icons.delete_outline, color: c.danger),
         ),
       ]),
     );
@@ -628,10 +729,11 @@ class _Safety extends StatelessWidget {
 }
 
 class _ExportSheet extends StatefulWidget {
-  const _ExportSheet({required this.profile, required this.sessions, required this.cardio});
+  const _ExportSheet({required this.profile, required this.sessions, required this.cardio, required this.saver});
   final UserProfile profile;
   final List<WorkoutSession> sessions;
   final List<CardioSession> cardio;
+  final ExportSaver saver;
 
   @override
   State<_ExportSheet> createState() => _ExportSheetState();
@@ -640,16 +742,39 @@ class _ExportSheet extends StatefulWidget {
 class _ExportSheetState extends State<_ExportSheet> {
   int _fmt = 0;
 
+  String get _ext => _fmt == 0 ? 'json' : 'csv';
+
   String get _text => _fmt == 0
       ? ExportBuilder.json(profile: widget.profile, sessions: widget.sessions, cardio: widget.cardio)
       : ExportBuilder.csv(sessions: widget.sessions, cardio: widget.cardio);
+
+  Future<void> _copy(String text) async {
+    await Clipboard.setData(ClipboardData(text: text));
+    if (mounted) {
+      Navigator.pop(context);
+      showSxSnack(context, 'Copied ${_ext.toUpperCase()} to clipboard');
+    }
+  }
+
+  Future<void> _save(String text) async {
+    final stamp = DateTime.now().toIso8601String().substring(0, 10);
+    try {
+      final saved = await widget.saver('stationx-export-$stamp.$_ext', text);
+      if (saved && mounted) {
+        Navigator.pop(context);
+        showSxSnack(context, 'Export saved');
+      }
+    } catch (_) {
+      // No save dialog on this device: fall back to the clipboard.
+      await _copy(text);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final c = context.sx;
     final empty = widget.sessions.isEmpty && widget.cardio.isEmpty;
-    final text = _text;
-    return Padding(
+    return SingleChildScrollView(
       padding: const EdgeInsets.all(SxSpace.md),
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text('EXPORT DATA', style: SxText.labelCaps.copyWith(color: c.textBody)),
@@ -658,26 +783,19 @@ class _ExportSheetState extends State<_ExportSheet> {
         const SizedBox(height: 10),
         if (empty)
           const EmptyState(icon: Icons.inbox_outlined, title: 'Nothing to export', message: 'Log a workout or cardio session first.')
-        else
-          Flexible(
-            child: SxInset(
-              child: SingleChildScrollView(child: SelectableText(text, style: SxText.metricSm.copyWith(color: c.textBody, fontSize: 11, height: 1.4))),
+        else ...[
+          SxInset(
+            child: Text(
+              '${widget.sessions.length} workout${widget.sessions.length == 1 ? '' : 's'} and ${widget.cardio.length} cardio session${widget.cardio.length == 1 ? '' : 's'} '
+              'will be exported as ${_ext.toUpperCase()}. ${_fmt == 0 ? 'JSON keeps everything, including your profile.' : 'CSV opens in any spreadsheet app.'}',
+              style: SxText.bodyMd.copyWith(color: c.textBody),
             ),
           ),
-        const SizedBox(height: SxSpace.md),
-        SxButton(
-          label: 'Copy to clipboard',
-          icon: Icons.copy,
-          onPressed: empty
-              ? null
-              : () async {
-                  await Clipboard.setData(ClipboardData(text: text));
-                  if (context.mounted) {
-                    Navigator.pop(context);
-                    showSxSnack(context, 'Copied ${_fmt == 0 ? 'JSON' : 'CSV'} to clipboard');
-                  }
-                },
-        ),
+          const SizedBox(height: SxSpace.md),
+          SxButton(label: 'Save as file', icon: Icons.save_alt, onPressed: () => _save(_text)),
+          const SizedBox(height: 8),
+          SxButton(label: 'Copy to clipboard', icon: Icons.copy, variant: SxButtonVariant.secondary, onPressed: () => _copy(_text)),
+        ],
       ]),
     );
   }

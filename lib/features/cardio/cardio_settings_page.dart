@@ -147,7 +147,7 @@ class CardioSettingsPage extends StatelessWidget {
               const SizedBox(height: 12),
               Flexible(
                 child: SxInset(
-                  child: SingleChildScrollView(child: SelectableText(text, style: SxText.metricSm.copyWith(color: c.textBody, fontSize: 11))),
+                  child: SingleChildScrollView(child: SelectableText(text, style: SxText.metricSm.copyWith(color: c.textBody))),
                 ),
               ),
               const SizedBox(height: 12),

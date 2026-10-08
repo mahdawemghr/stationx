@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -30,6 +32,10 @@ Future<void> importFromGymTracker(BuildContext context) async {
     return;
   }
   if (text == null || !context.mounted) return; // cancelled
+  if (GymTrackerImport.exceedsLimit(text)) {
+    await _showProblem(context, const ImportException(ImportProblem.tooLarge));
+    return;
+  }
   if (text.trim().isEmpty) {
     await _showMessage(context, 'Nothing to import', 'The clipboard is empty. In Gym Tracker choose Settings › Export Data, then try again.');
     return;
@@ -37,14 +43,14 @@ Future<void> importFromGymTracker(BuildContext context) async {
 
   final GymTrackerImportPlan plan;
   try {
-    plan = GymTrackerImport.plan(
+    plan = await GymTrackerImport.planAsync(
       text,
       existingSessionIds: {for (final s in app.sessions.sessions) s.id},
       catalog: app.exercises.all,
       workouts: app.workouts.workouts,
     );
   } on ImportException catch (e) {
-    await _showProblem(context, e);
+    if (context.mounted) await _showProblem(context, e);
     return;
   }
   if (!context.mounted) return;
@@ -62,13 +68,30 @@ Future<void> importFromGymTracker(BuildContext context) async {
   final choice = await showDialog<_Confirmed>(context: context, builder: (_) => _PreviewDialog(plan: plan));
   if (choice == null || !context.mounted) return;
 
-  final result = await GymTrackerImport.apply(
-    plan,
-    exercises: app.exercises,
-    sessions: app.sessions,
-    workouts: app.workouts,
-    applyRotation: choice.applyRotation,
-  );
+  // Busy indicator while the workouts are written (can take a moment for big files).
+  final nav = Navigator.of(context, rootNavigator: true);
+  unawaited(showDialog<void>(
+    context: context,
+    barrierDismissible: false,
+    builder: (_) => const PopScope(canPop: false, child: _BusyDialog()),
+  ));
+  final ImportResult result;
+  try {
+    result = await GymTrackerImport.apply(
+      plan,
+      exercises: app.exercises,
+      sessions: app.sessions,
+      workouts: app.workouts,
+      applyRotation: choice.applyRotation,
+    );
+  } catch (_) {
+    nav.pop();
+    if (context.mounted) {
+      await _showMessage(context, 'Import didn\'t finish', 'Something went wrong while adding your workouts. Anything already added is safe; you can run the import again and duplicates are skipped.');
+    }
+    return;
+  }
+  nav.pop();
   if (!context.mounted) return;
   showSxSnack(context, 'Imported ${result.sessionsAdded} workout${result.sessionsAdded == 1 ? '' : 's'} from Gym Tracker');
 }
@@ -81,7 +104,7 @@ class _Confirmed {
 }
 
 String _problemText(ImportProblem p) => switch (p) {
-      ImportProblem.tooLarge => 'This file is too large to be a Gym Tracker export.',
+      ImportProblem.tooLarge => 'This file is too large to be a Gym Tracker export (the limit is 10 MB).',
       ImportProblem.notJson => 'This isn\'t a Gym Tracker export. Choose the .json file made by Gym Tracker › Settings › Export Data.',
       ImportProblem.wrongFormat => 'This file was not made by Gym Tracker. Choose the .json file made by Gym Tracker › Settings › Export Data.',
       ImportProblem.unsupportedVersion => 'This export comes from a newer version of Gym Tracker. Update StationX, then try again.',
@@ -120,6 +143,25 @@ class _SourceSheet extends StatelessWidget {
         const SizedBox(height: 8),
         SxButton(label: 'Paste copied data', icon: Icons.content_paste, variant: SxButtonVariant.secondary, height: 48, onPressed: () => Navigator.pop(context, _Source.paste)),
       ]),
+    );
+  }
+}
+
+class _BusyDialog extends StatelessWidget {
+  const _BusyDialog();
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.sx;
+    return Dialog(
+      child: Padding(
+        padding: const EdgeInsets.all(SxSpace.lg),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          const SxSpinner(),
+          const SizedBox(width: 16),
+          Flexible(child: Text('Adding your workouts…', style: SxText.bodyMd.copyWith(color: c.textHigh))),
+        ]),
+      ),
     );
   }
 }
@@ -169,6 +211,13 @@ class _PreviewDialogState extends State<_PreviewDialog> {
             const SizedBox(height: 6),
             Text(p.newExercises.map((e) => e.name).join(', '), style: SxText.bodySm.copyWith(color: c.textMuted)),
           ],
+          if (p.needsReview.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              'Check muscles for: ${_reviewList(p.needsReview)}. You can edit them later.',
+              style: SxText.bodySm.copyWith(color: c.textMuted),
+            ),
+          ],
           const SizedBox(height: SxSpace.sm),
           Text('Workouts keep the date you trained. Personal records and estimated 1RM are recalculated from this history.',
               style: SxText.bodySm.copyWith(color: c.textBody)),
@@ -192,3 +241,6 @@ class _PreviewDialogState extends State<_PreviewDialog> {
     );
   }
 }
+
+String _reviewList(List<String> names) =>
+    names.length <= 5 ? names.join(', ') : '${names.take(5).join(', ')} and ${names.length - 5} more';

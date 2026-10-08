@@ -16,19 +16,32 @@ Future<T?> showSxSheet<T>(
     isScrollControlled: isScrollControlled,
     useSafeArea: true,
     backgroundColor: c.surface3,
+    barrierColor: c.scrim,
     constraints: const BoxConstraints(maxWidth: SxSpace.maxContentWidth),
     builder: (ctx) => Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(ctx).bottom),
       child: DecoratedBox(
-        decoration: BoxDecoration(border: Border(top: BorderSide(color: Colors.white.withValues(alpha: 0.08)))),
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          if (showHandle)
-            Padding(
-              padding: const EdgeInsets.only(top: 10, bottom: 4),
-              child: Container(width: 40, height: 4, decoration: BoxDecoration(color: c.hairline, borderRadius: BorderRadius.circular(2))),
-            ),
-          Flexible(child: builder(ctx)),
-        ]),
+        decoration: BoxDecoration(
+          border: Border(top: BorderSide(color: c.edge)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (showHandle)
+              Padding(
+                padding: const EdgeInsets.only(top: 10, bottom: 4),
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: c.hairline,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+            Flexible(child: builder(ctx)),
+          ],
+        ),
       ),
     ),
   );

@@ -10,19 +10,12 @@ import '../../core/widgets/widgets.dart';
 import '../../domain/domain.dart';
 import '../exercises/exercise_stats.dart';
 
-const _typeLabels = ['All', 'Heaviest Weight', 'Most Reps', 'Est. 1RM', 'Highest Volume'];
+const _typeLabels = ['All', 'Heaviest Weight', 'Most Reps', 'Est. max', 'Highest Volume'];
 const _types = [PrType.estimated1Rm, PrType.heaviestWeight, PrType.mostReps, PrType.estimated1Rm, PrType.highestVolume];
-const _muscleLabels = ['All', 'Chest', 'Back', 'Shoulders', 'Arms', 'Legs', 'Core'];
+/// Filter chips derive from the domain taxonomy: "All" + every [MuscleGroup].
+final _muscleLabels = ['All', for (final m in MuscleGroup.values) m.label];
 
-bool _inCategory(int i, MuscleGroup m) => switch (i) {
-      0 => true,
-      1 => m == MuscleGroup.chest,
-      2 => m == MuscleGroup.back,
-      3 => m == MuscleGroup.shoulders,
-      4 => m == MuscleGroup.biceps || m == MuscleGroup.triceps,
-      5 => m == MuscleGroup.legs,
-      _ => m == MuscleGroup.core,
-    };
+bool _inCategory(int i, MuscleGroup m) => i == 0 || MuscleGroup.values[i - 1] == m;
 
 /// Personal records board: strength PRs by type, with Epley-estimated 1RM.
 class PersonalRecordsPage extends StatefulWidget {
@@ -75,13 +68,17 @@ class _PersonalRecordsPageState extends State<PersonalRecordsPage> {
           if (prs.isEmpty)
             const EmptyState(icon: Icons.filter_alt_off_outlined, title: 'No records here', message: 'No logged exercises match this filter yet.')
           else
-            for (final p in prs)
-              _PrCard(
-                pr: p,
-                exercise: byId[p.exerciseId],
-                type: _types[_type],
-                unit: unit,
-                onTap: () => AppNav.exerciseHistory(context, p.exerciseId),
+            for (final (i, p) in prs.indexed)
+              SxStagger(
+                key: ValueKey('${_types[_type].name}-${p.exerciseId}'),
+                index: i,
+                child: _PrCard(
+                  pr: p,
+                  exercise: byId[p.exerciseId],
+                  type: _types[_type],
+                  unit: unit,
+                  onTap: () => AppNav.exerciseHistory(context, p.exerciseId),
+                ),
               ),
         ];
 
@@ -118,7 +115,7 @@ class _Hero extends StatelessWidget {
         Row(children: [
           Icon(Icons.analytics_outlined, size: 16, color: c.textBody),
           const SizedBox(width: 6),
-          Text('ESTIMATED 1RM', style: SxText.labelCaps.copyWith(color: c.textBody)),
+          Expanded(child: Text('ESTIMATED ONE-REP MAX', maxLines: 2, overflow: TextOverflow.ellipsis, style: SxText.labelCaps.copyWith(color: c.textBody))),
         ]),
         const SizedBox(height: 4),
         Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: SxText.headlineSm.copyWith(color: c.textHigh)),
@@ -127,14 +124,14 @@ class _Hero extends StatelessWidget {
           fit: BoxFit.scaleDown,
           alignment: Alignment.centerLeft,
           child: Row(crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, mainAxisSize: MainAxisSize.min, children: [
-            Text(Fmt.weight(pr.value, unit), style: SxText.metricXl.copyWith(color: c.primary, fontSize: 56)),
+            SxCountUp(value: pr.value, formatter: (v) => Fmt.weight(v, unit), style: SxText.metricXl.copyWith(color: c.primary, fontSize: 56)),
             const SizedBox(width: 6),
             Text(Fmt.unit(unit), style: SxText.headlineMd.copyWith(color: c.textBody)),
           ]),
         ),
         const SizedBox(height: 8),
         Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
-          Expanded(child: Text('Based on peak: ${Fmt.setLabel(pr.weightKg, pr.reps, unit)} reps', style: SxText.bodySm.copyWith(color: c.textBody))),
+          Expanded(child: Text('Based on your best set: ${Fmt.setLabel(pr.weightKg, pr.reps, unit)}', style: SxText.bodySm.copyWith(color: c.textBody))),
           if (pct != null) DeltaBadge('${pct.toStringAsFixed(1)}%', positive: pct >= 0),
           const SizedBox(width: 8),
           if (series.length > 1) SxSparkline(values: series),
@@ -147,7 +144,7 @@ class _Hero extends StatelessWidget {
             const SizedBox(width: 10),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('CALCULATION MATRIX', style: SxText.labelCaps.copyWith(color: c.textBody, fontSize: 10)),
+                Text('HOW IT IS CALCULATED', style: SxText.labelXs.copyWith(color: c.textBody)),
                 Text('Epley: W × (1 + R / 30)', style: SxText.metricSm.copyWith(color: c.textHigh)),
               ]),
             ),
@@ -157,7 +154,7 @@ class _Hero extends StatelessWidget {
         Row(children: [
           Icon(Icons.info_outline, size: 14, color: c.textMuted),
           const SizedBox(width: 6),
-          Expanded(child: Text('Estimated benchmark, not a tested 1RM attempt.', style: SxText.bodySm.copyWith(color: c.textBody))),
+          Expanded(child: Text('An estimate from your logged sets, not a tested one-rep max.', style: SxText.bodySm.copyWith(color: c.textBody))),
         ]),
       ]),
     );
@@ -200,13 +197,15 @@ class _PrCard extends StatelessWidget {
           ),
           if (exercise != null) ...[
             const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(color: c.surface3, borderRadius: BorderRadius.circular(SxRadius.sm)),
-              child: Text(exercise!.primaryMuscle.label.toUpperCase(), style: SxText.labelCaps.copyWith(fontSize: 9, color: c.textBody)),
+            Flexible(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(color: c.surface3, borderRadius: BorderRadius.circular(SxRadius.sm)),
+                child: Text(exercise!.primaryMuscle.label.toUpperCase(), maxLines: 1, overflow: TextOverflow.ellipsis, style: SxText.labelXs.copyWith(color: c.textBody)),
+              ),
             ),
           ],
-          if (badge != null) ...[const SizedBox(width: 8), Flexible(child: FittedBox(fit: BoxFit.scaleDown, child: PrBadge(badge)))],
+          if (badge != null) ...[const SizedBox(width: 8), Flexible(child: FittedBox(fit: BoxFit.scaleDown, child: SxPop(child: PrBadge(badge))))],
         ]),
         const SizedBox(height: 12),
         Row(children: [
@@ -214,7 +213,7 @@ class _PrCard extends StatelessWidget {
             child: SxInset(
               padding: const EdgeInsets.all(12),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(peakLabel.toUpperCase(), style: SxText.labelCaps.copyWith(color: c.textBody, fontSize: 10)),
+                Text(peakLabel.toUpperCase(), style: SxText.labelXs.copyWith(color: c.textBody)),
                 const SizedBox(height: 4),
                 FittedBox(
                   fit: BoxFit.scaleDown,
@@ -231,12 +230,18 @@ class _PrCard extends StatelessWidget {
             child: SxInset(
               padding: const EdgeInsets.all(12),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('PROJECTED 1RM', style: SxText.labelCaps.copyWith(color: c.textBody, fontSize: 10)),
+                Text('ESTIMATED MAX', style: SxText.labelXs.copyWith(color: c.textBody)),
                 const SizedBox(height: 4),
                 FittedBox(
                   fit: BoxFit.scaleDown,
                   alignment: Alignment.centerLeft,
-                  child: MetricValue(Fmt.weight(estimateOneRepMax(pr.weightKg, pr.reps), unit), unit: u, color: c.primary),
+                  child: () {
+                    // estimateOneRepMax is 0 above 12 reps: show a dash, never "0".
+                    final e1 = estimateOneRepMax(pr.weightKg, pr.reps);
+                    return e1 > 0
+                        ? MetricValue(Fmt.weight(e1, unit), unit: u, color: c.primary)
+                        : MetricValue('—', color: c.textMuted);
+                  }(),
                 ),
               ]),
             ),

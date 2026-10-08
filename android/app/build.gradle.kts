@@ -8,8 +8,8 @@ plugins {
 }
 
 // Release signing: create android/key.properties (gitignored — NEVER commit it or the
-// keystore). See docs/RELEASE.md. Without it, APK builds fall back to debug signing
-// (fine for local testing) and an App Bundle build is refused.
+// keystore). See docs/RELEASE.md. Without it, ANY release build (APK or App Bundle) is
+// refused: a release artifact is never signed with the debug key. Debug builds are unaffected.
 val keystoreProps = Properties().apply {
     val f = rootProject.file("key.properties")
     if (f.exists()) f.inputStream().use { load(it) }
@@ -53,7 +53,18 @@ android {
 
     buildTypes {
         release {
-            signingConfig = if (!keystoreProps.isEmpty) signingConfigs.getByName("release") else signingConfigs.getByName("debug")
+            // R8 shrinking is OPT-IN (`flutter build apk --release -Pstationx.minify=true`): the
+            // minified build compiles, but could not be run on a device here, so it is off until
+            // Isar / Health Connect / sync are verified on a minified release. See docs/RELEASE.md.
+            val minify = project.findProperty("stationx.minify") == "true"
+            isMinifyEnabled = minify
+            isShrinkResources = minify
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            // No debug-key fallback: building a release without key.properties fails (see the
+            // taskGraph check below) instead of producing a debug-signed "release".
+            if (!keystoreProps.isEmpty) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
 }
@@ -62,9 +73,10 @@ flutter {
     source = "../.."
 }
 
-// Never produce a Play Store bundle signed with the debug key.
+// Never produce a release APK/AAB signed with the debug key.
 gradle.taskGraph.whenReady {
-    if (hasTask(":app:bundleRelease") && keystoreProps.isEmpty) {
-        throw GradleException("android/key.properties is missing: refusing to build a release App Bundle signed with the debug key. See docs/RELEASE.md.")
+    val releaseTasks = listOf(":app:assembleRelease", ":app:bundleRelease", ":app:packageRelease", ":app:validateSigningRelease")
+    if (releaseTasks.any { hasTask(it) } && keystoreProps.isEmpty) {
+        throw GradleException("android/key.properties is missing: refusing to build a release APK/App Bundle (it would be signed with the debug key). Create an upload keystore and key.properties first - see docs/RELEASE.md section 2.")
     }
 }

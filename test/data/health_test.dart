@@ -4,7 +4,7 @@ import 'package:stationx/data/health/health_consent_store.dart';
 import 'package:stationx/data/health/health_gateway.dart';
 import 'package:stationx/domain/domain.dart';
 
-class FakeGateway implements HealthGateway {
+class FakeGateway extends HealthGateway {
   FakeGateway({this.ios = false});
   final bool ios;
   int permissionQueries = 0;

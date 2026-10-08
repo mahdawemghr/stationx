@@ -21,6 +21,17 @@ IconData cardioIcon(CardioKind k) => switch (k) {
       CardioKind.rowing => Icons.kayaking,
       CardioKind.stairClimber => Icons.stairs,
       CardioKind.jumpRope => Icons.bolt,
+      CardioKind.trailRun => Icons.terrain,
+      CardioKind.hiking => Icons.hiking,
+      CardioKind.spinBike => Icons.directions_bike_outlined,
+      CardioKind.airBike => Icons.air,
+      CardioKind.skiErg => Icons.downhill_skiing,
+      CardioKind.arcTrainer => Icons.sports_gymnastics,
+      CardioKind.verticalClimber => Icons.north,
+      CardioKind.swimming => Icons.pool,
+      CardioKind.handCycle => Icons.back_hand_outlined,
+      CardioKind.hiit => Icons.local_fire_department,
+      CardioKind.boxing => Icons.sports_mma,
       CardioKind.custom => Icons.fitness_center,
     };
 
@@ -192,7 +203,7 @@ class _TimeTile extends StatelessWidget {
       decoration: BoxDecoration(color: c.surface2, borderRadius: BorderRadius.circular(SxRadius.md), border: Border.all(color: c.hairline)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
-          Expanded(child: Text('RUNNING TIME', maxLines: 1, overflow: TextOverflow.ellipsis, style: SxText.labelCaps.copyWith(color: c.textBody, fontSize: 10))),
+          Expanded(child: Text('RUNNING TIME', maxLines: 1, overflow: TextOverflow.ellipsis, style: SxText.labelXs.copyWith(color: c.textBody))),
           Icon(Icons.schedule, size: 16, color: c.textBody),
         ]),
         const SizedBox(height: 6),
@@ -245,7 +256,7 @@ class _Tile extends StatelessWidget {
           decoration: BoxDecoration(color: c.surface2, borderRadius: BorderRadius.circular(SxRadius.md), border: Border.all(color: c.hairline)),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(children: [
-              Expanded(child: Text(label.toUpperCase(), maxLines: 1, overflow: TextOverflow.ellipsis, style: SxText.labelCaps.copyWith(color: c.textBody, fontSize: 10))),
+              Expanded(child: Text(label.toUpperCase(), maxLines: 1, overflow: TextOverflow.ellipsis, style: SxText.labelXs.copyWith(color: c.textBody))),
               Icon(icon, size: 16, color: c.textBody),
             ]),
             const SizedBox(height: 6),
@@ -254,7 +265,7 @@ class _Tile extends StatelessWidget {
               alignment: Alignment.centerLeft,
               child: Row(crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, mainAxisSize: MainAxisSize.min, children: [
                 Text(value, style: SxText.metricLg.copyWith(color: value == '—' ? c.textMuted : c.textHigh)),
-                if (unit != null) Text(' $unit', style: SxText.labelCaps.copyWith(color: c.textBody, fontSize: 10)),
+                if (unit != null) Text(' $unit', style: SxText.labelXs.copyWith(color: c.textBody)),
               ]),
             ),
             if (caption != null) ...[

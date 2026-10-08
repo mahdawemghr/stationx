@@ -27,18 +27,14 @@ void main() {
       testWidgets('active workout: rest timer running', (t) async {
         final h = t.ensureSemantics();
         await pumpPage(t, const ActiveWorkoutPage(workoutId: 'w2'), size: size, textScale: scale);
-        if (scale > 1.3) {
-          // Large text pushes the first set row below the fold.
+        if (scale >= 1.3) {
+          // Large text (and the taller set rows) push the first set row below the fold.
           await t.dragUntilVisible(find.bySemanticsLabel('Set 1 done'), find.byType(Scrollable).first, const Offset(0, -80));
           await t.pump(const Duration(milliseconds: 300));
         }
         await t.tap(find.bySemanticsLabel('Set 1 done').first);
         await t.pump(const Duration(milliseconds: 400));
-        if (scale > 1.3) {
-          // Scroll back up to the rest tile (now taller, with its 48dp actions).
-          await t.dragUntilVisible(find.text('SKIP'), find.byType(Scrollable).first, const Offset(0, 80));
-          await t.pump(const Duration(milliseconds: 300));
-        }
+        // The rest chip with +30s / SKIP is pinned in the footer: always reachable.
         expect(find.text('SKIP'), findsOneWidget);
         expect(await problems(t), isEmpty);
         h.dispose();
@@ -59,9 +55,9 @@ void main() {
       testWidgets('swap exercise sheet', (t) async {
         final h = t.ensureSemantics();
         await pumpPage(t, const ActiveWorkoutPage(workoutId: 'w2'), size: size, textScale: scale);
-        await t.ensureVisible(find.text('Swap').first);
+        await t.ensureVisible(find.bySemanticsLabel('Swap exercise').first);
         await t.pump(const Duration(milliseconds: 300));
-        await t.tap(find.text('Swap').first);
+        await t.tap(find.bySemanticsLabel('Swap exercise').first);
         await t.pumpAndSettle();
         expect(find.byType(BottomSheet), findsOneWidget);
         expect(await problems(t), isEmpty);

@@ -31,59 +31,104 @@ class IsarSyncLocalStore implements SyncLocalStore {
       case SyncTable.profiles:
         final e = await _db.profileEntitys.get(1);
         if (e == null || e.syncStatus == SyncStatus.synced) return [];
-        return [DirtyRow(table.singletonId, e.updatedAt, profileToRow(profileFromEntity(e), updatedAt: e.updatedAt))];
+        return [
+          DirtyRow(
+            table.singletonId,
+            e.updatedAt,
+            profileToRow(profileFromEntity(e), updatedAt: e.updatedAt),
+          ),
+        ];
       case SyncTable.rotations:
         final e = await _db.rotationEntitys.get(1);
         if (e == null || e.syncStatus == SyncStatus.synced) return [];
-        return [DirtyRow(table.singletonId, e.updatedAt, rotationToRow(rotationFromEntity(e), createdAt: e.updatedAt, updatedAt: e.updatedAt))];
+        return [
+          DirtyRow(
+            table.singletonId,
+            e.updatedAt,
+            rotationToRow(
+              rotationFromEntity(e),
+              createdAt: e.updatedAt,
+              updatedAt: e.updatedAt,
+            ),
+          ),
+        ];
       case SyncTable.exercises:
         return [
           for (final e in await _db.exerciseEntitys.where().findAll())
-            if (e.isCustom && _dirty(_meta(e.meta))) DirtyRow(e.uid, e.meta.updatedAt, exerciseToRow(exerciseFromEntity(e))),
+            if (e.isCustom && _dirty(_meta(e.meta)))
+              DirtyRow(
+                e.uid,
+                e.meta.updatedAt,
+                exerciseToRow(exerciseFromEntity(e)),
+              ),
         ];
       case SyncTable.workouts:
         return [
           for (final e in await _db.workoutEntitys.where().findAll())
-            if (_dirty(_meta(e.meta))) DirtyRow(e.uid, e.meta.updatedAt, workoutToRow(workoutFromEntity(e), e.position)),
+            if (_dirty(_meta(e.meta)))
+              DirtyRow(
+                e.uid,
+                e.meta.updatedAt,
+                workoutToRow(workoutFromEntity(e), e.position),
+              ),
         ];
       case SyncTable.workoutSessions:
         return [
           for (final e in await _db.sessionEntitys.where().findAll())
-            if (_dirty(_meta(e.meta))) DirtyRow(e.uid, e.meta.updatedAt, sessionToRow(sessionFromEntity(e))),
+            if (_dirty(_meta(e.meta)))
+              DirtyRow(
+                e.uid,
+                e.meta.updatedAt,
+                sessionToRow(sessionFromEntity(e)),
+              ),
         ];
       case SyncTable.cardioSessions:
         return [
           for (final e in await _db.cardioSessionEntitys.where().findAll())
-            if (_dirty(_meta(e.data.meta))) DirtyRow(e.uid, e.data.meta.updatedAt, cardioToRow(cardioFromEntity(e))),
+            if (_dirty(_meta(e.data.meta)))
+              DirtyRow(
+                e.uid,
+                e.data.meta.updatedAt,
+                cardioToRow(cardioFromEntity(e)),
+              ),
         ];
       case SyncTable.cardioGoals:
         return [
           for (final e in await _db.cardioGoalEntitys.where().findAll())
-            if (_dirty(_meta(e.meta))) DirtyRow(e.uid, e.meta.updatedAt, goalToRow(goalFromEntity(e))),
+            if (_dirty(_meta(e.meta)))
+              DirtyRow(e.uid, e.meta.updatedAt, goalToRow(goalFromEntity(e))),
         ];
       case SyncTable.customCardioActivities:
         return [
           for (final e in await _db.customActivityEntitys.where().findAll())
-            if (_dirty(_meta(e.meta))) DirtyRow(e.uid, e.meta.updatedAt, customActivityToRow(customActivityFromEntity(e))),
+            if (_dirty(_meta(e.meta)))
+              DirtyRow(
+                e.uid,
+                e.meta.updatedAt,
+                customActivityToRow(customActivityFromEntity(e)),
+              ),
         ];
     }
   }
 
   @override
   Future<List<SyncDeletion>> pendingDeletions() async => [
-        for (final d in await _db.syncDeletionEntitys.where().findAll())
-          if (SyncTable.byName(d.table) != null) SyncDeletion(SyncTable.byName(d.table)!, d.rowId, d.deletedAt),
-      ];
+    for (final d in await _db.syncDeletionEntitys.where().findAll())
+      if (SyncTable.byName(d.table) != null)
+        SyncDeletion(SyncTable.byName(d.table)!, d.rowId, d.deletedAt),
+  ];
 
   @override
-  Future<void> clearDeletions(List<SyncDeletion> done) => _db.writeTxn(() async {
+  Future<void> clearDeletions(List<SyncDeletion> done) =>
+      _db.writeTxn(() async {
         for (final d in done) {
           await _db.syncDeletionEntitys.deleteByTableRowId(d.table.name, d.id);
         }
       });
 
   @override
-  Future<void> markPushed(SyncTable table, List<DirtyRow> pushed) => _db.writeTxn(() async {
+  Future<void> markPushed(SyncTable table, List<DirtyRow> pushed) =>
+      _db.writeTxn(() async {
         for (final p in pushed) {
           switch (table) {
             case SyncTable.profiles:
@@ -118,7 +163,8 @@ class IsarSyncLocalStore implements SyncLocalStore {
               }
             case SyncTable.cardioSessions:
               final e = await _db.cardioSessionEntitys.getByUid(p.id);
-              if (e != null && e.data.meta.updatedAt.isAtSameMomentAs(p.updatedAt)) {
+              if (e != null &&
+                  e.data.meta.updatedAt.isAtSameMomentAs(p.updatedAt)) {
                 e.data.meta.syncStatus = SyncStatus.synced;
                 await _db.cardioSessionEntitys.putByUid(e);
               }
@@ -165,36 +211,54 @@ class IsarSyncLocalStore implements SyncLocalStore {
     final deleted = r['deleted_at'] != null;
     switch (table) {
       case SyncTable.profiles:
-        if (deleted) return false; // a profile is never deleted remotely except with the account
+        if (deleted) {
+          return false; // a profile is never deleted remotely except with the account
+        }
         final local = await _db.profileEntitys.get(1) ?? ProfileEntity();
         final localDirty = local.syncStatus != SyncStatus.synced;
-        if (localDirty && !remoteUpdated.isAfter(local.updatedAt)) return false; // local edit wins; it will be pushed
-        if (!localDirty && local.updatedAt.isAtSameMomentAs(remoteUpdated)) return false; // `==` would also compare the UTC flag // already applied
-        await _db.profileEntitys.put(profileToEntity(profileFromRow(r, profileFromEntity(local)))
-          ..updatedAt = remoteUpdated
-          ..syncStatus = SyncStatus.synced);
+        if (localDirty && !remoteUpdated.isAfter(local.updatedAt)) {
+          return false; // local edit wins; it will be pushed
+        }
+        if (!localDirty && local.updatedAt.isAtSameMomentAs(remoteUpdated)) {
+          return false; // `==` would also compare the UTC flag // already applied
+        }
+        await _db.profileEntitys.put(
+          profileToEntity(profileFromRow(r, profileFromEntity(local)))
+            ..updatedAt = remoteUpdated
+            ..syncStatus = SyncStatus.synced,
+        );
         return true;
       case SyncTable.rotations:
         if (deleted) return false;
         final local = await _db.rotationEntitys.get(1) ?? RotationEntity();
         final localDirty = local.syncStatus != SyncStatus.synced;
         if (localDirty && !remoteUpdated.isAfter(local.updatedAt)) return false;
-        if (!localDirty && local.updatedAt.isAtSameMomentAs(remoteUpdated)) return false; // `==` would also compare the UTC flag
-        await _db.rotationEntitys.put(rotationToEntity(rotationFromRow(r))
-          ..updatedAt = remoteUpdated
-          ..syncStatus = SyncStatus.synced);
+        if (!localDirty && local.updatedAt.isAtSameMomentAs(remoteUpdated)) {
+          return false; // `==` would also compare the UTC flag
+        }
+        await _db.rotationEntitys.put(
+          rotationToEntity(rotationFromRow(r))
+            ..updatedAt = remoteUpdated
+            ..syncStatus = SyncStatus.synced,
+        );
         return true;
       case SyncTable.exercises:
         return _collection<ExerciseEntity>(
-          r, remoteUpdated, deleted,
+          r,
+          remoteUpdated,
+          deleted,
           get: _db.exerciseEntitys.getByUid,
           localUpdated: (e) => e.meta.updatedAt,
           delete: _db.exerciseEntitys.deleteByUid,
-          put: () => _db.exerciseEntitys.putByUid(exerciseToEntity(exerciseFromRow(r))),
+          put: () => _db.exerciseEntitys.putByUid(
+            exerciseToEntity(exerciseFromRow(r)),
+          ),
         );
       case SyncTable.workouts:
         return _collection<WorkoutEntity>(
-          r, remoteUpdated, deleted,
+          r,
+          remoteUpdated,
+          deleted,
           get: _db.workoutEntitys.getByUid,
           localUpdated: (e) => e.meta.updatedAt,
           delete: _db.workoutEntitys.deleteByUid,
@@ -205,35 +269,49 @@ class IsarSyncLocalStore implements SyncLocalStore {
         );
       case SyncTable.workoutSessions:
         return _collection<SessionEntity>(
-          r, remoteUpdated, deleted,
+          r,
+          remoteUpdated,
+          deleted,
           get: _db.sessionEntitys.getByUid,
           localUpdated: (e) => e.meta.updatedAt,
           delete: _db.sessionEntitys.deleteByUid,
-          put: () => _db.sessionEntitys.putByUid(sessionToEntity(sessionFromRow(r))),
+          put: () =>
+              _db.sessionEntitys.putByUid(sessionToEntity(sessionFromRow(r))),
         );
       case SyncTable.cardioSessions:
         return _collection<CardioSessionEntity>(
-          r, remoteUpdated, deleted,
+          r,
+          remoteUpdated,
+          deleted,
           get: _db.cardioSessionEntitys.getByUid,
           localUpdated: (e) => e.data.meta.updatedAt,
           delete: _db.cardioSessionEntitys.deleteByUid,
-          put: () => _db.cardioSessionEntitys.putByUid(cardioToEntity(cardioFromRow(r))),
+          put: () => _db.cardioSessionEntitys.putByUid(
+            cardioToEntity(cardioFromRow(r)),
+          ),
         );
       case SyncTable.cardioGoals:
         return _collection<CardioGoalEntity>(
-          r, remoteUpdated, deleted,
+          r,
+          remoteUpdated,
+          deleted,
           get: _db.cardioGoalEntitys.getByUid,
           localUpdated: (e) => e.meta.updatedAt,
           delete: _db.cardioGoalEntitys.deleteByUid,
-          put: () => _db.cardioGoalEntitys.putByUid(goalToEntity(goalFromRow(r))),
+          put: () =>
+              _db.cardioGoalEntitys.putByUid(goalToEntity(goalFromRow(r))),
         );
       case SyncTable.customCardioActivities:
         return _collection<CustomActivityEntity>(
-          r, remoteUpdated, deleted,
+          r,
+          remoteUpdated,
+          deleted,
           get: _db.customActivityEntitys.getByUid,
           localUpdated: (e) => e.meta.updatedAt,
           delete: _db.customActivityEntitys.deleteByUid,
-          put: () => _db.customActivityEntitys.putByUid(customActivityToEntity(customActivityFromRow(r))),
+          put: () => _db.customActivityEntitys.putByUid(
+            customActivityToEntity(customActivityFromRow(r)),
+          ),
         );
     }
   }
@@ -252,10 +330,14 @@ class IsarSyncLocalStore implements SyncLocalStore {
     final local = await get(id);
     if (deleted) {
       // A cloud deletion removes the local row unless the user edited it afterwards.
-      if (local != null && !remoteUpdated.isBefore(localUpdated(local))) return delete(id);
+      if (local != null && !remoteUpdated.isBefore(localUpdated(local))) {
+        return delete(id);
+      }
       return false;
     }
-    if (local != null && !remoteUpdated.isAfter(localUpdated(local))) return false; // local is newer/equal
+    if (local != null && !remoteUpdated.isAfter(localUpdated(local))) {
+      return false; // local is newer/equal
+    }
     await put();
     return true;
   }
@@ -271,74 +353,118 @@ class IsarSyncLocalStore implements SyncLocalStore {
   }
 
   @override
-  Future<void> saveState(SyncState s) => _db.writeTxn(() => _db.syncStateEntitys.put(SyncStateEntity()
-    ..userId = s.userId
-    ..cursorsJson = jsonEncode(s.cursors)
-    ..lastSyncAt = s.lastSyncAt));
+  Future<void> saveState(SyncState s) => _db.writeTxn(
+    () => _db.syncStateEntitys.put(
+      SyncStateEntity()
+        ..userId = s.userId
+        ..cursorsJson = jsonEncode(s.cursors)
+        ..lastSyncAt = s.lastSyncAt,
+    ),
+  );
 
   @override
   Future<void> reloadCaches() => _store.reloadCaches();
 
   @override
   Future<void> bumpDirtySingletons() => _db.writeTxn(() async {
-        final now = DateTime.now();
-        final p = await _db.profileEntitys.get(1);
-        if (p != null && p.syncStatus != SyncStatus.synced) await _db.profileEntitys.put(p..updatedAt = now);
-        final r = await _db.rotationEntitys.get(1);
-        if (r != null && r.syncStatus != SyncStatus.synced) await _db.rotationEntitys.put(r..updatedAt = now);
-      });
+    final now = DateTime.now();
+    final p = await _db.profileEntitys.get(1);
+    if (p != null && p.syncStatus != SyncStatus.synced) {
+      await _db.profileEntitys.put(p..updatedAt = now);
+    }
+    final r = await _db.rotationEntitys.get(1);
+    if (r != null && r.syncStatus != SyncStatus.synced) {
+      await _db.rotationEntitys.put(r..updatedAt = now);
+    }
+  });
 
   @override
   Future<void> markSingletonsClean() => _db.writeTxn(() async {
-        final p = await _db.profileEntitys.get(1);
-        if (p != null) {
-          p
-            ..updatedAt = DateTime.fromMillisecondsSinceEpoch(0)
-            ..syncStatus = SyncStatus.synced;
-          await _db.profileEntitys.put(p);
-        }
-        final r = await _db.rotationEntitys.get(1);
-        if (r != null) {
-          r
-            ..updatedAt = DateTime.fromMillisecondsSinceEpoch(0)
-            ..syncStatus = SyncStatus.synced;
-          await _db.rotationEntitys.put(r);
-        }
-      });
+    final p = await _db.profileEntitys.get(1);
+    if (p != null) {
+      p
+        ..updatedAt = DateTime.fromMillisecondsSinceEpoch(0)
+        ..syncStatus = SyncStatus.synced;
+      await _db.profileEntitys.put(p);
+    }
+    final r = await _db.rotationEntitys.get(1);
+    if (r != null) {
+      r
+        ..updatedAt = DateTime.fromMillisecondsSinceEpoch(0)
+        ..syncStatus = SyncStatus.synced;
+      await _db.rotationEntitys.put(r);
+    }
+  });
 
   @override
   Future<void> markAllUserDataDirty() => _db.writeTxn(() async {
-        final epoch = DateTime.fromMillisecondsSinceEpoch(0);
-        bool real(DateTime updatedAt) => updatedAt.isAfter(epoch); // built-in defaults/demo rows keep an epoch stamp
-        for (final e in await _db.exerciseEntitys.where().findAll()) {
-          if (e.isCustom && real(e.meta.updatedAt)) await _db.exerciseEntitys.putByUid(e..meta.syncStatus = SyncStatus.pending);
-        }
-        for (final e in await _db.workoutEntitys.where().findAll()) {
-          if (real(e.meta.updatedAt)) await _db.workoutEntitys.putByUid(e..meta.syncStatus = SyncStatus.pending);
-        }
-        for (final e in await _db.sessionEntitys.where().findAll()) {
-          if (real(e.meta.updatedAt)) await _db.sessionEntitys.putByUid(e..meta.syncStatus = SyncStatus.pending);
-        }
-        for (final e in await _db.cardioSessionEntitys.where().findAll()) {
-          if (real(e.data.meta.updatedAt)) await _db.cardioSessionEntitys.putByUid(e..data.meta.syncStatus = SyncStatus.pending);
-        }
-        for (final e in await _db.cardioGoalEntitys.where().findAll()) {
-          if (real(e.meta.updatedAt)) await _db.cardioGoalEntitys.putByUid(e..meta.syncStatus = SyncStatus.pending);
-        }
-        for (final e in await _db.customActivityEntitys.where().findAll()) {
-          if (real(e.meta.updatedAt)) await _db.customActivityEntitys.putByUid(e..meta.syncStatus = SyncStatus.pending);
-        }
-        final p = await _db.profileEntitys.get(1);
-        if (p != null && real(p.updatedAt)) await _db.profileEntitys.put(p..syncStatus = SyncStatus.pending);
-        final r = await _db.rotationEntitys.get(1);
-        if (r != null && real(r.updatedAt)) await _db.rotationEntitys.put(r..syncStatus = SyncStatus.pending);
-      });
+    final epoch = DateTime.fromMillisecondsSinceEpoch(0);
+    bool real(DateTime updatedAt) => updatedAt.isAfter(
+      epoch,
+    ); // built-in defaults/demo rows keep an epoch stamp
+    for (final e in await _db.exerciseEntitys.where().findAll()) {
+      if (e.isCustom && real(e.meta.updatedAt)) {
+        await _db.exerciseEntitys.putByUid(
+          e..meta.syncStatus = SyncStatus.pending,
+        );
+      }
+    }
+    for (final e in await _db.workoutEntitys.where().findAll()) {
+      if (real(e.meta.updatedAt)) {
+        await _db.workoutEntitys.putByUid(
+          e..meta.syncStatus = SyncStatus.pending,
+        );
+      }
+    }
+    for (final e in await _db.sessionEntitys.where().findAll()) {
+      if (real(e.meta.updatedAt)) {
+        await _db.sessionEntitys.putByUid(
+          e..meta.syncStatus = SyncStatus.pending,
+        );
+      }
+    }
+    for (final e in await _db.cardioSessionEntitys.where().findAll()) {
+      if (real(e.data.meta.updatedAt)) {
+        await _db.cardioSessionEntitys.putByUid(
+          e..data.meta.syncStatus = SyncStatus.pending,
+        );
+      }
+    }
+    for (final e in await _db.cardioGoalEntitys.where().findAll()) {
+      if (real(e.meta.updatedAt)) {
+        await _db.cardioGoalEntitys.putByUid(
+          e..meta.syncStatus = SyncStatus.pending,
+        );
+      }
+    }
+    for (final e in await _db.customActivityEntitys.where().findAll()) {
+      if (real(e.meta.updatedAt)) {
+        await _db.customActivityEntitys.putByUid(
+          e..meta.syncStatus = SyncStatus.pending,
+        );
+      }
+    }
+    // The profile belongs to the PREVIOUS account (name, email, measurements): it is never uploaded
+    // to the new one. Reset to a blank, clean profile so the new account's own profile wins.
+    await _db.profileEntitys.put(
+      profileToEntity(const UserProfile())
+        ..updatedAt = epoch
+        ..syncStatus = SyncStatus.synced,
+    );
+    final r = await _db.rotationEntitys.get(1);
+    if (r != null && real(r.updatedAt)) {
+      await _db.rotationEntitys.put(r..syncStatus = SyncStatus.pending);
+    }
+  }).then((_) => _store.profile.reset(const UserProfile()));
 
   @override
   Future<bool> hasUserData() async {
-    if (await _db.sessionEntitys.count() > 0) return true;
-    if (await _db.cardioSessionEntitys.count() > 0) return true;
-    if (await _db.cardioGoalEntitys.count() > 0) return true;
+    // Demo rows (`seed_*`) are not the user's data: they must not trigger the account-switch prompt.
+    if (await _db.sessionEntitys.filter().not().uidStartsWith(kDemoIdPrefix).count() > 0) return true;
+    if (await _db.cardioSessionEntitys.filter().not().uidStartsWith(kDemoIdPrefix).count() > 0) return true;
+    for (final g in await _db.cardioGoalEntitys.where().findAll()) {
+      if (!SeedData.demoGoalIds.contains(g.uid)) return true;
+    }
     if (await _db.customActivityEntitys.count() > 0) return true;
     for (final e in await _db.exerciseEntitys.where().findAll()) {
       if (e.isCustom) return true;
@@ -348,9 +474,10 @@ class IsarSyncLocalStore implements SyncLocalStore {
 
   @override
   Future<void> resetForAccountSwitch() async {
-    final profile = _store.profile.profile;
-    await _store.replaceAll(SeedData.fresh(), profile);
-    await markSingletonsClean(); // the new account's profile/rotation come from the cloud
+    // The previous account's profile (name/email/measurements) must not follow the data into the
+    // new account: start blank; the new account's profile/rotation come from the cloud.
+    await _store.replaceAll(SeedData.fresh(), const UserProfile());
+    await markSingletonsClean();
     await saveState(const SyncState());
   }
 }

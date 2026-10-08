@@ -12,6 +12,9 @@ abstract class DataStore {
   CardioRepository get cardio;
   ProfileRepository get profile;
 
+  /// Local-only in-progress workout draft (never synced). Cleared by [replaceAll].
+  WorkoutDraftStore get workoutDraft;
+
   /// Persisted "user is past the landing screen" flag.
   bool get signedIn;
   Future<void> setSignedIn(bool value);
@@ -20,4 +23,17 @@ abstract class DataStore {
   Future<void> replaceAll(SeedData seed, UserProfile profile);
 
   Future<void> close();
+}
+
+/// Device-local preferences (never synced; kept across "Delete all data" / [DataStore.replaceAll]).
+/// Optional interface so existing [DataStore] fakes keep compiling; `AppController` falls back to
+/// in-memory values when a store does not implement it.
+abstract class LocalSettingsStore {
+  /// Raw maximum workout length: null = never chosen (default applies), 0 = explicitly off.
+  int? get maxWorkoutMinutesRaw;
+  Future<void> setMaxWorkoutMinutesRaw(int? raw);
+
+  /// JSON of the pending auto-end notice, until the user has seen it.
+  String? get autoEndNoticeJson;
+  Future<void> setAutoEndNoticeJson(String? json);
 }

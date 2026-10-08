@@ -11,6 +11,7 @@ import '../../domain/domain.dart';
 import '../exercises/exercise_widgets.dart';
 import 'cardio_progress_view.dart';
 import 'progress_period.dart';
+import 'progress_widgets.dart';
 
 /// Progress tab root: Strength / Cardio switch + period selector.
 class ProgressPage extends StatefulWidget {
@@ -65,8 +66,7 @@ class _ProgressPageState extends State<ProgressPage> {
                 ),
               const SizedBox(height: 8),
               Expanded(
-                child: AnimatedSwitcher(
-                  duration: SxMotion.base,
+                child: SxSwap(
                   child: _mode == 0
                       ? _StrengthView(key: const ValueKey('s'), period: _period)
                       : CardioProgressView(key: const ValueKey('c'), period: _period),
@@ -107,6 +107,8 @@ class _PeriodMenu extends StatelessWidget {
     );
   }
 }
+
+String _whole(double v) => v.round().toString();
 
 class _StrengthView extends StatelessWidget {
   const _StrengthView({super.key, required this.period});
@@ -152,10 +154,11 @@ class _StrengthView extends StatelessWidget {
         final children = <Widget>[
           StretchRow(children: [
             Expanded(
-              child: StatTile(
+              child: CountStatTile(
                 label: 'Workouts',
                 icon: Icons.fitness_center,
-                value: '${inW.length}',
+                value: inW.length.toDouble(),
+                format: _whole,
                 unit: period == ProgressPeriod.week ? '/ $target target' : 'sessions',
                 caption: period == ProgressPeriod.week ? (ahead >= 0 ? (ahead == 0 ? 'On target' : '+$ahead ahead') : '${-ahead} to go') : null,
                 accent: period == ProgressPeriod.week && ahead >= 0,
@@ -164,21 +167,23 @@ class _StrengthView extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Expanded(
-              child: StatTile(
+              child: CountStatTile(
                 label: 'Total volume',
                 icon: Icons.scale_outlined,
-                value: Fmt.number(Fmt.toDisplayWeight(volume, unit) / 1000),
+                value: Fmt.toDisplayWeight(volume, unit) / 1000,
+                format: Fmt.number,
                 unit: 't',
+                delay: SxMotion.stagger,
                 caption: prevVolume > 0 ? '${volume >= prevVolume ? '+' : ''}${((volume - prevVolume) / prevVolume * 100).round()}% vs previous' : null,
                 height: 112,
               ),
             ),
           ]),
           StretchRow(children: [
-            Expanded(child: StatTile(label: 'Sets hit', icon: Icons.checklist, value: '$sets', unit: 'sets', height: 112)),
+            Expanded(child: CountStatTile(label: 'Sets hit', icon: Icons.checklist, value: sets.toDouble(), format: _whole, unit: 'sets', delay: SxMotion.stagger * 2)),
             const SizedBox(width: 8),
             Expanded(
-              child: StatTile(label: 'New PRs', icon: Icons.emoji_events_outlined, value: '${newPrs.length}', unit: 'records', accent: newPrs.isNotEmpty, height: 112),
+              child: CountStatTile(label: 'New PRs', icon: Icons.emoji_events_outlined, value: newPrs.length.toDouble(), format: _whole, unit: 'records', accent: newPrs.isNotEmpty, delay: SxMotion.stagger * 3),
             ),
           ]),
         ];
@@ -203,7 +208,7 @@ class _StrengthView extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(SxSpace.md, 8, SxSpace.md, SxSpace.lg),
           itemCount: children.length,
           separatorBuilder: (_, _) => const SizedBox(height: SxSpace.md),
-          itemBuilder: (_, i) => children[i],
+          itemBuilder: (_, i) => SxStagger(index: i, enabled: i < SxMotion.staggerCap, child: children[i]),
         );
       },
     );
@@ -252,7 +257,7 @@ class _StrengthView extends StatelessWidget {
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     Row(children: [
                       Flexible(child: Text(byId[r.id]?.name ?? r.id, overflow: TextOverflow.ellipsis, style: SxText.headlineSm.copyWith(color: c.textHigh))),
-                      if (prIds.contains(r.id)) ...[const SizedBox(width: 6), const PrBadge()],
+                      if (prIds.contains(r.id)) ...[const SizedBox(width: 6), const SxPop(child: PrBadge())],
                     ]),
                     const SizedBox(height: 4),
                     Text.rich(TextSpan(children: [
@@ -265,7 +270,7 @@ class _StrengthView extends StatelessWidget {
                 const SizedBox(width: 8),
                 Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
                   Text('+${((r.to - r.from) / r.from * 100).round()}%', style: SxText.metricMd.copyWith(color: c.primary)),
-                  Text('+${Fmt.weight(r.to - r.from, unit)} $u', style: SxText.labelCaps.copyWith(color: c.textBody, fontSize: 10)),
+                  Text('+${Fmt.weight(r.to - r.from, unit)} $u', style: SxText.labelXs.copyWith(color: c.textBody)),
                 ]),
               ]),
             ),
@@ -283,7 +288,7 @@ class _StrengthView extends StatelessWidget {
       SectionHeader('Muscle volume dose', icon: Icons.equalizer, trailingText: perWeek ? 'AVG SETS / WEEK' : 'SETS THIS WEEK'),
       SxCard(
         child: Column(children: [
-          for (final m in MuscleGroup.values)
+          for (final (mi, m) in MuscleGroup.values.indexed)
             Builder(builder: (_) {
               final (min, max) = VolumeService.weeklyRange(m);
               final v = (sets[m] ?? 0) / weeks;
@@ -304,14 +309,14 @@ class _StrengthView extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(color: c.surface2, borderRadius: BorderRadius.circular(SxRadius.sm)),
-                      child: Text(label.toUpperCase(), style: SxText.labelCaps.copyWith(fontSize: 9, color: color)),
+                      child: Text(label.toUpperCase(), style: SxText.labelXs.copyWith(color: color)),
                     ),
                     const Spacer(),
                     Text(shown, style: SxText.metricMd.copyWith(color: color == c.primary ? c.primary : c.textHigh)),
                     Text(' / $min-$max sets', style: SxText.bodySm.copyWith(color: c.textBody)),
                   ]),
                   const SizedBox(height: 6),
-                  SxLinearMeter(value: v / max, height: 6, color: color == c.textMuted ? c.textBody : color),
+                  SxLinearMeter(value: v / max, height: 6, delay: SxMotion.staggerDelay(mi), color: color == c.textMuted ? c.textBody : color),
                 ]),
               );
             }),
@@ -337,9 +342,9 @@ class _StrengthView extends StatelessWidget {
                 Expanded(
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     Row(children: [
-                      Text(Fmt.relativeDay(p.date).toUpperCase(), style: SxText.labelCaps.copyWith(color: c.textBody, fontSize: 10)),
+                      Text(Fmt.relativeDay(p.date).toUpperCase(), style: SxText.labelXs.copyWith(color: c.textBody)),
                       const SizedBox(width: 8),
-                      if (p.delta != null) const PrBadge('New PR'),
+                      if (p.delta != null) const SxPop(child: PrBadge('New PR')),
                     ]),
                     const SizedBox(height: 4),
                     Text(byId[p.exerciseId]?.name ?? p.exerciseId, overflow: TextOverflow.ellipsis, style: SxText.headlineSm.copyWith(color: c.textHigh)),
@@ -349,7 +354,7 @@ class _StrengthView extends StatelessWidget {
                 SxInset(
                   padding: const EdgeInsets.all(10),
                   child: Column(children: [
-                    Text('EST. 1RM', style: SxText.labelCaps.copyWith(color: c.textBody, fontSize: 9)),
+                    Text('EST. MAX', style: SxText.labelXs.copyWith(color: c.textBody)),
                     Text(Fmt.weight(p.value, unit), style: SxText.metricMd.copyWith(color: c.textHigh)),
                     Text(Fmt.unit(unit), style: SxText.bodySm.copyWith(color: c.textBody)),
                   ]),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart' show CustomSemanticsAction;
 
 import '../../../app/app_scope.dart';
+import '../../../app/nav.dart';
 import '../../../core/theme/sx_spacing.dart';
 import '../../../core/theme/sx_theme.dart';
 import '../../../core/theme/sx_typography.dart';
@@ -14,7 +15,9 @@ import 'plate_calc_sheet.dart';
 import 'set_row.dart';
 
 /// Exercise slot: compact row when collapsed, full logging card when expanded.
-class ExerciseBlock extends StatelessWidget {
+/// When a slot becomes expanded (e.g. the next exercise opens after the last set) it
+/// scrolls into view.
+class ExerciseBlock extends StatefulWidget {
   const ExerciseBlock({
     super.key,
     required this.controller,
@@ -28,25 +31,79 @@ class ExerciseBlock extends StatelessWidget {
   final int index;
   final WeightUnit unit;
 
+  /// Test hook: called with the block index on every build of a block.
+  @visibleForTesting
+  static void Function(int index)? debugOnBuild;
+
+  @override
+  State<ExerciseBlock> createState() => _ExerciseBlockState();
+}
+
+class _ExerciseBlockState extends State<ExerciseBlock> {
+  late bool _wasExpanded = widget.draft.expanded;
+  late bool _wasComplete = widget.draft.complete;
+  // Latched once the user changed the expansion: from then on the swapped-in card fades in.
+  bool _animateSwap = false;
+
   @override
   Widget build(BuildContext context) {
-    return AnimatedSize(
-      duration: SxMotion.base,
-      curve: Curves.easeOut,
-      alignment: Alignment.topCenter,
-      child: draft.expanded
-          ? _Expanded(
-              controller: controller,
-              draft: draft,
-              index: index,
-              unit: unit,
-            )
-          : _Collapsed(
-              controller: controller,
-              draft: draft,
-              index: index,
-              unit: unit,
-            ),
+    // Only this exercise's own edits rebuild the block (see ExerciseDraft.touch).
+    return ListenableBuilder(
+      listenable: widget.draft,
+      builder: (context, _) {
+        ExerciseBlock.debugOnBuild?.call(widget.index);
+        return _content(context);
+      },
+    );
+  }
+
+  Widget _content(BuildContext context) {
+    final d = widget.draft;
+    final expanded = d.expanded;
+    final justCompleted = d.complete && !_wasComplete;
+    if (expanded != _wasExpanded) _animateSwap = true;
+    if (expanded && !_wasExpanded) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        Scrollable.ensureVisible(
+          context,
+          duration: SxMotion.of(context, SxMotion.standard),
+          alignment: 0.05,
+          curve: SxMotion.enter,
+        );
+      });
+    }
+    _wasExpanded = expanded;
+    _wasComplete = d.complete;
+    Widget card = expanded
+        ? _Expanded(
+            controller: widget.controller,
+            draft: d,
+            index: widget.index,
+            unit: widget.unit,
+          )
+        : _Collapsed(
+            controller: widget.controller,
+            draft: d,
+            index: widget.index,
+            unit: widget.unit,
+            celebrate: justCompleted,
+          );
+    if (_animateSwap) {
+      card = SxFadeSlideIn(
+        key: ValueKey<bool>(expanded),
+        dy: 0,
+        duration: SxMotion.short,
+        child: card,
+      );
+    }
+    return RepaintBoundary(
+      child: AnimatedSize(
+        duration: SxMotion.of(context, SxMotion.short),
+        curve: SxMotion.enter,
+        alignment: Alignment.topCenter,
+        child: card,
+      ),
     );
   }
 }
@@ -72,11 +129,15 @@ class _Collapsed extends StatelessWidget {
     required this.draft,
     required this.index,
     required this.unit,
+    this.celebrate = false,
   });
   final ActiveWorkoutController controller;
   final ExerciseDraft draft;
   final int index;
   final WeightUnit unit;
+
+  /// The exercise was just finished: its check badge pops once.
+  final bool celebrate;
 
   @override
   Widget build(BuildContext context) {
@@ -91,7 +152,12 @@ class _Collapsed extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         child: Row(
           children: [
-            _Badge(index: index, complete: complete, active: false),
+            _Badge(
+              index: index,
+              complete: complete,
+              active: false,
+              pop: celebrate,
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -124,9 +190,8 @@ class _Collapsed extends StatelessWidget {
                 complete
                     ? '${draft.doneCount}/${draft.sets.length}'
                     : '${draft.sets.length} SETS',
-                style: SxText.labelCaps.copyWith(
+                style: SxText.labelXs.copyWith(
                   color: complete ? c.positive : c.textBody,
-                  fontSize: 10,
                 ),
               ),
             ),
@@ -144,16 +209,18 @@ class _Badge extends StatelessWidget {
     required this.index,
     required this.complete,
     required this.active,
+    this.pop = false,
   });
   final int index;
   final bool complete;
   final bool active;
+  final bool pop;
 
   @override
   Widget build(BuildContext context) {
     final c = context.sx;
     if (complete) {
-      return Container(
+      final badge = Container(
         width: 32,
         height: 32,
         decoration: BoxDecoration(
@@ -163,6 +230,7 @@ class _Badge extends StatelessWidget {
         ),
         child: Icon(Icons.check_circle_outline, size: 20, color: c.positive),
       );
+      return pop ? SxPop(child: badge) : badge;
     }
     return Container(
       width: 28,
@@ -170,7 +238,7 @@ class _Badge extends StatelessWidget {
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: active ? c.primary : c.surface2,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(SxRadius.xs),
       ),
       child: Text(
         '${index + 1}',
@@ -223,6 +291,25 @@ class _Expanded extends StatelessWidget {
     if (v != null) controller.setReps(draft, i, v.round());
   }
 
+  /// Removes a set; a logged (done) set can be brought back from the snackbar.
+  void _removeWithUndo(BuildContext context, int i) {
+    final wasDone = draft.sets[i].done;
+    final removed = controller.removeSet(draft, i);
+    if (removed == null || !wasDone) return;
+    final m = ScaffoldMessenger.of(context);
+    m.hideCurrentSnackBar();
+    m.showSnackBar(
+      SnackBar(
+        duration: const Duration(seconds: 5),
+        content: Text('Set ${i + 1} removed'),
+        action: SnackBarAction(
+          label: 'Undo',
+          onPressed: () => controller.insertSet(draft, i, removed),
+        ),
+      ),
+    );
+  }
+
   Future<void> _swap(BuildContext context) async {
     final app = context.app;
     if (draft.doneCount > 0) {
@@ -268,33 +355,25 @@ class _Expanded extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Row 1: slot badge, full-width one-line title (full name on long-press / for screen
+          // readers), collapse.
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: _Badge(
-                  index: index,
-                  complete: draft.complete,
-                  active: true,
-                ),
-              ),
+              _Badge(index: index, complete: draft.complete, active: true),
               const SizedBox(width: 10),
               Expanded(
-                child: Text(
-                  ex.name,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: SxText.headlineMd.copyWith(color: c.textHigh),
+                child: Tooltip(
+                  message: ex.name,
+                  excludeFromSemantics: true,
+                  child: Text(
+                    ex.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: SxText.headlineMd.copyWith(color: c.textHigh),
+                  ),
                 ),
               ),
               const SizedBox(width: 6),
-              _HeaderButton(
-                icon: Icons.swap_horiz,
-                label: 'Swap',
-                onTap: () => _swap(context),
-              ),
-              const SizedBox(width: 4),
               _HeaderButton(
                 icon: Icons.expand_less,
                 tooltip: 'Collapse',
@@ -302,85 +381,70 @@ class _Expanded extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 6),
-          Text(
-            meta,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: SxText.labelCaps.copyWith(color: c.textBody, fontSize: 10),
-          ),
-          const SizedBox(height: 12),
-          SxInset(
-            padding: const EdgeInsets.all(10),
-            child: Row(
-              children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: c.surface3,
-                    borderRadius: BorderRadius.circular(SxRadius.base),
-                    border: Border.all(color: c.hairline),
-                  ),
-                  child: Center(child: MuscleMap.exercise(ex, height: 34)),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'TARGET: ${ex.primaryMuscle.label.toUpperCase()}',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: SxText.labelCaps.copyWith(
-                          color: c.textHigh,
-                          fontSize: 10,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Row(
-                        children: [
-                          Icon(Icons.history, size: 14, color: c.textMuted),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              prevTop == null
-                                  ? 'No previous session'
-                                  : 'Last: ${Fmt.setLabel(prevTop.weightKg, prevTop.reps, unit)}',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: SxText.bodySm.copyWith(color: c.textBody),
-                            ),
+          // Row 2: muscle / equipment tags and "Last: ..." stacked, with Swap and Info beside them
+          // (icon buttons, 48dp, spoken labels).
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      meta,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: SxText.labelXs.copyWith(color: c.textBody),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(Icons.history, size: 14, color: c.textMuted),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            prevTop == null
+                                ? 'No previous session'
+                                : 'Last: ${Fmt.setLabel(prevTop.weightKg, prevTop.reps, unit)}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: SxText.bodySm.copyWith(color: c.textBody),
                           ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                if (ex.tempo != null) ...[
-                  const SizedBox(width: 8),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        'TEMPO',
-                        style: SxText.labelCaps.copyWith(
-                          color: c.textMuted,
-                          fontSize: 9,
                         ),
-                      ),
-                      Text(
-                        ex.tempo!,
-                        style: SxText.metricSm.copyWith(color: c.primary),
-                      ),
-                    ],
-                  ),
-                ],
-              ],
-            ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 6),
+              _HeaderButton(
+                icon: Icons.swap_horiz,
+                tooltip: 'Swap exercise',
+                onTap: () => _swap(context),
+              ),
+              const SizedBox(width: 4),
+              _HeaderButton(
+                icon: Icons.info_outline,
+                tooltip: 'Exercise details',
+                onTap: () => AppNav.exerciseDetails(context, ex.id),
+              ),
+            ],
           ),
-          const SizedBox(height: 12),
+          if (draft.recommendation != null &&
+              !draft.complete &&
+              !draft.suggestionUsed) ...[
+            const SizedBox(height: 4),
+            SxFadeSlideIn(
+              dy: 6,
+              duration: SxMotion.short,
+              child: _SuggestionChip(
+                rec: draft.recommendation!,
+                unit: unit,
+                onUse: () => controller.useSuggestion(draft),
+              ),
+            ),
+          ],
+          const SizedBox(height: 4),
           SetTableHeader(unit: unit),
           for (var i = 0; i < draft.sets.length; i++)
             Padding(
@@ -390,14 +454,14 @@ class _Expanded extends StatelessWidget {
                 customSemanticsActions: {
                   if (draft.sets.length > 1)
                     const CustomSemanticsAction(label: 'Remove set'): () =>
-                        controller.removeSet(draft, i),
+                        _removeWithUndo(context, i),
                 },
                 child: Dismissible(
                   key: ObjectKey(draft.sets[i]),
                   direction: draft.sets.length > 1
                       ? DismissDirection.endToStart
                       : DismissDirection.none,
-                  onDismissed: (_) => controller.removeSet(draft, i),
+                  onDismissed: (_) => _removeWithUndo(context, i),
                   background: Container(
                     alignment: Alignment.centerRight,
                     padding: const EdgeInsets.only(right: 16),
@@ -415,44 +479,52 @@ class _Expanded extends StatelessWidget {
                     unit: unit,
                     onWeight: () => _editWeight(context, i),
                     onReps: () => _editReps(context, i),
-                    onToggle: () => controller.toggleSet(draft, i),
+                    onToggle: () {
+                      // Weighted work is never logged at 0 kg: ask for the weight first.
+                      if (!controller.toggleSet(draft, i)) {
+                        _editWeight(context, i);
+                      }
+                    },
+                    onWeightStep: (dir) =>
+                        controller.stepWeight(draft, i, dir, unit),
+                    onRepsStep: (dir) => controller.stepReps(draft, i, dir),
                   ),
                 ),
               ),
             ),
           const SizedBox(height: 4),
-          Row(
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              Expanded(
-                child: _TextAction(
-                  icon: Icons.add_circle_outline,
-                  label: 'Add Set',
-                  color: c.primary,
-                  onTap: () => controller.addSet(draft),
-                ),
+              _TextAction(
+                icon: Icons.add_circle_outline,
+                label: 'Add Set',
+                color: c.primary,
+                onTap: () => controller.addSet(draft),
               ),
-              Expanded(
-                child: _TextAction(
-                  icon: Icons.tune,
-                  label: 'Plate Calc',
+              if (active > 0)
+                _TextAction(
+                  icon: Icons.content_copy,
+                  label: 'Same as last set',
                   color: c.textBody,
-                  alignEnd: true,
-                  onTap: () {
-                    final i = active < 0 ? draft.sets.length - 1 : active;
-                    showPlateCalculator(
-                      context,
-                      targetKg: draft.sets[i].weightKg,
-                      unit: unit,
-                    );
-                  },
+                  onTap: () => controller.sameAsLast(draft, active),
                 ),
+              _TextAction(
+                icon: Icons.tune,
+                label: 'Plate Calc',
+                color: c.textBody,
+                onTap: () {
+                  final i = active < 0 ? draft.sets.length - 1 : active;
+                  showPlateCalculator(
+                    context,
+                    targetKg: draft.sets[i].weightKg,
+                    unit: unit,
+                  );
+                },
               ),
             ],
           ),
-          if (draft.recommendation != null && !draft.complete) ...[
-            const SizedBox(height: 8),
-            _OverloadCard(rec: draft.recommendation!, unit: unit),
-          ],
         ],
       ),
     );
@@ -463,12 +535,10 @@ class _HeaderButton extends StatelessWidget {
   const _HeaderButton({
     required this.icon,
     required this.onTap,
-    this.label,
-    this.tooltip,
+    required this.tooltip,
   });
   final IconData icon;
-  final String? label;
-  final String? tooltip;
+  final String tooltip;
   final VoidCallback onTap;
 
   @override
@@ -476,30 +546,27 @@ class _HeaderButton extends StatelessWidget {
     final c = context.sx;
     return Semantics(
       button: true,
-      label: label ?? tooltip,
+      label: tooltip,
       excludeSemantics: true,
       onTap: onTap,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(SxRadius.md),
-        child: Container(
-          constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-          padding: EdgeInsets.symmetric(horizontal: label == null ? 0 : 10),
-          decoration: BoxDecoration(
-            color: c.surface2,
-            borderRadius: BorderRadius.circular(SxRadius.md),
-            border: Border.all(color: c.hairline),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 20, color: c.textBody),
-              if (label != null) ...[
-                const SizedBox(width: 4),
-                Text(label!, style: SxText.labelUi.copyWith(color: c.textHigh)),
-              ],
-            ],
+      child: Tooltip(
+        message: tooltip,
+        excludeFromSemantics: true,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(SxRadius.md),
+          child: Container(
+            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+            decoration: BoxDecoration(
+              color: c.surface2,
+              borderRadius: BorderRadius.circular(SxRadius.md),
+              border: Border.all(color: c.hairline),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [Icon(icon, size: 20, color: c.textBody)],
+            ),
           ),
         ),
       ),
@@ -513,13 +580,11 @@ class _TextAction extends StatelessWidget {
     required this.label,
     required this.color,
     required this.onTap,
-    this.alignEnd = false,
   });
   final IconData icon;
   final String label;
   final Color color;
   final VoidCallback onTap;
-  final bool alignEnd;
 
   @override
   Widget build(BuildContext context) {
@@ -527,8 +592,8 @@ class _TextAction extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(SxRadius.base),
       child: Container(
-        constraints: const BoxConstraints(minHeight: 44),
-        alignment: alignEnd ? Alignment.centerRight : Alignment.centerLeft,
+        constraints: const BoxConstraints(minHeight: 48),
+        alignment: Alignment.centerLeft,
         padding: const EdgeInsets.symmetric(horizontal: 4),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -552,60 +617,132 @@ class _TextAction extends StatelessWidget {
   }
 }
 
-/// "Smart Overload" card. Content comes from ProgressionService only.
-class _OverloadCard extends StatelessWidget {
-  const _OverloadCard({required this.rec, required this.unit});
+/// Tappable progression suggestion ("Use 105 x 8"). Content comes from ProgressionService
+/// only; nothing is applied until the user taps it. One compact row; tapping the label
+/// row expands the reason.
+class _SuggestionChip extends StatefulWidget {
+  const _SuggestionChip({
+    required this.rec,
+    required this.unit,
+    required this.onUse,
+  });
   final ProgressionRecommendation rec;
   final WeightUnit unit;
+  final VoidCallback onUse;
+
+  @override
+  State<_SuggestionChip> createState() => _SuggestionChipState();
+}
+
+class _SuggestionChipState extends State<_SuggestionChip> {
+  bool _open = false;
 
   @override
   Widget build(BuildContext context) {
     final c = context.sx;
-    final headline = rec.isIncrease
-        ? 'Recommended: Increase load to ${Fmt.weight(rec.weightKg, unit)} ${Fmt.unit(unit)} × ${rec.repMin}–${rec.repMax}.'
-        : 'Recommended: ${Fmt.weight(rec.weightKg, unit)} ${Fmt.unit(unit)} × ${rec.repMin}–${rec.repMax}.';
-    return Semantics(
-      container: true,
-      excludeSemantics: true, // the visible text is the same; read it once
-      label:
-          '${rec.isIncrease ? 'Smart overload' : 'Progression'}. $headline ${rec.reason}',
-      child: SxInset(
-        padding: const EdgeInsets.all(10),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: c.primarySoft,
-                borderRadius: BorderRadius.circular(SxRadius.base),
-              ),
-              child: Icon(Icons.trending_up, color: c.primary, size: 22),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    rec.isIncrease ? 'SMART OVERLOAD' : 'PROGRESSION',
-                    style: SxText.labelCaps.copyWith(
-                      color: c.primary,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
+    final rec = widget.rec;
+    final use = 'Use ${Fmt.weight(rec.weightKg, widget.unit)} × ${rec.repMin}';
+    return SxInset(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Semantics(
+                  container: true,
+                  button: true,
+                  expanded: _open,
+                  label: 'Suggestion. ${rec.reason}',
+                  excludeSemantics: true,
+                  onTap: () => setState(() => _open = !_open),
+                  child: InkWell(
+                    onTap: () => setState(() => _open = !_open),
+                    borderRadius: BorderRadius.circular(SxRadius.base),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(minHeight: 48),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.lightbulb_outline,
+                            color: c.primary,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: Text(
+                              'SUGGESTION',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: SxText.labelXs.copyWith(
+                                color: c.primary,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                          Icon(
+                            _open ? Icons.expand_less : Icons.expand_more,
+                            color: c.textBody,
+                            size: 18,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '$headline ${rec.reason}',
-                    style: SxText.bodyMd.copyWith(color: c.textBody),
-                  ),
-                ],
+                ),
               ),
-            ),
-          ],
-        ),
+              const SizedBox(width: 8),
+              Semantics(
+                button: true,
+                label: use,
+                excludeSemantics: true,
+                onTap: widget.onUse,
+                child: SxPressable(
+                  semantics: false,
+                  onTap: widget.onUse,
+                  haptic: true,
+                  scale: 0.95,
+                  focusRadius: SxRadius.base,
+                  child: Container(
+                    constraints: const BoxConstraints(
+                      minHeight: 48,
+                      minWidth: 48,
+                    ),
+                    alignment: Alignment.center,
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: c.primarySoft,
+                      borderRadius: BorderRadius.circular(SxRadius.base),
+                      border: Border.all(color: c.primaryBorder),
+                    ),
+                    child: Text(
+                      use,
+                      maxLines: 1,
+                      style: SxText.labelUi.copyWith(color: c.primary),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          AnimatedSize(
+            duration: SxMotion.of(context, SxMotion.short),
+            curve: SxMotion.enter,
+            alignment: Alignment.topCenter,
+            child: _open
+                ? Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: ExcludeSemantics(
+                      child: Text(
+                        rec.reason,
+                        style: SxText.bodySm.copyWith(color: c.textBody),
+                      ),
+                    ),
+                  )
+                : const SizedBox(width: double.infinity),
+          ),
+        ],
       ),
     );
   }

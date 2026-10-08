@@ -64,14 +64,14 @@ class _PlateBodyState extends State<_PlateBody> {
           ),
         ]),
         const SizedBox(height: 12),
-        Text('BAR', style: SxText.labelCaps.copyWith(color: c.textBody, fontSize: 10)),
+        Text('BAR', style: SxText.labelXs.copyWith(color: c.textBody)),
         const SizedBox(height: 6),
         Wrap(spacing: 8, runSpacing: 8, children: [
           for (final b in const [20.0, 15.0, 10.0])
             SxChip(label: '${Fmt.number(b)} kg', selected: _bar == b, onTap: () => setState(() => _bar = b)),
         ]),
         const SizedBox(height: SxSpace.md),
-        Text('PER SIDE', style: SxText.labelCaps.copyWith(color: c.textBody, fontSize: 10)),
+        Text('PER SIDE', style: SxText.labelXs.copyWith(color: c.textBody)),
         const SizedBox(height: 8),
         if (tooLight)
           Text('Target is lighter than the bar.', style: SxText.bodyMd.copyWith(color: c.danger))

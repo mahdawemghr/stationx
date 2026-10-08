@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../theme/sx_spacing.dart';
 import '../theme/sx_theme.dart';
 import '../theme/sx_typography.dart';
 
@@ -38,47 +39,86 @@ class SxBottomNav extends StatelessWidget {
           maxScaleFactor: 1.3,
           child: SizedBox(
             height: 64,
-            child: Row(
+            child: Stack(
               children: [
-                for (var i = 0; i < sxTabs.length; i++)
-                  Expanded(
-                    child: Semantics(
-                      container: true,
-                      button: true,
-                      selected: i == index,
-                      label: sxTabs[i].label,
-                      excludeSemantics: true,
-                      onTap: () => onChanged(i),
-                      child: InkWell(
-                        onTap: () => onChanged(i),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            AnimatedScale(
-                              scale: i == index ? 1.08 : 1,
-                              duration: const Duration(milliseconds: 150),
-                              child: Icon(
-                                sxTabs[i].icon,
-                                size: 24,
-                                color: i == index ? c.primary : c.textBody,
-                              ),
+                // Single sliding indicator (top edge) shared by all tabs.
+                Positioned.fill(
+                  child: AnimatedAlign(
+                    duration: SxMotion.of(context, SxMotion.short),
+                    curve: SxMotion.enter,
+                    alignment: Alignment(
+                      sxTabs.length <= 1
+                          ? 0
+                          : -1 +
+                                2 *
+                                    index.clamp(0, sxTabs.length - 1) /
+                                    (sxTabs.length - 1),
+                      -1,
+                    ),
+                    child: FractionallySizedBox(
+                      widthFactor: 1 / sxTabs.length,
+                      child: Align(
+                        alignment: Alignment.topCenter,
+                        child: Container(
+                          width: 32,
+                          height: 3,
+                          decoration: BoxDecoration(
+                            color: c.primary,
+                            borderRadius: const BorderRadius.vertical(
+                              bottom: Radius.circular(SxRadius.sm),
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              sxTabs[i].label.toUpperCase(),
-                              style: SxText.labelCaps.copyWith(
-                                fontSize: 10,
-                                color: i == index ? c.primary : c.textBody,
-                                fontWeight: i == index
-                                    ? FontWeight.w700
-                                    : FontWeight.w500,
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
                       ),
                     ),
                   ),
+                ),
+                Row(
+                  children: [
+                    for (var i = 0; i < sxTabs.length; i++)
+                      Expanded(
+                        child: Semantics(
+                          container: true,
+                          button: true,
+                          selected: i == index,
+                          label: sxTabs[i].label,
+                          excludeSemantics: true,
+                          onTap: () => onChanged(i),
+                          child: InkWell(
+                            onTap: () => onChanged(i),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                AnimatedScale(
+                                  scale: i == index ? 1.08 : 1,
+                                  duration: SxMotion.of(
+                                    context,
+                                    SxMotion.micro,
+                                  ),
+                                  curve: SxMotion.enter,
+                                  child: Icon(
+                                    sxTabs[i].icon,
+                                    size: 24,
+                                    color: i == index ? c.primary : c.textBody,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  sxTabs[i].label.toUpperCase(),
+                                  style: SxText.labelXs.copyWith(
+                                    color: i == index ? c.primary : c.textBody,
+                                    fontWeight: i == index
+                                        ? FontWeight.w700
+                                        : FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ],
             ),
           ),

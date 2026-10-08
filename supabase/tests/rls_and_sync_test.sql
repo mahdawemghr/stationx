@@ -66,13 +66,45 @@ begin
 
   -- 7. constraints
   begin
-    insert into public.cardio_sessions (id, kind, workout_date, duration_seconds) values ('c-bad', 'swimming', now(), 100);
+    insert into public.cardio_sessions (id, kind, workout_date, duration_seconds) values ('c-bad', 'notAKind', now(), 100);
     r := r || E'\n' || 'FAIL invalid cardio kind accepted';
   exception when check_violation then r := r || E'\n' || 'PASS invalid cardio kind rejected'; end;
+  begin
+    insert into public.cardio_sessions (id, kind, workout_date, duration_seconds) values ('c-swim', 'swimming', now(), 100);
+    r := r || E'\n' || 'PASS new cardio kind (20261011) accepted';
+  exception when check_violation then r := r || E'\n' || 'FAIL new cardio kind rejected (migration 20261011 not applied?)'; end;
   begin
     insert into public.workouts (id, name, exercises) values ('w-bad', 'x', '{"not":"an array"}');
     r := r || E'\n' || 'FAIL non-array exercises accepted';
   exception when check_violation then r := r || E'\n' || 'PASS non-array exercises rejected'; end;
+  begin
+    insert into public.exercises (id, name, primary_muscle, equipment, muscle_targets)
+    values ('x-ok', 'Lat Pulldown Variation', 'back', 'cable', '[{"region":"back","muscle":"lats","role":"primary"}]');
+    r := r || E'\n' || 'PASS exercise muscle_targets array accepted';
+  exception when others then r := r || E'\n' || 'FAIL exercise muscle_targets array rejected: ' || sqlerrm; end;
+  begin
+    insert into public.exercises (id, name, primary_muscle, equipment, muscle_targets)
+    values ('x-bad', 'x', 'back', 'cable', '{"not":"an array"}');
+    r := r || E'\n' || 'FAIL non-array muscle_targets accepted';
+  exception when check_violation then r := r || E'\n' || 'PASS non-array muscle_targets rejected'; end;
+  -- 7b. hardening migration (20261010000000): byte-size caps + tombstones blank their content
+  begin
+    insert into public.workouts (id, name, exercises)
+    values ('w-huge', 'x', (select jsonb_agg(jsonb_build_object('exerciseId', 'e', 'pad', repeat('x', 4000))) from generate_series(1, 90)));
+    r := r || E'\n' || 'FAIL oversized (byte-size) workouts.exercises accepted';
+  exception when check_violation then r := r || E'\n' || 'PASS oversized workouts.exercises rejected by the byte-size CHECK'; end;
+  insert into public.workout_sessions (id, workout_id, name, workout_date, exercises, notes, updated_at)
+  values ('s-tomb', 'w1', 'Secret name', now(), '[{"exerciseId":"bench","sets":[{"weightKg":100,"reps":5}]}]', 'private note', '2026-07-01 00:00+00');
+  update public.workout_sessions set deleted_at = '2026-07-02 00:00+00', updated_at = '2026-07-02 00:00+00' where id = 's-tomb';
+  select count(*) into n from public.workout_sessions
+   where id = 's-tomb' and deleted_at is not null and notes = '' and name = '-' and exercises = '[]'::jsonb and cardio is null;
+  r := r || E'\n' || (case when n = 1 then 'PASS' else 'FAIL' end) || ' tombstone blanked name/notes/exercises';
+  -- a stale tombstone must neither delete nor blank
+  update public.workout_sessions set name = 'Alive', notes = 'keep', exercises = '[]', deleted_at = null, updated_at = '2026-07-03 00:00+00' where id = 's-tomb';
+  update public.workout_sessions set deleted_at = '2026-07-01 12:00+00', updated_at = '2026-07-01 12:00+00' where id = 's-tomb';
+  select count(*) into n from public.workout_sessions where id = 's-tomb' and deleted_at is null and notes = 'keep' and name = 'Alive';
+  r := r || E'\n' || (case when n = 1 then 'PASS' else 'FAIL' end) || ' stale tombstone neither deleted nor blanked the row';
+
   insert into public.cardio_sessions (id, kind, workout_date, duration_seconds, distance_km)
   values ('c1', 'treadmill', now() - interval '3 days', 1800, 4.2);
   insert into public.rotations (workout_ids, current_index) values ('{w1,w2,w3}', 1)

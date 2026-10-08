@@ -93,7 +93,7 @@ void main() {
       await t.tap(find.text('CARDIO'));
       await settle(t);
       expect(find.byType(CardioHomeView), findsOneWidget);
-      expect(find.text('ROUTINES'), findsNothing);
+      expect(find.text('My routines'), findsNothing);
       while (t.takeException() != null) {}
     });
 
@@ -120,7 +120,7 @@ void main() {
     });
 
     // 320 px @ 1.3x overflows inside the shared SxBrandBar (core) — reported to the owner.
-    for (final (size, scale) in [(const Size(320, 568), 1.0), (const Size(360, 800), 1.3), (const Size(412, 915), 1.0)]) {
+    for (final (size, scale) in [(const Size(320, 568), 1.0), (const Size(320, 568), 2.0), (const Size(360, 800), 1.3), (const Size(412, 915), 1.0)]) {
       testWidgets('layout ok at $size x$scale', (t) async {
         await pumpPage(t, const WorkoutsHubPage(), size: size, textScale: scale);
         await t.drag(find.byType(ListView).first, const Offset(0, -600));
@@ -217,10 +217,10 @@ void main() {
       final app = await open(t, 'w2');
       await t.tap(find.byTooltip('Edit sets and reps').first);
       await settle(t);
-      await t.tap(find.byTooltip('Increase Sets'));
+      await t.tap(find.bySemanticsLabel('Increase Sets'));
       await t.pump();
       for (var i = 0; i < 6; i++) {
-        await t.tap(find.byTooltip('Decrease Max reps'));
+        await t.tap(find.bySemanticsLabel('Decrease Max reps'));
         await t.pump();
       }
       await t.tap(find.text('DONE'));
@@ -239,6 +239,9 @@ void main() {
       await t.pump();
       await t.tap(find.text('REORDER'));
       await settle(t);
+      // Section headers make the list taller, so the first row may be scrolled off screen.
+      await t.ensureVisible(find.byTooltip('Move down').first);
+      await t.pump();
       await t.tap(find.byTooltip('Move down').first);
       await settle(t);
       await t.tap(find.text('SAVE WORKOUT STRUCTURE'));

@@ -1,6 +1,15 @@
 import 'sync_rows.dart';
 import 'sync_tables.dart';
 
+/// The cloud session is gone or no longer accepted (expired / revoked token, 401, signed out).
+/// Gateways translate their transport's auth failures into this so callers never match on text.
+class SyncAuthLostException implements Exception {
+  const SyncAuthLostException([this.detail]);
+  final String? detail;
+  @override
+  String toString() => 'SyncAuthLostException(${detail ?? ''})';
+}
+
 /// Server side of sync (PostgREST). Rows are plain maps; `user_id` is handled
 /// by the implementation. Implementations throw on network/server errors.
 abstract class SyncGateway {

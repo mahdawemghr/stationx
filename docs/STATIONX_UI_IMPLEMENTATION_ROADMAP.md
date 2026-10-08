@@ -507,3 +507,114 @@ The app can now back up and sync to the Supabase database from §T. **It is iner
 
 ## K. Final report
 **Completed:** design system, domain + mock data layer, 35 screens, tests. **Changed:** brand KINETIC→StationX; Stitch's sensor/mesocycle/social copy replaced by honest states. **Fixed:** shared widget overflow issues. **Security:** none found; auth is local-only by design. **Remaining:** Health Connect, sensors/GPS, launcher icon, device profiling, share/export files. **Git:** NO COMMIT WAS CREATED (user-level Claude settings now also deny `git commit`/`git push`).
+
+## W. Schedule setup
+After Create account (and from Workouts and Profile > Workout configuration) `lib/features/onboarding/` runs a skippable flow: pick a split or Custom, tick exercises per muscle sub-section (add your own inline), review, then `ScheduleBuilder.save` replaces the rotation.
+Guests get a dismissible prompt on Today (dismissal is session-only; no persisted flag exists). Tests: `test/features/onboarding/`.
+Update (2026-10-08): presets are listed Full Body, Upper / Lower, Push / Pull / Legs, Bro split, Custom. Choosing a preset offers **Quick start** (skips per-muscle ticking: pick -> "How many days a week?" -> review -> save) or **Customize exercises** (per-day steps, then the same days-per-week step); Custom also asks days/week. Save sets `UserProfile.weeklySessionTarget`. Copy states the program is a sequence: a missed day just continues with the next workout; days/week is only the weekly goal. No equipment selection in this version.
+Replacing a schedule never deletes workouts: the old rotation is **archived** (history kept). The Workouts tab has an "Archived" section (everything not in the rotation) with "Add back to rotation" (`ScheduleBuilder.restore`, appended at the end), still openable and deletable after the usual confirm. Day step shows secondary muscles as small tags and "Grouped by how people usually train it". Tests: `test/features/onboarding/`, `test/features/workouts/archive_test.dart` (incl. history opening for an archived workout's session).
+Muscle taxonomy (2026-10-08): the detailed taxonomy (11 regions -> leaf muscles, primary/secondary targets) lives in the domain layer (`lib/domain/models/muscle.dart`, `services/muscle_profiles.dart`, `muscle_coverage.dart`, `exercise_recommender.dart`); the legacy 7-way `MuscleGroup` still drives storage/sync, so no schema change. Screens never rank or compute coverage themselves: the Exercise library has sub-muscle chips under the chosen muscle (`exercise_library_page.dart`), Exercise details show Primary/Secondary from `MuscleProfiles.of`, the Swap sheet calls `ExerciseRecommender.replacements`, and the setup Review step has a collapsible "Muscle coverage" summary plus optional gap hints (`onboarding/setup_coverage.dart`; the day step shows a one-line per-day hint). Custom exercises get broad region-level profiles; detailed targets for them are a later schema change. Tests: `test/features/exercises/muscle_taxonomy_ui_test.dart`, `test/features/workouts/swap_recommender_test.dart`, `test/features/onboarding/coverage_ui_test.dart`.
+
+## X. FINALIZATION AUDIT & RELEASE READINESS (started 2026-10-08)
+Legend: `[ ]` not started · `[~]` in progress · `[x]` done and verified · `[!]` blocked (needs action outside the code or hardware)
+Baseline before this phase: `flutter analyze` clean, 536 tests passing, debug APK builds. Audits run: UI/motion, security/release, code quality
+(done); domain/data integrity, workout-logger/states/a11y (running — their findings are appended to this section when they land).
+Stitch project URL needs a login and is not reachable from the tooling; `design_reference/` (≈40 exported screens) is the visual source.
+
+### X.1 Security & release (from the security audit)
+- [x] P0 Android Auto Backup uploads the unencrypted Isar DB + Supabase session → disable backup (manifest + data-extraction rules); fix privacy wording
+- [!] P0 Account-deletion public URL/process (Play requirement) — owner must host; in-app deletion exists
+- [x] P0 `20261009000000_exercise_muscle_targets.sql` APPLIED to the live project on 2026-10-08 (column + shape CHECK verified via SQL); real e2e suite (`SUPABASE_E2E=1`, 4 tests incl. RLS + account deletion) passes against it. The RLS SQL file itself was not run through psql. (Token passed only as an env var, never stored; owner still advised to revoke it afterwards.)
+- [ ] P0 Privacy policy placeholders (effective date, contact e-mail) + HTTPS hosting URL (owner)
+- [ ] P0 Store screenshots must be ≤ 2:1 for Play (current 1080×2400 = 2.22:1); keep a 1080×2160 set for stores, the portfolio copies stay 9:20
+- [x] P1 Import clamps (session/exercise names, notes, exercise count) so imported data can never exceed server CHECKs and wedge sync; clamp in sync row building too
+- [x] P1 Import: smaller cap (~10 MB), decode off the UI isolate, size pre-check for clipboard path
+- [~] P1 Release signing (release APK no longer falls back to debug key; verified with throwaway keystore; R8 wired but OFF — unverified on a device): `flutter build apk --release` must not silently fall back to the debug key; ignore `*.jks`/`*.keystore`; verify R8/shrink on a real release build
+- [x] P1 Local "login" does not check a password → relabel as profile selection / remove password fields in local mode
+- [x] P1 Privacy policy gaps (tombstones keep content in the cloud until account deletion, synced fields list, sign-out keeps local data)
+- [x] P1 Sync: on signed-out/auth-lost classification sign out locally and stop retry loop
+- [x] P2 Raw `ArgumentError.message` shown in setup flow save error → fixed friendly text
+- [x] P2 jsonb byte-size CHECKs + tombstone blanking: `20261010000000_hardening.sql` APPLIED to the live project (dry-run in a rolled-back transaction first; 6 triggers + 9 constraints verified; real e2e suite passes after)
+- [x] Secrets: no `sbp_`/service-role/secret keys in tracked files or history; `env/supabase.json` ignored; RLS owner-only on all 8 tables, anon revoked, `delete_account` hardened
+
+### X.2 Motion & UI polish (from the UI audit)
+- [x] Central motion kit: tokens (micro 120 / short 200 / standard 300 / emphasis 500 ms, stagger 40 ms, curves) + `SxFadeSlideIn`, `SxStagger`, `SxPressable`, `SxCountUp`, `SxGrow`, `SxSwap`, `SxStepTransition`, `SxPop`; one reduced-motion path (`SxMotion.of`)
+- [x] P0 Charts/progress bars/rings animate on FIRST build (tween had no `begin`)
+- [x] P0 Reduced-motion honored everywhere (set row, exercise block, progress tab, swap sheet, button, nav, skeleton, page transitions)
+- [x] P0 Text controllers disposed while the sheet is still animating out (profile `_editName`, workout editor `_rename`, setup custom step row removal)
+- [x] Apply motion: tab-switch fade, list stagger, card press, set-completion pop + haptic, PR celebration, rotation advance, setup-step transitions, count-up numbers, exercise details entry, cardio start/stop, profile toggles, empty/loading/error cross-fades
+- [x] Tokens: `onDanger`, `scrim`, radius xs, `labelXs/labelSm` (no 9/11 sp text), nav-bar colour from `SxColors` (OLED), replace hard-coded colours/radii
+- [x] Shared widgets: `SxCheck`, `SxTag/SxPill`, `SxStepper` (5 duplicates), `SxSpinner`; route import dialogs through `showSxConfirm`
+- [x] Touch targets: wrap sub-48dp tappables in `SxIconButton`; remove misleading `SxButton(height: 40/44)`
+- [x] Keyboard: `keyboardDismissBehavior: onDrag` in `SxScaffold`
+- [ ] Navigation: a few call sites still bypass `AppNav` (landing/login/register/cloud card) — cosmetic, not fixed
+- [~] Stitch differences (Today header gap, hub header, logger header compaction done; hero glow subtler; Progress header actions and exercise-details tile sizes NOT changed): Today header gap/hero glow/"Preview workout"; Workouts hub stacked segmented controls (~230 px) + rotation label; active-workout timer tiles/set-row size; Progress header actions; exercise-details stat tiles
+- [x] Performance: active workout page rebuilds fully on every edit → per-exercise builders; cache Today computations; `Opacity` → colour dim; `RepaintBoundary` on hero
+- [x] Fixed: Workouts hub header overflow at 320 px with 2× text (pre-existing)
+
+### X.3 Code quality (from the code-quality audit)
+- [x] Demo data while signed in to cloud: guard/forget-device like "Delete all data"
+- [~] Stale strings/docs: "Guest · demo data", README "no network", PROJECT_DETAILS statements, stale `MOCK DATA` comments (seed catalog is production data)
+- [ ] Orphan `CardioSettingsPage` (unreachable): link it or delete it with its nav method/tests
+- [ ] Business logic out of widgets (strength-delta ranking, push/pull ratio, percent-change ×6 still in widgets — NOT moved) into domain services (strength delta ranking, push/pull ratio, percent-change ×6, exercise/workout stats, completion %)
+- [ ] Dead code (orphan CardioSettingsPage, unused helpers, cupertino_icons — NOT removed): `VolumeService.volumeSeries`, `customActivityIcon`, `toKm`, `isRunning`; `startDemo` is test-only; `cupertino_icons` unused
+- [~] One `SxStepper` (adopted in editor/profile/logger; cardio prepare hero stepper intentionally kept); derive muscle filter chips from the taxonomy; date/minute helpers into `Fmt`; rename public `Row` typedef
+- [ ] Split files > 600 lines (6 files) where it helps; null-safety pass on `!` hot spots
+- [x] No leaks found in controllers/timers/listeners; no prints/TODOs/ignores
+
+### X.4 Domain / data integrity (from the domain audit)
+- [x] P0 Progression: no recommendation for bodyweight/timed/0-weight exercises; ≥2 sessions (or ≥2 working sets) and last session ≤ ~42 days; never lift rep target above best+1; outlier top sets must not dictate (see also X.5 progression item; owner: logger agent)
+- [x] P0 `loadDemoData`/`startDemo` over real data: refuse or double-confirm when user data exists, cloud handling, demo marker + "Remove demo data" (only `seed_*`); `startDemo` → `@visibleForTesting`
+- [x] P1 `deleteWorkout` shifts the rotation pointer (keep current workout identity)
+- [x] P1 Completing a workout moves the rotation (DECIDED, `RotationService.afterCompleting` + `WorkoutCompletion`): current workout -> index+1 (wrap); another workout that IS in the rotation -> pointer goes to the position AFTER the performed one; workout NOT in the rotation (archived/ad-hoc) -> never changes it; backdated sessions never touch it. Logger retry path (`active_workout_page` calling `advanceRotation()` directly) should use the same rule.
+- [ ] P1 Gym Tracker import: custom exercises get only legacy fields (hamstring/glute/calf land in quadriceps; unknown → core) → build targets via `Exercise.custom`, map leaf words, unknown → "needs review"
+- [x] P1 `estimateOneRepMax` has no rep cap (100×30 → 200 kg): return 0 above ~12 reps; zero-weight/bodyweight must not create 0-valued PRs
+- [ ] P1 Cardio PRs and goals mix activity kinds (bike beats run; "Weekly Running Distance" counts cycling) → per-kind; editing a custom cardio session can erase distance
+- [x] P1 `ExerciseRecommender.forDay` is region-level: must keep a region open while required subgroups (upper/mid/lower chest; lats/upper back/traps-lower back; side/rear delts) have no direct work; avoid deadlift as a "back filler"; update the test that enshrines region-only behaviour
+- [x] P1 Account switch keeps previous account's profile; `wipeAllData` while cloud-signed-out leaves stale sync cursors
+- [x] P1 Isar workout repo writes memory before disk and tombstone in a separate transaction → persist-first, single transaction
+- [ ] P2 DST-safe week boundaries; per-exercise increments (8 kg lateral raise +31%); `MemorySessionRepository.update` missing-id behaviour; duplicate sets-per-muscle model (`VolumeService` vs `MuscleCoverage`); codec weight clamp (primary ≤ 1.0); cardio form mismatches (rowing pace /500 m, hard-coded "/ KM"); no-op expression in `exercise_aliases.dart`
+- [x] Verified OK: rotation is pure/index-based; backdating split holds; archive/restore never delete; no exercise delete API (history safe); catalog top-up never overwrites; seed rows never upload; import idempotent; all 82 built-ins have profiles, weights 1.0/0.5, direct = primary only, custom uses the same path
+### X.5 Workout logger, states, accessibility (from the logger audit)
+- [x] P0 In-progress workout is lost if the OS kills the app → persist the draft locally (debounced) + "Resume workout" on Today; keep screen awake while logging
+- [x] P0 Finish button can spin forever if saving throws → try/catch/finally + friendly retry text
+- [x] P0 "Load demo data" must not touch a signed-in cloud account (guard / forget-device like wipe)
+- [x] P0 Local "Log in/Create account" look like real accounts (also X.1) → "Create local profile"/"Open my profile", no fake password, no "Forgot password?"
+- [x] P1 Logger: later sets follow (confirm-then-reps keypad chain NOT done) weight/rep edits; "same as last set"; inline ± steppers; confirm-then-reps keypad chain
+- [x] P1 Done-check must not log a 0 kg weighted set (open keypad instead)
+- [x] P1 Haptic on set done and when rest ends; pinned compact rest chip in footer; rest continues between exercises
+- [x] P1 Swipe-to-remove-set needs undo/confirm for logged sets
+- [x] P1 Progression suggestion: ≥2 done sets & ≥2 sessions, staleness cutoff, unit-aware text (kg/lb, sensible lb increments), softer "Suggestion" wording, tappable "Use" chip instead of silently prefilling the increased weight
+- [x] P1 Set row at 320 dp: KG/REPS/DONE ≥ 48 dp (PREV on second line); collapse muscle-map/tempo card out of the logger; scroll next exercise into view; silent back when nothing logged
+- [ ] P1 States/auth: "Local" pills reflect real sync phase; one clear sign-out (cloud vs profile); cloud password reset + resend confirmation; account-switch sheet shows both counts; restore must not enter an empty app if first sync failed; delete-account progress/double-tap guard; export → file/share; import busy + try/catch; Health-denied next step; technical wording ("Isar", "PURGE", "SMART OVERLOAD", "Progression engine")
+- [ ] P1 a11y: `SxTextField` accessible label + errorText; reduced motion; top-bar text scale; edit-name sheet scrollable
+- [ ] P1 responsive: Workouts hub header at 320 dp × 2× text (narrow layout + 48 dp calendar button + regression test); max content width on tablets for logger/Today/Profile
+- [x] Already good: confirmations, cloud error wording, offline copy, startup-error screen, empty states, keypad targets, token contrast test (≥ 4.5:1)
+
+### X.6 Device verification
+- [!] No Android device/emulator available in this environment (Linux desktop only). Manual checklist (launch → account/guest → schedule setup → generate/customize → workout → complete → rotation → history/progress → replace exercise → custom exercise → change schedule → archive/restore → cardio → profile/settings → logout/login → offline → restart mid-workout) must be run by the owner on a phone.
+
+### X.7 Release blockers (manual actions outside the code)
+- Apply the Supabase migration; run RLS SQL test and e2e · Supabase dashboard: Site URL, min password length, SMTP, templates, leaked-password protection · revoke the old `sbp_` token
+- Create + back up the upload keystore and `android/key.properties` · test the release build (R8/Isar/Health Connect) on devices
+- Host the privacy policy (fill date/e-mail) and the account-deletion page · Play Console: Data safety, Health Connect declaration, content rating, target audience, closed test
+- Regenerate Play screenshots ≤ 2:1 · iOS: build/test on a Mac
+
+### X.8 Follow-ups from the domain fixes (domain side done: rotation `afterCompleting`, e1RM cap, per-kind cardio PRs, subgroup-aware `forDay`, codec/DST/volume model)
+- [ ] Logger retry path (`active_workout_page`) must use `RotationService.afterCompleting`/`WorkoutCompletion`, not `advanceRotation()` directly
+- [ ] `session_analysis.dart` / `exercise_stats.dart`: e1RM is now 0 above 12 reps → guard against 0 estimates in deltas/comparisons
+- [ ] Cardio UI: group/filter PRs by `kindLabel` (one per kind now); edit/forms use `CardioFieldResolver.fieldsFor`; `cardio_home_support` week helper DST-safe; "Weekly Running Distance" goal should pass `kinds:` (CardioGoal has no kind field → per-goal kind filter needs a schema change, NOT approved yet)
+- [ ] Progress/Complete screens: per-group dose now counts primary targets (deadlift counts Back + Legs) → check copy/tests
+- [ ] Data layer: `deleteWorkout` must keep the current workout's identity; Isar workout repo persist-first + single transaction (with tombstone); Gym Tracker import builds custom exercises through `Exercise.custom` with mapped regions; account-switch profile carry-over; `wipeAllData` with a stale sync cursor when signed out
+
+## X.9 Maximum workout length
+
+A workout that runs past the maximum length (default 3 h; options 2 h / 3 h / 4 h / Off, `WorkoutLimit.options`) is ended automatically: only done sets are saved (duration capped at the limit, rotation advances like a normal finish); a draft with no done set is discarded. The setting is a device-local preference (`AppController.maxWorkoutMinutes` / `setMaxWorkoutMinutes`), never synced and kept on "Delete all data".
+Screens must: (1) logger: when live elapsed >= `app.maxWorkoutMinutes` flush the draft, call `app.autoEndExpiredWorkout()` and show the result; (2) Today: show `app.pendingAutoEndNotice` ("Your workout ended automatically after 3 hours. N sets saved.") and call `clearAutoEndNotice()` on dismiss; (3) Profile: a picker over `WorkoutLimit.options`; (4) call `app.onAppResumed()` at start-up and on lifecycle resume.
+
+
+### X.10 Final status after the finalization phase (2026-10-09)
+**Done and verified** (analyzer clean; full suite ≈ 800 tests passing; debug APK builds; live Supabase e2e passes): security/release fixes (X.1), domain & data-integrity fixes (X.4), logger safety/UX incl. draft resume + progression guards (X.5), motion kit and its roll-out (X.2), muscle sections in workout preview/editor/logger, max workout length (2/3/4 h/off, device-local, auto-end incl. after app kill), 212-exercise catalog with muscle profiles, 11 new cardio kinds with per-500 m/100 m pace, two-way Health Connect/Apple Health sync layer + screens (opt-in, off by default), Gym Tracker import (muscle targets, needs-review note), custom exercises with the full muscle-target model. Live DB migrations applied: 20261009 (muscle_targets), 20261010 (hardening), 20261011 (cardio kinds).
+**Not done / open:** business logic still in some widgets (X.3); dead-code removal; AppNav call-site cleanup; `StatTile` count-up; line-chart grow-in; schedule save-confirmation pop; per-goal kind field for cardio goals (schema change not approved); 'confirm-then-reps' keypad chain; hero/shared-element transitions (skipped on purpose).
+**Cannot be verified here (no device):** the whole on-device checklist (X.6), Samsung Health ↔ Health Connect round-trip, minified (R8) release behaviour, TalkBack/haptics feel, iOS build, real-phone performance.
+**Release blockers (owner actions):** see X.7 — plus: apply nothing else is pending on the DB; Play Health Connect declaration for the new read/write permissions; privacy policy hosting + account-deletion page; keystore; revoke the Supabase access token that was shared in chat.

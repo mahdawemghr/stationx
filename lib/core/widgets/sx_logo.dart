@@ -15,9 +15,16 @@ class SxLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final mark = CustomPaint(size: Size.square(size), painter: const _LogoPainter());
+    final mark = CustomPaint(
+      size: Size.square(size),
+      painter: const _LogoPainter(),
+    );
     if (decorative) return ExcludeSemantics(child: mark);
-    return Semantics(image: true, label: 'StationX', child: ExcludeSemantics(child: mark));
+    return Semantics(
+      image: true,
+      label: 'StationX',
+      child: ExcludeSemantics(child: mark),
+    );
   }
 }
 
@@ -35,18 +42,26 @@ class _LogoPainter extends CustomPainter {
     final k = size.width / 512;
     canvas.save();
     canvas.scale(k);
-    final tile = RRect.fromRectAndRadius(const Rect.fromLTWH(0, 0, 512, 512), const Radius.circular(114));
+    final tile = RRect.fromRectAndRadius(
+      const Rect.fromLTWH(0, 0, 512, 512),
+      const Radius.circular(114),
+    );
     canvas.drawRRect(
-        tile,
-        Paint()
-          ..shader = const RadialGradient(center: Alignment(0, -0.2), radius: 0.6 * 1.6, colors: [Color(0xFF1B1E28), _ink])
-              .createShader(const Rect.fromLTWH(0, 0, 512, 512)));
+      tile,
+      Paint()
+        ..shader = const RadialGradient(
+          center: Alignment(0, -0.2),
+          radius: 0.6 * 1.6,
+          colors: [Color(0xFF1B1E28), _ink],
+        ).createShader(const Rect.fromLTWH(0, 0, 512, 512)),
+    );
     canvas.drawRRect(
-        tile.deflate(1),
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2
-          ..color = const Color(0xFF252A36));
+      tile.deflate(1),
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2
+        ..color = const Color(0xFF252A36),
+    );
 
     Path chevron(double dx) => Path()
       ..moveTo(128 + dx, 340)
@@ -55,19 +70,24 @@ class _LogoPainter extends CustomPainter {
       ..lineTo(176 + dx, 340)
       ..close();
     Paint grad(Color a, Color b, double dx) => Paint()
-      ..shader = LinearGradient(colors: [a, b]).createShader(Rect.fromLTWH(128 + dx, 172, 256, 168));
+      ..shader = LinearGradient(
+        colors: [a, b],
+      ).createShader(Rect.fromLTWH(128 + dx, 172, 256, 168));
     canvas.drawPath(chevron(0), grad(_cyanA, _cyan, 0));
     canvas.drawPath(chevron(120), grad(_violetA, _violet, 120));
 
     const c = Offset(256, 256);
     canvas.drawCircle(c, 46, Paint()..color = _ink);
     canvas.drawCircle(
-        c,
-        46,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 12
-          ..shader = const LinearGradient(colors: [_cyanA, _cyan]).createShader(Rect.fromCircle(center: c, radius: 52)));
+      c,
+      46,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 12
+        ..shader = const LinearGradient(
+          colors: [_cyanA, _cyan],
+        ).createShader(Rect.fromCircle(center: c, radius: 52)),
+    );
     canvas.drawCircle(c, 20, Paint()..color = _violet);
     canvas.drawCircle(c, 8, Paint()..color = Colors.white);
     canvas.restore();
@@ -86,8 +106,14 @@ class SxAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.sx;
-    final parts = name.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
-    final initials = parts.isEmpty ? '?' : parts.take(2).map((p) => p[0].toUpperCase()).join();
+    final parts = name
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((p) => p.isNotEmpty)
+        .toList();
+    final initials = parts.isEmpty
+        ? '?'
+        : parts.take(2).map((p) => p[0].toUpperCase()).join();
     return Container(
       width: size,
       height: size,
@@ -97,9 +123,15 @@ class SxAvatar extends StatelessWidget {
         shape: BoxShape.circle,
         border: Border.all(color: c.primaryBorder),
       ),
-      child: Text(initials,
-          style: TextStyle(
-              fontFamily: 'SpaceGrotesk', fontWeight: FontWeight.w700, fontSize: size * 0.38, color: c.primary)),
+      child: Text(
+        initials,
+        style: TextStyle(
+          fontFamily: 'SpaceGrotesk',
+          fontWeight: FontWeight.w700,
+          fontSize: size * 0.38,
+          color: c.primary,
+        ),
+      ),
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'cardio_pace.dart';
 import '../../core/utils/formatters.dart';
 import '../../domain/domain.dart';
 
@@ -16,6 +17,17 @@ IconData cardioKindIcon(CardioKind k) => switch (k) {
       CardioKind.rowing => Icons.kayaking,
       CardioKind.stairClimber => Icons.stairs,
       CardioKind.jumpRope => Icons.bolt,
+      CardioKind.trailRun => Icons.terrain,
+      CardioKind.hiking => Icons.hiking,
+      CardioKind.spinBike => Icons.directions_bike_outlined,
+      CardioKind.airBike => Icons.air,
+      CardioKind.skiErg => Icons.downhill_skiing,
+      CardioKind.arcTrainer => Icons.sports_gymnastics,
+      CardioKind.verticalClimber => Icons.north,
+      CardioKind.swimming => Icons.pool,
+      CardioKind.handCycle => Icons.back_hand_outlined,
+      CardioKind.hiit => Icons.local_fire_department,
+      CardioKind.boxing => Icons.sports_mma,
       CardioKind.custom => Icons.fitness_center,
     };
 
@@ -42,6 +54,17 @@ String cardioKindBlurb(CardioKind k) => switch (k) {
       CardioKind.rowing => 'Duration, distance & resistance',
       CardioKind.stairClimber => 'Duration & intensity level',
       CardioKind.jumpRope => 'High-intensity, duration based',
+      CardioKind.trailRun => 'Off-road running • distance, time & pace',
+      CardioKind.hiking => 'Long walks on trails • distance & time',
+      CardioKind.spinBike => 'Indoor cycling • resistance & distance',
+      CardioKind.airBike => 'Fan bike • time, distance & calories',
+      CardioKind.skiErg => 'Pull-style erg • distance, damper & calories',
+      CardioKind.arcTrainer => 'Low-impact trainer • resistance & distance',
+      CardioKind.verticalClimber => 'Full-body climber • time, climb & calories',
+      CardioKind.swimming => 'Pool laps • distance & pace per 100 m',
+      CardioKind.handCycle => 'Upper-body cycle • resistance & distance',
+      CardioKind.hiit => 'Intervals & circuits • time & calories',
+      CardioKind.boxing => 'Heavy bag & pads • time & calories',
       CardioKind.custom => 'Your own activity',
     };
 
@@ -72,6 +95,17 @@ Set<CardioGroup> cardioGroups(CardioKind k) => switch (k) {
       CardioKind.rowing => {CardioGroup.gym},
       CardioKind.stairClimber => {CardioGroup.gym, CardioGroup.highIntensity},
       CardioKind.jumpRope => {CardioGroup.highIntensity},
+      CardioKind.trailRun => {CardioGroup.outdoor},
+      CardioKind.hiking => {CardioGroup.outdoor, CardioGroup.lowImpact},
+      CardioKind.spinBike => {CardioGroup.gym, CardioGroup.lowImpact},
+      CardioKind.airBike => {CardioGroup.gym, CardioGroup.highIntensity},
+      CardioKind.skiErg => {CardioGroup.gym, CardioGroup.highIntensity},
+      CardioKind.arcTrainer => {CardioGroup.gym, CardioGroup.lowImpact},
+      CardioKind.verticalClimber => {CardioGroup.gym, CardioGroup.highIntensity},
+      CardioKind.swimming => {CardioGroup.lowImpact},
+      CardioKind.handCycle => {CardioGroup.gym, CardioGroup.lowImpact},
+      CardioKind.hiit => {CardioGroup.highIntensity},
+      CardioKind.boxing => {CardioGroup.highIntensity},
       CardioKind.custom => {},
     };
 
@@ -91,10 +125,10 @@ List<CardioMetric> cardioSummaryMetrics(CardioSession s, {bool miles = false}) {
   ];
   if (s.distanceKm != null) out.add(CardioMetric('Distance', Fmt.km(s.distanceKm, miles: miles), miles ? 'mi' : 'km'));
   final f = s.kind.fields;
-  if (f.contains(CardioField.pace) && s.paceSecPerKm != null) {
-    out.add(CardioMetric('Pace', Fmt.pace(s.paceSecPerKm), '/km'));
+  if (CardioPace.has(s.kind) && s.paceSecPerKm != null) {
+    out.add(CardioMetric('Pace', CardioPace.text(s.kind, s.paceSecPerKm, miles: miles), CardioPace.unit(s.kind, miles: miles)));
   } else if (f.contains(CardioField.speed) && s.avgSpeedKmh != null) {
-    out.add(CardioMetric('Speed', Fmt.number(s.avgSpeedKmh!), 'km/h'));
+    out.add(CardioMetric('Speed', Fmt.number(miles ? s.avgSpeedKmh! * 0.621371 : s.avgSpeedKmh!), miles ? 'mph' : 'km/h'));
   } else if (f.contains(CardioField.resistance) && s.resistance != null) {
     out.add(CardioMetric('Resist.', '${s.resistance}', 'lvl'));
   } else if (s.calories != null) {
@@ -105,8 +139,9 @@ List<CardioMetric> cardioSummaryMetrics(CardioSession s, {bool miles = false}) {
 
 /// Session at the start of "this week" (Mon) → +7 days.
 ({DateTime from, DateTime to}) cardioWeek(DateTime now, {int offsetWeeks = 0}) {
-  final start = VolumeService.startOfWeek(now).add(Duration(days: 7 * offsetWeeks));
-  final from = DateTime(start.year, start.month, start.day);
+  // Calendar arithmetic (not Duration) so a DST change never shifts the week boundary.
+  final s0 = VolumeService.startOfWeek(now);
+  final from = DateTime(s0.year, s0.month, s0.day + 7 * offsetWeeks);
   return (from: from, to: DateTime(from.year, from.month, from.day + 7));
 }
 

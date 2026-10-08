@@ -42,8 +42,9 @@ void main() {
   testWidgets('personal records: renders, filters', (t) async {
     await pumpPage(t, const PersonalRecordsPage());
     await shot(t, 'pr_board');
-    expect(find.text('CALCULATION MATRIX'), findsOneWidget);
-    expect(find.textContaining('not a tested 1RM'), findsOneWidget);
+    // Jargon 'CALCULATION MATRIX' was intentionally replaced by plain wording.
+    expect(find.text('HOW IT IS CALCULATED'), findsOneWidget);
+    expect(find.textContaining('not a tested one-rep max'), findsOneWidget);
     await t.tap(find.text('Most Reps'));
     await t.pump();
     await t.tap(find.text('Chest'));

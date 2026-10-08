@@ -20,9 +20,9 @@ class PrivacyPage extends StatelessWidget {
     ('Optional health data',
         'If you choose to connect Health Connect (Android) or Apple Health (iOS), StationX READS your sleep and resting heart rate to show a recovery summary. It never writes to those apps, keeps the values only in memory while the app is running, and never shares them. You can disconnect at any time.'),
     ('Export and sharing',
-        'Nothing is shared unless you export it yourself (Profile › Export). Exports are copied to your clipboard and are yours to place anywhere.'),
+        'Nothing is shared unless you export it yourself (Profile › Export). Exports are saved as a file you choose (or copied to your clipboard) and are yours to place anywhere.'),
     ('Deleting your data',
-        'Profile › Delete all local data removes your workouts, cardio and goals. Uninstalling the app removes everything it stored.'),
+        'Profile › Delete all local data removes your workouts, cardio and goals from this phone. It keeps your name and email so you stay signed in. Uninstalling the app removes everything it stored.'),
   ];
 
   @override

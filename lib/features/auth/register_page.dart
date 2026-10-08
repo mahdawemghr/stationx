@@ -9,8 +9,9 @@ import '../../core/widgets/widgets.dart';
 import 'auth_widgets.dart';
 import 'login_page.dart';
 
-/// Create account (Stitch: register_page). Creates a *local* profile with an
-/// empty history. The password only gates the form; it is never stored/logged.
+/// Create account (Stitch: register_page). Creates a *local* profile with an empty history.
+/// It is stored on this device and is NOT password protected, so there is no password field
+/// (cloud accounts, which use a password, are created in Profile > Cloud backup & sync).
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
 
@@ -21,24 +22,14 @@ class RegisterPage extends StatefulWidget {
 class _RegisterPageState extends State<RegisterPage> {
   final _name = TextEditingController();
   final _email = TextEditingController();
-  final _password = TextEditingController();
-  final _confirm = TextEditingController();
-  bool _showPw = false;
-  bool _showConfirm = false;
   bool _submitted = false;
 
   @override
   void dispose() {
     _name.dispose();
     _email.dispose();
-    _password.dispose();
-    _confirm.dispose();
     super.dispose();
   }
-
-  List<bool> get _rules => passwordRules(_password.text);
-  int get _level => _rules.where((r) => r).length;
-  bool get _matches => _confirm.text.isNotEmpty && _confirm.text == _password.text;
 
   String? get _nameError => _submitted && _name.text.trim().isEmpty ? 'Required field' : null;
   String? get _emailError {
@@ -47,38 +38,30 @@ class _RegisterPageState extends State<RegisterPage> {
     return isValidEmail(_email.text) ? null : 'Invalid format';
   }
 
-  String? get _confirmError => _submitted && !_matches ? 'Passwords do not match' : null;
-
   double get _progress {
     var n = 0;
     if (_name.text.trim().isNotEmpty) n++;
     if (isValidEmail(_email.text)) n++;
-    if (_level == 3) n++;
-    if (_matches) n++;
-    return n / 4;
+    return n / 2;
   }
 
   Future<void> _submit() async {
     setState(() => _submitted = true);
-    if (_nameError != null || _emailError != null || _level < 3 || !_matches) return;
+    if (_nameError != null || _emailError != null) return;
     final error = await context.app.register(name: _name.text.trim(), email: _email.text.trim());
-    _password.clear();
-    _confirm.clear();
     if (!mounted) return;
     if (error != null) {
       showSxSnack(context, error, icon: Icons.error_outline);
       return;
     }
-    AppNav.enterApp(context);
+    AppNav.scheduleSetup(context, afterSignup: true);
   }
 
   @override
   Widget build(BuildContext context) {
     final c = context.sx;
-    final rules = _rules;
-    const ruleLabels = ['At least 8 characters', 'One uppercase letter', 'One number'];
     return SxScaffold(
-      topBar: const AuthTopBar(label: 'Create account'),
+      topBar: const AuthTopBar(label: 'Create profile'),
       gap: SxSpace.md,
       children: [
         SxLinearMeter(value: _progress, height: 3),
@@ -92,8 +75,8 @@ class _RegisterPageState extends State<RegisterPage> {
           const SizedBox(width: 8),
           Flexible(child: Text('LOCAL PROFILE SETUP', overflow: TextOverflow.ellipsis, style: SxText.labelCaps.copyWith(color: c.primary, letterSpacing: 1.4))),
         ]),
-        Text('Create Your Account', style: SxText.headlineLg.copyWith(color: c.textHigh)),
-        Text('Start tracking your training and building progress, entirely on your device.', style: SxText.bodyLg.copyWith(color: c.textBody)),
+        Text('Create Your Profile', style: SxText.headlineLg.copyWith(color: c.textHigh)),
+        Text('Start tracking your training and building progress, entirely on your device. Local profile — stored on this device, not password protected.', style: SxText.bodyLg.copyWith(color: c.textBody)),
         SxTextField(
           label: 'Full name',
           controller: _name,
@@ -110,62 +93,12 @@ class _RegisterPageState extends State<RegisterPage> {
           icon: Icons.mail_outline,
           hint: 'you@example.com',
           keyboardType: TextInputType.emailAddress,
-          textInputAction: TextInputAction.next,
+          textInputAction: TextInputAction.done,
           autofillHints: const [AutofillHints.email],
           errorText: _emailError,
           onChanged: (_) => setState(() {}),
-        ),
-        SxTextField(
-          label: 'Password',
-          controller: _password,
-          icon: Icons.lock_outline,
-          hint: 'Create a strong password',
-          obscureText: !_showPw,
-          textInputAction: TextInputAction.next,
-          autofillHints: const [AutofillHints.newPassword],
-          onChanged: (_) => setState(() {}),
-          trailing: VisibilityToggle(visible: _showPw, onToggle: () => setState(() => _showPw = !_showPw)),
-        ),
-        SxCard(
-          color: c.surface2,
-          padding: const EdgeInsets.all(SxSpace.md),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Row(children: [
-              Expanded(child: Text('PASSWORD STRENGTH', overflow: TextOverflow.ellipsis, style: SxText.labelCaps.copyWith(color: c.textBody))),
-              Text('LEVEL $_level/3', style: SxText.labelCaps.copyWith(color: _level == 3 ? c.primary : c.textBody)),
-            ]),
-            const SizedBox(height: 10),
-            for (var i = 0; i < 3; i++)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Row(children: [
-                  Icon(rules[i] ? Icons.check_circle : Icons.radio_button_unchecked, size: 20, color: rules[i] ? c.primary : c.textMuted),
-                  const SizedBox(width: 10),
-                  Expanded(child: Text(ruleLabels[i], style: SxText.bodyMd.copyWith(color: rules[i] ? c.textHigh : c.textBody))),
-                ]),
-              ),
-          ]),
-        ),
-        SxTextField(
-          label: 'Confirm password',
-          controller: _confirm,
-          icon: Icons.lock_outline,
-          hint: 'Re-enter your password',
-          obscureText: !_showConfirm,
-          textInputAction: TextInputAction.done,
-          autofillHints: const [AutofillHints.newPassword],
-          errorText: _confirmError,
-          valid: false,
-          onChanged: (_) => setState(() {}),
           onSubmitted: (_) => _submit(),
-          trailing: VisibilityToggle(visible: _showConfirm, onToggle: () => setState(() => _showConfirm = !_showConfirm)),
         ),
-        if (_matches)
-          Row(children: [
-            Icon(Icons.check_circle, size: 16, color: c.primary),
-            const SizedBox(width: 6),
-            Text('Passwords match', style: SxText.bodySm.copyWith(color: c.primary)),
-          ]),
         SxCard(
           padding: const EdgeInsets.all(12),
           child: Row(children: [
@@ -188,9 +121,9 @@ class _RegisterPageState extends State<RegisterPage> {
         ),
         Text('Your data is stored on this device and works without a connection.',
             textAlign: TextAlign.center, style: SxText.bodySm.copyWith(color: c.textBody)),
-        SxButton(label: 'Create account', trailingIcon: Icons.arrow_forward, onPressed: _submit),
+        SxButton(label: 'Create profile', trailingIcon: Icons.arrow_forward, onPressed: _submit),
         Wrap(alignment: WrapAlignment.center, crossAxisAlignment: WrapCrossAlignment.center, children: [
-          Text('Already have an account? ', style: SxText.bodyMd.copyWith(color: c.textBody)),
+          Text('Already have a local profile? ', style: SxText.bodyMd.copyWith(color: c.textBody)),
           TextButton(
             onPressed: () => Navigator.of(context).pushReplacement(MaterialPageRoute<void>(builder: (_) => const LoginPage())),
             style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
@@ -203,7 +136,7 @@ class _RegisterPageState extends State<RegisterPage> {
           child: Row(children: [
             Icon(Icons.offline_bolt_outlined, size: 18, color: c.primary),
             const SizedBox(width: 10),
-            Expanded(child: Text('DATA STORED ON THIS DEVICE. OFFLINE FIRST.', style: SxText.labelCaps.copyWith(color: c.textBody, fontSize: 10))),
+            Expanded(child: Text('DATA STORED ON THIS DEVICE. OFFLINE FIRST.', style: SxText.labelXs.copyWith(color: c.textBody))),
           ]),
         ),
       ],

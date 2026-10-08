@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../cardio/cardio_pace.dart';
 import '../../app/app_scope.dart';
 import '../../app/nav.dart';
 import '../../core/theme/sx_spacing.dart';
@@ -10,6 +11,9 @@ import '../../core/widgets/widgets.dart';
 import '../../domain/domain.dart';
 import '../exercises/exercise_widgets.dart';
 import 'progress_period.dart';
+import 'progress_widgets.dart';
+
+String _whole(double v) => v.round().toString();
 
 /// Body-only cardio analytics (hosted by the Progress tab).
 /// Heart-rate zones, GPS and sensors are not in the data model → omitted.
@@ -31,7 +35,7 @@ class CardioProgressView extends StatelessWidget {
             child: SingleChildScrollView(
               child: EmptyState(
                 icon: Icons.directions_run,
-                eyebrow: 'Cardio engine',
+                eyebrow: 'Cardio',
                 title: 'No cardio recorded yet',
                 message: 'Log a run, ride or treadmill session to see weekly duration, distance and personal bests.',
                 actionLabel: 'Start cardio session',
@@ -61,23 +65,24 @@ class CardioProgressView extends StatelessWidget {
           _DurationCard(sessions: inW, period: period, window: w, minutes: minutes, goalMinutes: weeklyGoal?.target.round()),
           StretchRow(children: [
             Expanded(
-              child: StatTile(
+              child: CountStatTile(
                 label: 'Distance',
                 icon: Icons.route,
-                value: Fmt.number(miles ? km * 0.621371 : km),
+                value: miles ? km * 0.621371 : km,
+                format: Fmt.number,
                 unit: miles ? 'mi' : 'km',
                 caption: prevKm > 0 ? '${km >= prevKm ? '+' : ''}${((km - prevKm) / prevKm * 100).round()}% vs previous' : null,
                 height: 104,
               ),
             ),
             const SizedBox(width: 8),
-            Expanded(child: StatTile(label: 'Sessions', icon: Icons.timer_outlined, value: '${inW.length}', unit: 'workouts', height: 104)),
+            Expanded(child: CountStatTile(label: 'Sessions', icon: Icons.timer_outlined, value: inW.length.toDouble(), format: _whole, unit: 'workouts', height: 104, delay: SxMotion.stagger)),
           ]),
           if (kcal > 0 || avgHr != null)
             StretchRow(children: [
-              if (kcal > 0) Expanded(child: StatTile(label: 'Energy burn', icon: Icons.local_fire_department_outlined, value: Fmt.thousands(kcal), unit: 'kcal', height: 104)),
+              if (kcal > 0) Expanded(child: CountStatTile(label: 'Energy burn', icon: Icons.local_fire_department_outlined, value: kcal.toDouble(), format: Fmt.thousands, unit: 'kcal', height: 104, delay: SxMotion.stagger * 2)),
               if (kcal > 0 && avgHr != null) const SizedBox(width: 8),
-              if (avgHr != null) Expanded(child: StatTile(label: 'Avg heart rate', icon: Icons.favorite_border, value: '$avgHr', unit: 'BPM', height: 104)),
+              if (avgHr != null) Expanded(child: CountStatTile(label: 'Avg heart rate', icon: Icons.favorite_border, value: avgHr.toDouble(), format: _whole, unit: 'BPM', height: 104, delay: SxMotion.stagger * 3)),
             ]),
           SxCard(
             onTap: () => AppNav.cardioDetails(context, recent.id),
@@ -91,7 +96,7 @@ class CardioProgressView extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text('RECENT SESSION', style: SxText.labelCaps.copyWith(color: c.primary, fontSize: 10)),
+                  Text('RECENT SESSION', style: SxText.labelXs.copyWith(color: c.primary)),
                   Text(recent.kind.label, style: SxText.headlineSm.copyWith(color: c.textHigh)),
                   Text('${Fmt.durationShort(recent.durationSeconds)}${recent.distanceKm != null ? ' · ${Fmt.km(miles ? recent.distanceKm! * 0.621371 : recent.distanceKm)} ${miles ? 'mi' : 'km'}' : ''}',
                       style: SxText.bodySm.copyWith(color: c.textBody)),
@@ -107,7 +112,7 @@ class CardioProgressView extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(SxSpace.md, 8, SxSpace.md, SxSpace.lg),
           itemCount: children.length,
           separatorBuilder: (_, _) => const SizedBox(height: SxSpace.md),
-          itemBuilder: (_, i) => children[i],
+          itemBuilder: (_, i) => SxStagger(index: i, enabled: i < SxMotion.staggerCap, child: children[i]),
         );
       },
     );
@@ -203,9 +208,9 @@ class _DurationCard extends StatelessWidget {
         if (showTarget) ...[
           const SizedBox(height: 8),
           Row(children: [
-            Expanded(child: Text('TARGET: $goalMinutes MIN / WEEK', style: SxText.labelCaps.copyWith(color: c.textBody, fontSize: 10))),
+            Expanded(child: Text('TARGET: $goalMinutes MIN / WEEK', style: SxText.labelXs.copyWith(color: c.textBody))),
             if (weekly)
-              Text(minutes >= goalMinutes! ? '+${minutes - goalMinutes!} MIN SURPLUS' : '${goalMinutes! - minutes} MIN TO GO', style: SxText.labelCaps.copyWith(color: minutes >= goalMinutes! ? c.primary : c.textBody, fontSize: 10)),
+              Text(minutes >= goalMinutes! ? '+${minutes - goalMinutes!} MIN SURPLUS' : '${goalMinutes! - minutes} MIN TO GO', style: SxText.labelXs.copyWith(color: minutes >= goalMinutes! ? c.primary : c.textBody)),
           ]),
         ],
       ]),
@@ -230,7 +235,7 @@ class _Milestones extends StatelessWidget {
     String value(CardioPr p) => switch (p.type) {
           CardioPrType.longestDuration => Fmt.durationShort(p.value.round()),
           CardioPrType.longestDistance => '${Fmt.number(miles ? p.value * 0.621371 : p.value)} ${miles ? 'mi' : 'km'}',
-          CardioPrType.fastestPace => '${Fmt.pace(miles ? p.value * 1.609344 : p.value)} /${miles ? 'mi' : 'km'}',
+          CardioPrType.fastestPace => CardioPace.withUnit(CardioKind.values.firstWhere((k) => k.label == p.kindLabel, orElse: () => CardioKind.custom), p.value, miles: miles),
         };
     IconData icon(CardioPrType t) => switch (t) {
           CardioPrType.longestDuration => Icons.hourglass_top,
@@ -254,7 +259,7 @@ class _Milestones extends StatelessWidget {
                     width: 36,
                     height: 36,
                     decoration: BoxDecoration(color: c.surface2, shape: BoxShape.circle),
-                    child: Icon(icon(prs[i].type), size: 18, color: c.textBody),
+                    child: SxPop(child: Icon(icon(prs[i].type), size: 18, color: c.textBody)),
                   ),
                   const SizedBox(width: 12),
                   Expanded(

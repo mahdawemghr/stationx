@@ -13,6 +13,9 @@ void main() {
   testWidgets('library: renders, shot, filters by search + muscle', (t) async {
     await pumpPage(t, const ExerciseLibraryPage());
     await shot(t, 'ex_library');
+    // The seed library is large and lazily built: search to bring a known exercise into view.
+    await t.enterText(find.byType(TextField), 'barbell bench');
+    await t.pump();
     expect(find.text('Barbell Bench Press'), findsOneWidget);
     await t.enterText(find.byType(TextField), 'squat');
     await t.pump();
@@ -29,9 +32,47 @@ void main() {
     expect(find.text('Barbell Bench Press'), findsOneWidget);
   });
 
+  testWidgets(
+    'library: Common chip limits to common lifts, no overflow at 320x568',
+    (t) async {
+      t.view.physicalSize = const Size(640, 1136);
+      t.view.devicePixelRatio = 2;
+      addTearDown(t.view.reset);
+      await pumpPage(t, const ExerciseLibraryPage());
+      await t.tap(find.text('Common'));
+      await t.pump();
+      expect(find.text('Barbell Bench Press'), findsOneWidget);
+      await t.enterText(find.byType(TextField), 'cable fly');
+      await t.pump();
+      expect(find.text('No exercises found'), findsOneWidget);
+      await t.tap(
+        find.textContaining(RegExp('clear filters', caseSensitive: false)),
+      );
+      await t.pump();
+      await t.tap(find.text('All exercises'));
+      await t.pump();
+      expect(t.takeException(), isNull);
+    },
+  );
+
   testWidgets('library: pick mode pops the exercise', (t) async {
     Exercise? picked;
-    await pumpPage(t, Builder(builder: (c) => Scaffold(body: TextButton(onPressed: () async => picked = await Navigator.of(c).push<Exercise>(MaterialPageRoute(builder: (_) => const ExerciseLibraryPage(pickMode: true))), child: const Text('go')))));
+    await pumpPage(
+      t,
+      Builder(
+        builder: (c) => Scaffold(
+          body: TextButton(
+            onPressed: () async =>
+                picked = await Navigator.of(c).push<Exercise>(
+                  MaterialPageRoute(
+                    builder: (_) => const ExerciseLibraryPage(pickMode: true),
+                  ),
+                ),
+            child: const Text('go'),
+          ),
+        ),
+      ),
+    );
     await t.tap(find.text('go'));
     await t.pumpAndSettle();
     await t.enterText(find.byType(TextField), 'lat pull');
@@ -66,12 +107,20 @@ void main() {
   testWidgets('history empty state for never-logged exercise', (t) async {
     await pumpPage(t, const ExerciseHistoryPage(exerciseId: 'plank'));
     expect(find.text('No history yet'), findsOneWidget);
-    await pumpPage(t, const ExerciseDetailsPage(exerciseId: 'plank'), demo: false);
+    await pumpPage(
+      t,
+      const ExerciseDetailsPage(exerciseId: 'plank'),
+      demo: false,
+    );
     expect(find.textContaining('No sets logged'), findsOneWidget);
   });
 
   testWidgets('small screen + text scale 1.3: no overflow', (t) async {
-    for (final page in const [ExerciseLibraryPage(), ExerciseDetailsPage(exerciseId: 'lat_pulldown'), ExerciseHistoryPage(exerciseId: 'lat_pulldown')]) {
+    for (final page in const [
+      ExerciseLibraryPage(),
+      ExerciseDetailsPage(exerciseId: 'lat_pulldown'),
+      ExerciseHistoryPage(exerciseId: 'lat_pulldown'),
+    ]) {
       await pumpPage(t, page, size: const Size(320, 568), textScale: 1.3);
       expect(t.takeException(), isNull);
     }

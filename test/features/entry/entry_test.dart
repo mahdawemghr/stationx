@@ -36,17 +36,20 @@ void main() {
   });
 
   group('Login', () {
-    testWidgets('validates; rejects unknown email; restores the local account', (t) async {
+    testWidgets('validates; rejects unknown email; restores the local account; no password field', (t) async {
       final app = await pumpPage(t, const LoginPage(), demo: false);
+      // A local profile has no password: say so plainly and offer only an email field.
+      expect(find.byType(TextField), findsOneWidget);
+      expect(find.textContaining('not password protected'), findsOneWidget);
+      expect(find.textContaining('Forgot password'), findsNothing);
       await t.tap(find.text('LOG IN').first);
       await t.pump();
-      expect(find.text('REQUIRED FIELD'), findsNWidgets(2));
+      expect(find.text('Required field'), findsOneWidget);
       await t.enterText(find.byType(TextField).first, 'nope');
       await t.pump();
-      expect(find.text('INVALID FORMAT'), findsOneWidget);
+      expect(find.text('Invalid format'), findsOneWidget);
       // No local account exists yet: there is no server, so sign-in is refused.
       await t.enterText(find.byType(TextField).first, 'sam@mail.com');
-      await t.enterText(find.byType(TextField).last, 'secret');
       await t.tap(find.text('LOG IN').first);
       await t.pump();
       await t.pump(const Duration(milliseconds: 300));
@@ -55,7 +58,6 @@ void main() {
       // After an account exists locally (and the user signed out), sign-in restores it.
       await app.register(name: 'Sam', email: 'sam@mail.com');
       await app.signOut();
-      await t.enterText(find.byType(TextField).last, 'secret');
       await t.tap(find.text('LOG IN').first);
       await t.pumpAndSettle();
       expect(app.signedIn, isTrue);
@@ -64,21 +66,18 @@ void main() {
   });
 
   group('Register', () {
-    testWidgets('password rules update and mismatch blocks submit', (t) async {
+    testWidgets('local profile: name + email only, honest copy, creates the profile', (t) async {
       final app = await pumpPage(t, const RegisterPage(), demo: false, size: const Size(390, 1700));
-      expect(find.text('LEVEL 0/3'), findsOneWidget);
       final fields = find.byType(TextField);
-      await t.enterText(fields.at(0), 'Sam');
-      await t.enterText(fields.at(1), 'sam@mail.com');
-      await t.enterText(fields.at(2), 'Abcdef12');
-      await t.pump();
-      expect(find.text('LEVEL 3/3'), findsOneWidget);
-      await t.enterText(fields.at(3), 'different');
+      expect(fields, findsNWidgets(2)); // name + email: no password to pretend-protect anything
+      expect(find.textContaining('not password protected'), findsOneWidget);
+      expect(find.textContaining('PASSWORD', skipOffstage: false), findsNothing);
       await t.tap(find.byType(SxButton).last);
       await t.pump();
       expect(app.signedIn, isFalse);
-      expect(find.text("PASSWORDS DO NOT MATCH", skipOffstage: false), findsOneWidget);
-      await t.enterText(fields.at(3), 'Abcdef12');
+      expect(find.text('Required field'), findsNWidgets(2));
+      await t.enterText(fields.at(0), 'Sam');
+      await t.enterText(fields.at(1), 'sam@mail.com');
       await t.pump();
       await t.tap(find.byType(SxButton).last);
       await t.pumpAndSettle();
@@ -121,7 +120,7 @@ void main() {
 
   group('Profile', () {
     testWidgets('unit + theme persist through the repository', (t) async {
-      final app = await pumpPage(t, const ProfilePage(), size: const Size(390, 1800));
+      final app = await pumpPage(t, const ProfilePage(), size: const Size(390, 2600));
       await t.tap(find.text('LB (POUNDS)'));
       await t.pump();
       expect(app.profile.profile.unit, WeightUnit.lb);
@@ -131,7 +130,7 @@ void main() {
     });
 
     testWidgets('default sets stepper and progression switch', (t) async {
-      final app = await pumpPage(t, const ProfilePage(), size: const Size(390, 1800));
+      final app = await pumpPage(t, const ProfilePage(), size: const Size(390, 2600));
       await t.tap(find.bySemanticsLabel('Increase sets'));
       await t.pump();
       expect(app.profile.profile.defaultSets, 4);
@@ -141,26 +140,40 @@ void main() {
     });
 
     testWidgets('delete all data asks first, then wipes', (t) async {
-      final app = await pumpPage(t, const ProfilePage(), size: const Size(390, 1800));
+      final app = await pumpPage(t, const ProfilePage(), size: const Size(390, 2600));
       expect(app.sessions.sessions, isNotEmpty);
-      await t.tap(find.text('PURGE'));
+      await t.tap(find.text('Delete all local data'));
       await t.pumpAndSettle();
       await t.tap(find.text("CANCEL"));
       await t.pumpAndSettle();
       expect(app.sessions.sessions, isNotEmpty);
-      await t.tap(find.text('PURGE'));
+      await t.tap(find.text('Delete all local data'));
       await t.pumpAndSettle();
       await t.tap(find.text('DELETE EVERYTHING'));
       await t.pumpAndSettle();
       expect(app.sessions.sessions, isEmpty);
     });
 
+    testWidgets('maximum workout length selector persists', (t) async {
+      final app = await pumpPage(t, const ProfilePage(), size: const Size(390, 2400));
+      expect(app.maxWorkoutMinutes, 180);
+      await t.tap(find.text('2 H'));
+      await t.pumpAndSettle();
+      expect(app.maxWorkoutMinutes, 120);
+      await t.tap(find.text('OFF'));
+      await t.pumpAndSettle();
+      expect(app.maxWorkoutMinutes, isNull);
+      expect(find.textContaining('Sets you logged are kept'), findsOneWidget);
+    });
+
     testWidgets('export sheet renders JSON for real data', (t) async {
-      await pumpPage(t, const ProfilePage(), size: const Size(390, 1800));
-      await t.tap(find.text('EXPORT CSV / JSON'));
+      await pumpPage(t, const ProfilePage(), size: const Size(390, 2600));
+      await t.tap(find.text('EXPORT YOUR DATA'));
       await t.pumpAndSettle();
       expect(find.text('EXPORT DATA'), findsOneWidget);
-      expect(find.textContaining('workoutSessions', findRichText: true), findsOneWidget);
+      // Summary + actions instead of a giant text dump.
+      expect(find.textContaining('will be exported as JSON'), findsOneWidget);
+      expect(find.text('COPY TO CLIPBOARD'), findsOneWidget);
     });
   });
 

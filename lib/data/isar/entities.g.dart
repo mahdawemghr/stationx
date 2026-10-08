@@ -43,21 +43,26 @@ const ExerciseEntitySchema = CollectionSchema(
       name: r'movementPattern',
       type: IsarType.string,
     ),
-    r'name': PropertySchema(id: 5, name: r'name', type: IsarType.string),
+    r'muscleTargetsJson': PropertySchema(
+      id: 5,
+      name: r'muscleTargetsJson',
+      type: IsarType.string,
+    ),
+    r'name': PropertySchema(id: 6, name: r'name', type: IsarType.string),
     r'primaryMuscle': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'primaryMuscle',
       type: IsarType.string,
       enumMap: _ExerciseEntityprimaryMuscleEnumValueMap,
     ),
     r'secondaryMuscles': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'secondaryMuscles',
       type: IsarType.stringList,
       enumMap: _ExerciseEntitysecondaryMusclesEnumValueMap,
     ),
-    r'tempo': PropertySchema(id: 8, name: r'tempo', type: IsarType.string),
-    r'uid': PropertySchema(id: 9, name: r'uid', type: IsarType.string),
+    r'tempo': PropertySchema(id: 9, name: r'tempo', type: IsarType.string),
+    r'uid': PropertySchema(id: 10, name: r'uid', type: IsarType.string),
   },
 
   estimateSize: _exerciseEntityEstimateSize,
@@ -108,6 +113,12 @@ int _exerciseEntityEstimateSize(
       3 +
       MetaEmbSchema.estimateSize(object.meta, allOffsets[MetaEmb]!, allOffsets);
   bytesCount += 3 + object.movementPattern.length * 3;
+  {
+    final value = object.muscleTargetsJson;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   bytesCount += 3 + object.name.length * 3;
   bytesCount += 3 + object.primaryMuscle.name.length * 3;
   bytesCount += 3 + object.secondaryMuscles.length * 3;
@@ -148,14 +159,15 @@ void _exerciseEntitySerialize(
     object.meta,
   );
   writer.writeString(offsets[4], object.movementPattern);
-  writer.writeString(offsets[5], object.name);
-  writer.writeString(offsets[6], object.primaryMuscle.name);
+  writer.writeString(offsets[5], object.muscleTargetsJson);
+  writer.writeString(offsets[6], object.name);
+  writer.writeString(offsets[7], object.primaryMuscle.name);
   writer.writeStringList(
-    offsets[7],
+    offsets[8],
     object.secondaryMuscles.map((e) => e.name).toList(),
   );
-  writer.writeString(offsets[8], object.tempo);
-  writer.writeString(offsets[9], object.uid);
+  writer.writeString(offsets[9], object.tempo);
+  writer.writeString(offsets[10], object.uid);
 }
 
 ExerciseEntity _exerciseEntityDeserialize(
@@ -188,15 +200,16 @@ ExerciseEntity _exerciseEntityDeserialize(
       ) ??
       MetaEmb();
   object.movementPattern = reader.readString(offsets[4]);
-  object.name = reader.readString(offsets[5]);
+  object.muscleTargetsJson = reader.readStringOrNull(offsets[5]);
+  object.name = reader.readString(offsets[6]);
   object.primaryMuscle =
       _ExerciseEntityprimaryMuscleValueEnumMap[reader.readStringOrNull(
-        offsets[6],
+        offsets[7],
       )] ??
       MuscleGroup.chest;
   object.secondaryMuscles =
       reader
-          .readStringList(offsets[7])
+          .readStringList(offsets[8])
           ?.map(
             (e) =>
                 _ExerciseEntitysecondaryMusclesValueEnumMap[e] ??
@@ -204,8 +217,8 @@ ExerciseEntity _exerciseEntityDeserialize(
           )
           .toList() ??
       [];
-  object.tempo = reader.readStringOrNull(offsets[8]);
-  object.uid = reader.readString(offsets[9]);
+  object.tempo = reader.readStringOrNull(offsets[9]);
+  object.uid = reader.readString(offsets[10]);
   return object;
 }
 
@@ -244,14 +257,16 @@ P _exerciseEntityDeserializeProp<P>(
     case 4:
       return (reader.readString(offset)) as P;
     case 5:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 6:
+      return (reader.readString(offset)) as P;
+    case 7:
       return (_ExerciseEntityprimaryMuscleValueEnumMap[reader.readStringOrNull(
                 offset,
               )] ??
               MuscleGroup.chest)
           as P;
-    case 7:
+    case 8:
       return (reader
                   .readStringList(offset)
                   ?.map(
@@ -262,9 +277,9 @@ P _exerciseEntityDeserializeProp<P>(
                   .toList() ??
               [])
           as P;
-    case 8:
-      return (reader.readStringOrNull(offset)) as P;
     case 9:
+      return (reader.readStringOrNull(offset)) as P;
+    case 10:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -930,6 +945,165 @@ extension ExerciseEntityQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         FilterCondition.greaterThan(property: r'movementPattern', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<ExerciseEntity, ExerciseEntity, QAfterFilterCondition>
+  muscleTargetsJsonIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'muscleTargetsJson'),
+      );
+    });
+  }
+
+  QueryBuilder<ExerciseEntity, ExerciseEntity, QAfterFilterCondition>
+  muscleTargetsJsonIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'muscleTargetsJson'),
+      );
+    });
+  }
+
+  QueryBuilder<ExerciseEntity, ExerciseEntity, QAfterFilterCondition>
+  muscleTargetsJsonEqualTo(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'muscleTargetsJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ExerciseEntity, ExerciseEntity, QAfterFilterCondition>
+  muscleTargetsJsonGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'muscleTargetsJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ExerciseEntity, ExerciseEntity, QAfterFilterCondition>
+  muscleTargetsJsonLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'muscleTargetsJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ExerciseEntity, ExerciseEntity, QAfterFilterCondition>
+  muscleTargetsJsonBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'muscleTargetsJson',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ExerciseEntity, ExerciseEntity, QAfterFilterCondition>
+  muscleTargetsJsonStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'muscleTargetsJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ExerciseEntity, ExerciseEntity, QAfterFilterCondition>
+  muscleTargetsJsonEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'muscleTargetsJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ExerciseEntity, ExerciseEntity, QAfterFilterCondition>
+  muscleTargetsJsonContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'muscleTargetsJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ExerciseEntity, ExerciseEntity, QAfterFilterCondition>
+  muscleTargetsJsonMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'muscleTargetsJson',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ExerciseEntity, ExerciseEntity, QAfterFilterCondition>
+  muscleTargetsJsonIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'muscleTargetsJson', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<ExerciseEntity, ExerciseEntity, QAfterFilterCondition>
+  muscleTargetsJsonIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'muscleTargetsJson', value: ''),
       );
     });
   }
@@ -1779,6 +1953,20 @@ extension ExerciseEntityQuerySortBy
     });
   }
 
+  QueryBuilder<ExerciseEntity, ExerciseEntity, QAfterSortBy>
+  sortByMuscleTargetsJson() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'muscleTargetsJson', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ExerciseEntity, ExerciseEntity, QAfterSortBy>
+  sortByMuscleTargetsJsonDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'muscleTargetsJson', Sort.desc);
+    });
+  }
+
   QueryBuilder<ExerciseEntity, ExerciseEntity, QAfterSortBy> sortByName() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'name', Sort.asc);
@@ -1884,6 +2072,20 @@ extension ExerciseEntityQuerySortThenBy
     });
   }
 
+  QueryBuilder<ExerciseEntity, ExerciseEntity, QAfterSortBy>
+  thenByMuscleTargetsJson() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'muscleTargetsJson', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ExerciseEntity, ExerciseEntity, QAfterSortBy>
+  thenByMuscleTargetsJsonDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'muscleTargetsJson', Sort.desc);
+    });
+  }
+
   QueryBuilder<ExerciseEntity, ExerciseEntity, QAfterSortBy> thenByName() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'name', Sort.asc);
@@ -1956,6 +2158,16 @@ extension ExerciseEntityQueryWhereDistinct
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(
         r'movementPattern',
+        caseSensitive: caseSensitive,
+      );
+    });
+  }
+
+  QueryBuilder<ExerciseEntity, ExerciseEntity, QDistinct>
+  distinctByMuscleTargetsJson({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(
+        r'muscleTargetsJson',
         caseSensitive: caseSensitive,
       );
     });
@@ -2041,6 +2253,13 @@ extension ExerciseEntityQueryProperty
   movementPatternProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'movementPattern');
+    });
+  }
+
+  QueryBuilder<ExerciseEntity, String?, QQueryOperations>
+  muscleTargetsJsonProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'muscleTargetsJson');
     });
   }
 
@@ -12915,17 +13134,32 @@ const AppMetaEntitySchema = CollectionSchema(
   name: r'AppMetaEntity',
   id: 4798171179488078482,
   properties: {
-    r'healthConnected': PropertySchema(
+    r'autoEndNoticeJson': PropertySchema(
       id: 0,
+      name: r'autoEndNoticeJson',
+      type: IsarType.string,
+    ),
+    r'healthConnected': PropertySchema(
+      id: 1,
       name: r'healthConnected',
       type: IsarType.bool,
     ),
+    r'maxWorkoutMinutesRaw': PropertySchema(
+      id: 2,
+      name: r'maxWorkoutMinutesRaw',
+      type: IsarType.long,
+    ),
     r'schemaVersion': PropertySchema(
-      id: 1,
+      id: 3,
       name: r'schemaVersion',
       type: IsarType.long,
     ),
-    r'signedIn': PropertySchema(id: 2, name: r'signedIn', type: IsarType.bool),
+    r'signedIn': PropertySchema(id: 4, name: r'signedIn', type: IsarType.bool),
+    r'workoutDraftJson': PropertySchema(
+      id: 5,
+      name: r'workoutDraftJson',
+      type: IsarType.string,
+    ),
   },
 
   estimateSize: _appMetaEntityEstimateSize,
@@ -12949,6 +13183,18 @@ int _appMetaEntityEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
+  {
+    final value = object.autoEndNoticeJson;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
+    final value = object.workoutDraftJson;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   return bytesCount;
 }
 
@@ -12958,9 +13204,12 @@ void _appMetaEntitySerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeBool(offsets[0], object.healthConnected);
-  writer.writeLong(offsets[1], object.schemaVersion);
-  writer.writeBool(offsets[2], object.signedIn);
+  writer.writeString(offsets[0], object.autoEndNoticeJson);
+  writer.writeBool(offsets[1], object.healthConnected);
+  writer.writeLong(offsets[2], object.maxWorkoutMinutesRaw);
+  writer.writeLong(offsets[3], object.schemaVersion);
+  writer.writeBool(offsets[4], object.signedIn);
+  writer.writeString(offsets[5], object.workoutDraftJson);
 }
 
 AppMetaEntity _appMetaEntityDeserialize(
@@ -12970,10 +13219,13 @@ AppMetaEntity _appMetaEntityDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = AppMetaEntity();
-  object.healthConnected = reader.readBool(offsets[0]);
+  object.autoEndNoticeJson = reader.readStringOrNull(offsets[0]);
+  object.healthConnected = reader.readBool(offsets[1]);
   object.id = id;
-  object.schemaVersion = reader.readLong(offsets[1]);
-  object.signedIn = reader.readBool(offsets[2]);
+  object.maxWorkoutMinutesRaw = reader.readLongOrNull(offsets[2]);
+  object.schemaVersion = reader.readLong(offsets[3]);
+  object.signedIn = reader.readBool(offsets[4]);
+  object.workoutDraftJson = reader.readStringOrNull(offsets[5]);
   return object;
 }
 
@@ -12985,11 +13237,17 @@ P _appMetaEntityDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readBool(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 1:
-      return (reader.readLong(offset)) as P;
-    case 2:
       return (reader.readBool(offset)) as P;
+    case 2:
+      return (reader.readLongOrNull(offset)) as P;
+    case 3:
+      return (reader.readLong(offset)) as P;
+    case 4:
+      return (reader.readBool(offset)) as P;
+    case 5:
+      return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -13098,6 +13356,165 @@ extension AppMetaEntityQueryWhere
 extension AppMetaEntityQueryFilter
     on QueryBuilder<AppMetaEntity, AppMetaEntity, QFilterCondition> {
   QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterFilterCondition>
+  autoEndNoticeJsonIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'autoEndNoticeJson'),
+      );
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterFilterCondition>
+  autoEndNoticeJsonIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'autoEndNoticeJson'),
+      );
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterFilterCondition>
+  autoEndNoticeJsonEqualTo(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'autoEndNoticeJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterFilterCondition>
+  autoEndNoticeJsonGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'autoEndNoticeJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterFilterCondition>
+  autoEndNoticeJsonLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'autoEndNoticeJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterFilterCondition>
+  autoEndNoticeJsonBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'autoEndNoticeJson',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterFilterCondition>
+  autoEndNoticeJsonStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'autoEndNoticeJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterFilterCondition>
+  autoEndNoticeJsonEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'autoEndNoticeJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterFilterCondition>
+  autoEndNoticeJsonContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'autoEndNoticeJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterFilterCondition>
+  autoEndNoticeJsonMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'autoEndNoticeJson',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterFilterCondition>
+  autoEndNoticeJsonIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'autoEndNoticeJson', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterFilterCondition>
+  autoEndNoticeJsonIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'autoEndNoticeJson', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterFilterCondition>
   healthConnectedEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
@@ -13154,6 +13571,82 @@ extension AppMetaEntityQueryFilter
       return query.addFilterCondition(
         FilterCondition.between(
           property: r'id',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterFilterCondition>
+  maxWorkoutMinutesRawIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'maxWorkoutMinutesRaw'),
+      );
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterFilterCondition>
+  maxWorkoutMinutesRawIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'maxWorkoutMinutesRaw'),
+      );
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterFilterCondition>
+  maxWorkoutMinutesRawEqualTo(int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'maxWorkoutMinutesRaw',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterFilterCondition>
+  maxWorkoutMinutesRawGreaterThan(int? value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'maxWorkoutMinutesRaw',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterFilterCondition>
+  maxWorkoutMinutesRawLessThan(int? value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'maxWorkoutMinutesRaw',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterFilterCondition>
+  maxWorkoutMinutesRawBetween(
+    int? lower,
+    int? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'maxWorkoutMinutesRaw',
           lower: lower,
           includeLower: includeLower,
           upper: upper,
@@ -13226,6 +13719,165 @@ extension AppMetaEntityQueryFilter
       );
     });
   }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterFilterCondition>
+  workoutDraftJsonIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'workoutDraftJson'),
+      );
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterFilterCondition>
+  workoutDraftJsonIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'workoutDraftJson'),
+      );
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterFilterCondition>
+  workoutDraftJsonEqualTo(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'workoutDraftJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterFilterCondition>
+  workoutDraftJsonGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'workoutDraftJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterFilterCondition>
+  workoutDraftJsonLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'workoutDraftJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterFilterCondition>
+  workoutDraftJsonBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'workoutDraftJson',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterFilterCondition>
+  workoutDraftJsonStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'workoutDraftJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterFilterCondition>
+  workoutDraftJsonEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'workoutDraftJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterFilterCondition>
+  workoutDraftJsonContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'workoutDraftJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterFilterCondition>
+  workoutDraftJsonMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'workoutDraftJson',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterFilterCondition>
+  workoutDraftJsonIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'workoutDraftJson', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterFilterCondition>
+  workoutDraftJsonIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'workoutDraftJson', value: ''),
+      );
+    });
+  }
 }
 
 extension AppMetaEntityQueryObject
@@ -13237,6 +13889,20 @@ extension AppMetaEntityQueryLinks
 extension AppMetaEntityQuerySortBy
     on QueryBuilder<AppMetaEntity, AppMetaEntity, QSortBy> {
   QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterSortBy>
+  sortByAutoEndNoticeJson() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'autoEndNoticeJson', Sort.asc);
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterSortBy>
+  sortByAutoEndNoticeJsonDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'autoEndNoticeJson', Sort.desc);
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterSortBy>
   sortByHealthConnected() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'healthConnected', Sort.asc);
@@ -13247,6 +13913,20 @@ extension AppMetaEntityQuerySortBy
   sortByHealthConnectedDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'healthConnected', Sort.desc);
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterSortBy>
+  sortByMaxWorkoutMinutesRaw() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'maxWorkoutMinutesRaw', Sort.asc);
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterSortBy>
+  sortByMaxWorkoutMinutesRawDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'maxWorkoutMinutesRaw', Sort.desc);
     });
   }
 
@@ -13276,10 +13956,38 @@ extension AppMetaEntityQuerySortBy
       return query.addSortBy(r'signedIn', Sort.desc);
     });
   }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterSortBy>
+  sortByWorkoutDraftJson() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'workoutDraftJson', Sort.asc);
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterSortBy>
+  sortByWorkoutDraftJsonDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'workoutDraftJson', Sort.desc);
+    });
+  }
 }
 
 extension AppMetaEntityQuerySortThenBy
     on QueryBuilder<AppMetaEntity, AppMetaEntity, QSortThenBy> {
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterSortBy>
+  thenByAutoEndNoticeJson() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'autoEndNoticeJson', Sort.asc);
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterSortBy>
+  thenByAutoEndNoticeJsonDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'autoEndNoticeJson', Sort.desc);
+    });
+  }
+
   QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterSortBy>
   thenByHealthConnected() {
     return QueryBuilder.apply(this, (query) {
@@ -13303,6 +14011,20 @@ extension AppMetaEntityQuerySortThenBy
   QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterSortBy> thenByIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.desc);
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterSortBy>
+  thenByMaxWorkoutMinutesRaw() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'maxWorkoutMinutesRaw', Sort.asc);
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterSortBy>
+  thenByMaxWorkoutMinutesRawDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'maxWorkoutMinutesRaw', Sort.desc);
     });
   }
 
@@ -13332,14 +14054,45 @@ extension AppMetaEntityQuerySortThenBy
       return query.addSortBy(r'signedIn', Sort.desc);
     });
   }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterSortBy>
+  thenByWorkoutDraftJson() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'workoutDraftJson', Sort.asc);
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterSortBy>
+  thenByWorkoutDraftJsonDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'workoutDraftJson', Sort.desc);
+    });
+  }
 }
 
 extension AppMetaEntityQueryWhereDistinct
     on QueryBuilder<AppMetaEntity, AppMetaEntity, QDistinct> {
   QueryBuilder<AppMetaEntity, AppMetaEntity, QDistinct>
+  distinctByAutoEndNoticeJson({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(
+        r'autoEndNoticeJson',
+        caseSensitive: caseSensitive,
+      );
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QDistinct>
   distinctByHealthConnected() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'healthConnected');
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QDistinct>
+  distinctByMaxWorkoutMinutesRaw() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'maxWorkoutMinutesRaw');
     });
   }
 
@@ -13355,6 +14108,16 @@ extension AppMetaEntityQueryWhereDistinct
       return query.addDistinctBy(r'signedIn');
     });
   }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QDistinct>
+  distinctByWorkoutDraftJson({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(
+        r'workoutDraftJson',
+        caseSensitive: caseSensitive,
+      );
+    });
+  }
 }
 
 extension AppMetaEntityQueryProperty
@@ -13365,10 +14128,24 @@ extension AppMetaEntityQueryProperty
     });
   }
 
+  QueryBuilder<AppMetaEntity, String?, QQueryOperations>
+  autoEndNoticeJsonProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'autoEndNoticeJson');
+    });
+  }
+
   QueryBuilder<AppMetaEntity, bool, QQueryOperations>
   healthConnectedProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'healthConnected');
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, int?, QQueryOperations>
+  maxWorkoutMinutesRawProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'maxWorkoutMinutesRaw');
     });
   }
 
@@ -13381,6 +14158,13 @@ extension AppMetaEntityQueryProperty
   QueryBuilder<AppMetaEntity, bool, QQueryOperations> signedInProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'signedIn');
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, String?, QQueryOperations>
+  workoutDraftJsonProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'workoutDraftJson');
     });
   }
 }
@@ -16399,6 +17183,17 @@ const _CardioTargetEmbkindEnumValueMap = {
   r'rowing': r'rowing',
   r'stairClimber': r'stairClimber',
   r'jumpRope': r'jumpRope',
+  r'trailRun': r'trailRun',
+  r'hiking': r'hiking',
+  r'spinBike': r'spinBike',
+  r'airBike': r'airBike',
+  r'skiErg': r'skiErg',
+  r'arcTrainer': r'arcTrainer',
+  r'verticalClimber': r'verticalClimber',
+  r'swimming': r'swimming',
+  r'handCycle': r'handCycle',
+  r'hiit': r'hiit',
+  r'boxing': r'boxing',
   r'custom': r'custom',
 };
 const _CardioTargetEmbkindValueEnumMap = {
@@ -16411,6 +17206,17 @@ const _CardioTargetEmbkindValueEnumMap = {
   r'rowing': CardioKind.rowing,
   r'stairClimber': CardioKind.stairClimber,
   r'jumpRope': CardioKind.jumpRope,
+  r'trailRun': CardioKind.trailRun,
+  r'hiking': CardioKind.hiking,
+  r'spinBike': CardioKind.spinBike,
+  r'airBike': CardioKind.airBike,
+  r'skiErg': CardioKind.skiErg,
+  r'arcTrainer': CardioKind.arcTrainer,
+  r'verticalClimber': CardioKind.verticalClimber,
+  r'swimming': CardioKind.swimming,
+  r'handCycle': CardioKind.handCycle,
+  r'hiit': CardioKind.hiit,
+  r'boxing': CardioKind.boxing,
   r'custom': CardioKind.custom,
 };
 
@@ -17834,6 +18640,17 @@ const _CardioSessionEmbkindEnumValueMap = {
   r'rowing': r'rowing',
   r'stairClimber': r'stairClimber',
   r'jumpRope': r'jumpRope',
+  r'trailRun': r'trailRun',
+  r'hiking': r'hiking',
+  r'spinBike': r'spinBike',
+  r'airBike': r'airBike',
+  r'skiErg': r'skiErg',
+  r'arcTrainer': r'arcTrainer',
+  r'verticalClimber': r'verticalClimber',
+  r'swimming': r'swimming',
+  r'handCycle': r'handCycle',
+  r'hiit': r'hiit',
+  r'boxing': r'boxing',
   r'custom': r'custom',
 };
 const _CardioSessionEmbkindValueEnumMap = {
@@ -17846,6 +18663,17 @@ const _CardioSessionEmbkindValueEnumMap = {
   r'rowing': CardioKind.rowing,
   r'stairClimber': CardioKind.stairClimber,
   r'jumpRope': CardioKind.jumpRope,
+  r'trailRun': CardioKind.trailRun,
+  r'hiking': CardioKind.hiking,
+  r'spinBike': CardioKind.spinBike,
+  r'airBike': CardioKind.airBike,
+  r'skiErg': CardioKind.skiErg,
+  r'arcTrainer': CardioKind.arcTrainer,
+  r'verticalClimber': CardioKind.verticalClimber,
+  r'swimming': CardioKind.swimming,
+  r'handCycle': CardioKind.handCycle,
+  r'hiit': CardioKind.hiit,
+  r'boxing': CardioKind.boxing,
   r'custom': CardioKind.custom,
 };
 

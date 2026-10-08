@@ -10,6 +10,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/theme/sx_colors.dart';
 import '../core/theme/sx_typography.dart';
 import '../data/health/health_connect_repository.dart';
+import '../data/health/health_gateway.dart';
+import '../data/health/health_sync_service.dart';
+import '../data/health/health_sync_store.dart';
 import '../data/health/plugin_health_gateway.dart';
 import '../data/isar/isar_store.dart';
 import '../data/isar/isar_sync_store.dart';
@@ -29,14 +32,16 @@ const _dbName = 'stationx';
 /// start the UI. A database failure shows a recovery screen instead of crashing.
 Future<void> bootstrap() async {
   WidgetsFlutterBinding.ensureInitialized();
-  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-    statusBarColor: Colors.transparent,
-    statusBarIconBrightness: Brightness.light,
-    systemNavigationBarColor: Color(0xFF1A1C1E),
-    systemNavigationBarIconBrightness: Brightness.light,
-  ));
+  SystemChrome.setSystemUIOverlayStyle(SxColors.obsidian.systemOverlay);
   _installErrorHandling();
   await _start();
+}
+
+/// System bar colours for [mode]; mirrors the palette chosen in `StationXApp`
+/// ("system" resolves to the dark Obsidian palette).
+void applySystemOverlayFor(SxThemeMode mode) {
+  final colors = mode == SxThemeMode.oled ? SxColors.oled : SxColors.obsidian;
+  SystemChrome.setSystemUIOverlayStyle(colors.systemOverlay);
 }
 
 void _installErrorHandling() {
@@ -82,8 +87,22 @@ Future<void> _start() async {
       : NoopHealthRepository();
   unawaited(health.init()); // never blocks startup; UI reacts when it completes
 
+  final healthSync = HealthSyncService(
+    (Platform.isAndroid || Platform.isIOS) ? PluginHealthGateway() : HealthGateway.inert,
+    await FileHealthSyncStore.open(dir),
+  );
   final cloud = await _buildCloud(store);
-  runApp(StationXApp(controller: AppController(store: store, health: health, cloud: cloud)));
+  final controller = AppController(store: store, health: health, healthSync: healthSync, cloud: cloud);
+  applySystemOverlayFor(controller.profile.profile.themeMode);
+  // Keep the system navigation bar in step with the active theme (Obsidian / OLED).
+  var lastMode = controller.profile.profile.themeMode;
+  controller.profile.addListener(() {
+    final mode = controller.profile.profile.themeMode;
+    if (mode == lastMode) return;
+    lastMode = mode;
+    applySystemOverlayFor(mode);
+  });
+  runApp(StationXApp(controller: controller));
   unawaited(cloud.init()); // loads status; if signed in, syncs in the background
 }
 
