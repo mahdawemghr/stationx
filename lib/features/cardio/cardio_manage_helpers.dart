@@ -2,33 +2,12 @@ import 'package:flutter/material.dart';
 
 import '../../core/utils/formatters.dart';
 import '../../domain/domain.dart';
+import 'cardio_kind_presentation.dart';
 
 /// Shared helpers for the cardio management screens (details, edit, backdate,
 /// history, goals, goal details, custom activity, settings).
 
-IconData cardioKindIcon(CardioKind k) => switch (k) {
-      CardioKind.outdoorRun => Icons.directions_run,
-      CardioKind.outdoorWalk => Icons.directions_walk,
-      CardioKind.treadmill => Icons.speed,
-      CardioKind.cycling => Icons.directions_bike,
-      CardioKind.stationaryBike => Icons.pedal_bike,
-      CardioKind.elliptical => Icons.accessibility_new,
-      CardioKind.rowing => Icons.kayaking,
-      CardioKind.stairClimber => Icons.stairs,
-      CardioKind.jumpRope => Icons.bolt,
-      CardioKind.trailRun => Icons.terrain,
-      CardioKind.hiking => Icons.hiking,
-      CardioKind.spinBike => Icons.directions_bike_outlined,
-      CardioKind.airBike => Icons.air,
-      CardioKind.skiErg => Icons.downhill_skiing,
-      CardioKind.arcTrainer => Icons.sports_gymnastics,
-      CardioKind.verticalClimber => Icons.north,
-      CardioKind.swimming => Icons.pool,
-      CardioKind.handCycle => Icons.back_hand_outlined,
-      CardioKind.hiit => Icons.local_fire_department,
-      CardioKind.boxing => Icons.sports_mma,
-      CardioKind.custom => Icons.fitness_center,
-    };
+IconData cardioKindIcon(CardioKind k) => cardioKindGlyph(k);
 
 /// Glyphs offered by "Create Custom Cardio Activity"; key = persisted `iconKey`.
 const Map<String, IconData> cardioCustomIcons = {
@@ -40,6 +19,22 @@ const Map<String, IconData> cardioCustomIcons = {
   'sports_soccer': Icons.sports_soccer,
   'directions_run': Icons.directions_run,
   'timer': Icons.timer,
+  'sports_tennis': Icons.sports_tennis,
+  'sports_basketball': Icons.sports_basketball,
+  'sports_volleyball': Icons.sports_volleyball,
+  'sports_handball': Icons.sports_handball,
+  'sports_rugby': Icons.sports_rugby,
+  'sports_cricket': Icons.sports_cricket,
+  'sports_hockey': Icons.sports_hockey,
+  'sports_golf': Icons.sports_golf,
+  'sports_gymnastics': Icons.sports_gymnastics,
+  'sports_kabaddi': Icons.sports_kabaddi,
+  'self_improvement': Icons.self_improvement,
+  'stairs': Icons.stairs,
+  'surfing': Icons.surfing,
+  'kayaking': Icons.kayaking,
+  'rowing': Icons.rowing,
+  'local_fire_department': Icons.local_fire_department,
 };
 
 IconData customActivityIcon(String key) => cardioCustomIcons[key] ?? Icons.fitness_center;

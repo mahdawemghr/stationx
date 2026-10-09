@@ -96,6 +96,7 @@ abstract final class AppNav {
   static Future<void> cardioHistory(BuildContext c) => _push(c, const CardioHistoryPage());
   static Future<void> cardioGoals(BuildContext c) => _push(c, const CardioGoalsPage());
   static Future<void> cardioGoalDetails(BuildContext c, String goalId) => _push(c, CardioGoalDetailsPage(goalId: goalId));
-  static Future<void> createCustomCardio(BuildContext c) => _push(c, const CreateCustomCardioActivityPage());
+  static Future<void> createCustomCardio(BuildContext c, {String? initialName}) =>
+      _push(c, CreateCustomCardioActivityPage(initialName: initialName));
   static Future<void> cardioSettings(BuildContext c) => _push(c, const CardioSettingsPage());
 }

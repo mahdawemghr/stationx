@@ -2,16 +2,8 @@ import '../models/models.dart';
 import 'exercise_recommender.dart';
 import 'muscle_profiles.dart';
 import 'split_models.dart';
-
-class _Sec {
-  const _Sec(this.key, this.label, this.hint, this.ids);
-  final String key;
-  final String label;
-  final String hint;
-
-  /// Exercise ids in display order (compounds first).
-  final List<String> ids;
-}
+import 'split_section_def.dart';
+import 'split_sections/sections_all.dart';
 
 RoutineExercise _r(String id, [int sets = 3, int min = 8, int max = 12]) =>
     RoutineExercise(exerciseId: id, sets: sets, repMin: min, repMax: max);
@@ -20,381 +12,8 @@ RoutineExercise _r(String id, [int sets = 3, int min = 8, int max = 12]) =>
 /// PURE DART: no UI, no storage. Sub-sections are a static map keyed by exercise id.
 abstract final class SplitCatalog {
   // ── Sub-sections (single source of truth: section → exercise ids) ──
-  static const Map<MuscleGroup, List<_Sec>> _sections = {
-    MuscleGroup.chest: [
-      _Sec(
-        'upper',
-        'Upper chest',
-        'Incline pressing and flyes for the clavicular head.',
-        [
-          'incline_bench_press',
-          'incline_db_press',
-          'smith_incline_press',
-          'incline_machine_press',
-          'reverse_grip_bench_press',
-          'decline_pushup',
-          'incline_cable_fly',
-          'incline_db_fly',
-        ],
-      ),
-      _Sec('mid', 'Mid chest', 'Flat pressing for overall chest mass.', [
-        'bench_press',
-        'db_bench_press',
-        'smith_bench_press',
-        'machine_chest_press',
-        'cable_chest_press',
-        'db_floor_press',
-        'pushup',
-        'wide_pushup',
-        'svend_press',
-      ]),
-      _Sec(
-        'lower',
-        'Lower chest',
-        'Decline and dip patterns for the lower fibres.',
-        [
-          'dips',
-          'decline_bench_press',
-          'decline_db_press',
-          'assisted_dip',
-          'incline_pushup',
-          'high_cable_fly',
-        ],
-      ),
-      _Sec(
-        'fly',
-        'Flyes & isolation',
-        'Stretch and squeeze the chest without the triceps.',
-        ['cable_fly', 'pec_deck', 'db_fly', 'single_arm_cable_fly'],
-      ),
-    ],
-    MuscleGroup.back: [
-      _Sec('lats', 'Lats', 'Vertical pulls and straight-arm work for width.', [
-        'pullup',
-        'chinup',
-        'neutral_grip_pullup',
-        'lat_pulldown',
-        'close_grip_pulldown',
-        'reverse_grip_pulldown',
-        'machine_pulldown',
-        'assisted_pullup',
-        'single_arm_pulldown',
-        'straight_arm_pulldown',
-        'db_pullover',
-      ]),
-      _Sec(
-        'upper',
-        'Upper back & traps',
-        'Rows for thickness and the mid back.',
-        [
-          'barbell_row',
-          'pendlay_row',
-          'meadows_row',
-          'tbar_row',
-          'seal_row',
-          'seated_cable_row',
-          'wide_grip_cable_row',
-          'chest_supported_row',
-          'chest_supported_db_row',
-          'db_row',
-          'one_arm_cable_row',
-          'inverted_row',
-        ],
-      ),
-      _Sec('traps', 'Traps', 'Shrugs, rack pulls and Y raises for the traps.', [
-        'barbell_shrug',
-        'db_shrug',
-        'cable_shrug',
-        'rack_pull',
-        'prone_y_raise',
-      ]),
-      _Sec(
-        'lower',
-        'Lower back',
-        'Hinges and extensions for the spinal erectors.',
-        [
-          'deadlift',
-          'back_extension',
-          'good_morning',
-          'reverse_hyperextension',
-          'superman',
-        ],
-      ),
-    ],
-    MuscleGroup.shoulders: [
-      _Sec('front', 'Front & press', 'Overhead pressing for the front delts.', [
-        'overhead_press',
-        'push_press',
-        'db_shoulder_press',
-        'machine_shoulder_press',
-        'smith_shoulder_press',
-        'arnold_press',
-        'landmine_press',
-        'pike_pushup',
-        'handstand_pushup',
-        'front_raise',
-        'plate_front_raise',
-        'cable_front_raise',
-      ]),
-      _Sec('side', 'Side delts', 'Lateral raises for shoulder width.', [
-        'lateral_raise',
-        'cable_lateral_raise',
-        'leaning_cable_lateral_raise',
-        'seated_lateral_raise',
-        'machine_lateral_raise',
-        'upright_row',
-      ]),
-      _Sec(
-        'rear',
-        'Rear delts',
-        'Rear-delt work for posture and balanced shoulders.',
-        [
-          'face_pull',
-          'rear_delt_fly',
-          'cable_rear_delt_fly',
-          'chest_supported_rear_delt_raise',
-          'reverse_pec_deck',
-          'rear_delt_row',
-          'band_pull_apart',
-        ],
-      ),
-    ],
-    MuscleGroup.biceps: [
-      _Sec(
-        'mass',
-        'Mass builders',
-        'Heavy standing curls for overall biceps size.',
-        [
-          'barbell_curl',
-          'ez_bar_curl',
-          'db_curl',
-          'cable_curl',
-          'wide_grip_barbell_curl',
-          'drag_curl',
-          'machine_biceps_curl',
-          'incline_db_curl',
-          'bayesian_curl',
-        ],
-      ),
-      _Sec(
-        'peak',
-        'Peak (short head)',
-        'Arms in front of the body to hit the short head.',
-        [
-          'preacher_curl',
-          'ez_preacher_curl',
-          'db_preacher_curl',
-          'concentration_curl',
-          'spider_curl',
-        ],
-      ),
-      _Sec(
-        'brachialis',
-        'Brachialis & forearm',
-        'Neutral and reverse grips for arm thickness.',
-        [
-          'hammer_curl',
-          'rope_hammer_curl',
-          'cross_body_hammer_curl',
-          'zottman_curl',
-          'reverse_curl',
-        ],
-      ),
-      _Sec(
-        'forearms',
-        'Forearms & grip',
-        'Wrist curls, carries and hangs for forearm size and grip.',
-        [
-          'wrist_curl',
-          'reverse_wrist_curl',
-          'wrist_roller',
-          'farmers_carry',
-          'plate_pinch',
-          'dead_hang',
-        ],
-      ),
-    ],
-    MuscleGroup.triceps: [
-      _Sec(
-        'overhead',
-        'Overhead (long head)',
-        'Arms overhead to stretch the largest head.',
-        [
-          'overhead_tri_ext',
-          'cable_oh_tri_ext',
-          'ez_overhead_extension',
-          'skullcrusher',
-          'incline_skullcrusher',
-          'db_skullcrusher',
-          'tate_press',
-        ],
-      ),
-      _Sec(
-        'pushdown',
-        'Pushdowns',
-        'Cable and machine extensions for the lateral and medial heads.',
-        [
-          'tricep_pushdown',
-          'rope_pushdown',
-          'single_arm_pushdown',
-          'reverse_grip_pushdown',
-          'machine_triceps_extension',
-          'cable_tricep_kickback',
-          'db_tricep_kickback',
-        ],
-      ),
-      _Sec(
-        'press',
-        'Presses & dips',
-        'Heavy compound lifts for triceps strength.',
-        [
-          'close_grip_bench',
-          'smith_close_grip_bench',
-          'jm_press',
-          'triceps_dip',
-          'seated_dip_machine',
-          'bench_dip',
-          'diamond_pushup',
-        ],
-      ),
-    ],
-    MuscleGroup.legs: [
-      _Sec(
-        'quads',
-        'Quads',
-        'Squats, leg presses and deadlift variants for the front of the thigh.',
-        [
-          'back_squat',
-          'front_squat',
-          'smith_machine_squat',
-          'goblet_squat',
-          'hack_squat',
-          'pendulum_squat',
-          'belt_squat',
-          'leg_press',
-          'leg_press_feet_low',
-          'single_leg_press',
-          'trap_bar_deadlift',
-          'sumo_deadlift',
-        ],
-      ),
-      _Sec(
-        'lunges',
-        'Lunges & single-leg',
-        'Split squats, lunges and step-ups for unilateral leg strength.',
-        [
-          'bulgarian_split_squat',
-          'smith_split_squat',
-          'walking_lunge',
-          'reverse_lunge',
-          'forward_lunge',
-          'db_step_up',
-          'lateral_lunge',
-          'cossack_squat',
-        ],
-      ),
-      _Sec(
-        'quad_iso',
-        'Quad isolation & bodyweight',
-        'Extensions and bodyweight work for the quads.',
-        [
-          'leg_extension',
-          'single_leg_extension',
-          'sissy_squat',
-          'reverse_nordic_curl',
-          'bodyweight_squat',
-          'wall_sit',
-        ],
-      ),
-      _Sec(
-        'hams',
-        'Hamstrings',
-        'Hinges and curls for the back of the thigh.',
-        [
-          'rdl',
-          'db_rdl',
-          'stiff_leg_deadlift',
-          'single_leg_rdl',
-          'leg_curl',
-          'seated_leg_curl',
-          'standing_leg_curl',
-          'stability_ball_leg_curl',
-          'nordic_curl',
-          'glute_ham_raise',
-        ],
-      ),
-      _Sec(
-        'glutes',
-        'Glutes & hips',
-        'Thrusts, bridges, kickbacks and hip abduction/adduction.',
-        [
-          'hip_thrust',
-          'machine_hip_thrust',
-          'db_hip_thrust',
-          'single_leg_hip_thrust',
-          'glute_bridge',
-          'frog_pump',
-          'cable_pull_through',
-          'kettlebell_swing',
-          'cable_kickback',
-          'glute_kickback_machine',
-          'hip_abduction_machine',
-          'cable_hip_abduction',
-          'hip_adduction_machine',
-        ],
-      ),
-      _Sec(
-        'calves',
-        'Calves',
-        'Straight- and bent-knee raises for the lower leg.',
-        [
-          'calf_raise',
-          'smith_calf_raise',
-          'donkey_calf_raise',
-          'leg_press_calf_raise',
-          'db_calf_raise',
-          'seated_calf_raise',
-          'single_leg_calf_raise',
-          'tibialis_raise',
-        ],
-      ),
-    ],
-    MuscleGroup.core: [
-      _Sec('abs', 'Abs', 'Crunching and leg-raising movements.', [
-        'cable_crunch',
-        'machine_crunch',
-        'crunch',
-        'decline_situp',
-        'reverse_crunch',
-        'bicycle_crunch',
-        'v_up',
-        'hanging_leg_raise',
-        'hanging_knee_raise',
-        'toes_to_bar',
-        'lying_leg_raise',
-        'dragon_flag',
-      ]),
-      _Sec(
-        'stability',
-        'Stability & obliques',
-        'Anti-extension, planks, carries and rotation.',
-        [
-          'plank',
-          'ab_wheel',
-          'dead_bug',
-          'bird_dog',
-          'hollow_hold',
-          'stir_the_pot',
-          'side_plank',
-          'pallof_press',
-          'cable_woodchop',
-          'russian_twist',
-          'side_bend',
-          'suitcase_carry',
-        ],
-      ),
-    ],
-  };
+  static const Map<MuscleGroup, List<SectionDef>> _sections =
+      splitSectionsByMuscle;
 
   /// Universally used lifts across all muscles, shown as "Common exercises" in the library.
   static const List<String> commonExerciseIds = [
@@ -431,6 +50,13 @@ abstract final class SplitCatalog {
     'seated_calf_raise',
     'hanging_leg_raise',
     'cable_crunch',
+    // Added with the ~420 catalogue: universal staples only (every SectionMuscle incl. Forearms stays covered).
+    'weighted_pullup',
+    'goblet_squat',
+    'bulgarian_split_squat',
+    'kettlebell_swing',
+    'farmers_carry',
+    'db_wrist_curl',
   ];
 
   static final Set<String> _common = commonExerciseIds.toSet();
@@ -816,7 +442,7 @@ abstract final class SplitCatalog {
 
   /// Sub-sections of [m] in display order (built-in only; the "Your exercises" section is added by [grouped]).
   static List<SplitSection> sectionsFor(MuscleGroup m) => [
-    for (final s in _sections[m] ?? const <_Sec>[])
+    for (final s in _sections[m] ?? const <SectionDef>[])
       SplitSection(id: _id(m, s.key), label: s.label, muscle: m, hint: s.hint),
   ];
 
@@ -837,7 +463,7 @@ abstract final class SplitCatalog {
   }
 
   /// Exercises whose curated section deliberately differs from what the primary leaf alone gives (flyes are
-  /// grouped as isolation work; rows with a lats co-primary sit with the rows; ab wheel is anti-extension
+  /// grouped as isolation work; rows with a lats lead sit with the rows via [sectionOverrideSwaps]; ab wheel is anti-extension
   /// "stability"). Exercises whose section cannot be derived at all (region-level profiles such as curls and
   /// pushdowns) are simply curated. The consistency test allows a derived mismatch only for these ids.
   static const Set<String> sectionOverrideIds = {
@@ -845,13 +471,44 @@ abstract final class SplitCatalog {
     'pec_deck',
     'db_fly',
     'single_arm_cable_fly', // chest: "Flyes & isolation" (leaf is mid chest)
-    'db_row', // lats + upper-back co-primaries: grouped with the rows
     'ab_wheel', // abs leaf, but an anti-extension stability drill
+    'barbell_rollout', // same: anti-extension rollout
+    'mountain_climber', // abs leaf, but a plank-based stability drill
   };
 
+  /// Whole sections that are deliberately NOT derivable from the primary leaf (a per-section override table):
+  /// every exercise curated in one of these is exempt from the derived == curated check. "Flyes & isolation" is
+  /// a movement-type grouping whose members' leaves are chest leaves (mostly mid chest).
+  static const Set<String> sectionOverrideSectionIds = {'chest_fly'};
+
+  /// Per-region override table of allowed (derived family lead -> curated family lead) swaps: a row whose
+  /// lead leaf is lats (Yates, underhand, one-arm and machine rows...) is curated with the rows
+  /// ("back_upper"), not the pull-ups/pulldowns, because the movement pattern decides where it is looked up.
+  static const Map<String, Set<String>> sectionOverrideSwaps = {
+    'back_lats': {'back_upper'},
+  };
+
+  /// True when [e]'s curated section deliberately differs from its profile-derived one: its id is in
+  /// [sectionOverrideIds], its curated section is in [sectionOverrideSectionIds], or the
+  /// (derived, curated) family pair is in [sectionOverrideSwaps].
+  static bool isSectionOverride(Exercise e) {
+    if (sectionOverrideIds.contains(e.id)) return true;
+    final curated = sectionIdOf(e);
+    if (sectionOverrideSectionIds.contains(curated)) return true;
+    final derived = derivedSectionIdOf(e);
+    return derived != null &&
+        (sectionOverrideSwaps[derived]?.contains(familyLeadOf(curated)) ??
+            false);
+  }
+
   /// Section id derived ONLY from the exercise's muscle profile (primary leaf, or the region when it maps
-  /// to a single section), or null when it cannot be derived defensibly. Used for exercises that are not
+  /// to a single sub-area), or null when it cannot be derived defensibly. Used for exercises that are not
   /// curated in [_sections] and checked against the curated map by a consistency test.
+  ///
+  /// Derivation works at FAMILY level: a sub-area that was split into several sections (e.g. "Mid chest ·
+  /// Presses" and "Mid chest · Cable, push-ups & band") is one family, and the result is the family's LEAD
+  /// section id. A curated section agrees with the derivation when [familyLeadOf] its id equals the result;
+  /// which member of the family an exercise sits in is curated only (see [SectionDef.family]).
   static String? derivedSectionIdOf(Exercise e) {
     final profile = MuscleProfiles.builtIn(e.id);
     if (profile == null) return null;
@@ -861,10 +518,36 @@ abstract final class SplitCatalog {
         : _regionSection[lead.region];
     if (key == null) return null;
     final m = e.primaryMuscle;
-    if (!(_sections[m] ?? const <_Sec>[]).any((s) => s.key == key)) return null;
+    if (!(_sections[m] ?? const <SectionDef>[]).any((s) => s.key == key)) {
+      return null;
+    }
     return _id(m, key);
   }
 
+  /// The lead section id of the family that section [sectionId] belongs to (itself when it is a lead, a
+  /// custom "mine" section or unknown). Pair with [derivedSectionIdOf] to compare derived and curated sections.
+  static String familyLeadOf(String sectionId) {
+    for (final e in _sections.entries) {
+      for (final s in e.value) {
+        if (_id(e.key, s.key) == sectionId) return _id(e.key, s.familyKey);
+      }
+    }
+    return sectionId;
+  }
+
+  /// Section ids of the family of [sectionId], lead first, in display order.
+  static List<String> familyOf(String sectionId) {
+    final lead = familyLeadOf(sectionId);
+    final out = <String>[];
+    for (final e in _sections.entries) {
+      for (final s in e.value) {
+        if (_id(e.key, s.familyKey) == lead) out.add(_id(e.key, s.key));
+      }
+    }
+    return out;
+  }
+
+  /// Leaf muscle -> LEAD section key of the sub-area it belongs to (the family lead; see [SectionDef.family]).
   static const Map<Muscle, String> _leafSection = {
     Muscle.upperChest: 'upper',
     Muscle.midChest: 'mid',
@@ -987,7 +670,7 @@ abstract final class SplitCatalog {
       for (final r in MuscleRegion.values)
         if (r.legacy == m && r != MuscleRegion.forearms) r,
     ];
-    return ExerciseRecommender.forDay(
+    final picks = ExerciseRecommender.forDay(
       regions: regions,
       catalog: pool,
       // 3 days/week => each muscle once per session: a full "menu" for the muscle.
@@ -999,5 +682,18 @@ abstract final class SplitCatalog {
           r.exerciseId,
       ],
     );
+    // The recommender returns compounds first in pick order; the user-facing list leads with the classic
+    // lifts of [_suggested] (in their curated order), then the rest in recommender order.
+    final classic = {
+      for (var i = 0; i < (_suggested[m] ?? const []).length; i++)
+        _suggested[m]![i].exerciseId: i,
+    };
+    final indexed = [for (var i = 0; i < picks.length; i++) (picks[i], i)];
+    indexed.sort((a, b) {
+      final ca = classic[a.$1.exerciseId] ?? 1 << 20;
+      final cb = classic[b.$1.exerciseId] ?? 1 << 20;
+      return ca != cb ? ca.compareTo(cb) : a.$2.compareTo(b.$2);
+    });
+    return [for (final p in indexed) p.$1];
   }
 }

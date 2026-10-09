@@ -4,17 +4,21 @@
 // Pure data + JSON; the logger controller converts to/from its live state.
 
 class DraftSet {
-  const DraftSet({required this.weightKg, required this.reps, required this.done});
+  const DraftSet({
+    required this.weightKg,
+    required this.reps,
+    required this.done,
+  });
   final double weightKg;
   final int reps;
   final bool done;
 
   Map<String, Object?> toJson() => {'w': weightKg, 'r': reps, 'd': done};
   factory DraftSet.fromJson(Map<String, Object?> j) => DraftSet(
-        weightKg: (j['w'] as num?)?.toDouble() ?? 0,
-        reps: (j['r'] as num?)?.toInt() ?? 0,
-        done: j['d'] as bool? ?? false,
-      );
+    weightKg: (j['w'] as num?)?.toDouble() ?? 0,
+    reps: (j['r'] as num?)?.toInt() ?? 0,
+    done: j['d'] as bool? ?? false,
+  );
 }
 
 class DraftExercise {
@@ -34,24 +38,24 @@ class DraftExercise {
   final bool suggestionUsed;
 
   Map<String, Object?> toJson() => {
-        'e': exerciseId,
-        'min': repMin,
-        'max': repMax,
-        'x': expanded,
-        'su': suggestionUsed,
-        's': [for (final s in sets) s.toJson()],
-      };
+    'e': exerciseId,
+    'min': repMin,
+    'max': repMax,
+    'x': expanded,
+    'su': suggestionUsed,
+    's': [for (final s in sets) s.toJson()],
+  };
   factory DraftExercise.fromJson(Map<String, Object?> j) => DraftExercise(
-        exerciseId: j['e'] as String,
-        repMin: (j['min'] as num?)?.toInt() ?? 8,
-        repMax: (j['max'] as num?)?.toInt() ?? 12,
-        expanded: j['x'] as bool? ?? false,
-        suggestionUsed: j['su'] as bool? ?? false,
-        sets: [
-          for (final s in (j['s'] as List? ?? const []))
-            DraftSet.fromJson((s as Map).cast<String, Object?>()),
-        ],
-      );
+    exerciseId: j['e'] as String,
+    repMin: (j['min'] as num?)?.toInt() ?? 8,
+    repMax: (j['max'] as num?)?.toInt() ?? 12,
+    expanded: j['x'] as bool? ?? false,
+    suggestionUsed: j['su'] as bool? ?? false,
+    sets: [
+      for (final s in (j['s'] as List? ?? const []))
+        DraftSet.fromJson((s as Map).cast<String, Object?>()),
+    ],
+  );
 }
 
 class WorkoutDraft {
@@ -80,31 +84,32 @@ class WorkoutDraft {
   final DateTime? backdate;
 
   int get totalSets => exercises.fold(0, (a, e) => a + e.sets.length);
-  int get doneSets => exercises.fold(0, (a, e) => a + e.sets.where((s) => s.done).length);
+  int get doneSets =>
+      exercises.fold(0, (a, e) => a + e.sets.where((s) => s.done).length);
 
   Map<String, Object?> toJson() => {
-        'v': 1,
-        'wid': workoutId,
-        'wn': workoutName,
-        'st': startedAt.toIso8601String(),
-        'sv': savedAt.toIso8601String(),
-        'ci': currentIndex,
-        'n': notes,
-        if (backdate != null) 'bd': backdate!.toIso8601String(),
-        'ex': [for (final e in exercises) e.toJson()],
-      };
+    'v': 1,
+    'wid': workoutId,
+    'wn': workoutName,
+    'st': startedAt.toIso8601String(),
+    'sv': savedAt.toIso8601String(),
+    'ci': currentIndex,
+    'n': notes,
+    if (backdate != null) 'bd': backdate!.toIso8601String(),
+    'ex': [for (final e in exercises) e.toJson()],
+  };
 
   factory WorkoutDraft.fromJson(Map<String, Object?> j) => WorkoutDraft(
-        workoutId: j['wid'] as String,
-        workoutName: j['wn'] as String? ?? 'Workout',
-        startedAt: DateTime.parse(j['st'] as String),
-        savedAt: DateTime.parse(j['sv'] as String),
-        currentIndex: (j['ci'] as num?)?.toInt() ?? 0,
-        notes: j['n'] as String? ?? '',
-        backdate: j['bd'] == null ? null : DateTime.parse(j['bd'] as String),
-        exercises: [
-          for (final e in (j['ex'] as List? ?? const []))
-            DraftExercise.fromJson((e as Map).cast<String, Object?>()),
-        ],
-      );
+    workoutId: j['wid'] as String,
+    workoutName: j['wn'] as String? ?? 'Workout',
+    startedAt: DateTime.parse(j['st'] as String),
+    savedAt: DateTime.parse(j['sv'] as String),
+    currentIndex: (j['ci'] as num?)?.toInt() ?? 0,
+    notes: j['n'] as String? ?? '',
+    backdate: j['bd'] == null ? null : DateTime.parse(j['bd'] as String),
+    exercises: [
+      for (final e in (j['ex'] as List? ?? const []))
+        DraftExercise.fromJson((e as Map).cast<String, Object?>()),
+    ],
+  );
 }

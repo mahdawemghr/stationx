@@ -43,9 +43,10 @@ Future<Exercise?> showSwapExerciseSheet(
 
 enum _EquipFilter {
   cables('Cables', {Equipment.cable}),
-  free('Free Weights', {Equipment.dumbbell, Equipment.barbell}),
-  machines('Machines', {Equipment.machine}),
-  bodyweight('Bodyweight', {Equipment.bodyweight});
+  free('Free Weights', {Equipment.dumbbell, Equipment.barbell, Equipment.kettlebell}),
+  machines('Machines', {Equipment.machine, Equipment.smithMachine}),
+  bodyweight('Bodyweight', {Equipment.bodyweight}),
+  bandsOther('Bands & other', {Equipment.band, Equipment.other});
 
   const _EquipFilter(this.label, this.equipment);
   final String label;

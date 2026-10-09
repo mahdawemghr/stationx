@@ -93,7 +93,7 @@ class _WorkoutCompletePageState extends State<WorkoutCompletePage> {
             if (mixed) _CardioSummary(cardio: s.cardio!, useKm: app.profile.profile.cardioDistanceUnitKm),
             if (prs.isNotEmpty) _PrSection(prs: prs, names: names, unit: unit),
             if (prog.isNotEmpty) _ProgressionIndex(items: prog, names: names),
-            if (_details && !empty) _DetailsLog(key: _detailsKey, session: s, names: names, unit: unit),
+            if (_details && !empty) _DetailsLog(key: _detailsKey, session: s, names: names, unit: unit, catalog: app.exercises.all),
             if (_isFresh(s)) _NextUp(workout: app.workouts.currentWorkout),
           ],
         );
@@ -593,39 +593,61 @@ class _ProgressionIndex extends StatelessWidget {
 }
 
 class _DetailsLog extends StatelessWidget {
-  const _DetailsLog({super.key, required this.session, required this.names, required this.unit});
+  const _DetailsLog({super.key, required this.session, required this.names, required this.unit, required this.catalog});
+  final List<Exercise> catalog;
   final WorkoutSession session;
   final Map<String, Exercise> names;
   final WeightUnit unit;
 
+  /// Muscle label per log index where a new muscle run starts (only with 2+ runs; logged order is kept).
+  Map<int, String> _dividers() {
+    final routine = [
+      for (final l in session.exercises) RoutineExercise(exerciseId: l.exerciseId, sets: 1, repMin: 1, repMax: 1),
+    ];
+    final runs = WorkoutSections.groupContiguous(routine, catalog);
+    if (runs.length < 2) return const {};
+    return {for (final r in runs) r.startIndex: r.label};
+  }
+
   @override
   Widget build(BuildContext context) {
     final c = context.sx;
+    final dividers = _dividers();
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       const SectionHeader('Workout details', icon: Icons.list_alt),
       const SizedBox(height: 8),
-      for (final l in session.exercises) ...[
-        SxCard(
-          padding: const EdgeInsets.all(12),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Row(children: [
-              Expanded(child: Text(names[l.exerciseId]?.name ?? 'Exercise', style: SxText.headlineSm.copyWith(color: c.textHigh))),
-              Text(Fmt.volume(l.volume, u: unit), style: SxText.metricSm.copyWith(color: c.textBody)),
-            ]),
-            const SizedBox(height: 8),
-            Wrap(spacing: 6, runSpacing: 6, children: [
-              for (var i = 0; i < l.doneSets.length; i++)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                  decoration: BoxDecoration(color: c.surface2, borderRadius: BorderRadius.circular(SxRadius.base)),
-                  child: Text('${i + 1}  ${Fmt.setLabel(l.doneSets.elementAt(i).weightKg, l.doneSets.elementAt(i).reps, unit)}',
-                      style: SxText.metricSm.copyWith(color: c.textHigh, fontSize: 12)),
-                ),
-            ]),
-          ]),
-        ),
+      for (var li = 0; li < session.exercises.length; li++) ...[
+        if (dividers[li] != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 6, left: 2),
+            child: Text(dividers[li]!.toUpperCase(), style: SxText.labelXs.copyWith(color: c.textMuted)),
+          ),
+        _card(context, session.exercises[li]),
         const SizedBox(height: 8),
       ],
     ]);
+  }
+
+  Widget _card(BuildContext context, ExerciseLog l) {
+    final c = context.sx;
+    return SxCard(
+      padding: const EdgeInsets.all(12),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Expanded(child: Text(names[l.exerciseId]?.name ?? 'Exercise', style: SxText.headlineSm.copyWith(color: c.textHigh))),
+          Text(Fmt.volume(l.volume, u: unit), style: SxText.metricSm.copyWith(color: c.textBody)),
+        ]),
+        const SizedBox(height: 8),
+        Wrap(spacing: 6, runSpacing: 6, children: [
+          for (var i = 0; i < l.doneSets.length; i++)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              decoration: BoxDecoration(color: c.surface2, borderRadius: BorderRadius.circular(SxRadius.base)),
+              child: Text('${i + 1}  ${Fmt.setLabel(l.doneSets.elementAt(i).weightKg, l.doneSets.elementAt(i).reps, unit)}',
+                  style: SxText.metricSm.copyWith(color: c.textHigh, fontSize: 12)),
+            ),
+        ]),
+      ]),
+    );
   }
 }

@@ -24,7 +24,7 @@ enum CardioKind {
     CardioField.distance,
     CardioField.pace,
   ]),
-  treadmill('Treadmill', [
+  treadmill('Treadmill Run', [
     CardioField.duration,
     CardioField.distance,
     CardioField.speed,
@@ -35,7 +35,7 @@ enum CardioKind {
     CardioField.distance,
     CardioField.speed,
   ]),
-  stationaryBike('Stationary Bike', [
+  stationaryBike('Upright Bike', [
     CardioField.duration,
     CardioField.distance,
     CardioField.resistance,
@@ -50,7 +50,10 @@ enum CardioKind {
     CardioField.distance,
     CardioField.resistance,
   ]),
-  stairClimber('Stair Climber', [CardioField.duration, CardioField.resistance]),
+  stairClimber('Stair Climber / Stepper', [
+    CardioField.duration,
+    CardioField.resistance,
+  ]),
   jumpRope('Jump Rope', [CardioField.duration]),
   // Added 2026-10 (append-only: stored by `name`, never by index). Watts and
   // cadence/SPM/stroke rate are NOT stored fields; floors/laps map onto distance.
@@ -90,14 +93,75 @@ enum CardioKind {
     CardioField.distance,
     CardioField.calories,
   ]),
-  swimming('Swimming', [CardioField.duration, CardioField.distance]),
+  swimming('Pool Swim', [CardioField.duration, CardioField.distance]),
   handCycle('Arm Ergometer', [
     CardioField.duration,
     CardioField.distance,
     CardioField.resistance,
   ]),
-  hiit('HIIT / Circuit', [CardioField.duration, CardioField.calories]),
+  hiit('HIIT / Circuit / Conditioning', [
+    CardioField.duration,
+    CardioField.calories,
+  ]),
   boxing('Boxing / Heavy Bag', [CardioField.duration, CardioField.calories]),
+  // Added 2026-10 (second batch; append-only, before `custom`). No new stored fields.
+  indoorWalk('Indoor Walk / Walking Pad', [
+    CardioField.duration,
+    CardioField.distance,
+    CardioField.speed,
+    CardioField.incline,
+  ]),
+  nordicWalk('Nordic Walking', [
+    CardioField.duration,
+    CardioField.distance,
+    CardioField.pace,
+  ]),
+  rucking('Rucking', [
+    CardioField.duration,
+    CardioField.distance,
+    CardioField.pace,
+  ]),
+  recumbentBike('Recumbent Bike', [
+    CardioField.duration,
+    CardioField.distance,
+    CardioField.resistance,
+  ]),
+  indoorTrainer('Bike Trainer / Zwift', [
+    CardioField.duration,
+    CardioField.distance,
+    CardioField.resistance,
+  ]),
+  crossCountrySki('Cross-Country Skiing', [
+    CardioField.duration,
+    CardioField.distance,
+    CardioField.pace,
+  ]),
+  openWaterSwim('Open Water Swim', [
+    CardioField.duration,
+    CardioField.distance,
+  ]),
+  outdoorRowing('Rowing (On Water)', [
+    CardioField.duration,
+    CardioField.distance,
+  ]),
+  paddling('Kayak / Canoe / SUP', [CardioField.duration, CardioField.distance]),
+  danceCardio('Dance / Zumba / Aerobics', [
+    CardioField.duration,
+    CardioField.calories,
+  ]),
+  skating('Skating / Rollerblading', [
+    CardioField.duration,
+    CardioField.distance,
+    CardioField.speed,
+  ]),
+  climbing('Climbing / Bouldering', [
+    CardioField.duration,
+    CardioField.calories,
+  ]),
+  martialArts('Kickboxing / Martial Arts', [
+    CardioField.duration,
+    CardioField.calories,
+  ]),
   custom('Custom', [CardioField.duration]);
 
   const CardioKind(this.label, this.fields);
@@ -108,12 +172,24 @@ enum CardioKind {
 
   bool get hasDistance => fields.contains(CardioField.distance);
 
+  /// Whether a "fastest pace" personal record is meaningful. Kinds without a pace convention
+  /// (bikes, skating, walking pad...) never get a run-style pace PR. A treadmill session is a
+  /// run, so it keeps one even though it logs speed rather than pace.
+  bool get hasPacePr =>
+      paceBasis != CardioPaceBasis.none || this == CardioKind.treadmill;
+
   /// How pace is conventionally quoted for this activity (derived, never stored).
   CardioPaceBasis get paceBasis => switch (this) {
-        CardioKind.rowing || CardioKind.skiErg => CardioPaceBasis.per500m,
-        CardioKind.swimming => CardioPaceBasis.per100m,
-        _ => fields.contains(CardioField.pace) ? CardioPaceBasis.perKm : CardioPaceBasis.none,
-      };
+    CardioKind.rowing ||
+    CardioKind.skiErg ||
+    CardioKind.outdoorRowing ||
+    CardioKind.paddling => CardioPaceBasis.per500m,
+    CardioKind.swimming || CardioKind.openWaterSwim => CardioPaceBasis.per100m,
+    _ =>
+      fields.contains(CardioField.pace)
+          ? CardioPaceBasis.perKm
+          : CardioPaceBasis.none,
+  };
 }
 
 /// Pace convention: running/walking per km (or mi), rowing & ski erg per 500 m,
@@ -128,11 +204,11 @@ enum CardioPaceBasis {
   final double meters;
 
   String get unitLabel => switch (this) {
-        none => '',
-        perKm => '/km',
-        per500m => '/500m',
-        per100m => '/100m',
-      };
+    none => '',
+    perKm => '/km',
+    per500m => '/500m',
+    per100m => '/100m',
+  };
 }
 
 /// Resolves which input fields a session of [kind] exposes. A `CardioKind.custom`
@@ -145,7 +221,9 @@ abstract final class CardioFieldResolver {
     CustomCardioActivity? custom,
     double? existingDistanceKm,
   }) {
-    final base = (kind == CardioKind.custom && custom != null) ? custom.fields : kind.fields;
+    final base = (kind == CardioKind.custom && custom != null)
+        ? custom.fields
+        : kind.fields;
     if (kind == CardioKind.custom &&
         (existingDistanceKm ?? 0) > 0 &&
         !base.contains(CardioField.distance)) {
@@ -232,8 +310,8 @@ class CardioSession {
 
   double? _paceSecPer(double meters) =>
       (distanceKm != null && distanceKm! > 0 && durationSeconds > 0)
-          ? durationSeconds / (distanceKm! * 1000 / meters)
-          : null;
+      ? durationSeconds / (distanceKm! * 1000 / meters)
+      : null;
 
   double? get avgSpeedKmh =>
       speedKmh ??

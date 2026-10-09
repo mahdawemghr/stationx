@@ -6,34 +6,13 @@ import '../../../core/theme/sx_typography.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../../domain/domain.dart';
+import '../../cardio/cardio_kind_presentation.dart';
 import '../active_workout_controller.dart';
 import 'timers.dart';
 
 const _kmPerMile = 1.609344;
 
-IconData cardioIcon(CardioKind k) => switch (k) {
-      CardioKind.outdoorRun => Icons.directions_run,
-      CardioKind.outdoorWalk => Icons.directions_walk,
-      CardioKind.treadmill => Icons.speed,
-      CardioKind.cycling => Icons.directions_bike,
-      CardioKind.stationaryBike => Icons.pedal_bike,
-      CardioKind.elliptical => Icons.accessibility_new,
-      CardioKind.rowing => Icons.kayaking,
-      CardioKind.stairClimber => Icons.stairs,
-      CardioKind.jumpRope => Icons.bolt,
-      CardioKind.trailRun => Icons.terrain,
-      CardioKind.hiking => Icons.hiking,
-      CardioKind.spinBike => Icons.directions_bike_outlined,
-      CardioKind.airBike => Icons.air,
-      CardioKind.skiErg => Icons.downhill_skiing,
-      CardioKind.arcTrainer => Icons.sports_gymnastics,
-      CardioKind.verticalClimber => Icons.north,
-      CardioKind.swimming => Icons.pool,
-      CardioKind.handCycle => Icons.back_hand_outlined,
-      CardioKind.hiit => Icons.local_fire_department,
-      CardioKind.boxing => Icons.sports_mma,
-      CardioKind.custom => Icons.fitness_center,
-    };
+IconData cardioIcon(CardioKind k) => cardioKindGlyph(k);
 
 String _targetLine(CardioDraft d) {
   final parts = <String>[

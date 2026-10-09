@@ -56,14 +56,15 @@ void main() {
   group('select activity', () {
     testWidgets('lists activities and filters by search', (t) async {
       await pumpPage(t, const SelectCardioActivityPage(), size: const Size(390, 2600));
-      expect(find.text('Outdoor Run'), findsOneWidget);
-      expect(find.text('Treadmill'), findsOneWidget);
+      expect(find.byKey(const Key('recent-strip')), findsOneWidget);
+      expect(find.text('Outdoor Run'), findsNWidgets(2)); // recent chip + its section row
+      expect(find.text('Treadmill Run'), findsWidgets);
       expect(find.text('Rowing Machine'), findsWidgets);
       await shot(t, 'cardio_select');
       await t.enterText(find.byType(TextField), 'tread');
       await t.pump();
       expect(find.text('Outdoor Run'), findsNothing);
-      expect(find.text('Treadmill'), findsOneWidget);
+      expect(find.text('Treadmill Run'), findsOneWidget);
       await t.enterText(find.byType(TextField), 'zzzz');
       await t.pump();
       expect(find.text('No activity found'), findsOneWidget);

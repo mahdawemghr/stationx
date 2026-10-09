@@ -32,8 +32,8 @@ class IsarStore implements DataStore, LocalSettingsStore {
     String? draftJson,
     this._maxRaw,
     this._noticeJson,
-  )   : healthConsent = _IsarHealthConsent(_db, healthConnected),
-        workoutDraft = IsarWorkoutDraftStore(_db, draftJson);
+  ) : healthConsent = _IsarHealthConsent(_db, healthConnected),
+      workoutDraft = IsarWorkoutDraftStore(_db, draftJson);
 
   static const schemas = [
     ExerciseEntitySchema,
@@ -93,25 +93,46 @@ class IsarStore implements DataStore, LocalSettingsStore {
   /// Inserts built-in exercises added in newer app versions: only ids that are missing, so existing rows
   /// (edited, custom, or already seeded) are never overwritten or removed. Seed rows are marked synced
   /// (and are not custom), so they never trigger a sync upload. Returns how many were added.
+  ///
+  /// Also a "refresh seed fields" pass: for NON-custom rows whose stored equipment / movementPattern differ
+  /// from the current seed definition (e.g. smith rows re-mapped to smithMachine), only those two fields are
+  /// updated. Name, muscles, instructions, custom rows and the sync meta are never touched, and the pass is
+  /// idempotent (it compares first, so a second run writes nothing).
   static Future<int> topUpCatalog(Isar db) async {
-    final have = (await db.exerciseEntitys.where().findAll())
-        .map((e) => e.uid)
-        .toSet();
+    final stored = await db.exerciseEntitys.where().findAll();
+    final byUid = {for (final e in stored) e.uid: e};
+    final seed = seedExercises();
     final missing = [
-      for (final e in seedExercises())
-        if (!have.contains(e.id)) e,
+      for (final e in seed)
+        if (!byUid.containsKey(e.id)) e,
     ];
-    if (missing.isEmpty) return 0;
+    final stale = <ExerciseEntity>[];
+    for (final e in seed) {
+      final row = byUid[e.id];
+      if (row == null || row.isCustom) continue;
+      if (row.equipment != e.equipment ||
+          row.movementPattern != e.movementPattern) {
+        stale.add(
+          row
+            ..equipment = e.equipment
+            ..movementPattern = e.movementPattern,
+        );
+      }
+    }
+    if (missing.isEmpty && stale.isEmpty) return 0;
     final now = DateTime.now();
     await db.writeTxn(() async {
-      await db.exerciseEntitys.putAllByUid([
-        for (final e in missing)
-          exerciseToEntity(e)
-            ..meta = (MetaEmb()
-              ..createdAt = now
-              ..updatedAt = now
-              ..syncStatus = SyncStatus.synced),
-      ]);
+      if (stale.isNotEmpty) await db.exerciseEntitys.putAll(stale);
+      if (missing.isNotEmpty) {
+        await db.exerciseEntitys.putAllByUid([
+          for (final e in missing)
+            exerciseToEntity(e)
+              ..meta = (MetaEmb()
+                ..createdAt = now
+                ..updatedAt = now
+                ..syncStatus = SyncStatus.synced),
+        ]);
+      }
     });
     return missing.length;
   }
@@ -300,7 +321,9 @@ RotationEntity _pendingRotation(Rotation r) => rotationToEntity(r)
 
 /// Remember a local deletion until it has been sent to the cloud. Call inside a write txn.
 Future<void> _queueDeletion(Isar db, SyncTable table, String id) async {
-  if (isDemoId(id)) return; // demo rows were never uploaded: nothing to tombstone in the cloud
+  if (isDemoId(id)) {
+    return; // demo rows were never uploaded: nothing to tombstone in the cloud
+  }
   await db.syncDeletionEntitys.putByTableRowId(
     SyncDeletionEntity()
       ..table = table.name
@@ -347,14 +370,20 @@ class IsarWorkoutRepository extends MemoryWorkoutRepository {
 
   /// Writes [items] + [rot] (and [tombstone], if any) in ONE transaction. The cache and listeners
   /// change only after it committed, so a failed write leaves memory untouched.
-  Future<void> _commit(List<Workout> items, Rotation rot, {String? tombstone}) async {
+  Future<void> _commit(
+    List<Workout> items,
+    Rotation rot, {
+    String? tombstone,
+  }) async {
     await _db.writeTxn(() async {
       await _db.workoutEntitys.clear();
       await _db.workoutEntitys.putAll([
         for (var i = 0; i < items.length; i++) workoutToEntity(items[i], i),
       ]);
       await _db.rotationEntitys.put(_pendingRotation(rot));
-      if (tombstone != null) await _queueDeletion(_db, SyncTable.workouts, tombstone);
+      if (tombstone != null) {
+        await _queueDeletion(_db, SyncTable.workouts, tombstone);
+      }
     });
     reset(items, rot);
   }
@@ -400,7 +429,9 @@ class IsarSessionRepository extends MemorySessionRepository {
 
   @override
   Future<void> update(WorkoutSession s) async {
-    if (byId(s.id) == null) return; // missing row: no-op (never resurrect a deleted session)
+    if (byId(s.id) == null) {
+      return; // missing row: no-op (never resurrect a deleted session)
+    }
     await _db.writeTxn(() => _db.sessionEntitys.putByUid(sessionToEntity(s)));
     await super.update(s);
   }
@@ -437,7 +468,9 @@ class IsarCardioRepository extends MemoryCardioRepository {
 
   @override
   Future<void> update(CardioSession s) async {
-    if (byId(s.id) == null) return; // missing row: no-op (never resurrect a deleted session)
+    if (byId(s.id) == null) {
+      return; // missing row: no-op (never resurrect a deleted session)
+    }
     await _db.writeTxn(
       () => _db.cardioSessionEntitys.putByUid(cardioToEntity(s)),
     );
@@ -520,10 +553,10 @@ class IsarWorkoutDraftStore extends MemoryWorkoutDraftStore {
   final Isar _db;
 
   Future<void> _persist(String? json) => _db.writeTxn(() async {
-        final m = (await _db.appMetaEntitys.get(1)) ?? AppMetaEntity();
-        m.workoutDraftJson = json;
-        await _db.appMetaEntitys.put(m);
-      });
+    final m = (await _db.appMetaEntitys.get(1)) ?? AppMetaEntity();
+    m.workoutDraftJson = json;
+    await _db.appMetaEntitys.put(m);
+  });
 
   @override
   Future<void> save(WorkoutDraft draft) async {

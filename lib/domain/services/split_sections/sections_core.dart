@@ -1,0 +1,82 @@
+import '../split_section_def.dart';
+
+// Curated sub-sections: core (muscle: core). Display order = list order (compounds first). Section keys are stable ids; do not
+// rename them. Sections that share a `family` are one sub-area split to stay <= 13 exercises each.
+const List<SectionDef> sectionsCore = [
+  SectionDef(
+    'abs',
+    'Abs · Crunches & sit-ups',
+    'Crunching and sit-up movements for the rectus abdominis.',
+    [
+      'cable_crunch',
+      'machine_crunch',
+      'crunch',
+      'decline_situp',
+      'sit_up',
+      'reverse_crunch',
+      'bicycle_crunch',
+      'v_up',
+      'ab_coaster',
+    ],
+  ),
+  SectionDef(
+    'abs_legs',
+    'Abs · Leg & hip-flexor raises',
+    'Leg raises and hanging work for the lower abs.',
+    [
+      'hanging_leg_raise',
+      'hanging_knee_raise',
+      'toes_to_bar',
+      'captains_chair_knee_raise',
+      'lying_leg_raise',
+      'flutter_kicks',
+      'dragon_flag',
+      'l_sit_hold',
+    ],
+    family: 'abs',
+  ),
+  SectionDef(
+    'stability',
+    'Core stability · Planks & anti-rotation',
+    'Planks, rollouts and anti-rotation presses.',
+    [
+      'plank',
+      'ab_wheel',
+      'barbell_rollout',
+      'dead_bug',
+      'bird_dog',
+      'hollow_hold',
+      'stir_the_pot',
+      'mountain_climber',
+      'side_plank',
+      'pallof_press',
+      'overhead_pallof_press',
+      'band_pallof_press',
+    ],
+  ),
+  SectionDef(
+    'stability_rotation',
+    'Core stability · Rotation & chops',
+    'Chops, twists and side bends for the obliques.',
+    [
+      'cable_woodchop',
+      'half_kneeling_cable_chop',
+      'russian_twist',
+      'landmine_twist',
+      'torso_rotation_machine',
+      'cable_oblique_crunch',
+      'side_bend',
+      'cable_side_bend',
+      'copenhagen_plank',
+      'side_plank_hip_dip',
+    ],
+    family: 'stability',
+  ),
+  SectionDef(
+    'stability_carry',
+    'Core stability · Carries & kettlebell',
+    'Loaded carries and kettlebell core work.',
+    ['suitcase_carry', 'db_overhead_carry', 'kb_windmill', 'turkish_get_up'],
+    family: 'stability',
+  ),
+];

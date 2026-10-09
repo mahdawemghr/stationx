@@ -125,6 +125,57 @@ void main() {
       },
     );
 
+    test(
+      'save arranges each day: merged muscles, main first, chosen muscle order',
+      () async {
+        await go([
+          SplitDayPlan(
+            name: 'Mixed',
+            muscles: const [MuscleGroup.biceps, MuscleGroup.chest],
+            exercises: [
+              for (final i in [
+                'cable_fly',
+                'barbell_curl',
+                'incline_db_press',
+                'bench_press',
+                'hammer_curl',
+              ])
+                RoutineExercise(exerciseId: i),
+            ],
+          ),
+        ]);
+        expect(workouts.byId('w_s1_0')!.exercises.map((e) => e.exerciseId), [
+          'barbell_curl',
+          'hammer_curl',
+          'bench_press',
+          'incline_db_press',
+          'cable_fly',
+        ]);
+      },
+    );
+
+    test('presets are saved arranged (one section per muscle)', () async {
+      final days = [
+        for (final p in SplitCatalog.presets)
+          for (final d in p.days) d.copyWith(name: '${p.id}/${d.name}'),
+      ];
+      await go(days);
+      for (var i = 0; i < days.length; i++) {
+        final saved = workouts.byId('w_s1_$i')!.exercises;
+        expect(
+          WorkoutSections.isArranged(saved, catalog),
+          isTrue,
+          reason: days[i].name,
+        );
+        expect(
+          saved.length,
+          days[i].exercises
+              .where((e) => catalog.any((c) => c.id == e.exerciseId))
+              .length,
+        );
+      }
+    });
+
     test('restore puts an archived workout at the end, once', () async {
       await go([day('Push')]);
       await ScheduleBuilder.restore('w2', workouts);

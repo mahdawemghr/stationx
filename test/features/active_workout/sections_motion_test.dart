@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:stationx/app/app_controller.dart';
 import 'package:stationx/core/utils/formatters.dart';
+import 'package:stationx/domain/domain.dart';
 import 'package:stationx/features/active_workout/active_workout_controller.dart';
 import 'package:stationx/features/active_workout/active_workout_page.dart';
 import 'package:stationx/features/active_workout/widgets/exercise_block.dart';
@@ -43,22 +44,116 @@ void main() {
   setUpAll(loadAppFonts);
 
   group('muscle sections', () {
-    test('order is preserved, never merged, and progress counts follow the sets', () async {
+    test('a new session runs in arranged order: one section per muscle, counts follow the sets', () async {
       final app = AppController();
       await app.startDemo();
-      final c = ctlFor(app, 'w3'); // Legs, Shoulders, Legs, Shoulders, Legs interleaved
-      expect(c.sections.map((s) => s.label).toList(), ['Legs', 'Shoulders', 'Legs', 'Shoulders', 'Legs']);
+      final saved = app.workouts.byId('w3')!; // saved order interleaves Legs / Shoulders
+      final c = ctlFor(app, 'w3');
+      // The OLD rule kept the saved order and showed Legs, Shoulders, Legs, Shoulders, Legs. The new rule
+      // (plan 6.1: ONE section per muscle) arranges a NEW session, so display order == execution order.
+      expect(c.sections.map((s) => s.label).toList(), ['Legs', 'Shoulders']);
+      final arranged = WorkoutSections.arrange(saved.exercises, app.exercises.all);
+      expect([for (final d in c.drafts) d.exercise.id], [for (final e in arranged) e.exerciseId]);
       expect([for (final s in c.sections) ...s.drafts], c.drafts);
-      expect(c.sections.map((s) => s.startIndex).toList(), [0, 1, 2, 4, 5]);
+      expect(c.sections[0].startIndex, 0);
+      expect(c.sections[1].startIndex, c.sections[0].drafts.length);
       final s0 = c.sections.first;
-      expect((s0.exercisesDone, s0.setsDone, s0.setsTotal), (0, 0, c.drafts[0].sets.length));
-      for (var i = 0; i < c.drafts[0].sets.length; i++) {
-        c.toggleSet(c.drafts[0], i);
+      final first = c.drafts[0];
+      expect((s0.exercisesDone, s0.setsDone, s0.setsTotal), (0, 0, s0.drafts.fold(0, (a, d) => a + d.sets.length)));
+      for (var i = 0; i < first.sets.length; i++) {
+        c.toggleSet(first, i);
       }
-      expect((s0.exercisesDone, s0.setsDone), (1, c.drafts[0].sets.length));
-      expect(s0.complete, isTrue);
+      expect((s0.exercisesDone, s0.setsDone), (1, first.sets.length));
       expect(c.sections[1].complete, isFalse);
       c.dispose();
+    });
+
+    test('a restored draft keeps its stored order (never reordered) and counts stay right', () async {
+      final app = AppController();
+      await app.startDemo();
+      final w = app.workouts.byId('w3')!; // saved order is NOT arranged
+      expect(WorkoutSections.isArranged(w.exercises, app.exercises.all), isFalse);
+      final draft = WorkoutDraft(
+        workoutId: w.id,
+        workoutName: w.name,
+        startedAt: DateTime.now(),
+        savedAt: DateTime.now(),
+        exercises: [
+          for (var i = 0; i < w.exercises.length; i++)
+            DraftExercise(
+              exerciseId: w.exercises[i].exerciseId,
+              repMin: w.exercises[i].repMin,
+              repMax: w.exercises[i].repMax,
+              sets: [for (var k = 0; k < w.exercises[i].sets; k++) DraftSet(weightKg: 50, reps: 5, done: i == 0 && k == 0)],
+            ),
+        ],
+      );
+      final c = ActiveWorkoutController(
+        workout: w,
+        catalog: app.exercises.all,
+        sessions: app.sessions,
+        profile: app.profile.profile,
+        restoreFrom: draft,
+      );
+      expect([for (final d in c.drafts) d.exercise.id], [for (final e in w.exercises) e.exerciseId]);
+      expect(c.sections.map((s) => s.label).toList(), ['Legs', 'Shoulders', 'Legs', 'Shoulders', 'Legs']);
+      expect(c.sections.map((s) => s.startIndex).toList(), [0, 1, 2, 4, 5]);
+      expect([for (final s in c.sections) ...s.drafts], c.drafts);
+      expect(c.sections.first.setsDone, 1);
+      expect(c.doneSets, 1);
+      c.dispose();
+    });
+
+    test('swap keeps the exercise position', () async {
+      final app = AppController();
+      await app.startDemo();
+      final c = ctlFor(app, 'w2');
+      final before = [for (final d in c.drafts) d.exercise.id];
+      final repl = app.exercises.all.firstWhere((e) => !before.contains(e.id) && e.primaryMuscle == c.drafts[1].exercise.primaryMuscle);
+      c.replaceExercise(c.drafts[1], repl, app.sessions);
+      expect(c.drafts[1].exercise.id, repl.id);
+      expect(c.drafts.length, before.length);
+      expect([for (final s in c.sections) ...s.drafts], c.drafts);
+      c.dispose();
+    });
+
+    testWidgets('Legs + Shoulders shows exactly two section headers', (t) async {
+      await pumpPage(t, const ActiveWorkoutPage(workoutId: 'w3'), size: const Size(360, 3000));
+      expect(find.byType(MuscleSectionHeader), findsNWidgets(2));
+      expect(find.text('LEGS'), findsOneWidget);
+      expect(find.text('SHOULDERS'), findsOneWidget);
+    });
+
+    testWidgets('single-muscle workout hides the section header', (t) async {
+      final app = AppController();
+      await app.startDemo();
+      await app.workouts.saveWorkout(Workout(id: 'chest_only', name: 'Chest day', exercises: const [
+        RoutineExercise(exerciseId: 'bench_press', sets: 3, repMin: 6, repMax: 8),
+        RoutineExercise(exerciseId: 'incline_db_press', sets: 3, repMin: 8, repMax: 10),
+      ]));
+      await pumpPage(t, const ActiveWorkoutPage(workoutId: 'chest_only'), controller: app, size: const Size(360, 3000));
+      expect(find.byType(MuscleSectionHeader), findsNothing);
+      expect(find.text('CHEST'), findsNothing);
+      // Two sub-areas (main + Upper chest) still get the compact sub-caption.
+      expect(find.text('Upper chest'), findsOneWidget);
+    });
+
+    testWidgets('a forearm exercise creates a Forearms section and sub-captions appear in multi-muscle workouts', (t) async {
+      final app = AppController();
+      await app.startDemo();
+      await app.workouts.saveWorkout(Workout(id: 'mix', name: 'Mix', exercises: const [
+        RoutineExercise(exerciseId: 'wrist_curl', sets: 2, repMin: 10, repMax: 15),
+        RoutineExercise(exerciseId: 'incline_db_press', sets: 3, repMin: 8, repMax: 10),
+        RoutineExercise(exerciseId: 'bench_press', sets: 3, repMin: 6, repMax: 8),
+      ]));
+      final c = ctlFor(app, 'mix');
+      expect(c.sections.map((s) => s.label).toList(), ['Forearms', 'Chest']);
+      expect(c.sections[1].groups.map((g) => g.label).toList(), [null, 'Upper chest']);
+      c.dispose();
+      await pumpPage(t, const ActiveWorkoutPage(workoutId: 'mix'), controller: app, size: const Size(360, 3000));
+      expect(find.text('FOREARMS'), findsOneWidget);
+      expect(find.text('CHEST'), findsOneWidget);
+      expect(find.text('Upper chest'), findsOneWidget);
     });
 
     testWidgets('headers render, are semantic headers and update per edit', (t) async {

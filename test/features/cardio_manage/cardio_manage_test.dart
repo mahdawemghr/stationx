@@ -64,11 +64,11 @@ void main() {
       expect(find.text('RESISTANCE LEVEL'), findsNothing);
       await t.drag(find.text('Outdoor Walk'), const Offset(-500, 0));
       await t.pump();
-      await t.tap(find.text('Stationary Bike'));
+      await t.tap(find.text('Upright Bike'));
       await t.pump();
       expect(find.text('RESISTANCE LEVEL'), findsOneWidget);
       expect(find.text('BELT SPEED'), findsNothing);
-      await t.drag(find.text('Stationary Bike'), const Offset(900, 0));
+      await t.drag(find.text('Upright Bike'), const Offset(900, 0));
       await t.pump();
       await t.tap(find.text('Outdoor Run'));
       await t.pump();

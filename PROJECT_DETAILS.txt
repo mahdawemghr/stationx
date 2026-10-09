@@ -15,7 +15,7 @@ resting-heart-rate data can be turned on by the user; both are off by default.
 
   App name ........ StationX
   Version ......... 1.0.0+1
-  Package / app id  dev.mahdi_ramadhan.stationx
+  Package / app id  dev.mahdi_haji.stationx
   Platforms ....... Android (primary, min SDK 26), iOS/desktop scaffolding present
   Framework ....... Flutter 3.47 / Dart 3.13, Material 3
   Author .......... Mahdi Ramadhan
@@ -59,7 +59,8 @@ Schedule setup (after registering; optional for guests; also in Workouts and Pro
   * Choose a program: Full Body, Upper / Lower, Push / Pull / Legs, Bro split, or Custom.
   * "Quick start" takes a preset as is: pick, answer "How many days a week?", review, save.
     "Customize exercises" lets you tick exercises per day and per muscle, grouped into
-    practical sub-sections (for example Back -> Lats, Upper back & traps, Lower back), with
+    practical sub-sections (for example Back -> Lats . Pull-ups / Pulldowns, Upper back . rows,
+    Traps, Lower back; no section holds more than 13 exercises), with
     a one-line reason per suggestion and sets/reps steppers.
   * "+ Add exercise" inside the flow creates your own exercise and ticks it immediately.
   * Custom: name your days, choose muscles per day; suggestions come from the recommender.
@@ -90,7 +91,7 @@ Active workout (strength logger)
   * Finishing a workout advances the rotation; backdated sessions are supported.
 
 Exercises
-  * Library of 212 built-in exercises with search, muscle filter, sub-muscle filter (for
+  * Library of 420 built-in exercises with search, muscle filter, sub-muscle filter (for
     example Back -> Lats / Upper back / Traps / Lower back), equipment filter and a
     "Common" quick filter.
   * Exercise details: muscle map, primary and assisting muscles (from the muscle profile),
@@ -104,9 +105,13 @@ History
   * Session list, calendar view, session details, edit and delete.
 
 Cardio
-  * 20 activity types (treadmill, outdoor/trail run, hiking, bikes incl. spin and air bike, rowing,
-    ski erg, elliptical, arc trainer, stair/vertical climber, swimming, arm ergometer, HIIT, boxing,
-    jump rope, custom); rowing/ski erg show pace per 500 m, swimming per 100 m.
+  * 33 activity types + custom: Treadmill Run, Indoor Walk / Walking Pad, outdoor/trail run, walking,
+    hiking, Nordic walking, rucking, cycling, upright/recumbent/spin/air bike, bike trainer, rowing
+    (machine and on water), ski erg, kayak/canoe/SUP, elliptical, arc trainer, stair climber, vertical
+    climber, pool and open-water swimming, cross-country skiing, skating, climbing, dance/zumba, HIIT,
+    boxing/martial arts, jump rope. Rowing/paddling show pace per 500 m, swimming per 100 m. The picker
+    has search (aliases like '12-3-30', 'stepmill'), recents, group headings and one-tap templates for
+    sports (padel, tennis, soccer, ...).
   * Live cardio session and manual logging for run / treadmill / bike / row / etc.
     Fields adapt to the activity type (distance, duration, pace, incline, resistance, heart
     rate, calories...). Cardio goals, records, history, edit and delete.
@@ -165,14 +170,17 @@ Muscle and recommendation layer (all pure Dart, in lib/domain):
                               MuscleTarget (region, optional subgroup, primary/assisting role,
                               optional emphasis/weight), ExerciseMuscleProfile (many targets),
                               MuscleWeights (primary 1.0, assisting 0.5 - one place)
-  services/muscle_profiles .. detailed profile for each of the 212 built-in exercises; broad
+  services/muscle_profiles .. detailed profile for each of the 420 built-in exercises; broad
                               fallback derived from the stored fields when nothing else exists
   services/muscle_coverage .. coverage of a workout, a program or logged history: direct sets
                               (primary only) vs weighted sets (plus assisting), High /
                               Moderate / Low levels per week (practical guideline numbers)
   services/exercise_recommender  one engine for day generation, replacement ranking and
                               informational gap hints; SmartSwapService delegates to it
-  services/split_catalog .... presets, sub-sections, "common" list, suggestions
+  services/split_catalog .... presets, sub-sections (split_sections/: big sub-areas are split into
+                              "families" such as Mid chest . Presses + Cable, push-ups & band; profile
+                              derivation works per family, with a documented override table),
+                              "common" list (39), suggestions (classic compound first)
   services/split_models + schedule_builder .. the designed days and saving them as workouts
                               and a rotation (never deletes, can restore archived workouts)
 The simplified 7-way MuscleGroup stays as the broad layer used by storage, sync and simple
@@ -282,7 +290,7 @@ Profile > Integrations > "Import from Gym Tracker" -> choose the file (or paste 
 
 12. TESTING
 -----------
-About 540 tests across test/{domain,data,features,a11y,perf,app,core,store,helpers,e2e}:
+About 900 tests across test/{domain,data,features,a11y,perf,app,core,store,helpers,e2e}:
   * unit tests for the domain services, mappers and sync engine (two simulated phones plus a
     fake server with the same last-write-wins rules);
   * widget tests for every feature, including overflow and empty states;
@@ -293,7 +301,7 @@ About 540 tests across test/{domain,data,features,a11y,perf,app,core,store,helpe
     1080x2400 phone screenshots into docs/store/screenshots.
   * schedule setup, archive/restore, muscle profiles/coverage and the recommender have their
     own unit and widget tests (including overflow checks at 320x568 with 2x text).
-Latest status: flutter analyze clean, 536 tests passing.
+Latest status: flutter analyze clean, 893 tests passing (+10 opt-in skipped), live Supabase e2e (4) passing, debug APK builds.
 
 
 13. RUNNING / BUILDING

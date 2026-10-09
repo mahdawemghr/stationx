@@ -57,4 +57,63 @@ void main() {
       await s.close();
     },
   );
+
+  test(
+    'restart refreshes equipment/pattern of seed rows only, idempotently',
+    () async {
+      var s = await IsarStore.open(directory: dir.path, name: 'refresh');
+      await s.exercises.addCustom(
+        Exercise(
+          id: 'my_smith',
+          name: 'Smith thing',
+          primaryMuscle: MuscleGroup.legs,
+          equipment: Equipment.machine,
+          isCustom: true,
+        ),
+      );
+      // Simulate an install from before the new equipment: old mapping + a user-visible rename.
+      await s.db.writeTxn(() async {
+        final swing = (await s.db.exerciseEntitys.getByUid('kettlebell_swing'))!
+          ..equipment = Equipment.dumbbell
+          ..movementPattern = 'old pattern'
+          ..name = 'Renamed swing';
+        await s.db.exerciseEntitys.putByUid(swing);
+        final smith = (await s.db.exerciseEntitys.getByUid(
+          'smith_bench_press',
+        ))!..equipment = Equipment.machine;
+        await s.db.exerciseEntitys.putByUid(smith);
+      });
+      final before = (await s.db.exerciseEntitys.getByUid(
+        'kettlebell_swing',
+      ))!.meta;
+      await s.close();
+
+      s = await IsarStore.open(directory: dir.path, name: 'refresh');
+      final swing = (await s.db.exerciseEntitys.getByUid('kettlebell_swing'))!;
+      final seed = {for (final e in seedExercises()) e.id: e};
+      expect(swing.equipment, Equipment.kettlebell);
+      expect(swing.movementPattern, seed['kettlebell_swing']!.movementPattern);
+      expect(swing.name, 'Renamed swing'); // never touches the name
+      expect(swing.meta.updatedAt, before.updatedAt); // meta untouched
+      expect(swing.meta.syncStatus, before.syncStatus);
+      expect(
+        (await s.db.exerciseEntitys.getByUid('smith_bench_press'))!.equipment,
+        Equipment.smithMachine,
+      );
+      final mine = (await s.db.exerciseEntitys.getByUid('my_smith'))!;
+      expect(
+        mine.equipment,
+        Equipment.machine,
+      ); // custom rows are never refreshed
+      expect(mine.isCustom, isTrue);
+
+      // Idempotent: nothing to add, and a second pass leaves the rows as they are.
+      expect(await IsarStore.topUpCatalog(s.db), 0);
+      expect(
+        (await s.db.exerciseEntitys.getByUid('kettlebell_swing'))!.equipment,
+        Equipment.kettlebell,
+      );
+      await s.close();
+    },
+  );
 }

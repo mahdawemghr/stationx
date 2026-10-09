@@ -12,7 +12,11 @@ abstract final class CoverageThresholds {
   static const double muscleModerate = 2;
   static const double muscleHigh = 5;
 
-  static CoverageLevel level(double perWeek, {required double moderate, required double high}) {
+  static CoverageLevel level(
+    double perWeek, {
+    required double moderate,
+    required double high,
+  }) {
     if (perWeek <= 0) return CoverageLevel.none;
     if (perWeek < moderate) return CoverageLevel.low;
     if (perWeek < high) return CoverageLevel.moderate;
@@ -59,13 +63,17 @@ class CoverageReport {
 
 abstract final class MuscleCoverage {
   /// Coverage of arbitrary (exercise, sets) slots. Totals are raw over the period; [weeks] only drives levels.
-  static CoverageReport ofSlots(Iterable<(Exercise, int)> slots, {double weeks = 1}) {
+  static CoverageReport ofSlots(
+    Iterable<(Exercise, int)> slots, {
+    double weeks = 1,
+  }) {
     final dm = <Muscle, double>{}, wm = <Muscle, double>{};
     final dr = <MuscleRegion, double>{}, wr = <MuscleRegion, double>{};
     for (final (ex, sets) in slots) {
       if (sets <= 0) continue;
       final targets = MuscleProfiles.of(ex).targets;
-      final regionDirect = <MuscleRegion, double>{}, regionWeighted = <MuscleRegion, double>{};
+      final regionDirect = <MuscleRegion, double>{},
+          regionWeighted = <MuscleRegion, double>{};
       for (final t in targets) {
         final w = t.effectiveWeight;
         final primary = t.role == TargetRole.primary;
@@ -79,10 +87,19 @@ abstract final class MuscleCoverage {
       regionWeighted.forEach((r, w) => wr[r] = (wr[r] ?? 0) + sets * w);
       regionDirect.forEach((r, w) => dr[r] = (dr[r] ?? 0) + sets * w);
     }
-    return CoverageReport(directByMuscle: dm, weightedByMuscle: wm, directByRegion: dr, weightedByRegion: wr, weeks: weeks);
+    return CoverageReport(
+      directByMuscle: dm,
+      weightedByMuscle: wm,
+      directByRegion: dr,
+      weightedByRegion: wr,
+      weeks: weeks,
+    );
   }
 
-  static Iterable<(Exercise, int)> _workoutSlots(Workout w, Map<String, Exercise> byId) sync* {
+  static Iterable<(Exercise, int)> _workoutSlots(
+    Workout w,
+    Map<String, Exercise> byId,
+  ) sync* {
     for (final re in w.exercises) {
       final ex = byId[re.exerciseId];
       if (ex != null) yield (ex, re.sets);
@@ -95,16 +112,26 @@ abstract final class MuscleCoverage {
 
   /// A whole program (rotation), expressed per week for [daysPerWeek] sessions of the rotation in order
   /// (cycling when daysPerWeek > rotation length). weeks == 1.
-  static CoverageReport ofProgram(List<Workout> rotation, List<Exercise> catalog, {int daysPerWeek = 4}) {
+  static CoverageReport ofProgram(
+    List<Workout> rotation,
+    List<Exercise> catalog, {
+    int daysPerWeek = 4,
+  }) {
     if (rotation.isEmpty || daysPerWeek <= 0) return const CoverageReport();
     final byId = {for (final e in catalog) e.id: e};
     return ofSlots([
-      for (var i = 0; i < daysPerWeek; i++) ..._workoutSlots(rotation[i % rotation.length], byId),
+      for (var i = 0; i < daysPerWeek; i++)
+        ..._workoutSlots(rotation[i % rotation.length], byId),
     ]);
   }
 
   /// Logged history between [from] (inclusive) and [to] (exclusive); only done sets count.
-  static CoverageReport ofHistory(Iterable<WorkoutSession> sessions, List<Exercise> catalog, {required DateTime from, required DateTime to}) {
+  static CoverageReport ofHistory(
+    Iterable<WorkoutSession> sessions,
+    List<Exercise> catalog, {
+    required DateTime from,
+    required DateTime to,
+  }) {
     final byId = {for (final e in catalog) e.id: e};
     final slots = <(Exercise, int)>[];
     for (final s in sessions) {
@@ -114,7 +141,8 @@ abstract final class MuscleCoverage {
         if (ex != null) slots.add((ex, log.doneSets.length));
       }
     }
-    final weeks = to.difference(from).inMilliseconds / Duration.millisecondsPerDay / 7;
+    final weeks =
+        to.difference(from).inMilliseconds / Duration.millisecondsPerDay / 7;
     return ofSlots(slots, weeks: weeks < 1e-6 ? 1e-6 : weeks);
   }
 }

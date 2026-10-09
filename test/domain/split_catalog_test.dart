@@ -9,7 +9,7 @@ void main() {
   test('common exercises exist, are unique and cover every muscle', () {
     final ids2 = SplitCatalog.commonExerciseIds;
     expect(ids2.toSet().length, ids2.length);
-    expect(ids2.length, inInclusiveRange(20, 35));
+    expect(ids2.length, inInclusiveRange(20, 40));
     for (final id in ids2) {
       expect(ids, contains(id));
       expect(SplitCatalog.isCommon(id), isTrue);
@@ -20,12 +20,22 @@ void main() {
         if (SplitCatalog.isCommon(e.id)) e.primaryMuscle,
     };
     expect(muscles, containsAll(MuscleGroup.values));
+    // Every library section muscle (incl. Forearms, which shares MuscleGroup.biceps) has a common lift.
+    final sections = {
+      for (final e in all)
+        if (SplitCatalog.isCommon(e.id))
+          SectionMuscle.of(MuscleProfiles.of(e).primaryRegion),
+    };
+    expect(sections, containsAll(SectionMuscle.values));
   });
 
   test('seed ids are unique', () => expect(ids.length, all.length));
 
   test('seed names are unique (case/spacing/punctuation-insensitive)', () {
-    final names = [for (final e in all) e.name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '')];
+    final names = [
+      for (final e in all)
+        e.name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), ''),
+    ];
     expect(names.toSet().length, names.length);
   });
 

@@ -205,7 +205,7 @@ void main() {
       gw.external
         ..add(_ext('a'))
         ..add(_ext('b', act: 'BIKING', hoursAgo: 30))
-        ..add(_ext('c', act: 'DANCING'));
+        ..add(_ext('c', act: 'GOLF')); // no cardio kind -> never imported (DANCING now maps to Dance)
       final before = app.cardio.sessions.length;
       await pumpImport(t);
       expect(find.text('IMPORT 2 WORKOUTS'), findsOneWidget);

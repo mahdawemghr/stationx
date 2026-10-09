@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/sx_colors.dart';
 import '../../core/theme/sx_theme.dart';
 import '../../core/theme/sx_typography.dart';
 import '../../core/widgets/widgets.dart';
@@ -55,16 +56,45 @@ class SetupReviewStep extends StatelessWidget {
             Text('${days[i].exercises.length} exercises · ${days[i].totalSets} sets · ~${days[i].estimatedMinutes} min',
                 style: SxText.bodySm.copyWith(color: c.textBody)),
             const SizedBox(height: 6),
-            for (final re in days[i].exercises)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 2),
-                child: Row(children: [
-                  Expanded(child: Text(byId[re.exerciseId]?.name ?? re.exerciseId, style: SxText.bodyMd.copyWith(color: c.textHigh))),
-                  Text('${re.sets}×${re.repMin}–${re.repMax}', style: SxText.metricSm.copyWith(color: c.textBody)),
-                ]),
-              ),
+            ..._sections(c, days[i], byId),
           ]),
         ),
     ]);
+  }
+
+  /// The day as it will be saved: arranged, one section per muscle, main exercises first then sub-areas.
+  List<Widget> _sections(SxColors c, SplitDayPlan day, Map<String, Exercise> byId) {
+    final arranged = WorkoutSections.arrange(day.exercises, all, muscleOrder: day.sectionMuscles);
+    final sections = WorkoutSections.group(arranged, all);
+    final headers = WorkoutSections.showSectionHeaders(sections);
+    Widget row(RoutineExercise re) => Padding(
+          padding: const EdgeInsets.symmetric(vertical: 2),
+          child: Row(children: [
+            Expanded(child: Text(byId[re.exerciseId]?.name ?? re.exerciseId, style: SxText.bodyMd.copyWith(color: c.textHigh))),
+            Text('${re.sets}×${re.repMin}–${re.repMax}', style: SxText.metricSm.copyWith(color: c.textBody)),
+          ]),
+        );
+    return [
+      for (final s in sections) ...[
+        if (headers)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Semantics(
+              header: true,
+              child: Text('${s.label.toUpperCase()} · ${s.sets} ${s.sets == 1 ? 'set' : 'sets'}', style: SxText.labelCaps.copyWith(color: c.primary)),
+            ),
+          ),
+        for (final g in s.groups) ...[
+          if (g.label != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(g.label!, style: SxText.bodySm.copyWith(color: c.textMuted)),
+            ),
+          for (final re in g.items) row(re),
+        ],
+      ],
+      for (final re in arranged)
+        if (byId[re.exerciseId] == null) row(re),
+    ];
   }
 }

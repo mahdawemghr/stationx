@@ -286,12 +286,12 @@ void main() {
       await t.pump();
       await t.tap(find.text('Machines'));
       await t.pump();
-      final machines = SmartSwapService.alternatives(current: lat, catalog: catalog, allowedEquipment: {Equipment.machine});
+      final machines = SmartSwapService.alternatives(current: lat, catalog: catalog, allowedEquipment: {Equipment.machine, Equipment.smithMachine}); // 'Machines' chip also covers smith machines
       expect(find.text('${machines.length} available'), findsOneWidget);
       await t.tap(find.text('REPLACE EXERCISE'));
       await t.pump();
       expect(picked!.id, machines.first.exercise.id);
-      expect(picked!.equipment, Equipment.machine);
+      expect({Equipment.machine, Equipment.smithMachine}, contains(picked!.equipment));
     });
 
     testWidgets('no candidates → none returned', (t) async {

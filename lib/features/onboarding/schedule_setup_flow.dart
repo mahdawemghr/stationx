@@ -61,7 +61,7 @@ class _ScheduleSetupFlowState extends State<ScheduleSetupFlow> {
   void _startCustom() => setState(() {
         _custom = true;
         _quick = false;
-        _days = const [SplitDayPlan(name: 'Day 1', muscles: [])];
+        _days = const [SplitDayPlan(name: 'Day 1', sectionMuscles: [])];
         _perWeek = 3;
         _step = 1;
       });
@@ -103,7 +103,7 @@ class _ScheduleSetupFlowState extends State<ScheduleSetupFlow> {
   String? _customError() {
     for (final d in _days) {
       if (d.name.trim().isEmpty) return 'Every day needs a name.';
-      if (d.muscles.isEmpty) return 'Choose at least one muscle for "${d.name.trim()}".';
+      if (d.sectionMuscles.isEmpty) return 'Choose at least one muscle for "${d.name.trim()}".';
     }
     final names = <String>{};
     for (final d in _days) {

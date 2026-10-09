@@ -56,7 +56,7 @@ void main() {
     expect(src.calls, 1);
     expect(find.text('IMPORT 19 WORKOUTS?'), findsOneWidget);
     expect(find.text('374'), findsOneWidget); // sets
-    expect(find.textContaining('Zercher Squat'), findsOneWidget); // new custom exercise is disclosed
+    expect(find.textContaining('Chest Press Machine'), findsOneWidget); // a name with no built-in match stays a disclosed custom exercise (Zercher Squat is now a built-in alias)
     expect(app.sessions.sessions, isEmpty); // nothing changed before confirming
     await tester.tap(find.text('IMPORT'));
     await tester.pumpAndSettle();

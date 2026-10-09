@@ -332,6 +332,8 @@ class _HeroCard extends StatelessWidget {
     final c = context.sx;
     final (day, total) = RotationService.dayOf(rotation);
     final catalog = context.app.exercises;
+    // Muscle tags in section order (Forearms included), one per muscle.
+    final tags = [for (final g in WorkoutSections.group(workout.exercises, catalog.all)) g.label];
     final workoutMuscles = <MuscleGroup>{
       for (final re in workout.exercises) ?catalog.byId(re.exerciseId)?.primaryMuscle,
     };
@@ -352,6 +354,10 @@ class _HeroCard extends StatelessWidget {
               Text(workout.name, style: SxText.headlineLg.copyWith(color: c.textHigh)),
               const SizedBox(height: 4),
               if (workout.description.isNotEmpty) Text(workout.description, style: SxText.bodySm.copyWith(color: c.textBody)),
+              if (tags.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(tags.join(' · '), maxLines: 1, overflow: TextOverflow.ellipsis, style: SxText.labelXs.copyWith(color: c.primary)),
+              ],
             ]),
           ),
           const SizedBox(width: 12),

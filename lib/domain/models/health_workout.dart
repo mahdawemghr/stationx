@@ -30,6 +30,13 @@ enum HealthActivity {
   hiit,
   boxing,
   handCycling,
+  openWaterSwimming,
+  crossCountrySkiing,
+  paddling,
+  dance,
+  skating,
+  climbing,
+  martialArts,
   strength,
 
   /// Any activity StationX cannot name (written as a generic workout; never imported).

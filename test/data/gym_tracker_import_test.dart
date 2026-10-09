@@ -40,11 +40,12 @@ void main() {
       expect(p.achievementsInFile, 1);
       // Same movements under different names are matched, not duplicated.
       // 18 since the catalogue grew to 212: "EZ-Bar Preacher Curl", "Hip Abduction
-      // Machine" and "Seated Calf Raise" are now exact built-in names (some were custom/aliased).
-      expect(p.matchedExercises, 18);
+      // Machine" and "Seated Calf Raise" are now exact built-in names (some were custom/aliased). 20 with the
+      // ~420 catalogue: "Zercher Squat" and "Chest-Supported Row Machine" are now curated aliases
+      // (zercher_squat, chest_supported_row) instead of custom exercises.
+      expect(p.matchedExercises, 20);
       expect(p.newExercises.map((e) => e.name).toSet(), {
-        'Chest Press Machine', 'Dumbbell Chest Fly', 'Dumbbell Bicep Curl', 'Chest-Supported Row Machine',
-        'Zercher Squat',
+        'Chest Press Machine', 'Dumbbell Chest Fly', 'Dumbbell Bicep Curl',
       });
     });
 
@@ -54,12 +55,13 @@ void main() {
       for (final id in ['bench_press', 'incline_db_press', 'ez_preacher_curl', 'hip_abduction_machine', 'hammer_curl', 'lat_pulldown', 'seated_cable_row', 'straight_arm_pulldown', 'face_pull', 'tricep_pushdown', 'cable_oh_tri_ext', 'leg_press', 'leg_extension', 'leg_curl', 'lateral_raise']) {
         expect(ids, contains(id), reason: id);
       }
-      final zercher = p.newExercises.singleWhere((e) => e.name == 'Zercher Squat');
-      expect(zercher.id, 'gt_x_zerchersquat');
-      expect(zercher.isCustom, isTrue);
-      expect(zercher.primaryMuscle, MuscleGroup.legs); // "Quads"
-      expect(zercher.secondaryMuscles, [MuscleGroup.back]); // "Glutes, Back" minus the primary group
-      expect(zercher.equipment, Equipment.barbell);
+      // Newly aliased built-ins: matched to the catalogue id, not created as custom exercises.
+      expect(ids, containsAll(['zercher_squat', 'chest_supported_row']));
+      expect(p.newExercises.where((e) => e.name == 'Zercher Squat'), isEmpty);
+      final press = p.newExercises.singleWhere((e) => e.name == 'Chest Press Machine');
+      expect(press.id, 'gt_x_chestpressmachine');
+      expect(press.isCustom, isTrue);
+      expect(press.primaryMuscle, MuscleGroup.chest);
       // Built-in now: matched to the catalogue id, not created as a custom exercise.
       expect(p.newExercises.where((e) => e.name == 'Hip Abduction Machine'), isEmpty);
       expect(p.newExercises.singleWhere((e) => e.name == 'Dumbbell Bicep Curl').primaryMuscle, MuscleGroup.biceps);
@@ -128,6 +130,18 @@ void main() {
       expect(planFor(_oneExercise('EZ-Bar Preacher Curl')).sessions.single.exercises.single.exerciseId, 'ez_preacher_curl');
       expect(planFor(_oneExercise('Reverse Hyper')).sessions.single.exercises.single.exerciseId, 'reverse_hyperextension');
       expect(planFor(_oneExercise('Woodchopper')).sessions.single.exercises.single.exerciseId, 'cable_woodchop');
+      for (final c in {
+        'Hammer Strength Chest Press': 'plate_loaded_chest_press',
+        'Standing Military Press': 'overhead_press',
+        'Zercher Squat': 'zercher_squat',
+        'Rope Crunch': 'cable_crunch',
+        'Parallel Bar Dip': 'triceps_dip',
+        'Lying Leg Curl Machine': 'leg_curl',
+        'Cable Crossover': 'cable_fly',
+        'Wall-Assisted Handstand Push-Up': 'handstand_pushup',
+      }.entries) {
+        expect(planFor(_oneExercise(c.key)).sessions.single.exercises.single.exerciseId, c.value, reason: c.key);
+      }
     });
   });
 
@@ -136,9 +150,9 @@ void main() {
       final store = MemoryStore(SeedData.fresh());
       final plan = planFor(fixtureText, store: store);
       final r = await GymTrackerImport.apply(plan, exercises: store.exercises, sessions: store.sessions, workouts: store.workouts);
-      expect((r.sessionsAdded, r.exercisesCreated, r.rotationApplied), (19, 5, false));
+      expect((r.sessionsAdded, r.exercisesCreated, r.rotationApplied), (19, 3, false));
       expect(store.sessions.sessions.length, 19);
-      expect(store.exercises.all.where((e) => e.isCustom).length, 5);
+      expect(store.exercises.all.where((e) => e.isCustom).length, 3);
     for (final e in store.exercises.all.where((e) => e.isCustom)) {
       expect(e.muscleTargets, isNotNull, reason: e.name);
       expect(e.muscleTargets!.first.role, TargetRole.primary);
@@ -401,11 +415,11 @@ void main() {
     final plan = GymTrackerImport.plan(fixtureText,
         existingSessionIds: {for (final s in store.sessions.sessions) s.id}, catalog: store.exercises.all, workouts: store.workouts.workouts);
     final r = await GymTrackerImport.apply(plan, exercises: store.exercises, sessions: store.sessions, workouts: store.workouts, applyRotation: true);
-    expect((r.sessionsAdded, r.exercisesCreated), (19, 5));
+    expect((r.sessionsAdded, r.exercisesCreated), (19, 3));
     await store.close();
     store = await IsarStore.open(directory: dir.path, name: 'imp');
     expect(store.sessions.sessions.length, 19);
-    expect(store.exercises.all.where((e) => e.isCustom).length, 5);
+    expect(store.exercises.all.where((e) => e.isCustom).length, 3);
     expect(store.workouts.rotation.currentIndex, 1);
     final s = store.sessions.byId(plan.sessions.first.id)!;
     expect(s.workoutDate.isAtSameMomentAs(DateTime.utc(2026, 8, 3, 7, 30)), isTrue);

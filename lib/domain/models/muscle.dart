@@ -21,7 +21,10 @@ enum MuscleRegion {
   final String label;
   final MuscleGroup legacy;
 
-  List<Muscle> get muscles => [for (final m in Muscle.values) if (m.region == this) m];
+  List<Muscle> get muscles => [
+    for (final m in Muscle.values)
+      if (m.region == this) m,
+  ];
 }
 
 /// Practical gym subdivisions (not an anatomy standard). Each belongs to one [MuscleRegion].
@@ -81,11 +84,28 @@ enum TargetRole { primary, secondary }
 /// One thing an exercise trains. [muscle] == null means "the region as a whole" — used when a subdivision
 /// can't be assigned reliably (no fake precision). [weight] overrides the default role weight when set.
 class MuscleTarget {
-  const MuscleTarget(this.region, {this.muscle, this.role = TargetRole.secondary, this.weight, this.emphasis});
-  const MuscleTarget.primary(MuscleRegion region, {Muscle? muscle, String? emphasis})
-      : this(region, muscle: muscle, role: TargetRole.primary, emphasis: emphasis);
-  const MuscleTarget.secondary(MuscleRegion region, {Muscle? muscle, double? weight})
-      : this(region, muscle: muscle, role: TargetRole.secondary, weight: weight);
+  const MuscleTarget(
+    this.region, {
+    this.muscle,
+    this.role = TargetRole.secondary,
+    this.weight,
+    this.emphasis,
+  });
+  const MuscleTarget.primary(
+    MuscleRegion region, {
+    Muscle? muscle,
+    String? emphasis,
+  }) : this(
+         region,
+         muscle: muscle,
+         role: TargetRole.primary,
+         emphasis: emphasis,
+       );
+  const MuscleTarget.secondary(
+    MuscleRegion region, {
+    Muscle? muscle,
+    double? weight,
+  }) : this(region, muscle: muscle, role: TargetRole.secondary, weight: weight);
 
   final MuscleRegion region;
   final Muscle? muscle;
@@ -96,7 +116,11 @@ class MuscleTarget {
   final String? emphasis;
 
   /// Contribution of ONE set to this target (primary counts fully, secondary less).
-  double get effectiveWeight => weight ?? (role == TargetRole.primary ? MuscleWeights.primary : MuscleWeights.secondary);
+  double get effectiveWeight =>
+      weight ??
+      (role == TargetRole.primary
+          ? MuscleWeights.primary
+          : MuscleWeights.secondary);
 }
 
 /// The single place the contribution model lives.
@@ -110,8 +134,10 @@ class ExerciseMuscleProfile {
   const ExerciseMuscleProfile(this.targets);
   final List<MuscleTarget> targets;
 
-  Iterable<MuscleTarget> get primary => targets.where((t) => t.role == TargetRole.primary);
-  Iterable<MuscleTarget> get secondary => targets.where((t) => t.role == TargetRole.secondary);
+  Iterable<MuscleTarget> get primary =>
+      targets.where((t) => t.role == TargetRole.primary);
+  Iterable<MuscleTarget> get secondary =>
+      targets.where((t) => t.role == TargetRole.secondary);
   MuscleTarget get lead => primary.isNotEmpty ? primary.first : targets.first;
   MuscleRegion get primaryRegion => lead.region;
 }
@@ -149,15 +175,27 @@ abstract final class MuscleTargetCodec {
       Muscle? muscle;
       if (e['muscle'] != null) {
         muscle = _byName(Muscle.values, e['muscle']);
-        if (muscle == null || muscle.region != region) continue; // invalid leaf: drop the entry
+        if (muscle == null || muscle.region != region) {
+          continue; // invalid leaf: drop the entry
+        }
       }
       final role = _byName(TargetRole.values, e['role']);
       if (role == null) continue;
       final w = e['weight'];
       final weight = _validWeight(w);
       final em = e['emphasis'];
-      final emphasis = em is String && em.trim().isNotEmpty ? _clip(em.trim()) : null;
-      out.add(MuscleTarget(region, muscle: muscle, role: role, weight: weight, emphasis: emphasis));
+      final emphasis = em is String && em.trim().isNotEmpty
+          ? _clip(em.trim())
+          : null;
+      out.add(
+        MuscleTarget(
+          region,
+          muscle: muscle,
+          role: role,
+          weight: weight,
+          emphasis: emphasis,
+        ),
+      );
     }
     return normalize(out);
   }
@@ -196,9 +234,12 @@ abstract final class MuscleTargetCodec {
   /// A custom weight must be in (0, 1.0] for both roles (1.0 = a full set; nothing counts more than one
   /// set). Anything else (0, negative, NaN, > 1) is dropped so the role default applies.
   static double? _validWeight(Object? w) =>
-      (w is num && w.isFinite && w > 0 && w <= MuscleWeights.primary) ? w.toDouble() : null;
+      (w is num && w.isFinite && w > 0 && w <= MuscleWeights.primary)
+      ? w.toDouble()
+      : null;
 
-  static String _clip(String s) => s.length <= maxEmphasisLength ? s : s.substring(0, maxEmphasisLength);
+  static String _clip(String s) =>
+      s.length <= maxEmphasisLength ? s : s.substring(0, maxEmphasisLength);
 
   static T? _byName<T extends Enum>(List<T> values, Object? name) {
     if (name is! String) return null;

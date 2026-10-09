@@ -21,12 +21,12 @@ class AutoEndResult {
   final String? sessionId;
 
   Map<String, Object?> toJson() => {
-        'wn': workoutName,
-        'sl': setsLogged,
-        'ss': savedSession,
-        'ea': endedAfter.inSeconds,
-        if (sessionId != null) 'id': sessionId,
-      };
+    'wn': workoutName,
+    'sl': setsLogged,
+    'ss': savedSession,
+    'ea': endedAfter.inSeconds,
+    if (sessionId != null) 'id': sessionId,
+  };
   static AutoEndResult? tryParse(Map<String, Object?> j) {
     try {
       return AutoEndResult(
@@ -49,18 +49,25 @@ class AutoEndResult {
 /// [WorkoutCompletion] (backdated drafts never advance it).
 abstract final class DraftCompletion {
   /// Stable id derived from the draft, so retries / double calls never duplicate the session.
-  static String sessionId(WorkoutDraft d) => 'ws_auto_${d.startedAt.microsecondsSinceEpoch}';
+  static String sessionId(WorkoutDraft d) =>
+      'ws_auto_${d.startedAt.microsecondsSinceEpoch}';
 
   /// Null when no set is done (nothing to save). [durationSeconds] defaults to the elapsed time
   /// from start to [now].
-  static WorkoutSession? toSession(WorkoutDraft d, {required DateTime now, int? durationSeconds}) {
+  static WorkoutSession? toSession(
+    WorkoutDraft d, {
+    required DateTime now,
+    int? durationSeconds,
+  }) {
     final logs = <ExerciseLog>[];
     for (final e in d.exercises) {
       final sets = [
         for (final s in e.sets)
           if (s.done) SetLog(weightKg: s.weightKg, reps: s.reps),
       ];
-      if (sets.isNotEmpty) logs.add(ExerciseLog(exerciseId: e.exerciseId, sets: sets));
+      if (sets.isNotEmpty) {
+        logs.add(ExerciseLog(exerciseId: e.exerciseId, sets: sets));
+      }
     }
     if (logs.isEmpty) return null;
     return WorkoutSession(
@@ -69,7 +76,8 @@ abstract final class DraftCompletion {
       name: d.workoutName,
       workoutDate: d.backdate ?? d.startedAt,
       exercises: logs,
-      durationSeconds: durationSeconds ?? WorkoutLimit.elapsedSeconds(d.startedAt, now),
+      durationSeconds:
+          durationSeconds ?? WorkoutLimit.elapsedSeconds(d.startedAt, now),
       meta: SyncMeta(createdAt: now),
     );
   }
@@ -88,10 +96,18 @@ abstract final class DraftCompletion {
     final session = toSession(d, now: now, durationSeconds: capped);
     final endedAfter = Duration(seconds: capped);
     if (session == null) {
-      return AutoEndResult(workoutName: d.workoutName, setsLogged: 0, savedSession: false, endedAfter: endedAfter);
+      return AutoEndResult(
+        workoutName: d.workoutName,
+        setsLogged: 0,
+        savedSession: false,
+        endedAfter: endedAfter,
+      );
     }
     if (sessions.byId(session.id) == null) {
-      await WorkoutCompletion(sessions, workouts).complete(session, advanceRotation: d.backdate == null);
+      await WorkoutCompletion(
+        sessions,
+        workouts,
+      ).complete(session, advanceRotation: d.backdate == null);
     }
     return AutoEndResult(
       workoutName: d.workoutName,
@@ -102,4 +118,3 @@ abstract final class DraftCompletion {
     );
   }
 }
-

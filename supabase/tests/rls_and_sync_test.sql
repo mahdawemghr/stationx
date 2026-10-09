@@ -74,6 +74,19 @@ begin
     r := r || E'\n' || 'PASS new cardio kind (20261011) accepted';
   exception when check_violation then r := r || E'\n' || 'FAIL new cardio kind rejected (migration 20261011 not applied?)'; end;
   begin
+    insert into public.cardio_sessions (id, kind, workout_date, duration_seconds) values ('c-walkpad', 'indoorWalk', now(), 100);
+    r := r || E'\n' || 'PASS new cardio kind (20261012) accepted';
+  exception when check_violation then r := r || E'\n' || 'FAIL new cardio kind rejected (migration 20261012 not applied?)'; end;
+  begin
+    insert into public.exercises (id, name, primary_muscle, equipment)
+    values ('x-kb', 'Kettlebell Swing', 'legs', 'kettlebell'), ('x-smith', 'Smith Squat', 'legs', 'smithMachine');
+    r := r || E'\n' || 'PASS new equipment (20261012010000) accepted';
+  exception when check_violation then r := r || E'\n' || 'FAIL new equipment rejected (migration 20261012010000 not applied?)'; end;
+  begin
+    insert into public.exercises (id, name, primary_muscle, equipment) values ('x-bad-eq', 'x', 'legs', 'spaceship');
+    r := r || E'\n' || 'FAIL unknown equipment accepted';
+  exception when check_violation then r := r || E'\n' || 'PASS unknown equipment rejected'; end;
+  begin
     insert into public.workouts (id, name, exercises) values ('w-bad', 'x', '{"not":"an array"}');
     r := r || E'\n' || 'FAIL non-array exercises accepted';
   exception when check_violation then r := r || E'\n' || 'PASS non-array exercises rejected'; end;

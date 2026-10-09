@@ -189,7 +189,7 @@ void main() {
   testWidgets('mixed workout: cardio block fields adapt to treadmill', (t) async {
     await pumpPage(t, const ActiveWorkoutPage(workoutId: 'w1'), size: const Size(390, 3200));
     expect(find.text('CARDIO FINISHER'), findsOneWidget);
-    expect(find.text('TREADMILL'), findsOneWidget);
+    expect(find.text('TREADMILL RUN'), findsOneWidget);
     expect(find.text('Target: 20 min • 7.5 km/h • 3% Incline'), findsOneWidget);
     expect(find.text('SPEED / INCLINE'), findsOneWidget);
     expect(find.text('DISTANCE'), findsOneWidget);
@@ -253,7 +253,7 @@ void main() {
     expect(find.text('WORKOUT COMPLETE'), findsOneWidget);
     expect(find.text('STRENGTH'), findsOneWidget);
     expect(find.text('CARDIO'), findsOneWidget);
-    expect(find.text('Treadmill'), findsOneWidget);
+    expect(find.text('Treadmill Run'), findsOneWidget);
     expect(find.text('Incline'.toUpperCase()), findsOneWidget);
     expect(find.text('RESISTANCE'), findsNothing);
     expect(find.text('Muscle volume'), findsOneWidget);

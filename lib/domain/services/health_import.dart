@@ -114,16 +114,28 @@ abstract final class HealthImport {
       out.add((w, kind));
     }
     out.sort((a, b) => a.$1.start.compareTo(b.$1.start));
-    final picked = out.length > maxSessions ? out.sublist(out.length - maxSessions) : out;
+    final picked = out.length > maxSessions
+        ? out.sublist(out.length - maxSessions)
+        : out;
     final labels = <String>{};
     final sessions = <CardioSession>[];
     for (final (w, kind) in picked) {
       final secs = w.end.difference(w.start).inSeconds;
-      var km = (w.distanceMeters != null && w.distanceMeters!.isFinite && w.distanceMeters! > 0)
+      var km =
+          (w.distanceMeters != null &&
+              w.distanceMeters!.isFinite &&
+              w.distanceMeters! > 0)
           ? w.distanceMeters! / 1000
           : null;
-      if (km != null && (km > maxDistanceKm || km / (secs / 3600) > maxSpeedKmh)) km = null;
-      final cal = (w.energyKcal != null && w.energyKcal!.isFinite && w.energyKcal! >= 1 && w.energyKcal! <= maxCalories)
+      if (km != null &&
+          (km > maxDistanceKm || km / (secs / 3600) > maxSpeedKmh)) {
+        km = null;
+      }
+      final cal =
+          (w.energyKcal != null &&
+              w.energyKcal!.isFinite &&
+              w.energyKcal! >= 1 &&
+              w.energyKcal! <= maxCalories)
           ? w.energyKcal!.round()
           : null;
       final label = knownSources[w.sourceName];
@@ -143,9 +155,7 @@ abstract final class HealthImport {
     }
     return HealthImportPlan(
       sessions: sessions,
-      externalIds: [
-        for (final (w, _) in picked) w.id,
-      ],
+      externalIds: [for (final (w, _) in picked) w.id],
       skippedOwn: own,
       skippedAlreadyImported: dup,
       skippedUnsupported: unsupported,
@@ -156,7 +166,10 @@ abstract final class HealthImport {
 
   /// Adds the planned sessions to [cardio] (never touches strength history). Skips ids that
   /// appeared in the meantime, so applying twice adds nothing. Returns how many were added.
-  static Future<int> apply(HealthImportPlan plan, CardioRepository cardio) async {
+  static Future<int> apply(
+    HealthImportPlan plan,
+    CardioRepository cardio,
+  ) async {
     var added = 0;
     for (final s in plan.sessions) {
       if (cardio.byId(s.id) != null) continue;

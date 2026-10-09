@@ -14,7 +14,7 @@ Status legend: ✅ done in the repo · 🟡 needs the owner · 🔴 blocked (nee
 ## 0. Decisions only the owner can make
 | Item | Current | Action |
 |---|---|---|
-| ✅ Application ID / bundle ID | Android `applicationId` = `dev.mahdi_ramadhan.stationx` (already set in `android/app/build.gradle.kts`, no longer a template value); iOS/macOS `dev.mahdi-ramadhan.stationx` (iOS bundle ids cannot contain `_`, so the underscore became a hyphen) | Applied 2026-10-08. **Cannot be changed after publishing.** The two platforms' ids need not match. If you'd rather have one id everywhere, choose one without `_` (e.g. `dev.mahdiramadhan.stationx`) *before* the first upload. |
+| ✅ Application ID / bundle ID | Android `applicationId` = `dev.mahdi_haji.stationx` (already set in `android/app/build.gradle.kts`, no longer a template value); iOS/macOS `dev.mahdi-haji.stationx` (iOS bundle ids cannot contain `_`, so the underscore became a hyphen) | Applied 2026-10-08. **Cannot be changed after publishing.** The two platforms' ids need not match. If you'd rather have one id everywhere, choose one without `_` (e.g. `dev.mahdiramadhan.stationx`) *before* the first upload. |
 | 🟡 Developer accounts | — | Google Play Console ($25 one-time); Apple Developer Program ($99/yr) for iOS |
 | 🟡 Privacy-policy URL + contact email | draft in `docs/PRIVACY_POLICY.md` (now describes optional cloud sync) | Fill placeholders, host over HTTPS; also an **account-deletion page/email** for Google Play |
 | 🟡 App name / store listing text | "StationX" | Confirm the name is available on both stores |

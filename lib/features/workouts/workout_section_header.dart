@@ -64,3 +64,28 @@ class WorkoutSectionHeader extends StatelessWidget {
     );
   }
 }
+
+/// Small sub-area header ("Upper chest") inside a section. Main groups have no sub-header.
+class WorkoutSubHeader extends StatelessWidget {
+  const WorkoutSubHeader({super.key, required this.label});
+  final String label;
+
+  /// Sub-headers show for labelled (non-main) groups; a lone sub-area in a single-muscle workout has
+  /// nothing to be told apart from, so it stays hidden.
+  static bool visible(WorkoutSection s, WorkoutSubSection g, {required bool multiSection}) =>
+      g.label != null && (multiSection || s.groups.length > 1);
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.sx;
+    return Semantics(
+      header: true,
+      label: label,
+      excludeSemantics: true,
+      child: Padding(
+        padding: const EdgeInsets.only(top: SxSpace.xs, bottom: SxSpace.xs, left: 2),
+        child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: SxText.labelXs.copyWith(color: c.textMuted, letterSpacing: 0.8)),
+      ),
+    );
+  }
+}

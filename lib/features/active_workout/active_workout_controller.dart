@@ -55,13 +55,24 @@ class ExerciseDraft extends ChangeNotifier {
   void touch() => notifyListeners();
 }
 
-/// A run of consecutive exercises that train the same muscle (see WorkoutSections).
+/// A run of consecutive drafts of one sub-area inside a [DraftSection]. [label] is null for the MAIN group.
+class DraftGroup {
+  const DraftGroup({required this.label, required this.drafts, required this.startIndex});
+  final String? label;
+  final List<ExerciseDraft> drafts;
+  final int startIndex;
+}
+
+/// A run of consecutive exercises that train the same muscle (see WorkoutSections.groupContiguous).
 /// [label] is empty for the flat fallback (no header).
 class DraftSection {
-  const DraftSection({required this.label, required this.drafts, required this.startIndex});
+  const DraftSection({required this.label, required this.drafts, required this.startIndex, this.groups = const []});
   final String label;
   final List<ExerciseDraft> drafts;
   final int startIndex;
+
+  /// Sub-area runs (main group has a null label). Empty for the flat fallback.
+  final List<DraftGroup> groups;
 
   int get exercisesDone => drafts.where((d) => d.complete).length;
   int get setsDone => drafts.fold(0, (a, d) => a + d.doneCount);
@@ -194,7 +205,8 @@ class ActiveWorkoutController extends ChangeNotifier {
         startedAt = restoreFrom?.startedAt ?? (clock ?? DateTime.now)() {
     final byId = {for (final e in catalog) e.id: e};
     final routine = restoreFrom == null
-        ? workout.exercises
+        // New session: display order == execution order (main exercises first, one block per muscle).
+        ? WorkoutSections.arrange(workout.exercises, catalog)
         : [
             for (final e in restoreFrom.exercises)
               RoutineExercise(exerciseId: e.exerciseId, sets: e.sets.length, repMin: e.repMin, repMax: e.repMax),
@@ -307,7 +319,8 @@ class ActiveWorkoutController extends ChangeNotifier {
     final routine = [
       for (final d in drafts) RoutineExercise(exerciseId: d.exercise.id, sets: d.sets.length, repMin: d.repMin, repMax: d.repMax),
     ];
-    final groups = WorkoutSections.group(routine, _catalog);
+    // Drafts are never reordered: contiguous runs only.
+    final groups = WorkoutSections.groupContiguous(routine, _catalog);
     final covered = groups.fold<int>(0, (a, g) => a + g.items.length);
     if (covered != drafts.length) {
       // Some exercise is missing from the catalog: never drop it, show one flat section.
@@ -315,7 +328,22 @@ class ActiveWorkoutController extends ChangeNotifier {
     }
     return [
       for (final g in groups)
-        DraftSection(label: g.label, drafts: List.unmodifiable(drafts.sublist(g.startIndex, g.startIndex + g.items.length)), startIndex: g.startIndex),
+        DraftSection(
+          label: g.label,
+          drafts: List.unmodifiable(drafts.sublist(g.startIndex, g.startIndex + g.items.length)),
+          startIndex: g.startIndex,
+          groups: () {
+            var at = g.startIndex;
+            return [
+              for (final sub in g.groups)
+                DraftGroup(
+                  label: sub.label,
+                  drafts: List.unmodifiable(drafts.sublist(at, at += sub.items.length)),
+                  startIndex: at - sub.items.length,
+                ),
+            ];
+          }(),
+        ),
     ];
   }
 
@@ -436,7 +464,7 @@ class ActiveWorkoutController extends ChangeNotifier {
 
   /// Weighted work must not be logged at 0 kg: the caller opens the weight keypad instead.
   bool needsWeight(ExerciseDraft d, int i) =>
-      !d.sets[i].done && d.sets[i].weightKg <= 0 && d.exercise.equipment != Equipment.bodyweight;
+      !d.sets[i].done && d.sets[i].weightKg <= 0 && !d.exercise.equipment.isUnloaded;
 
   /// Toggles a set. Returns false (nothing changed) when [needsWeight].
   bool toggleSet(ExerciseDraft d, int i) {
@@ -550,7 +578,7 @@ class ActiveWorkoutController extends ChangeNotifier {
 
   /// Swap [d]'s exercise for [replacement] inside this session only.
   void replaceExercise(ExerciseDraft d, Exercise replacement, SessionRepository sessions) {
-    final before = [for (final x in sections) '${x.label}:${x.drafts.length}'].join('|');
+    final before = [for (final x in sections) '${x.label}:${x.drafts.length}:${x.groups.length}'].join('|');
     final fresh = _buildStatic(
         RoutineExercise(exerciseId: replacement.id, sets: d.sets.length, repMin: d.repMin, repMax: d.repMax),
         replacement,
@@ -570,7 +598,7 @@ class ActiveWorkoutController extends ChangeNotifier {
     d.expanded = true;
     d.touch();
     _sections = null;
-    if ([for (final x in sections) '${x.label}:${x.drafts.length}'].join('|') != before) layout.value++;
+    if ([for (final x in sections) '${x.label}:${x.drafts.length}:${x.groups.length}'].join('|') != before) layout.value++;
     notifyListeners();
   }
 

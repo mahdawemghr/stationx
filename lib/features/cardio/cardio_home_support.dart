@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'cardio_kind_presentation.dart';
+import 'cardio_manage_helpers.dart' show cardioCustomIcons;
 import 'cardio_pace.dart';
 import '../../core/utils/formatters.dart';
 import '../../domain/domain.dart';
@@ -7,44 +9,14 @@ import '../../domain/domain.dart';
 /// Presentation helpers for [CardioKind] shared by the live-flow screens
 /// (home, select, prepare, active, complete). Pure + stateless.
 
-IconData cardioKindIcon(CardioKind k) => switch (k) {
-      CardioKind.outdoorRun => Icons.directions_run,
-      CardioKind.outdoorWalk => Icons.directions_walk,
-      CardioKind.treadmill => Icons.speed,
-      CardioKind.cycling => Icons.directions_bike,
-      CardioKind.stationaryBike => Icons.pedal_bike,
-      CardioKind.elliptical => Icons.accessibility_new,
-      CardioKind.rowing => Icons.kayaking,
-      CardioKind.stairClimber => Icons.stairs,
-      CardioKind.jumpRope => Icons.bolt,
-      CardioKind.trailRun => Icons.terrain,
-      CardioKind.hiking => Icons.hiking,
-      CardioKind.spinBike => Icons.directions_bike_outlined,
-      CardioKind.airBike => Icons.air,
-      CardioKind.skiErg => Icons.downhill_skiing,
-      CardioKind.arcTrainer => Icons.sports_gymnastics,
-      CardioKind.verticalClimber => Icons.north,
-      CardioKind.swimming => Icons.pool,
-      CardioKind.handCycle => Icons.back_hand_outlined,
-      CardioKind.hiit => Icons.local_fire_department,
-      CardioKind.boxing => Icons.sports_mma,
-      CardioKind.custom => Icons.fitness_center,
-    };
+IconData cardioKindIcon(CardioKind k) => cardioKindGlyph(k);
 
 /// Maps a custom activity's `iconKey` to an icon (unknown → generic).
-IconData cardioIconForKey(String key) => switch (key) {
-      'sports_mma' => Icons.sports_mma,
-      'sports_soccer' => Icons.sports_soccer,
-      'downhill_skiing' => Icons.downhill_skiing,
-      'landscape' => Icons.landscape,
-      'surfing' => Icons.surfing,
-      'rowing' => Icons.rowing,
-      'kayaking' => Icons.kayaking,
-      'local_fire_department' => Icons.local_fire_department,
-      _ => Icons.fitness_center,
-    };
+IconData cardioIconForKey(String key) => cardioCustomIcons[key] ?? Icons.fitness_center;
 
-String cardioKindBlurb(CardioKind k) => switch (k) {
+String cardioKindBlurb(CardioKind k) => cardioBlurb(k);
+
+String cardioBlurb(CardioKind k) => switch (k) {
       CardioKind.outdoorRun => 'Distance, duration & pace',
       CardioKind.outdoorWalk => 'Low-impact endurance & active recovery',
       CardioKind.treadmill => 'Speed & incline • indoor sessions',
@@ -65,6 +37,19 @@ String cardioKindBlurb(CardioKind k) => switch (k) {
       CardioKind.handCycle => 'Upper-body cycle • resistance & distance',
       CardioKind.hiit => 'Intervals & circuits • time & calories',
       CardioKind.boxing => 'Heavy bag & pads • time & calories',
+      CardioKind.indoorWalk => 'Walking pad or treadmill walk • speed & incline',
+      CardioKind.nordicWalk => 'Pole walking • distance, time & pace',
+      CardioKind.rucking => 'Weighted-pack walks • distance, time & pace',
+      CardioKind.recumbentBike => 'Seated bike • resistance & distance',
+      CardioKind.indoorTrainer => 'Smart trainer or Zwift • time, distance & resistance',
+      CardioKind.crossCountrySki => 'Nordic skiing • distance, time & pace',
+      CardioKind.openWaterSwim => 'Lake or sea swims • distance & pace per 100 m',
+      CardioKind.outdoorRowing => 'On the water • distance & pace per 500 m',
+      CardioKind.paddling => 'Kayak, canoe or SUP • distance & pace per 500 m',
+      CardioKind.danceCardio => 'Dance cardio & classes • time & calories',
+      CardioKind.skating => 'Inline, roller or ice • distance & speed',
+      CardioKind.climbing => 'Wall or boulder sessions • time & calories',
+      CardioKind.martialArts => 'Kickboxing, sparring & drills • time & calories',
       CardioKind.custom => 'Your own activity',
     };
 
@@ -83,7 +68,7 @@ String cardioFieldLabel(CardioField f) => switch (f) {
 String cardioMetricsLine(CardioKind k) => 'METRICS: ${k.fields.map(cardioFieldLabel).join(' • ')}';
 
 /// Coarse grouping used by the activity filter chips.
-enum CardioGroup { outdoor, gym, highIntensity, lowImpact }
+enum CardioGroup { outdoor, gym, highIntensity, lowImpact, classes }
 
 Set<CardioGroup> cardioGroups(CardioKind k) => switch (k) {
       CardioKind.outdoorRun => {CardioGroup.outdoor},
@@ -106,6 +91,19 @@ Set<CardioGroup> cardioGroups(CardioKind k) => switch (k) {
       CardioKind.handCycle => {CardioGroup.gym, CardioGroup.lowImpact},
       CardioKind.hiit => {CardioGroup.highIntensity},
       CardioKind.boxing => {CardioGroup.highIntensity},
+      CardioKind.indoorWalk => {CardioGroup.gym, CardioGroup.lowImpact},
+      CardioKind.nordicWalk => {CardioGroup.outdoor, CardioGroup.lowImpact},
+      CardioKind.rucking => {CardioGroup.outdoor},
+      CardioKind.recumbentBike => {CardioGroup.gym, CardioGroup.lowImpact},
+      CardioKind.indoorTrainer => {CardioGroup.gym},
+      CardioKind.crossCountrySki => {CardioGroup.outdoor, CardioGroup.highIntensity},
+      CardioKind.openWaterSwim => {CardioGroup.outdoor, CardioGroup.lowImpact},
+      CardioKind.outdoorRowing => {CardioGroup.outdoor},
+      CardioKind.paddling => {CardioGroup.outdoor, CardioGroup.lowImpact},
+      CardioKind.danceCardio => {CardioGroup.classes},
+      CardioKind.skating => {CardioGroup.outdoor},
+      CardioKind.climbing => {CardioGroup.classes, CardioGroup.highIntensity},
+      CardioKind.martialArts => {CardioGroup.classes, CardioGroup.highIntensity},
       CardioKind.custom => {},
     };
 

@@ -3,6 +3,7 @@ export 'enums.dart';
 export 'exercise.dart';
 export 'health.dart';
 export 'muscle.dart';
+export 'section_muscle.dart';
 export 'profile.dart';
 export 'records.dart';
 export 'sync_meta.dart';

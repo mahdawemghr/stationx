@@ -150,6 +150,7 @@ class GymTrackerImport {
       ),
     );
   }
+
   static const supportedVersion = 1;
   static const idPrefix = 'gt_s';
   static const customExercisePrefix = 'gt_x_';
@@ -213,9 +214,15 @@ class GymTrackerImport {
           String,
           Map
         >{}; // normalised name → exported exercise record (muscles etc.)
-    for (final e in (decoded['exercises'] is List ? decoded['exercises'] as List : const [])) {
+    for (final e
+        in (decoded['exercises'] is List
+            ? decoded['exercises'] as List
+            : const [])) {
       if (e is Map && e['name'] is String) {
-        gtExercises[normalizeExerciseName(clipText(e['name'] as String, maxNameLength))] = e;
+        gtExercises[normalizeExerciseName(
+              clipText(e['name'] as String, maxNameLength),
+            )] =
+            e;
       }
     }
     final created = <String, Exercise>{};
@@ -312,17 +319,27 @@ class GymTrackerImport {
       final notes = <String>[];
       final exs =
           [
-            for (final e in (raw['exercises'] is List ? raw['exercises'] as List : const []))
+            for (final e
+                in (raw['exercises'] is List
+                    ? raw['exercises'] as List
+                    : const []))
               if (e is Map) e,
-          ]..sort((a, b) => _order(a['orderIndex']).compareTo(_order(b['orderIndex'])));
+          ]..sort(
+            (a, b) =>
+                _order(a['orderIndex']).compareTo(_order(b['orderIndex'])),
+          );
       for (final e in exs) {
         if (logs.length >= maxExercisesPerSession) break;
         final sets = <SetLog>[];
         final rawSets =
             [
-              for (final s in (e['sets'] is List ? e['sets'] as List : const []))
+              for (final s
+                  in (e['sets'] is List ? e['sets'] as List : const []))
                 if (s is Map) s,
-            ]..sort((a, b) => _order(a['setNumber']).compareTo(_order(b['setNumber'])));
+            ]..sort(
+              (a, b) =>
+                  _order(a['setNumber']).compareTo(_order(b['setNumber'])),
+            );
         for (final s in rawSets) {
           if (sets.length >= maxSetsPerExercise) break;
           final kg = s['weightKg'];
@@ -363,12 +380,17 @@ class GymTrackerImport {
           : completed.difference(started).inSeconds;
       final day = raw['templateDay'] is int ? raw['templateDay'] as int : null;
       final templateName = raw['templateName'] is String
-          ? clipText((raw['templateName'] as String).trim(), maxNameLength).trim()
+          ? clipText(
+              (raw['templateName'] as String).trim(),
+              maxNameLength,
+            ).trim()
           : '';
       sessions.add(
         WorkoutSession(
           id: sessionId,
-          workoutId: workoutFor(day, templateName.isEmpty ? null : templateName) ?? 'w1',
+          workoutId:
+              workoutFor(day, templateName.isEmpty ? null : templateName) ??
+              'w1',
           name: templateName.isEmpty ? 'Workout' : templateName,
           workoutDate: started,
           durationSeconds: secs > 0 && secs <= 6 * 3600 ? secs : 0,
@@ -468,12 +490,19 @@ class GymTrackerImport {
     DateTime now,
   ) {
     List<String> labels(String field, int max) => [
-      for (final part in clipText(source?[field]?.toString() ?? '', max).split(','))
+      for (final part in clipText(
+        source?[field]?.toString() ?? '',
+        max,
+      ).split(','))
         if (part.trim().isNotEmpty) part.trim(),
     ].take(12).toList();
 
-    final primaryLabels = [for (final l in labels('primaryMuscles', 200)) ?_target(l)];
-    final secondaryLabels = [for (final l in labels('secondaryMuscles', 500)) ?_target(l)];
+    final primaryLabels = [
+      for (final l in labels('primaryMuscles', 200)) ?_target(l),
+    ];
+    final secondaryLabels = [
+      for (final l in labels('secondaryMuscles', 500)) ?_target(l),
+    ];
 
     var unknown = false;
     final _Pick first;
@@ -489,7 +518,10 @@ class GymTrackerImport {
         first = guess;
       } else {
         unknown = true;
-        first = const _Pick(MuscleRegion.core, null); // placeholder, flagged for review
+        first = const _Pick(
+          MuscleRegion.core,
+          null,
+        ); // placeholder, flagged for review
       }
       rest.addAll(secondaryLabels);
     }
@@ -497,7 +529,10 @@ class GymTrackerImport {
       MuscleTarget.primary(first.region, muscle: first.muscle),
     ];
     for (final r in rest) {
-      if (r.region == first.region && (r.muscle == null || r.muscle == first.muscle)) continue;
+      if (r.region == first.region &&
+          (r.muscle == null || r.muscle == first.muscle)) {
+        continue;
+      }
       targets.add(MuscleTarget.secondary(r.region, muscle: r.muscle));
     }
     final exercise = Exercise.custom(
@@ -515,82 +550,167 @@ class GymTrackerImport {
     final s = label.toLowerCase().replaceAll(RegExp(r'[^a-z ]'), ' ').trim();
     if (s.isEmpty) return null;
     bool has(String w) => s.contains(w);
-    if (has('rear delt') || has('posterior delt')) return const _Pick(MuscleRegion.shoulders, Muscle.rearDelts);
+    if (has('rear delt') || has('posterior delt')) {
+      return const _Pick(MuscleRegion.shoulders, Muscle.rearDelts);
+    }
     if (has('side delt') || has('lateral delt') || has('middle delt')) {
       return const _Pick(MuscleRegion.shoulders, Muscle.sideDelts);
     }
-    if (has('front delt') || has('anterior delt')) return const _Pick(MuscleRegion.shoulders, Muscle.frontDelts);
-    if (has('delt') || has('shoulder')) return const _Pick(MuscleRegion.shoulders, null);
-    if (has('upper chest')) return const _Pick(MuscleRegion.chest, Muscle.upperChest);
-    if (has('lower chest')) return const _Pick(MuscleRegion.chest, Muscle.lowerChest);
-    if (has('chest') || has('pec')) return const _Pick(MuscleRegion.chest, null);
+    if (has('front delt') || has('anterior delt')) {
+      return const _Pick(MuscleRegion.shoulders, Muscle.frontDelts);
+    }
+    if (has('delt') || has('shoulder')) {
+      return const _Pick(MuscleRegion.shoulders, null);
+    }
+    if (has('upper chest')) {
+      return const _Pick(MuscleRegion.chest, Muscle.upperChest);
+    }
+    if (has('lower chest')) {
+      return const _Pick(MuscleRegion.chest, Muscle.lowerChest);
+    }
+    if (has('chest') || has('pec')) {
+      return const _Pick(MuscleRegion.chest, null);
+    }
     if (has('tricep')) return const _Pick(MuscleRegion.triceps, null);
     if (has('bicep')) return const _Pick(MuscleRegion.biceps, null);
-    if (has('brachialis')) return const _Pick(MuscleRegion.biceps, Muscle.brachialis);
-    if (has('forearm') || has('grip')) return const _Pick(MuscleRegion.forearms, null);
-    if (has('lower back')) return const _Pick(MuscleRegion.back, Muscle.lowerBack);
-    if (has('upper back') || has('rhomboid')) return const _Pick(MuscleRegion.back, Muscle.upperBack);
+    if (has('brachialis')) {
+      return const _Pick(MuscleRegion.biceps, Muscle.brachialis);
+    }
+    if (has('forearm') || has('grip')) {
+      return const _Pick(MuscleRegion.forearms, null);
+    }
+    if (has('lower back')) {
+      return const _Pick(MuscleRegion.back, Muscle.lowerBack);
+    }
+    if (has('upper back') || has('rhomboid')) {
+      return const _Pick(MuscleRegion.back, Muscle.upperBack);
+    }
     if (has('trap')) return const _Pick(MuscleRegion.back, Muscle.traps);
-    if (RegExp(r'\blats?\b|latissimus').hasMatch(s)) return const _Pick(MuscleRegion.back, Muscle.lats);
+    if (RegExp(r'\blats?\b|latissimus').hasMatch(s)) {
+      return const _Pick(MuscleRegion.back, Muscle.lats);
+    }
     if (has('back')) return const _Pick(MuscleRegion.back, null);
     if (has('quad')) return const _Pick(MuscleRegion.quadriceps, null);
     if (has('hamstring')) return const _Pick(MuscleRegion.hamstrings, null);
-    if (has('glute') || has('abductor') || has('hip')) return const _Pick(MuscleRegion.glutes, null);
+    if (has('glute') || has('abductor') || has('hip')) {
+      return const _Pick(MuscleRegion.glutes, null);
+    }
     if (has('calf') || has('calves') || has('soleus') || has('gastroc')) {
       return const _Pick(MuscleRegion.calves, null);
     }
     if (has('oblique')) return const _Pick(MuscleRegion.core, Muscle.obliques);
-    if (has('abs') || has('abdominal') || has('core')) return const _Pick(MuscleRegion.core, null);
+    if (has('abs') || has('abdominal') || has('core')) {
+      return const _Pick(MuscleRegion.core, null);
+    }
     return null; // "Legs", "Full body", "Cardio", … are too vague to place
   }
 
   /// Conservative guess from the exercise NAME when the file gives no usable muscle label. Whole region only.
   static _Pick? _fromName(String name) {
-    final s = ' ${name.toLowerCase().replaceAll(RegExp(r'[^a-z]+'), ' ').trim()} ';
+    final s =
+        ' ${name.toLowerCase().replaceAll(RegExp(r'[^a-z]+'), ' ').trim()} ';
     bool has(String w) => s.contains(w);
     _Pick r(MuscleRegion x) => _Pick(x, null);
-    if (has('leg curl') || has('hamstring') || has('romanian') || has(' rdl ') || has('good morning') || has('nordic')) {
+    if (has('leg curl') ||
+        has('hamstring') ||
+        has('romanian') ||
+        has(' rdl ') ||
+        has('good morning') ||
+        has('nordic')) {
       return r(MuscleRegion.hamstrings);
     }
-    if (has('hip thrust') || has('glute') || has('bridge') || has('kickback') || has('abduction') || has('abductor')) {
+    if (has('hip thrust') ||
+        has('glute') ||
+        has('bridge') ||
+        has('kickback') ||
+        has('abduction') ||
+        has('abductor')) {
       return r(MuscleRegion.glutes);
     }
     if (has('calf') || has('calves')) return r(MuscleRegion.calves);
     if (has('wrist curl') || has('forearm')) return r(MuscleRegion.forearms);
-    if (has('tricep') || has('pushdown') || has('push down') || has('skull') || has('kickback')) {
+    if (has('tricep') ||
+        has('pushdown') ||
+        has('push down') ||
+        has('skull') ||
+        has('kickback')) {
       return r(MuscleRegion.triceps);
     }
-    if (has('face pull') || has('rear delt') || has('reverse fly') || has('reverse pec') ||
-        has('lateral raise') || has('front raise') || has('shoulder') || has('overhead press') ||
-        has('military') || has('arnold') || has('upright row')) {
+    if (has('face pull') ||
+        has('rear delt') ||
+        has('reverse fly') ||
+        has('reverse pec') ||
+        has('lateral raise') ||
+        has('front raise') ||
+        has('shoulder') ||
+        has('overhead press') ||
+        has('military') ||
+        has('arnold') ||
+        has('upright row')) {
       return r(MuscleRegion.shoulders);
     }
-    if (has('leg extension') || has('leg press') || has('squat') || has('lunge') || has('quad') || has('step up')) {
+    if (has('leg extension') ||
+        has('leg press') ||
+        has('squat') ||
+        has('lunge') ||
+        has('quad') ||
+        has('step up')) {
       return r(MuscleRegion.quadriceps);
     }
     if (has('curl')) return r(MuscleRegion.biceps);
     if (has('shrug')) return const _Pick(MuscleRegion.back, Muscle.traps);
-    if (has('row') || has('pulldown') || has('pull down') || has('pull up') || has('pullup') ||
-        has('chin up') || has('chinup') || has('deadlift') || has('back extension') || has('pullover')) {
+    if (has('row') ||
+        has('pulldown') ||
+        has('pull down') ||
+        has('pull up') ||
+        has('pullup') ||
+        has('chin up') ||
+        has('chinup') ||
+        has('deadlift') ||
+        has('back extension') ||
+        has('pullover')) {
       return r(MuscleRegion.back);
     }
-    if (has('bench') || has('chest') || has('push up') || has('pushup') || has(' fly ') || has(' flye ') ||
-        has('pec deck') || has('crossover')) {
+    if (has('bench') ||
+        has('chest') ||
+        has('push up') ||
+        has('pushup') ||
+        has(' fly ') ||
+        has(' flye ') ||
+        has('pec deck') ||
+        has('crossover')) {
       return r(MuscleRegion.chest);
     }
-    if (has('crunch') || has('plank') || has('sit up') || has('situp') || has(' abs ') || has('leg raise') || has('woodchop')) {
+    if (has('crunch') ||
+        has('plank') ||
+        has('sit up') ||
+        has('situp') ||
+        has(' abs ') ||
+        has('leg raise') ||
+        has('woodchop')) {
       return r(MuscleRegion.core);
     }
     return null;
   }
 
+  /// Equipment guessed from an imported exercise name (exposed for tests).
+  static Equipment equipmentForName(String name) => _equipment(name);
+
   static Equipment _equipment(String name) {
     final s = name.toLowerCase();
+    // Specific implements first: "Smith Machine Squat" must not fall into the generic machine rule.
+    if (s.contains('kettlebell') || RegExp(r'\bkb\b').hasMatch(s)) {
+      return Equipment.kettlebell;
+    }
+    if (s.contains('smith')) return Equipment.smithMachine;
+    if (RegExp(r'\b(band|bands|banded)\b').hasMatch(s) ||
+        s.contains('resistance band')) {
+      return Equipment.band;
+    }
     if (s.contains('machine') ||
         s.contains('leg press') ||
         s.contains('leg extension') ||
-        s.contains('leg curl') ||
-        s.contains('smith')) {
+        s.contains('leg curl')) {
       return Equipment.machine;
     }
     if (s.contains('cable') ||

@@ -7,20 +7,24 @@ import '../../core/theme/sx_typography.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/widgets/widgets.dart';
 import '../../domain/domain.dart';
+import 'cardio_activity_templates.dart';
 import 'cardio_manage_helpers.dart';
 
 /// Define a custom cardio activity: name, category, glyph, tracked metrics and
 /// an optional round/rest template. Only fields the session model supports are
 /// offered; the interval template is stored on the activity only.
 class CreateCustomCardioActivityPage extends StatefulWidget {
-  const CreateCustomCardioActivityPage({super.key});
+  const CreateCustomCardioActivityPage({super.key, this.initialName});
+
+  /// Prefills the name (e.g. from a no-result search in the activity picker).
+  final String? initialName;
 
   @override
   State<CreateCustomCardioActivityPage> createState() => _CreateCustomCardioActivityPageState();
 }
 
 class _CreateCustomCardioActivityPageState extends State<CreateCustomCardioActivityPage> {
-  static const _categories = ['Combat Sport', 'Functional HIIT', 'Field Sports', 'Water / Paddle'];
+  static const _categories = ['Combat Sport', 'Functional HIIT', 'Field Sports', 'Racket Sports', 'Water / Paddle', 'Mind & Body'];
   static const _optional = <(CardioField, String, String, IconData)>[
     (CardioField.heartRate, 'Heart rate', 'Log an average heart rate you read from a device', Icons.favorite_border),
     (CardioField.calories, 'Calories', 'Log estimated energy burn', Icons.local_fire_department_outlined),
@@ -29,7 +33,7 @@ class _CreateCustomCardioActivityPageState extends State<CreateCustomCardioActiv
     (CardioField.rpe, 'Perceived effort (RPE)', 'Log a 1–10 effort rating', Icons.speed),
   ];
 
-  final _name = TextEditingController();
+  late final _name = TextEditingController(text: widget.initialName?.trim() ?? '');
   String _category = _categories.first;
   String _icon = cardioCustomIcons.keys.first;
   final Set<CardioField> _fields = {CardioField.duration};
@@ -50,6 +54,22 @@ class _CreateCustomCardioActivityPageState extends State<CreateCustomCardioActiv
     final dup = context.app.cardio.customActivities.any((a) => a.name.toLowerCase() == n.toLowerCase());
     return dup ? 'Name already used' : null;
   }
+
+  void _applyTemplate(CardioActivityTemplate t) => setState(() {
+        _name.text = t.name;
+        _category = t.category;
+        _icon = cardioCustomIcons.containsKey(t.iconKey) ? t.iconKey : cardioCustomIcons.keys.first;
+        _fields
+          ..clear()
+          ..add(CardioField.duration)
+          ..addAll(t.fields);
+        _intervals = t.hasIntervals;
+        if (t.hasIntervals) {
+          _round = t.roundSeconds!;
+          _rest = t.restSeconds!;
+          _rounds = t.rounds!;
+        }
+      });
 
   int get _workingSeconds => _rounds * _round + (_rounds > 0 ? (_rounds - 1) * _rest : 0);
 
@@ -95,6 +115,27 @@ class _CreateCustomCardioActivityPageState extends State<CreateCustomCardioActiv
         CardioFormLike(
           title: '01 / Activity identity',
           children: [
+            Text('SUGGESTIONS', style: SxText.labelCaps.copyWith(color: c.textBody)),
+            const SizedBox(height: 2),
+            SizedBox(
+              key: const Key('template-suggestions'),
+              height: 48,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: cardioActivityTemplates.length,
+                separatorBuilder: (_, _) => const SizedBox(width: 8),
+                itemBuilder: (_, i) {
+                  final t = cardioActivityTemplates[i];
+                  return SxChip(
+                    label: t.name,
+                    icon: customActivityIcon(t.iconKey),
+                    selected: _name.text.trim().toLowerCase() == t.name.toLowerCase(),
+                    onTap: () => _applyTemplate(t),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: SxSpace.sm),
             SxTextField(label: 'Activity name', controller: _name, hint: 'e.g. Heavy bag rounds', icon: Icons.edit_outlined, errorText: _nameError, onChanged: (_) => setState(() {})),
             const SizedBox(height: SxSpace.md),
             Text('DISCIPLINE CATEGORY', style: SxText.labelCaps.copyWith(color: c.textBody)),

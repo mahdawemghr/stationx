@@ -1,0 +1,81 @@
+import '../split_section_def.dart';
+
+// Curated sub-sections: shoulders (muscle: shoulders). Display order = list order (compounds first). Section keys are stable ids; do not
+// rename them. Sections that share a `family` are one sub-area split to stay <= 13 exercises each.
+const List<SectionDef> sectionsShoulders = [
+  SectionDef(
+    'front',
+    'Front delts · Overhead presses',
+    'Barbell, dumbbell and machine overhead presses.',
+    [
+      'overhead_press',
+      'push_press',
+      'seated_barbell_press',
+      'z_press',
+      'db_shoulder_press',
+      'neutral_grip_db_press',
+      'arnold_press',
+      'machine_shoulder_press',
+      'plate_loaded_shoulder_press',
+      'smith_shoulder_press',
+      'landmine_press',
+    ],
+  ),
+  SectionDef(
+    'front_alt',
+    'Front delts · Cable, band & bodyweight presses',
+    'Cable, kettlebell, band and bodyweight overhead pressing.',
+    [
+      'cable_shoulder_press',
+      'kb_press',
+      'band_shoulder_press',
+      'pike_pushup',
+      'handstand_pushup',
+    ],
+    family: 'front',
+  ),
+  SectionDef(
+    'front_raise',
+    'Front delts · Front raises',
+    'Front raises to isolate the front delts.',
+    [
+      'front_raise',
+      'plate_front_raise',
+      'cable_front_raise',
+      'barbell_front_raise',
+    ],
+    family: 'front',
+  ),
+  SectionDef('side', 'Side delts', 'Lateral raises for shoulder width.', [
+    'lateral_raise',
+    'cable_lateral_raise',
+    'leaning_cable_lateral_raise',
+    'seated_lateral_raise',
+    'machine_lateral_raise',
+    'upright_row',
+    'leaning_db_lateral_raise',
+    'behind_back_cable_lateral_raise',
+    'band_lateral_raise',
+    'side_lying_lateral_raise',
+    'smith_upright_row',
+  ]),
+  SectionDef(
+    'rear',
+    'Rear delts',
+    'Rear-delt work for posture and balanced shoulders.',
+    [
+      'face_pull',
+      'rear_delt_fly',
+      'cable_rear_delt_fly',
+      'chest_supported_rear_delt_raise',
+      'reverse_pec_deck',
+      'rear_delt_row',
+      'band_pull_apart',
+      'cable_y_raise',
+      'cable_rear_delt_row',
+      'prone_t_raise',
+      'band_reverse_fly',
+      'band_face_pull',
+    ],
+  ),
+];

@@ -186,29 +186,34 @@ abstract final class PrService {
         if (km > 0 && (longestK == null || km > longestK.distanceKm!)) {
           longestK = s;
         }
-        if (km >= minPaceKm &&
+        if (kind.hasPacePr &&
+            km >= minPaceKm &&
             s.durationSeconds > 0 &&
             (fastest == null || s.paceSecPerKm! < fastest.paceSecPerKm!)) {
           fastest = s;
         }
       }
       if (longestK != null) {
-        out.add(CardioPr(
-          type: CardioPrType.longestDistance,
-          sessionId: longestK.id,
-          value: longestK.distanceKm!,
-          date: longestK.workoutDate,
-          kindLabel: kind.label,
-        ));
+        out.add(
+          CardioPr(
+            type: CardioPrType.longestDistance,
+            sessionId: longestK.id,
+            value: longestK.distanceKm!,
+            date: longestK.workoutDate,
+            kindLabel: kind.label,
+          ),
+        );
       }
       if (fastest != null) {
-        out.add(CardioPr(
-          type: CardioPrType.fastestPace,
-          sessionId: fastest.id,
-          value: fastest.paceSecPerKm!,
-          date: fastest.workoutDate,
-          kindLabel: kind.label,
-        ));
+        out.add(
+          CardioPr(
+            type: CardioPrType.fastestPace,
+            sessionId: fastest.id,
+            value: fastest.paceSecPerKm!,
+            date: fastest.workoutDate,
+            kindLabel: kind.label,
+          ),
+        );
       }
     }
     return out;

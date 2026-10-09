@@ -32,8 +32,15 @@ class Exercise {
     SyncMeta? meta,
   }) {
     final t = MuscleTargetCodec.normalize(targets);
-    if (t == null) throw ArgumentError('A custom exercise needs at least one primary muscle target');
-    final primary = t.firstWhere((x) => x.role == TargetRole.primary).region.legacy;
+    if (t == null) {
+      throw ArgumentError(
+        'A custom exercise needs at least one primary muscle target',
+      );
+    }
+    final primary = t
+        .firstWhere((x) => x.role == TargetRole.primary)
+        .region
+        .legacy;
     final secondary = <MuscleGroup>[];
     for (final x in t) {
       final g = x.region.legacy;

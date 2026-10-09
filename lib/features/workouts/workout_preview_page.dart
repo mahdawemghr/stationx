@@ -170,7 +170,7 @@ class _Preview extends StatelessWidget {
             )
           else
             _SectionedSequence(
-              sections: WorkoutSections.group(workout.exercises, exercises.all),
+              sections: WorkoutSections.group(WorkoutSections.arrange(workout.exercises, exercises.all), exercises.all),
               exercises: exercises,
               unit: unit,
               lastSet: (id) => _lastSet(sessions, id),
@@ -200,54 +200,53 @@ class _SectionedSequence extends StatefulWidget {
 }
 
 class _SectionedSequenceState extends State<_SectionedSequence> {
-  final _collapsed = <String>{};
+  final _collapsed = <SectionMuscle>{};
 
   @override
   Widget build(BuildContext context) {
-    final seen = <String, int>{};
+    final multi = WorkoutSections.showSectionHeaders(widget.sections);
     var n = 0;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         for (final s in widget.sections)
           Builder(builder: (context) {
-            final ord = seen.update(s.label, (v) => v + 1, ifAbsent: () => 0);
-            final key = '${s.label}#$ord';
-            final collapsed = _collapsed.contains(key);
-            final first = n;
+            final collapsed = multi && _collapsed.contains(s.muscle);
+            var pos = n;
             n += s.items.length;
             return Column(
-              key: ValueKey('section_$key'),
+              key: ValueKey('section_${s.muscle.name}'),
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                WorkoutSectionHeader(
-                  section: s,
-                  collapsed: collapsed,
-                  onToggle: () => setState(() => collapsed ? _collapsed.remove(key) : _collapsed.add(key)),
-                ),
-                AnimatedSize(
-                  duration: SxMotion.of(context, SxMotion.short),
-                  curve: SxMotion.enter,
-                  alignment: Alignment.topCenter,
+                if (multi)
+                  WorkoutSectionHeader(
+                    section: s,
+                    collapsed: collapsed,
+                    onToggle: () => setState(() => collapsed ? _collapsed.remove(s.muscle) : _collapsed.add(s.muscle)),
+                  ),
+                _MaybeAnimatedSize(
                   child: collapsed
                       ? const SizedBox(width: double.infinity)
                       : Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            for (var j = 0; j < s.items.length; j++)
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: SxSpace.sm),
-                                child: SxStagger(
-                                  index: first + j,
-                                  child: _SequenceRow(
-                                    index: s.startIndex + j,
-                                    re: s.items[j],
-                                    exercise: widget.exercises.byId(s.items[j].exerciseId),
-                                    lastSet: widget.lastSet(s.items[j].exerciseId),
-                                    unit: widget.unit,
+                            for (final g in s.groups) ...[
+                              if (WorkoutSubHeader.visible(s, g, multiSection: multi)) WorkoutSubHeader(label: g.label!),
+                              for (final re in g.items)
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: SxSpace.sm),
+                                  child: SxStagger(
+                                    index: pos,
+                                    child: _SequenceRow(
+                                      index: pos++,
+                                      re: re,
+                                      exercise: widget.exercises.byId(re.exerciseId),
+                                      lastSet: widget.lastSet(re.exerciseId),
+                                      unit: widget.unit,
+                                    ),
                                   ),
                                 ),
-                              ),
+                            ],
                           ],
                         ),
                 ),
@@ -257,6 +256,19 @@ class _SectionedSequenceState extends State<_SectionedSequence> {
           }),
       ],
     );
+  }
+}
+
+/// AnimatedSize that is a plain pass-through under reduced motion (a zero-duration AnimatedSize can
+/// re-dirty its own layout).
+class _MaybeAnimatedSize extends StatelessWidget {
+  const _MaybeAnimatedSize({required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    if (SxMotion.reduced(context)) return child;
+    return AnimatedSize(duration: SxMotion.of(context, SxMotion.short), curve: SxMotion.enter, alignment: Alignment.topCenter, child: child);
   }
 }
 

@@ -378,14 +378,20 @@ class _ActiveWorkoutPageState extends State<ActiveWorkoutPage> with WidgetsBindi
                 for (final section in ctl.sections) ...[
                   // One muscle in the whole workout: a header would only repeat the title.
                   if (ctl.sections.length > 1 && section.label.isNotEmpty) MuscleSectionHeader(section: section),
-                  for (var k = 0; k < section.drafts.length; k++)
-                    ExerciseBlock(
-                      key: ObjectKey(section.drafts[k]),
-                      controller: ctl,
-                      draft: section.drafts[k],
-                      index: section.startIndex + k,
-                      unit: unit,
-                    ),
+                  for (final g in section.groups.isEmpty
+                      ? [DraftGroup(label: null, drafts: section.drafts, startIndex: section.startIndex)]
+                      : section.groups) ...[
+                    // Main exercises have no sub-header; a sub-area gets one compact caption line.
+                    if (g.label != null && (section.groups.length > 1 || ctl.sections.length > 1)) _SubAreaCaption(label: g.label!, drafts: g.drafts),
+                    for (var k = 0; k < g.drafts.length; k++)
+                      ExerciseBlock(
+                        key: ObjectKey(g.drafts[k]),
+                        controller: ctl,
+                        draft: g.drafts[k],
+                        index: g.startIndex + k,
+                        unit: unit,
+                      ),
+                  ],
                 ],
               if (!mixed) _UpNext(controller: ctl),
               if (mixed) _CardioHeader(draft: ctl.cardio!),
@@ -403,6 +409,39 @@ class _ActiveWorkoutPageState extends State<ActiveWorkoutPage> with WidgetsBindi
           );
         },
       ),
+    );
+  }
+}
+
+/// Compact one-line sub-area caption ("Upper chest") above the first exercise of a non-main group.
+/// Dims when every exercise of the group is done.
+class _SubAreaCaption extends StatelessWidget {
+  const _SubAreaCaption({required this.label, required this.drafts});
+  final String label;
+  final List<ExerciseDraft> drafts;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.sx;
+    return ListenableBuilder(
+      listenable: Listenable.merge(drafts),
+      builder: (context, _) {
+        final done = drafts.isNotEmpty && drafts.every((d) => d.complete);
+        return Semantics(
+          header: true,
+          label: label,
+          excludeSemantics: true,
+          child: Padding(
+            padding: const EdgeInsets.only(left: 4),
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: SxText.labelXs.copyWith(color: done ? c.textMuted : c.textBody),
+            ),
+          ),
+        );
+      },
     );
   }
 }

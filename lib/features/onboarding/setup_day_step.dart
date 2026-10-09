@@ -28,31 +28,35 @@ class SetupDayStep extends StatelessWidget {
 
   int _indexOf(String id) => day.exercises.indexWhere((e) => e.exerciseId == id);
 
+  RoutineExercise _fresh(String id) =>
+      RoutineExercise(exerciseId: id, sets: profile.defaultSets, repMin: profile.defaultRepMin, repMax: profile.defaultRepMax);
+
+  /// Inserts at the canonical spot (end of its sub-area), then re-arranges in the day's muscle order, so
+  /// the list is always what [ScheduleBuilder.save] will write.
+  List<RoutineExercise> _with(List<RoutineExercise> list, RoutineExercise re, [List<SectionMuscle>? order]) {
+    final out = [...list]..insert(WorkoutSections.insertionIndex(list, re, all), re);
+    return WorkoutSections.arrange(out, all, muscleOrder: order ?? day.sectionMuscles);
+  }
+
   void _toggle(Exercise e) {
     final i = _indexOf(e.id);
-    final list = [...day.exercises];
     if (i >= 0) {
-      list.removeAt(i);
+      onChanged(day.copyWith(exercises: [...day.exercises]..removeAt(i)));
     } else {
-      list.add(RoutineExercise(exerciseId: e.id, sets: profile.defaultSets, repMin: profile.defaultRepMin, repMax: profile.defaultRepMax));
+      onChanged(day.copyWith(exercises: _with(day.exercises, _fresh(e.id))));
     }
-    onChanged(day.copyWith(exercises: list));
   }
 
   void _update(String id, RoutineExercise Function(RoutineExercise) f) {
     onChanged(day.copyWith(exercises: [for (final e in day.exercises) e.exerciseId == id ? f(e) : e]));
   }
 
-  Future<void> _add(BuildContext context, MuscleGroup m) async {
-    final ex = await showCreateExerciseSheet(context, initialMuscle: m);
+  Future<void> _add(BuildContext context, SectionMuscle m) async {
+    final ex = await showCreateExerciseSheet(context, initialMuscle: m.legacy, initialRegion: m.regions.first);
     if (ex == null) return;
-    onChanged(day.copyWith(
-      muscles: day.muscles.contains(ex.primaryMuscle) ? null : [...day.muscles, ex.primaryMuscle],
-      exercises: [
-        ...day.exercises,
-        RoutineExercise(exerciseId: ex.id, sets: profile.defaultSets, repMin: profile.defaultRepMin, repMax: profile.defaultRepMax),
-      ],
-    ));
+    final sm = sectionOf(ex);
+    final muscles = day.sectionMuscles.contains(sm) ? day.sectionMuscles : [...day.sectionMuscles, sm];
+    onChanged(day.copyWith(sectionMuscles: muscles, exercises: _with(day.exercises, _fresh(ex.id), muscles)));
   }
 
   @override
@@ -71,17 +75,21 @@ class SetupDayStep extends StatelessWidget {
     if (hint != null) {
       children.add(Semantics(liveRegion: false, label: 'Coverage of this day. $hint', excludeSemantics: true, child: Text(hint, style: SxText.bodySm.copyWith(color: c.textMuted))));
     }
-    if (day.muscles.isEmpty) {
+    if (day.sectionMuscles.isEmpty) {
       children.add(Text('No muscles on this day. Go back to choose some.', style: SxText.bodyMd.copyWith(color: c.textBody)));
     }
-    for (final m in day.muscles) {
-      children.add(Semantics(header: true, child: Text(m.label, style: SxText.headlineMd.copyWith(color: c.textHigh))));
-      final groups = catalog.grouped(m, all);
+    final muscles = day.sectionMuscles;
+    final showHeaders = muscles.length >= 2;
+    for (final m in muscles) {
+      if (showHeaders) {
+        children.add(Semantics(header: true, child: Text(m.label, style: SxText.headlineMd.copyWith(color: c.textHigh))));
+      }
+      final groups = catalog.groupedSection(m, all);
       if (groups.isEmpty) {
         children.add(Text('No exercises listed yet. Add your own.', style: SxText.bodySm.copyWith(color: c.textMuted)));
       }
       for (final g in groups) {
-        children.add(SetupSubHeader(g.section.label, hint: g.section.hint));
+        if (g.label != null) children.add(SetupSubHeader(g.label!, hint: g.hint));
         for (final e in g.exercises) {
           shown.add(e.id);
           children.add(_tile(context, e));

@@ -14,11 +14,13 @@ import '../../domain/domain.dart';
 Future<Exercise?> showCreateExerciseSheet(
   BuildContext context, {
   MuscleGroup initialMuscle = MuscleGroup.chest,
+  MuscleRegion? initialRegion,
+  String initialName = '',
 }) {
   final repo = context.app.exercises;
   return showSxSheet<Exercise>(
     context,
-    builder: (_) => _CreateBody(repo: repo, initialMuscle: initialMuscle),
+    builder: (_) => _CreateBody(repo: repo, initialMuscle: initialMuscle, initialRegion: initialRegion, initialName: initialName),
   );
 }
 
@@ -26,9 +28,15 @@ class _CreateBody extends StatefulWidget {
   const _CreateBody({
     required this.repo,
     this.initialMuscle = MuscleGroup.chest,
+    this.initialRegion,
+    this.initialName = '',
   });
   final ExerciseRepository repo;
   final MuscleGroup initialMuscle;
+
+  /// Precise starting region (wins over [initialMuscle]); lets "Add forearms exercise" open on Forearms.
+  final MuscleRegion? initialRegion;
+  final String initialName;
 
   @override
   State<_CreateBody> createState() => _CreateBodyState();
@@ -56,9 +64,9 @@ class _TargetRow {
 }
 
 class _CreateBodyState extends State<_CreateBody> {
-  final _name = TextEditingController();
+  late final _name = TextEditingController(text: widget.initialName);
   late final List<_TargetRow> _rows = [
-    _TargetRow(_regionFor(widget.initialMuscle)),
+    _TargetRow(widget.initialRegion ?? _regionFor(widget.initialMuscle)),
   ];
   Equipment _equipment = Equipment.dumbbell;
   String? _error;

@@ -32,7 +32,9 @@ abstract final class ProgressionService {
     Exercise? exercise,
   }) {
     if (exercise != null && !isLoadTracked(exercise)) return null;
-    final done = lastSets.where((s) => s.done && s.reps > 0 && s.weightKg > 0).toList();
+    final done = lastSets
+        .where((s) => s.done && s.reps > 0 && s.weightKg > 0)
+        .toList();
     if (done.length < minDoneSets || priorSessions < minSessions) return null;
 
     final w = _workingWeight(done, repMin);
@@ -42,8 +44,10 @@ abstract final class ProgressionService {
     final wDisp = _fmt(_toDisplay(w, unit));
 
     final last = lastSessionDate;
-    if (last != null && (now ?? DateTime.now()).difference(last).inDays > staleAfterDays) {
-      final weeks = ((now ?? DateTime.now()).difference(last).inDays / 7).round();
+    if (last != null &&
+        (now ?? DateTime.now()).difference(last).inDays > staleAfterDays) {
+      final weeks = ((now ?? DateTime.now()).difference(last).inDays / 7)
+          .round();
       return ProgressionRecommendation(
         weightKg: w,
         repMin: repMin,
@@ -93,13 +97,16 @@ abstract final class ProgressionService {
 
   /// False for bodyweight, isometric and timed work: a kg/lb number is meaningless there.
   static bool isLoadTracked(Exercise e) {
-    if (e.equipment == Equipment.bodyweight) return false;
+    if (e.equipment.isUnloaded) return false;
     return !_timed.hasMatch('${e.name} ${e.movementPattern}'.toLowerCase());
   }
 
-  static final _timed = RegExp(r'plank|isometric|\bhold\b|wall sit|dead hang|l-sit|\bhang\b|carry');
-  static final _smallIsolation =
-      RegExp(r'lateral raise|front raise|rear delt|reverse fly|reverse flye|\bfly\b|\bflye\b|curl|kickback|face pull|pushdown|triceps extension|wrist');
+  static final _timed = RegExp(
+    r'plank|isometric|\bhold\b|wall sit|dead hang|l-sit|\bhang\b|carry',
+  );
+  static final _smallIsolation = RegExp(
+    r'lateral raise|front raise|rear delt|reverse fly|reverse flye|\bfly\b|\bflye\b|curl|kickback|face pull|pushdown|triceps extension|wrist',
+  );
 
   /// Smallest sensible jump in DISPLAY units. kg: 5 for barbell compounds, 2.5 for
   /// machines/cables/dumbbell compounds, 1 for small dumbbell isolation, 2.5 for other
@@ -110,11 +117,14 @@ abstract final class ProgressionService {
       return small ? 2.5 : 5;
     }
     if (small) return e.equipment == Equipment.dumbbell ? 1 : 2.5;
+    if (e.equipment == Equipment.kettlebell) return 2; // KBs come in 2 kg steps
     return e.equipment == Equipment.barbell ? 5 : 2.5;
   }
 
-  static double _toDisplay(double kg, WeightUnit u) => u == WeightUnit.kg ? kg : kg * _lbPerKg;
-  static double _fromDisplay(double v, WeightUnit u) => u == WeightUnit.kg ? v : v / _lbPerKg;
+  static double _toDisplay(double kg, WeightUnit u) =>
+      u == WeightUnit.kg ? kg : kg * _lbPerKg;
+  static double _fromDisplay(double v, WeightUnit u) =>
+      u == WeightUnit.kg ? v : v / _lbPerKg;
   static double _round(double v) => (v * 2).round() / 2;
 
   static String _fmt(double v) {

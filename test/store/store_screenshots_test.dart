@@ -6,6 +6,7 @@ import 'package:stationx/features/active_workout/active_workout_page.dart';
 import 'package:stationx/features/exercises/exercise_details_page.dart';
 import 'package:stationx/features/history/calendar_page.dart';
 import 'package:stationx/features/shell/main_shell.dart';
+import 'package:stationx/features/workouts/workout_preview_page.dart';
 import '../helpers/pump.dart';
 
 /// Regenerates the Play Store phone screenshots (1080×2160, 2:1 — Play rejects anything taller than 2:1; see the env overrides below for other ratios) into
@@ -32,5 +33,6 @@ void main() {
   testWidgets('03 active workout', (t) => capture(t, const ActiveWorkoutPage(workoutId: 'w2'), '03_active_workout'), skip: !enabled);
   testWidgets('04 exercise', (t) => capture(t, const ExerciseDetailsPage(exerciseId: 'lat_pulldown'), '04_exercise_details'), skip: !enabled);
   testWidgets('05 progress', (t) => capture(t, const MainShell(initialIndex: 2), '05_progress'), skip: !enabled);
+  testWidgets('07 workout sections', (t) => capture(t, const WorkoutPreviewPage(workoutId: 'w3'), '07_workout_sections'), skip: !enabled);
   testWidgets('06 calendar', (t) => capture(t, const CalendarPage(), '06_calendar'), skip: !enabled);
 }

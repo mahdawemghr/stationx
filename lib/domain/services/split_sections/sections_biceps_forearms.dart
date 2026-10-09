@@ -1,0 +1,108 @@
+import '../split_section_def.dart';
+
+// Curated sub-sections: biceps_forearms (muscle: biceps). Display order = list order (compounds first). Section keys are stable ids; do not
+// rename them. Sections that share a `family` are one sub-area split to stay <= 13 exercises each.
+const List<SectionDef> sectionsBicepsForearms = [
+  SectionDef(
+    'mass',
+    'Mass builders · Barbell & EZ-bar',
+    'Heavy barbell and EZ-bar curls for overall biceps size.',
+    [
+      'barbell_curl',
+      'ez_bar_curl',
+      'close_grip_ez_curl',
+      'wide_grip_barbell_curl',
+      'drag_curl',
+    ],
+  ),
+  SectionDef(
+    'mass_db',
+    'Mass builders · Dumbbell, cable & machine',
+    'Dumbbell, cable, kettlebell, band and machine curls.',
+    [
+      'db_curl',
+      'cable_curl',
+      'kb_curl',
+      'band_curl',
+      'machine_biceps_curl',
+      'high_cable_curl',
+      'lying_cable_curl',
+      'inverted_biceps_curl',
+      'incline_db_curl',
+      'bayesian_curl',
+    ],
+    family: 'mass',
+  ),
+  SectionDef(
+    'peak',
+    'Peak (short head)',
+    'Arms in front of the body to hit the short head.',
+    [
+      'preacher_curl',
+      'ez_preacher_curl',
+      'db_preacher_curl',
+      'cable_preacher_curl',
+      'concentration_curl',
+      'spider_curl',
+    ],
+  ),
+  SectionDef(
+    'brachialis',
+    'Brachialis & forearm',
+    'Neutral grips for arm thickness.',
+    [
+      'hammer_curl',
+      'rope_hammer_curl',
+      'cross_body_hammer_curl',
+      'incline_hammer_curl',
+      'kb_hammer_curl',
+      'zottman_curl',
+    ],
+  ),
+  SectionDef(
+    'forearms',
+    'Forearms · Carries & hangs',
+    'Carries, hangs and grip work for forearm size and grip.',
+    [
+      'farmers_carry',
+      'kb_farmers_carry',
+      'trap_bar_carry',
+      'kb_bottoms_up_carry',
+      'dead_hang',
+      'towel_dead_hang',
+      'plate_pinch',
+      'hand_gripper',
+    ],
+  ),
+  SectionDef(
+    'forearms_wrist',
+    'Forearms · Wrist & grip curls',
+    'Wrist flexion and extension, rollers and grip curls.',
+    [
+      'wrist_curl',
+      'db_wrist_curl',
+      'behind_back_wrist_curl',
+      'cable_wrist_curl',
+      'wrist_curl_machine',
+      'band_wrist_curl',
+      'reverse_wrist_curl',
+      'db_reverse_wrist_curl',
+      'cable_reverse_wrist_curl',
+      'band_reverse_wrist_curl',
+      'wrist_roller',
+    ],
+    family: 'forearms',
+  ),
+  SectionDef(
+    'forearms_reverse',
+    'Forearms · Reverse curls & rotators',
+    'Reverse curls and pronation/supination work.',
+    [
+      'reverse_curl',
+      'db_reverse_curl',
+      'cable_reverse_curl',
+      'db_pronation_supination',
+    ],
+    family: 'forearms',
+  ),
+];

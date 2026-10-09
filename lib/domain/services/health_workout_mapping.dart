@@ -11,10 +11,13 @@ abstract final class WorkoutMapping {
   /// generic workout ([HealthActivity.other]) so new kinds never break writing.
   static HealthActivity activityForCardio(CardioKind kind) => switch (kind) {
     CardioKind.outdoorRun || CardioKind.trailRun => HealthActivity.running,
-    CardioKind.outdoorWalk => HealthActivity.walking,
+    CardioKind.outdoorWalk || CardioKind.nordicWalk => HealthActivity.walking,
+    CardioKind.indoorWalk => HealthActivity.walkingTreadmill,
     CardioKind.treadmill => HealthActivity.runningTreadmill,
     CardioKind.cycling => HealthActivity.biking,
     CardioKind.stationaryBike ||
+    CardioKind.recumbentBike ||
+    CardioKind.indoorTrainer ||
     CardioKind.spinBike ||
     CardioKind.airBike => HealthActivity.bikingStationary,
     CardioKind.elliptical || CardioKind.arcTrainer => HealthActivity.elliptical,
@@ -22,8 +25,16 @@ abstract final class WorkoutMapping {
     CardioKind.stairClimber ||
     CardioKind.verticalClimber => HealthActivity.stairClimbingMachine,
     CardioKind.jumpRope => HealthActivity.jumpRope,
-    CardioKind.hiking => HealthActivity.hiking,
+    CardioKind.hiking || CardioKind.rucking => HealthActivity.hiking,
     CardioKind.swimming => HealthActivity.swimming,
+    CardioKind.openWaterSwim => HealthActivity.openWaterSwimming,
+    CardioKind.outdoorRowing => HealthActivity.rowing,
+    CardioKind.paddling => HealthActivity.paddling,
+    CardioKind.crossCountrySki => HealthActivity.crossCountrySkiing,
+    CardioKind.danceCardio => HealthActivity.dance,
+    CardioKind.skating => HealthActivity.skating,
+    CardioKind.climbing => HealthActivity.climbing,
+    CardioKind.martialArts => HealthActivity.martialArts,
     CardioKind.handCycle => HealthActivity.handCycling,
     CardioKind.hiit => HealthActivity.hiit,
     CardioKind.boxing => HealthActivity.boxing,
@@ -32,40 +43,45 @@ abstract final class WorkoutMapping {
 
   /// Raw platform activity name (Health Connect / HealthKit via the plugin) to [HealthActivity].
   /// Unknown names are [HealthActivity.other].
-  static HealthActivity activityFromName(String name) =>
-      switch (name.toUpperCase()) {
-        'RUNNING' => HealthActivity.running,
-        'RUNNING_TREADMILL' => HealthActivity.runningTreadmill,
-        'WALKING' => HealthActivity.walking,
-        'WALKING_TREADMILL' => HealthActivity.walkingTreadmill,
-        'BIKING' => HealthActivity.biking,
-        'BIKING_STATIONARY' => HealthActivity.bikingStationary,
-        'HIKING' => HealthActivity.hiking,
-        'ROWING' => HealthActivity.rowing,
-        'ROWING_MACHINE' => HealthActivity.rowingMachine,
-        'ELLIPTICAL' => HealthActivity.elliptical,
-        'STAIR_CLIMBING' => HealthActivity.stairClimbing,
-        'STAIR_CLIMBING_MACHINE' || 'STAIRS' => HealthActivity.stairClimbingMachine,
-        'SWIMMING' ||
-        'SWIMMING_POOL' ||
-        'SWIMMING_OPEN_WATER' => HealthActivity.swimming,
-        'JUMP_ROPE' => HealthActivity.jumpRope,
-        'HIGH_INTENSITY_INTERVAL_TRAINING' => HealthActivity.hiit,
-        'BOXING' => HealthActivity.boxing,
-        'HAND_CYCLING' => HealthActivity.handCycling,
-        'STRENGTH_TRAINING' ||
-        'WEIGHTLIFTING' ||
-        'TRADITIONAL_STRENGTH_TRAINING' ||
-        'FUNCTIONAL_STRENGTH_TRAINING' => HealthActivity.strength,
-        _ => HealthActivity.other,
-      };
+  static HealthActivity activityFromName(String name) => switch (name
+      .toUpperCase()) {
+    'RUNNING' => HealthActivity.running,
+    'RUNNING_TREADMILL' => HealthActivity.runningTreadmill,
+    'WALKING' => HealthActivity.walking,
+    'WALKING_TREADMILL' => HealthActivity.walkingTreadmill,
+    'BIKING' => HealthActivity.biking,
+    'BIKING_STATIONARY' => HealthActivity.bikingStationary,
+    'HIKING' => HealthActivity.hiking,
+    'ROWING' => HealthActivity.rowing,
+    'ROWING_MACHINE' => HealthActivity.rowingMachine,
+    'ELLIPTICAL' => HealthActivity.elliptical,
+    'STAIR_CLIMBING' => HealthActivity.stairClimbing,
+    'STAIR_CLIMBING_MACHINE' || 'STAIRS' => HealthActivity.stairClimbingMachine,
+    'SWIMMING' || 'SWIMMING_POOL' => HealthActivity.swimming,
+    'SWIMMING_OPEN_WATER' => HealthActivity.openWaterSwimming,
+    'CROSS_COUNTRY_SKIING' => HealthActivity.crossCountrySkiing,
+    'PADDLE_SPORTS' || 'PADDLING' || 'KAYAKING' => HealthActivity.paddling,
+    'CARDIO_DANCE' || 'DANCING' || 'SOCIAL_DANCE' => HealthActivity.dance,
+    'SKATING' || 'ICE_SKATING' || 'ROLLER_SKATING' => HealthActivity.skating,
+    'CLIMBING' || 'ROCK_CLIMBING' => HealthActivity.climbing,
+    'MARTIAL_ARTS' || 'KICKBOXING' => HealthActivity.martialArts,
+    'JUMP_ROPE' => HealthActivity.jumpRope,
+    'HIGH_INTENSITY_INTERVAL_TRAINING' => HealthActivity.hiit,
+    'BOXING' => HealthActivity.boxing,
+    'HAND_CYCLING' => HealthActivity.handCycling,
+    'STRENGTH_TRAINING' ||
+    'WEIGHTLIFTING' ||
+    'TRADITIONAL_STRENGTH_TRAINING' ||
+    'FUNCTIONAL_STRENGTH_TRAINING' => HealthActivity.strength,
+    _ => HealthActivity.other,
+  };
 
   /// The StationX cardio kind to import an external activity as, or null when not defensible
   /// (strength, generic "other", sports StationX has no cardio kind for).
   static CardioKind? cardioKindFor(HealthActivity a) => switch (a) {
     HealthActivity.running => CardioKind.outdoorRun,
-    HealthActivity.runningTreadmill ||
-    HealthActivity.walkingTreadmill => CardioKind.treadmill,
+    HealthActivity.runningTreadmill => CardioKind.treadmill,
+    HealthActivity.walkingTreadmill => CardioKind.indoorWalk,
     HealthActivity.walking => CardioKind.outdoorWalk,
     HealthActivity.biking => CardioKind.cycling,
     HealthActivity.bikingStationary => CardioKind.stationaryBike,
@@ -75,6 +91,13 @@ abstract final class WorkoutMapping {
     HealthActivity.stairClimbing ||
     HealthActivity.stairClimbingMachine => CardioKind.stairClimber,
     HealthActivity.swimming => CardioKind.swimming,
+    HealthActivity.openWaterSwimming => CardioKind.openWaterSwim,
+    HealthActivity.crossCountrySkiing => CardioKind.crossCountrySki,
+    HealthActivity.paddling => CardioKind.paddling,
+    HealthActivity.dance => CardioKind.danceCardio,
+    HealthActivity.skating => CardioKind.skating,
+    HealthActivity.climbing => CardioKind.climbing,
+    HealthActivity.martialArts => CardioKind.martialArts,
     HealthActivity.jumpRope => CardioKind.jumpRope,
     HealthActivity.hiit => CardioKind.hiit,
     HealthActivity.boxing => CardioKind.boxing,
@@ -99,7 +122,8 @@ abstract final class WorkoutMapping {
       start: s.workoutDate,
       end: s.workoutDate.add(Duration(seconds: seconds)),
       title: s.kind == CardioKind.custom ? 'Cardio' : s.kind.label,
-      distanceMeters: (km != null && km.isFinite && km > 0 && km <= maxDistanceKm)
+      distanceMeters:
+          (km != null && km.isFinite && km > 0 && km <= maxDistanceKm)
           ? (km * 1000).round()
           : null,
       energyKcal: (cal != null && cal > 0 && cal <= maxCalories) ? cal : null,

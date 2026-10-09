@@ -267,6 +267,7 @@ Exercise exerciseFromRow(Row r) => Exercise(
     MuscleGroup.chest,
   ),
   secondaryMuscles: _enums(MuscleGroup.values, r['secondary_muscles']),
+  // Unknown (newer) equipment from another client falls back to bodyweight; new values need migration 20261012010000.
   equipment: _enum(Equipment.values, r['equipment'], Equipment.bodyweight),
   movementPattern: _s(r['movement_pattern']),
   instructions: [

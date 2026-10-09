@@ -5,7 +5,12 @@ import 'smart_swap_service.dart';
 
 /// A muscle area that looks under-trained. INFORMATIONAL only — never an instruction to add volume.
 class CoverageGap {
-  const CoverageGap({required this.region, this.muscle, required this.level, required this.note});
+  const CoverageGap({
+    required this.region,
+    this.muscle,
+    required this.level,
+    required this.note,
+  });
   final MuscleRegion region;
   final Muscle? muscle;
   final CoverageLevel level;
@@ -47,24 +52,43 @@ abstract final class ExerciseRecommender {
   }
 
   /// Weighted working sets that make [region] "adequate" within one day.
-  static int dayTargetSets(MuscleRegion region, {int daysPerWeek = 4, int regionCount = 1}) {
+  static int dayTargetSets(
+    MuscleRegion region, {
+    int daysPerWeek = 4,
+    int regionCount = 1,
+  }) {
     final weekly = weeklyTargetSets[region] ?? 8;
     final t = (weekly / frequencyPerWeek(daysPerWeek, regionCount)).round();
     return t < 3 ? 3 : t;
   }
 
   static const _isolationPatterns = {
-    'curl', 'extension', 'fly', 'raise', 'rear delt', 'shrug', 'crunch', 'rotation', 'isometric',
-    'overhead extension', 'flexion', 'kickback',
+    'curl',
+    'extension',
+    'fly',
+    'raise',
+    'rear delt',
+    'shrug',
+    'crunch',
+    'rotation',
+    'isometric',
+    'overhead extension',
+    'flexion',
+    'kickback',
   };
 
   /// Compound = not an isolation movement pattern AND meaningfully trains ≥2 regions (targets with weight
   /// ≥ 0.5, so stabiliser-only core work does not count). Everything else is isolation. Used for the
   /// "similar training purpose" tier, compound-before-isolation ordering and rep ranges.
   static bool isCompound(Exercise e, [ExerciseMuscleProfile? profile]) {
-    if (_isolationPatterns.contains(e.movementPattern.toLowerCase())) return false;
+    if (_isolationPatterns.contains(e.movementPattern.toLowerCase())) {
+      return false;
+    }
     final p = profile ?? MuscleProfiles.of(e);
-    final regions = {for (final t in p.targets) if (t.effectiveWeight >= 0.5) t.region};
+    final regions = {
+      for (final t in p.targets)
+        if (t.effectiveWeight >= 0.5) t.region,
+    };
     return regions.length >= 2;
   }
 
@@ -99,16 +123,20 @@ abstract final class ExerciseRecommender {
     final cur = MuscleProfiles.of(current);
     final curCompound = isCompound(current, cur);
     final done = _doneIds(history);
-    final scored = <(SwapCandidate, int)>[];
+    final scored = <(SwapCandidate, int, bool)>[];
     for (var i = 0; i < catalog.length; i++) {
       final e = catalog[i];
       if (e.id == current.id || excludeIds.contains(e.id)) continue;
-      if (allowedEquipment != null && !allowedEquipment.contains(e.equipment)) continue;
+      if (allowedEquipment != null && !allowedEquipment.contains(e.equipment)) {
+        continue;
+      }
       final p = MuscleProfiles.of(e);
       final m = _primaryMatch(cur, p);
       if (m.score <= 0) continue;
       var score = 50 * m.score;
-      final samePattern = e.movementPattern.isNotEmpty && e.movementPattern == current.movementPattern;
+      final samePattern =
+          e.movementPattern.isNotEmpty &&
+          e.movementPattern == current.movementPattern;
       if (samePattern) score += 18;
       final overlap = _secondaryOverlap(cur, p);
       score += 12 * overlap;
@@ -123,22 +151,37 @@ abstract final class ExerciseRecommender {
         if (familiar) "you've done this before",
       ];
       scored.add((
-        SwapCandidate(exercise: e, matchPercent: score.round().clamp(0, 100), reason: parts.join(' • ')),
+        SwapCandidate(
+          exercise: e,
+          matchPercent: score.round().clamp(0, 100),
+          reason: parts.join(' • '),
+        ),
         i,
+        familiar,
       ));
     }
+    // Deterministic: higher match first; on equal match the exercise the user has done before wins, then
+    // catalogue order (so adding new equal-profile exercises never reshuffles familiar ones).
     scored.sort((a, b) {
       final c = b.$1.matchPercent.compareTo(a.$1.matchPercent);
-      return c != 0 ? c : a.$2.compareTo(b.$2);
+      if (c != 0) return c;
+      if (a.$3 != b.$3) return a.$3 ? -1 : 1;
+      return a.$2.compareTo(b.$2);
     });
     return [for (final s in scored) s.$1];
   }
 
-  static Set<String> _doneIds(Iterable<WorkoutSession> history) =>
-      {for (final s in history) for (final l in s.exercises) if (l.doneSets.isNotEmpty) l.exerciseId};
+  static Set<String> _doneIds(Iterable<WorkoutSession> history) => {
+    for (final s in history)
+      for (final l in s.exercises)
+        if (l.doneSets.isNotEmpty) l.exerciseId,
+  };
 
   /// Best-aligned primary targets of [a] against [b]: average over a's primaries of the best pair score.
-  static ({double score, String? label}) _primaryMatch(ExerciseMuscleProfile a, ExerciseMuscleProfile b) {
+  static ({double score, String? label}) _primaryMatch(
+    ExerciseMuscleProfile a,
+    ExerciseMuscleProfile b,
+  ) {
     final ap = a.primary.toList(), bp = b.primary.toList();
     if (ap.isEmpty || bp.isEmpty) return (score: 0, label: null);
     var sum = 0.0;
@@ -174,7 +217,10 @@ abstract final class ExerciseRecommender {
 
   /// 0..1: how much of a's secondary work (weighted) b also provides. No secondaries on a: b without any
   /// also scores 1, otherwise 0.5.
-  static double _secondaryOverlap(ExerciseMuscleProfile a, ExerciseMuscleProfile b) {
+  static double _secondaryOverlap(
+    ExerciseMuscleProfile a,
+    ExerciseMuscleProfile b,
+  ) {
     final sec = a.secondary.toList();
     if (sec.isEmpty) return b.secondary.isEmpty ? 1.0 : 0.5;
     var total = 0.0, got = 0.0;
@@ -185,8 +231,8 @@ abstract final class ExerciseRecommender {
         final v = t.region != s.region
             ? 0.0
             : (s.muscle == null || t.muscle == null)
-                ? 0.7
-                : (s.muscle == t.muscle ? 1.0 : 0.4);
+            ? 0.7
+            : (s.muscle == t.muscle ? 1.0 : 0.4);
         if (v > best) best = v;
       }
       got += s.effectiveWeight * best;
@@ -220,7 +266,8 @@ abstract final class ExerciseRecommender {
   /// Heavy multi-region hinges (deadlift-type): primary work in 2+ regions with a hinge pattern. They are
   /// not used as a leaf filler (e.g. for lower back) while a simpler exercise can fill that leaf.
   static bool _isHeavyHinge(Exercise e, ExerciseMuscleProfile p) =>
-      e.movementPattern.toLowerCase() == 'hinge' && {for (final t in p.primary) t.region}.length >= 2;
+      e.movementPattern.toLowerCase() == 'hinge' &&
+      {for (final t in p.primary) t.region}.length >= 2;
 
   // ── Day building ──────────────────────────────────────────────────────────────────────────────────────
 
@@ -248,7 +295,12 @@ abstract final class ExerciseRecommender {
     if (regions.isEmpty || maxExercises <= 0) return const [];
     final byId = {for (final e in catalog) e.id: e};
     final target = {
-      for (final r in regions) r: dayTargetSets(r, daysPerWeek: daysPerWeek, regionCount: regions.length),
+      for (final r in regions)
+        r: dayTargetSets(
+          r,
+          daysPerWeek: daysPerWeek,
+          regionCount: regions.length,
+        ),
     };
     final acc = _Tally();
     final usedIds = <String>{};
@@ -267,7 +319,9 @@ abstract final class ExerciseRecommender {
     for (var i = 0; i < catalog.length; i++) {
       final e = catalog[i];
       if (usedIds.contains(e.id)) continue;
-      if (allowedEquipment != null && !allowedEquipment.contains(e.equipment)) continue;
+      if (allowedEquipment != null && !allowedEquipment.contains(e.equipment)) {
+        continue;
+      }
       final p = MuscleProfiles.of(e);
       if (!p.primary.any((t) => regions.contains(t.region))) continue;
       pool.add(_Cand(e, p, i, isCompound(e, p), _isHeavyHinge(e, p)));
@@ -276,7 +330,10 @@ abstract final class ExerciseRecommender {
     final picked = <(RoutineExercise, bool)>[];
     while (picked.length < maxExercises && pool.isNotEmpty) {
       double deficit(MuscleRegion r) => (target[r] ?? 0) - acc.region(r);
-      final deficitOpen = {for (final r in regions) if (deficit(r) >= 1.0) r};
+      final deficitOpen = {
+        for (final r in regions)
+          if (deficit(r) >= 1.0) r,
+      };
       // Unmet leaf requirements that at least one remaining candidate can fill (no fake precision: a
       // leaf nothing in the catalog trains directly is simply skipped).
       final unmet = <(MuscleRegion, Set<Muscle>)>[];
@@ -288,7 +345,8 @@ abstract final class ExerciseRecommender {
       }
       // A heavy hinge only fills a group when no other candidate can.
       bool fillsAllowed(_Cand c, Set<Muscle> g) =>
-          _fills(c, g) && (!c.heavyHinge || !pool.any((o) => !o.heavyHinge && _fills(o, g)));
+          _fills(c, g) &&
+          (!c.heavyHinge || !pool.any((o) => !o.heavyHinge && _fills(o, g)));
       final open = {...deficitOpen, for (final u in unmet) u.$1};
       final forced = picked.length < minExercises;
       if (open.isEmpty && !forced) break;
@@ -306,7 +364,9 @@ abstract final class ExerciseRecommender {
         var novel = 0.0;
         for (final e in _regionWeights(c.profile).entries) {
           if (!regions.contains(e.key)) continue;
-          final frac = ((target[e.key] ?? 0) - acc.region(e.key)).clamp(0, 99) / (target[e.key] ?? 1);
+          final frac =
+              ((target[e.key] ?? 0) - acc.region(e.key)).clamp(0, 99) /
+              (target[e.key] ?? 1);
           s += e.value * frac * 2;
         }
         for (final t in c.profile.primary) {
@@ -334,7 +394,9 @@ abstract final class ExerciseRecommender {
       pool.remove(best);
       final e = best.exercise;
       final timed = e.movementPattern.toLowerCase() == 'isometric';
-      final leadOpen = best.profile.primary.map((t) => deficit(t.region)).fold(0.0, (a, b) => a > b ? a : b);
+      final leadOpen = best.profile.primary
+          .map((t) => deficit(t.region))
+          .fold(0.0, (a, b) => a > b ? a : b);
       final base = best.compound ? (picked.any((p) => p.$2) ? 3 : 4) : 3;
       final sets = leadOpen <= 0 ? 3 : leadOpen.ceil().clamp(2, base);
       acc.add(best.profile, sets);
@@ -351,8 +413,10 @@ abstract final class ExerciseRecommender {
     }
     // Compounds first, otherwise in pick order (stable).
     return [
-      for (final p in picked) if (p.$2) p.$1,
-      for (final p in picked) if (!p.$2) p.$1,
+      for (final p in picked)
+        if (p.$2) p.$1,
+      for (final p in picked)
+        if (!p.$2) p.$1,
     ];
   }
 
@@ -360,8 +424,14 @@ abstract final class ExerciseRecommender {
 
   /// Leaves worth a gentle mention when their region IS trained but they get almost nothing.
   static const _notableLeaves = [
-    Muscle.upperChest, Muscle.lats, Muscle.upperBack, Muscle.sideDelts, Muscle.rearDelts,
-    Muscle.bicepsLongHead, Muscle.tricepsLongHead, Muscle.gluteusMaximus,
+    Muscle.upperChest,
+    Muscle.lats,
+    Muscle.upperBack,
+    Muscle.sideDelts,
+    Muscle.rearDelts,
+    Muscle.bicepsLongHead,
+    Muscle.tricepsLongHead,
+    Muscle.gluteusMaximus,
   ];
 
   /// Under-trained areas of [report] given the program context. INFORMATIONAL: it never says a muscle
@@ -385,38 +455,52 @@ abstract final class ExerciseRecommender {
       if (direct >= 0.4 * weekly || weighted >= 0.5 * weekly) continue;
       flagged.add(r);
       final lower = r.label.toLowerCase();
-      out.add(CoverageGap(
-        region: r,
-        level: weighted <= 0 ? CoverageLevel.none : CoverageLevel.low,
-        note: weighted <= 0
-            ? 'No $lower work in this program — optional to add.'
-            : direct <= 0
-                ? '${r.label} only get indirect work in this program — optional to add direct sets.'
-                : '${r.label} ${_verb(r.label)} little direct work in this program — optional to add.',
-      ));
+      out.add(
+        CoverageGap(
+          region: r,
+          level: weighted <= 0 ? CoverageLevel.none : CoverageLevel.low,
+          note: weighted <= 0
+              ? 'No $lower work in this program — optional to add.'
+              : direct <= 0
+              ? '${r.label} only get indirect work in this program — optional to add direct sets.'
+              : '${r.label} ${_verb(r.label)} little direct work in this program — optional to add.',
+        ),
+      );
     }
     for (final m in _notableLeaves) {
       final r = m.region;
       if (flagged.contains(r)) continue;
-      final hasLeafDetail = report.directByMuscle.entries.any((e) => e.key.region == r && e.value > 0);
+      final hasLeafDetail = report.directByMuscle.entries.any(
+        (e) => e.key.region == r && e.value > 0,
+      );
       if (!hasLeafDetail) continue;
       final weighted = (report.weightedByMuscle[m] ?? 0) / w;
       if (weighted >= 2 * scale) continue;
-      out.add(CoverageGap(
-        region: r,
-        muscle: m,
-        level: weighted <= 0 ? CoverageLevel.none : CoverageLevel.low,
-        note: '${m.label} ${_verb(m.label)} little direct work in this program — optional to add.',
-      ));
+      out.add(
+        CoverageGap(
+          region: r,
+          muscle: m,
+          level: weighted <= 0 ? CoverageLevel.none : CoverageLevel.low,
+          note:
+              '${m.label} ${_verb(m.label)} little direct work in this program — optional to add.',
+        ),
+      );
     }
     return out;
   }
 
-  static String _verb(String label) => label.toLowerCase().endsWith('s') ? 'get' : 'gets';
+  static String _verb(String label) =>
+      label.toLowerCase().endsWith('s') ? 'get' : 'gets';
 }
 
 class _Cand {
-  _Cand(this.exercise, this.profile, this.index, this.compound, this.heavyHinge);
+  _Cand(
+    this.exercise,
+    this.profile,
+    this.index,
+    this.compound,
+    this.heavyHinge,
+  );
   final Exercise exercise;
   final ExerciseMuscleProfile profile;
   final int index;
@@ -425,7 +509,8 @@ class _Cand {
 }
 
 /// True when [c] has direct (primary) work on any leaf of [group].
-bool _fills(_Cand c, Set<Muscle> group) => c.profile.primary.any((t) => t.muscle != null && group.contains(t.muscle));
+bool _fills(_Cand c, Set<Muscle> group) =>
+    c.profile.primary.any((t) => t.muscle != null && group.contains(t.muscle));
 
 /// Running working-set tally for the day being built (same weights as [MuscleCoverage]).
 class _Tally {

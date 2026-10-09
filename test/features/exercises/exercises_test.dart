@@ -15,19 +15,21 @@ void main() {
     await shot(t, 'ex_library');
     // The seed library is large and lazily built: search to bring a known exercise into view.
     await t.enterText(find.byType(TextField), 'barbell bench');
-    await t.pump();
+    await t.pump(const Duration(milliseconds: 200));
     expect(find.text('Barbell Bench Press'), findsOneWidget);
     await t.enterText(find.byType(TextField), 'squat');
-    await t.pump();
+    await t.pump(const Duration(milliseconds: 200));
     expect(find.text('Barbell Bench Press'), findsNothing);
     expect(find.text('Barbell Back Squat'), findsOneWidget);
     await t.enterText(find.byType(TextField), 'zzzz');
-    await t.pump();
+    await t.pump(const Duration(milliseconds: 200));
     expect(find.text('No exercises found'), findsOneWidget);
     await t.enterText(find.byType(TextField), '');
-    await t.pump();
+    await t.pump(const Duration(milliseconds: 200));
     await t.tap(find.text('Chest'));
     await t.pump();
+    await t.enterText(find.byType(TextField), 'barbell bench');
+    await t.pump(const Duration(milliseconds: 200));
     expect(find.text('Barbell Back Squat'), findsNothing);
     expect(find.text('Barbell Bench Press'), findsOneWidget);
   });
@@ -43,7 +45,7 @@ void main() {
       await t.pump();
       expect(find.text('Barbell Bench Press'), findsOneWidget);
       await t.enterText(find.byType(TextField), 'cable fly');
-      await t.pump();
+      await t.pump(const Duration(milliseconds: 200));
       expect(find.text('No exercises found'), findsOneWidget);
       await t.tap(
         find.textContaining(RegExp('clear filters', caseSensitive: false)),
@@ -76,7 +78,7 @@ void main() {
     await t.tap(find.text('go'));
     await t.pumpAndSettle();
     await t.enterText(find.byType(TextField), 'lat pull');
-    await t.pump();
+    await t.pump(const Duration(milliseconds: 200));
     await t.tap(find.text('Lat Pulldown'));
     await t.pumpAndSettle();
     expect(picked?.id, 'lat_pulldown');
@@ -88,6 +90,8 @@ void main() {
     await t.tap(find.text('CUSTOM'));
     await t.pumpAndSettle();
     await t.enterText(find.byType(TextField).last, 'Zercher Squat');
+    await t.ensureVisible(find.text('SAVE EXERCISE')); // 9 equipment chips make the sheet scroll
+    await t.pumpAndSettle();
     await t.tap(find.text('SAVE EXERCISE'));
     await t.pumpAndSettle();
     expect(app.exercises.all.length, before + 1);

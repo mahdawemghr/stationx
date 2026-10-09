@@ -43,8 +43,21 @@ HealthWorkout hw(
   );
 }
 
-HealthImportPlan plan(List<HealthWorkout> w, {Set<String> imported = const {}, Set<String> own = const {}, Set<String> existing = const {}, int? days}) =>
-    HealthImport.plan(w, ownSourceIds: {'dev.mahdi_ramadhan.stationx'}, ownRecordIds: own, alreadyImported: imported, existingSessionIds: existing, now: now, days: days);
+HealthImportPlan plan(
+  List<HealthWorkout> w, {
+  Set<String> imported = const {},
+  Set<String> own = const {},
+  Set<String> existing = const {},
+  int? days,
+}) => HealthImport.plan(
+  w,
+  ownSourceIds: {'dev.mahdi_haji.stationx'},
+  ownRecordIds: own,
+  alreadyImported: imported,
+  existingSessionIds: existing,
+  now: now,
+  days: days,
+);
 
 void main() {
   group('WorkoutMapping', () {
@@ -53,22 +66,131 @@ void main() {
         final a = WorkoutMapping.activityForCardio(k);
         if (k == CardioKind.custom) expect(a, HealthActivity.other);
       }
-      expect(WorkoutMapping.activityForCardio(CardioKind.outdoorRun), HealthActivity.running);
-      expect(WorkoutMapping.activityForCardio(CardioKind.treadmill), HealthActivity.runningTreadmill);
-      expect(WorkoutMapping.activityForCardio(CardioKind.stationaryBike), HealthActivity.bikingStationary);
-      expect(WorkoutMapping.activityForCardio(CardioKind.rowing), HealthActivity.rowingMachine);
-      expect(WorkoutMapping.activityForCardio(CardioKind.swimming), HealthActivity.swimming);
-      expect(WorkoutMapping.activityForCardio(CardioKind.jumpRope), HealthActivity.jumpRope);
-      expect(WorkoutMapping.activityForCardio(CardioKind.hiit), HealthActivity.hiit);
+      expect(
+        WorkoutMapping.activityForCardio(CardioKind.outdoorRun),
+        HealthActivity.running,
+      );
+      expect(
+        WorkoutMapping.activityForCardio(CardioKind.treadmill),
+        HealthActivity.runningTreadmill,
+      );
+      expect(
+        WorkoutMapping.activityForCardio(CardioKind.stationaryBike),
+        HealthActivity.bikingStationary,
+      );
+      expect(
+        WorkoutMapping.activityForCardio(CardioKind.rowing),
+        HealthActivity.rowingMachine,
+      );
+      expect(
+        WorkoutMapping.activityForCardio(CardioKind.swimming),
+        HealthActivity.swimming,
+      );
+      expect(
+        WorkoutMapping.activityForCardio(CardioKind.jumpRope),
+        HealthActivity.jumpRope,
+      );
+      expect(
+        WorkoutMapping.activityForCardio(CardioKind.hiit),
+        HealthActivity.hiit,
+      );
     });
+    test(
+      'new kinds map both ways; treadmill walking imports as Indoor Walk',
+      () {
+        expect(
+          WorkoutMapping.activityForCardio(CardioKind.indoorWalk),
+          HealthActivity.walkingTreadmill,
+        );
+        expect(
+          WorkoutMapping.activityForCardio(CardioKind.nordicWalk),
+          HealthActivity.walking,
+        );
+        expect(
+          WorkoutMapping.activityForCardio(CardioKind.rucking),
+          HealthActivity.hiking,
+        );
+        expect(
+          WorkoutMapping.activityForCardio(CardioKind.indoorTrainer),
+          HealthActivity.bikingStationary,
+        );
+        expect(
+          WorkoutMapping.activityForCardio(CardioKind.recumbentBike),
+          HealthActivity.bikingStationary,
+        );
+        expect(
+          WorkoutMapping.activityForCardio(CardioKind.outdoorRowing),
+          HealthActivity.rowing,
+        );
+        expect(
+          WorkoutMapping.activityForCardio(CardioKind.martialArts),
+          HealthActivity.martialArts,
+        );
+        expect(
+          WorkoutMapping.cardioKindFor(HealthActivity.walkingTreadmill),
+          CardioKind.indoorWalk,
+        );
+        expect(
+          WorkoutMapping.cardioKindFor(HealthActivity.runningTreadmill),
+          CardioKind.treadmill,
+        );
+        for (final k in CardioKind.values.where(
+          (k) => k != CardioKind.custom,
+        )) {
+          final a = WorkoutMapping.activityForCardio(k);
+          expect(a, isNot(HealthActivity.other), reason: k.name);
+        }
+        expect(
+          WorkoutMapping.activityFromName('WALKING_TREADMILL'),
+          HealthActivity.walkingTreadmill,
+        );
+        expect(
+          WorkoutMapping.activityFromName('SWIMMING_OPEN_WATER'),
+          HealthActivity.openWaterSwimming,
+        );
+        expect(
+          WorkoutMapping.cardioKindFor(HealthActivity.openWaterSwimming),
+          CardioKind.openWaterSwim,
+        );
+        expect(
+          WorkoutMapping.activityFromName('CARDIO_DANCE'),
+          HealthActivity.dance,
+        );
+        expect(
+          WorkoutMapping.activityFromName('ROCK_CLIMBING'),
+          HealthActivity.climbing,
+        );
+        expect(
+          WorkoutMapping.activityFromName('kickboxing'),
+          HealthActivity.martialArts,
+        );
+        expect(
+          WorkoutMapping.activityFromName('PADDLE_SPORTS'),
+          HealthActivity.paddling,
+        );
+        expect(
+          WorkoutMapping.cardioKindFor(HealthActivity.skating),
+          CardioKind.skating,
+        );
+      },
+    );
     test('unknown platform names are other; strength names are strength', () {
-      expect(WorkoutMapping.activityFromName('TOTALLY_NEW'), HealthActivity.other);
-      expect(WorkoutMapping.activityFromName('strength_training'), HealthActivity.strength);
+      expect(
+        WorkoutMapping.activityFromName('TOTALLY_NEW'),
+        HealthActivity.other,
+      );
+      expect(
+        WorkoutMapping.activityFromName('strength_training'),
+        HealthActivity.strength,
+      );
       expect(WorkoutMapping.cardioKindFor(HealthActivity.strength), isNull);
       expect(WorkoutMapping.cardioKindFor(HealthActivity.other), isNull);
     });
     test('request: units converted, only logged numbers, no heart rate', () {
-      final r = WorkoutMapping.forCardio(cardio(km: 5.25, cal: 320, hr: 150), now: now)!;
+      final r = WorkoutMapping.forCardio(
+        cardio(km: 5.25, cal: 320, hr: 150),
+        now: now,
+      )!;
       expect(r.distanceMeters, 5250);
       expect(r.energyKcal, 320);
       expect(r.end.difference(r.start), const Duration(minutes: 30));
@@ -80,72 +202,154 @@ void main() {
     test('refuses what cannot be written honestly', () {
       expect(WorkoutMapping.forCardio(cardio(secs: 0), now: now), isNull);
       expect(WorkoutMapping.forCardio(cardio(secs: 90000), now: now), isNull);
-      expect(WorkoutMapping.forCardio(cardio(at: now.add(const Duration(days: 1))), now: now), isNull);
-      expect(WorkoutMapping.forCardio(cardio(km: 5000, secs: 60), now: now)!.distanceMeters, isNull);
-      expect(WorkoutMapping.forCardio(cardio(km: -1), now: now)!.distanceMeters, isNull);
+      expect(
+        WorkoutMapping.forCardio(
+          cardio(at: now.add(const Duration(days: 1))),
+          now: now,
+        ),
+        isNull,
+      );
+      expect(
+        WorkoutMapping.forCardio(
+          cardio(km: 5000, secs: 60),
+          now: now,
+        )!.distanceMeters,
+        isNull,
+      );
+      expect(
+        WorkoutMapping.forCardio(cardio(km: -1), now: now)!.distanceMeters,
+        isNull,
+      );
     });
     test('strength: duration required, finisher not separate', () {
-      final s = WorkoutSession(id: 'w1', workoutId: 'x', name: 'Push', workoutDate: DateTime(2026, 10, 9, 7), exercises: const [], durationSeconds: 3000);
+      final s = WorkoutSession(
+        id: 'w1',
+        workoutId: 'x',
+        name: 'Push',
+        workoutDate: DateTime(2026, 10, 9, 7),
+        exercises: const [],
+        durationSeconds: 3000,
+      );
       final r = WorkoutMapping.forStrength(s, now: now)!;
       expect(r.activity, HealthActivity.strength);
       expect(r.key, 's:w1');
       expect(r.distanceMeters, isNull);
-      expect(WorkoutMapping.forStrength(WorkoutSession(id: 'w2', workoutId: 'x', name: '', workoutDate: DateTime(2026, 10, 9), exercises: const []), now: now), isNull);
+      expect(
+        WorkoutMapping.forStrength(
+          WorkoutSession(
+            id: 'w2',
+            workoutId: 'x',
+            name: '',
+            workoutDate: DateTime(2026, 10, 9),
+            exercises: const [],
+          ),
+          now: now,
+        ),
+        isNull,
+      );
     });
   });
 
   group('HealthEnrichmentService', () {
     test('fills only empty fields, ignores outliers', () {
-      final e = HealthEnrichmentService.suggest(cardio(), const HealthMetrics(heartRates: [140, 150, 999, 10], activeKcal: 250.4));
+      final e = HealthEnrichmentService.suggest(
+        cardio(),
+        const HealthMetrics(heartRates: [140, 150, 999, 10], activeKcal: 250.4),
+      );
       expect(e.avgHeartRate, 145);
       expect(e.calories, 250);
     });
     test('never suggests over typed values', () {
-      final e = HealthEnrichmentService.suggest(cardio(hr: 120, cal: 100), const HealthMetrics(heartRates: [150], activeKcal: 300));
+      final e = HealthEnrichmentService.suggest(
+        cardio(hr: 120, cal: 100),
+        const HealthMetrics(heartRates: [150], activeKcal: 300),
+      );
       expect(e.isEmpty, isTrue);
-      final applied = HealthEnrichmentService.apply(cardio(hr: 120), const HealthEnrichment(avgHeartRate: 150, calories: 200));
+      final applied = HealthEnrichmentService.apply(
+        cardio(hr: 120),
+        const HealthEnrichment(avgHeartRate: 150, calories: 200),
+      );
       expect(applied.avgHeartRate, 120);
       expect(applied.calories, 200);
     });
     test('falls back to total kcal; nothing when no data', () {
-      expect(HealthEnrichmentService.suggest(cardio(), const HealthMetrics(totalKcal: 400)).calories, 400);
-      expect(HealthEnrichmentService.suggest(cardio(), const HealthMetrics()).isEmpty, isTrue);
-      expect(HealthEnrichmentService.suggest(cardio(), const HealthMetrics(activeKcal: 9e9)).calories, isNull);
+      expect(
+        HealthEnrichmentService.suggest(
+          cardio(),
+          const HealthMetrics(totalKcal: 400),
+        ).calories,
+        400,
+      );
+      expect(
+        HealthEnrichmentService.suggest(
+          cardio(),
+          const HealthMetrics(),
+        ).isEmpty,
+        isTrue,
+      );
+      expect(
+        HealthEnrichmentService.suggest(
+          cardio(),
+          const HealthMetrics(activeKcal: 9e9),
+        ).calories,
+        isNull,
+      );
     });
   });
 
   group('HealthImport', () {
-    test('imports mapped sessions with source note, original start, createdAt now', () {
-      final p = plan([hw('a'), hw('b', type: 'BIKING_STATIONARY', ago: const Duration(days: 3))]);
-      expect(p.sessions.length, 2);
-      expect(p.sessions.first.kind, CardioKind.stationaryBike); // oldest first
-      final s = p.sessions.last;
-      expect(s.id, startsWith('hc_'));
-      expect(s.kind, CardioKind.outdoorRun);
-      expect(s.workoutDate, now.subtract(const Duration(days: 2)));
-      expect(s.meta.createdAt, now);
-      expect(s.distanceKm, 5.0);
-      expect(s.calories, 300);
-      expect(s.notes, 'Imported from Health Connect (Samsung Health)');
-      expect(p.sourceLabels, {'Samsung Health'});
-    });
+    test(
+      'imports mapped sessions with source note, original start, createdAt now',
+      () {
+        final p = plan([
+          hw('a'),
+          hw('b', type: 'BIKING_STATIONARY', ago: const Duration(days: 3)),
+        ]);
+        expect(p.sessions.length, 2);
+        expect(
+          p.sessions.first.kind,
+          CardioKind.stationaryBike,
+        ); // oldest first
+        final s = p.sessions.last;
+        expect(s.id, startsWith('hc_'));
+        expect(s.kind, CardioKind.outdoorRun);
+        expect(s.workoutDate, now.subtract(const Duration(days: 2)));
+        expect(s.meta.createdAt, now);
+        expect(s.distanceKm, 5.0);
+        expect(s.calories, 300);
+        expect(s.notes, 'Imported from Health Connect (Samsung Health)');
+        expect(p.sourceLabels, {'Samsung Health'});
+      },
+    );
     test('excludes own records and own origin', () {
-      final p = plan([hw('own1'), hw('x', src: 'dev.mahdi_ramadhan.stationx'), hw('ok')], own: {'own1'});
+      final p = plan(
+        [hw('own1'), hw('x', src: 'dev.mahdi_haji.stationx'), hw('ok')],
+        own: {'own1'},
+      );
       expect(p.sessions.length, 1);
       expect(p.skippedOwn, 2);
     });
-    test('idempotent: imported ids and existing session ids are skipped; apply twice adds once', () async {
-      final repo = MemoryCardioRepository([], []);
-      final p1 = plan([hw('a')]);
-      expect(await HealthImport.apply(p1, repo), 1);
-      expect(await HealthImport.apply(p1, repo), 0);
-      final p2 = plan([hw('a')], existing: {for (final s in repo.sessions) s.id});
-      expect(p2.sessions, isEmpty);
-      expect(p2.skippedAlreadyImported, 1);
-      expect(plan([hw('a')], imported: {'a'}).skippedAlreadyImported, 1);
-      expect(HealthImport.sessionIdFor('a'), HealthImport.sessionIdFor('a'));
-      expect(HealthImport.sessionIdFor('a'), isNot(HealthImport.sessionIdFor('b')));
-    });
+    test(
+      'idempotent: imported ids and existing session ids are skipped; apply twice adds once',
+      () async {
+        final repo = MemoryCardioRepository([], []);
+        final p1 = plan([hw('a')]);
+        expect(await HealthImport.apply(p1, repo), 1);
+        expect(await HealthImport.apply(p1, repo), 0);
+        final p2 = plan(
+          [hw('a')],
+          existing: {for (final s in repo.sessions) s.id},
+        );
+        expect(p2.sessions, isEmpty);
+        expect(p2.skippedAlreadyImported, 1);
+        expect(plan([hw('a')], imported: {'a'}).skippedAlreadyImported, 1);
+        expect(HealthImport.sessionIdFor('a'), HealthImport.sessionIdFor('a'));
+        expect(
+          HealthImport.sessionIdFor('a'),
+          isNot(HealthImport.sessionIdFor('b')),
+        );
+      },
+    );
     test('only completed, sane, in-window sessions; unsupported counted', () {
       final p = plan([
         hw('future', ago: const Duration(minutes: -10)), // ends in the future
@@ -169,10 +373,19 @@ void main() {
       ]);
       expect(p.sessions.length, 4);
       for (final s in p.sessions) {
-        expect(s.distanceKm == null || (s.distanceKm! > 0 && s.distanceKm! < 1000), isTrue);
+        expect(
+          s.distanceKm == null || (s.distanceKm! > 0 && s.distanceKm! < 1000),
+          isTrue,
+        );
       }
-      expect(p.sessions.every((s) => s.calories == null || s.calories! <= 20000), isTrue);
-      expect(p.sessions.where((s) => s.distanceKm != null).length, 0 + 0 + 0 + 1);
+      expect(
+        p.sessions.every((s) => s.calories == null || s.calories! <= 20000),
+        isTrue,
+      );
+      expect(
+        p.sessions.where((s) => s.distanceKm != null).length,
+        0 + 0 + 0 + 1,
+      );
     });
     test('hostile source name never reaches notes; days clamp', () {
       final p = plan([hw('a', src: '<script>alert(1)</script>')]);
@@ -180,7 +393,12 @@ void main() {
       expect(HealthImport.clampDays(500), 90);
       expect(HealthImport.clampDays(null), 30);
       expect(HealthImport.clampDays(-3), 1);
-      expect(plan([hw('a', ago: const Duration(days: 45))], days: 90).sessions.length, 1);
+      expect(
+        plan([
+          hw('a', ago: const Duration(days: 45)),
+        ], days: 90).sessions.length,
+        1,
+      );
     });
   });
 }

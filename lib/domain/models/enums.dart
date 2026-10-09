@@ -19,10 +19,18 @@ enum Equipment {
   dumbbell('Dumbbell'),
   barbell('Barbell'),
   machine('Machine'),
-  bodyweight('Bodyweight');
+  bodyweight('Bodyweight'),
+  // Appended (stored by name; server CHECK widened by migration 20261012010000_equipment_values.sql).
+  kettlebell('Kettlebell'),
+  band('Band'),
+  smithMachine('Smith machine'),
+  other('Other');
 
   const Equipment(this.label);
   final String label;
+
+  /// No external load to log (bodyweight, resistance bands): no kg prompt, no load progression.
+  bool get isUnloaded => this == bodyweight || this == band;
 }
 
 enum WeightUnit { kg, lb }

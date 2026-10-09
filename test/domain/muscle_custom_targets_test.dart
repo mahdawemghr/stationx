@@ -6,19 +6,34 @@ void main() {
   group('MuscleTargetCodec', () {
     test('round-trips region, leaf, role, emphasis and weight', () {
       const src = [
-        MuscleTarget.primary(MuscleRegion.back, muscle: Muscle.lats, emphasis: 'Stretch'),
+        MuscleTarget.primary(
+          MuscleRegion.back,
+          muscle: Muscle.lats,
+          emphasis: 'Stretch',
+        ),
         MuscleTarget.secondary(MuscleRegion.biceps),
-        MuscleTarget(MuscleRegion.core, role: TargetRole.secondary, weight: 0.25),
+        MuscleTarget(
+          MuscleRegion.core,
+          role: TargetRole.secondary,
+          weight: 0.25,
+        ),
       ];
       final back = MuscleTargetCodec.decode(MuscleTargetCodec.encode(src));
-      expect(back!.map((t) => (t.region, t.muscle, t.role, t.emphasis, t.weight)),
-          src.map((t) => (t.region, t.muscle, t.role, t.emphasis, t.weight)));
+      expect(
+        back!.map((t) => (t.region, t.muscle, t.role, t.emphasis, t.weight)),
+        src.map((t) => (t.region, t.muscle, t.role, t.emphasis, t.weight)),
+      );
     });
 
     test('null/empty/no-primary encode to null', () {
       expect(MuscleTargetCodec.encode(null), isNull);
       expect(MuscleTargetCodec.encode(const []), isNull);
-      expect(MuscleTargetCodec.encode(const [MuscleTarget.secondary(MuscleRegion.biceps)]), isNull);
+      expect(
+        MuscleTargetCodec.encode(const [
+          MuscleTarget.secondary(MuscleRegion.biceps),
+        ]),
+        isNull,
+      );
     });
 
     test('garbage is tolerated: bad entries dropped, bad JSON -> null', () {
@@ -28,10 +43,24 @@ void main() {
       final t = MuscleTargetCodec.fromJson([
         42,
         {'region': 'nope', 'role': 'primary'},
-        {'region': 'back', 'muscle': 'upperChest', 'role': 'primary'}, // leaf not in region
+        {
+          'region': 'back',
+          'muscle': 'upperChest',
+          'role': 'primary',
+        }, // leaf not in region
         {'region': 'back', 'muscle': 'lats', 'role': 'bogus'},
-        {'region': 'back', 'muscle': 'lats', 'role': 'primary', 'weight': 'x', 'emphasis': '  '},
-        {'region': 'back', 'muscle': 'lats', 'role': 'secondary'}, // duplicate of the above
+        {
+          'region': 'back',
+          'muscle': 'lats',
+          'role': 'primary',
+          'weight': 'x',
+          'emphasis': '  ',
+        },
+        {
+          'region': 'back',
+          'muscle': 'lats',
+          'role': 'secondary',
+        }, // duplicate of the above
         {'region': 'biceps', 'role': 'secondary', 'weight': 99},
       ])!;
       expect(t.length, 2);
@@ -55,13 +84,25 @@ void main() {
         ],
       );
       expect(e.isCustom, isTrue);
-      expect(e.primaryMuscle, MuscleGroup.legs); // first PRIMARY target, not first row
-      expect(e.secondaryMuscles, [MuscleGroup.biceps]); // forearms->biceps deduped, legs removed
+      expect(
+        e.primaryMuscle,
+        MuscleGroup.legs,
+      ); // first PRIMARY target, not first row
+      expect(e.secondaryMuscles, [
+        MuscleGroup.biceps,
+      ]); // forearms->biceps deduped, legs removed
     });
 
     test('requires a primary target', () {
-      expect(() => Exercise.custom(id: 'c', name: 'X', equipment: Equipment.cable, targets: const [MuscleTarget.secondary(MuscleRegion.core)]),
-          throwsArgumentError);
+      expect(
+        () => Exercise.custom(
+          id: 'c',
+          name: 'X',
+          equipment: Equipment.cable,
+          targets: const [MuscleTarget.secondary(MuscleRegion.core)],
+        ),
+        throwsArgumentError,
+      );
     });
   });
 
@@ -76,7 +117,14 @@ void main() {
         MuscleTarget.secondary(MuscleRegion.back, muscle: Muscle.upperBack),
       ],
     );
-    final without = Exercise(id: 'custom_old', name: 'Old', primaryMuscle: MuscleGroup.back, secondaryMuscles: const [MuscleGroup.biceps], equipment: Equipment.cable, isCustom: true);
+    final without = Exercise(
+      id: 'custom_old',
+      name: 'Old',
+      primaryMuscle: MuscleGroup.back,
+      secondaryMuscles: const [MuscleGroup.biceps],
+      equipment: Equipment.cable,
+      isCustom: true,
+    );
 
     test('uses stored targets (leaf-level) when present', () {
       final p = MuscleProfiles.of(withTargets);
@@ -101,22 +149,45 @@ void main() {
     });
 
     test('built-in id always wins over any stored targets', () {
-      final fake = Exercise(id: 'lat_pulldown', name: 'x', primaryMuscle: MuscleGroup.chest, equipment: Equipment.cable,
-          muscleTargets: const [MuscleTarget.primary(MuscleRegion.chest)]);
+      final fake = Exercise(
+        id: 'lat_pulldown',
+        name: 'x',
+        primaryMuscle: MuscleGroup.chest,
+        equipment: Equipment.cable,
+        muscleTargets: const [MuscleTarget.primary(MuscleRegion.chest)],
+      );
       expect(MuscleProfiles.of(fake).primaryRegion, MuscleRegion.back);
     });
 
-    test('recommender: custom exercise with Back->Lats primary is a replacement for Lat Pulldown', () {
-      final catalog = [...seedExercises(), withTargets];
-      final cur = catalog.firstWhere((e) => e.id == 'lat_pulldown');
-      final res = ExerciseRecommender.replacements(current: cur, catalog: catalog);
-      final hit = res.where((c) => c.exercise.id == 'custom_lat').toList();
-      expect(hit, isNotEmpty);
-      expect(hit.single.matchPercent, greaterThan(60)); // same leaf
-      // The same exercise WITHOUT targets is only a region-level match, so it ranks lower.
-      final coarse = Exercise(id: 'custom_coarse', name: 'Coarse', primaryMuscle: MuscleGroup.back, equipment: Equipment.cable, isCustom: true);
-      final res2 = ExerciseRecommender.replacements(current: cur, catalog: [...seedExercises(), coarse]);
-      expect(res2.firstWhere((c) => c.exercise.id == 'custom_coarse').matchPercent, lessThan(hit.single.matchPercent));
-    });
+    test(
+      'recommender: custom exercise with Back->Lats primary is a replacement for Lat Pulldown',
+      () {
+        final catalog = [...seedExercises(), withTargets];
+        final cur = catalog.firstWhere((e) => e.id == 'lat_pulldown');
+        final res = ExerciseRecommender.replacements(
+          current: cur,
+          catalog: catalog,
+        );
+        final hit = res.where((c) => c.exercise.id == 'custom_lat').toList();
+        expect(hit, isNotEmpty);
+        expect(hit.single.matchPercent, greaterThan(60)); // same leaf
+        // The same exercise WITHOUT targets is only a region-level match, so it ranks lower.
+        final coarse = Exercise(
+          id: 'custom_coarse',
+          name: 'Coarse',
+          primaryMuscle: MuscleGroup.back,
+          equipment: Equipment.cable,
+          isCustom: true,
+        );
+        final res2 = ExerciseRecommender.replacements(
+          current: cur,
+          catalog: [...seedExercises(), coarse],
+        );
+        expect(
+          res2.firstWhere((c) => c.exercise.id == 'custom_coarse').matchPercent,
+          lessThan(hit.single.matchPercent),
+        );
+      },
+    );
   });
 }

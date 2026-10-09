@@ -25,12 +25,12 @@ class SetupCustomStep extends StatefulWidget {
 class _Entry {
   _Entry(String name, this.muscles, this.exercises) : name = TextEditingController(text: name);
   final TextEditingController name;
-  List<MuscleGroup> muscles;
+  List<SectionMuscle> muscles;
   List<RoutineExercise> exercises;
 }
 
 class _SetupCustomStepState extends State<SetupCustomStep> {
-  late final List<_Entry> _entries = [for (final d in widget.days) _Entry(d.name, [...d.muscles], [...d.exercises])];
+  late final List<_Entry> _entries = [for (final d in widget.days) _Entry(d.name, [...d.sectionMuscles], [...d.exercises])];
 
   @override
   void dispose() {
@@ -41,19 +41,24 @@ class _SetupCustomStepState extends State<SetupCustomStep> {
   }
 
   void _emit() {
-    widget.onChanged([for (final e in _entries) SplitDayPlan(name: e.name.text, muscles: [...e.muscles], exercises: [...e.exercises])]);
+    widget.onChanged([for (final e in _entries) SplitDayPlan(name: e.name.text, sectionMuscles: [...e.muscles], exercises: [...e.exercises])]);
     setState(() {});
   }
 
-  void _toggle(_Entry e, MuscleGroup m) {
+  void _toggle(_Entry e, SectionMuscle m) {
     if (e.muscles.contains(m)) {
-      final ids = {for (final x in widget.all) if (x.primaryMuscle == m) x.id};
+      final ids = {for (final x in widget.all) if (sectionOf(x) == m) x.id};
       e.muscles = [...e.muscles]..remove(m);
       e.exercises = [for (final x in e.exercises) if (!ids.contains(x.exerciseId)) x];
     } else {
-      e.muscles = [for (final x in MuscleGroup.values) if (x == m || e.muscles.contains(x)) x];
+      // Muscles keep the order they were chosen in: that is the order of the day's sections.
+      e.muscles = [...e.muscles, m];
       final have = {for (final x in e.exercises) x.exerciseId};
-      e.exercises = [...e.exercises, for (final x in widget.catalog.suggest(m, widget.all)) if (!have.contains(x.exerciseId)) x];
+      e.exercises = WorkoutSections.arrange(
+        [...e.exercises, for (final x in widget.catalog.suggestSection(m, widget.all)) if (!have.contains(x.exerciseId)) x],
+        widget.all,
+        muscleOrder: e.muscles,
+      );
     }
     _emit();
   }
@@ -121,8 +126,8 @@ class _SetupCustomStepState extends State<SetupCustomStep> {
         SxTextField(label: 'Day name', hint: 'e.g. Push', controller: e.name, onChanged: (_) => _emit()),
         const SizedBox(height: SxSpace.sm),
         Text('MUSCLES', style: SxText.labelCaps.copyWith(color: c.textBody)),
-        Wrap(spacing: 8, children: [
-          for (final m in MuscleGroup.values) SxChip(label: m.label, selected: e.muscles.contains(m), onTap: () => _toggle(e, m)),
+        Wrap(spacing: 8, runSpacing: 8, children: [
+          for (final m in SectionMuscle.values) SxChip(label: m.label, selected: e.muscles.contains(m), onTap: () => _toggle(e, m)),
         ]),
       ]),
     );

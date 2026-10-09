@@ -1,6 +1,7 @@
 import '../models/models.dart';
 import '../repositories/repositories.dart';
 import 'split_models.dart';
+import 'workout_sections.dart';
 
 class ScheduleSaveResult {
   const ScheduleSaveResult({
@@ -57,10 +58,14 @@ abstract final class ScheduleBuilder {
           id: id,
           name: d.name.trim(),
           description: description,
-          exercises: [
-            for (final e in d.exercises)
-              if (known.contains(e.exerciseId)) e,
-          ],
+          exercises: WorkoutSections.arrange(
+            [
+              for (final e in d.exercises)
+                if (known.contains(e.exerciseId)) e,
+            ],
+            catalog,
+            muscleOrder: d.sectionMuscles,
+          ),
         ),
       );
     }

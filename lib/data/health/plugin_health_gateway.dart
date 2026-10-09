@@ -131,7 +131,7 @@ class PluginHealthGateway implements HealthGateway {
 
   // ───────────────────────── workouts: write / read ─────────────────────────
 
-  static const _ownPackage = 'dev.mahdi_ramadhan.stationx';
+  static const _ownPackage = 'dev.mahdi_haji.stationx';
   @override
   Set<String> get ownSourceIds => const {_ownPackage, 'StationX'};
 
@@ -159,7 +159,8 @@ class PluginHealthGateway implements HealthGateway {
     ],
   };
 
-  HealthDataAccess _featureAccess(HealthFeature f) => f == HealthFeature.writeWorkouts
+  HealthDataAccess _featureAccess(HealthFeature f) =>
+      f == HealthFeature.writeWorkouts
       ? HealthDataAccess.WRITE
       : HealthDataAccess.READ;
 
@@ -197,21 +198,63 @@ class PluginHealthGateway implements HealthGateway {
   // WALKING_TREADMILL (plugin 13.3.2), so those degrade to the closest supported type.
   HealthWorkoutActivityType _platformType(HealthActivity a) => switch (a) {
     HealthActivity.running => HealthWorkoutActivityType.RUNNING,
-    HealthActivity.runningTreadmill => _ios ? HealthWorkoutActivityType.RUNNING : HealthWorkoutActivityType.RUNNING_TREADMILL,
-    HealthActivity.walking || HealthActivity.walkingTreadmill => HealthWorkoutActivityType.WALKING,
-    HealthActivity.biking || HealthActivity.bikingStationary => HealthWorkoutActivityType.BIKING,
+    HealthActivity.runningTreadmill =>
+      _ios
+          ? HealthWorkoutActivityType.RUNNING
+          : HealthWorkoutActivityType.RUNNING_TREADMILL,
+    HealthActivity.walking ||
+    HealthActivity.walkingTreadmill => HealthWorkoutActivityType.WALKING,
+    HealthActivity.biking ||
+    HealthActivity.bikingStationary => HealthWorkoutActivityType.BIKING,
     HealthActivity.hiking => HealthWorkoutActivityType.HIKING,
     HealthActivity.rowing => HealthWorkoutActivityType.ROWING,
-    HealthActivity.rowingMachine => _ios ? HealthWorkoutActivityType.ROWING : HealthWorkoutActivityType.ROWING_MACHINE,
+    HealthActivity.rowingMachine =>
+      _ios
+          ? HealthWorkoutActivityType.ROWING
+          : HealthWorkoutActivityType.ROWING_MACHINE,
     HealthActivity.elliptical => HealthWorkoutActivityType.ELLIPTICAL,
     HealthActivity.stairClimbing => HealthWorkoutActivityType.STAIR_CLIMBING,
-    HealthActivity.stairClimbingMachine => _ios ? HealthWorkoutActivityType.STAIR_CLIMBING : HealthWorkoutActivityType.STAIR_CLIMBING_MACHINE,
-    HealthActivity.swimming => _ios ? HealthWorkoutActivityType.SWIMMING : HealthWorkoutActivityType.SWIMMING_POOL,
-    HealthActivity.jumpRope => _ios ? HealthWorkoutActivityType.JUMP_ROPE : HealthWorkoutActivityType.OTHER,
-    HealthActivity.hiit => HealthWorkoutActivityType.HIGH_INTENSITY_INTERVAL_TRAINING,
+    HealthActivity.stairClimbingMachine =>
+      _ios
+          ? HealthWorkoutActivityType.STAIR_CLIMBING
+          : HealthWorkoutActivityType.STAIR_CLIMBING_MACHINE,
+    HealthActivity.swimming =>
+      _ios
+          ? HealthWorkoutActivityType.SWIMMING
+          : HealthWorkoutActivityType.SWIMMING_POOL,
+    HealthActivity.openWaterSwimming =>
+      _ios
+          ? HealthWorkoutActivityType.SWIMMING
+          : HealthWorkoutActivityType.SWIMMING_OPEN_WATER,
+    HealthActivity.crossCountrySkiing =>
+      HealthWorkoutActivityType.CROSS_COUNTRY_SKIING,
+    // Android Health Connect has no kayak/paddle type in plugin 13.3.2: generic workout there.
+    HealthActivity.paddling =>
+      _ios
+          ? HealthWorkoutActivityType.PADDLE_SPORTS
+          : HealthWorkoutActivityType.OTHER,
+    HealthActivity.dance => HealthWorkoutActivityType.CARDIO_DANCE,
+    HealthActivity.skating => HealthWorkoutActivityType.SKATING,
+    HealthActivity.climbing =>
+      _ios
+          ? HealthWorkoutActivityType.CLIMBING
+          : HealthWorkoutActivityType.ROCK_CLIMBING,
+    HealthActivity.martialArts => HealthWorkoutActivityType.MARTIAL_ARTS,
+    HealthActivity.jumpRope =>
+      _ios
+          ? HealthWorkoutActivityType.JUMP_ROPE
+          : HealthWorkoutActivityType.OTHER,
+    HealthActivity.hiit =>
+      HealthWorkoutActivityType.HIGH_INTENSITY_INTERVAL_TRAINING,
     HealthActivity.boxing => HealthWorkoutActivityType.BOXING,
-    HealthActivity.handCycling => _ios ? HealthWorkoutActivityType.HAND_CYCLING : HealthWorkoutActivityType.OTHER,
-    HealthActivity.strength => _ios ? HealthWorkoutActivityType.TRADITIONAL_STRENGTH_TRAINING : HealthWorkoutActivityType.STRENGTH_TRAINING,
+    HealthActivity.handCycling =>
+      _ios
+          ? HealthWorkoutActivityType.HAND_CYCLING
+          : HealthWorkoutActivityType.OTHER,
+    HealthActivity.strength =>
+      _ios
+          ? HealthWorkoutActivityType.TRADITIONAL_STRENGTH_TRAINING
+          : HealthWorkoutActivityType.STRENGTH_TRAINING,
     HealthActivity.other => HealthWorkoutActivityType.OTHER,
   };
 
@@ -265,7 +308,9 @@ class PluginHealthGateway implements HealthGateway {
           }
         } catch (_) {
           // Never leave a session without its numbers: roll back, the caller retries.
-          await deleteWorkout(HealthWriteReceipt(workoutId: id, extraClientIds: extras));
+          await deleteWorkout(
+            HealthWriteReceipt(workoutId: id, extraClientIds: extras),
+          );
           return null;
         }
       }
@@ -288,7 +333,8 @@ class PluginHealthGateway implements HealthGateway {
         final type = cid.endsWith('.dist')
             ? HealthDataType.DISTANCE_DELTA
             : HealthDataType.TOTAL_CALORIES_BURNED;
-        ok = await _health.deleteByClientRecordId(
+        ok =
+            await _health.deleteByClientRecordId(
               dataTypeKey: type,
               clientRecordId: cid,
             ) &&
@@ -349,7 +395,10 @@ class PluginHealthGateway implements HealthGateway {
       double active = 0, total = 0;
       var hasActive = false, hasTotal = false;
       for (final p in points) {
-        if (ownSourceIds.contains(p.sourceName) || ownSourceIds.contains(p.sourceId)) continue;
+        if (ownSourceIds.contains(p.sourceName) ||
+            ownSourceIds.contains(p.sourceId)) {
+          continue;
+        }
         final v = p.value;
         if (v is! NumericHealthValue) continue;
         final n = v.numericValue.toDouble();
