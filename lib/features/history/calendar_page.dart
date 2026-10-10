@@ -10,6 +10,7 @@ import '../../core/theme/sx_typography.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/widgets/widgets.dart';
 import '../../domain/domain.dart';
+import 'session_delete_dialog.dart';
 
 DateTime _dateOnly(DateTime d) => DateTime(d.year, d.month, d.day);
 
@@ -61,19 +62,24 @@ class _CalendarPageState extends State<CalendarPage> {
 
   Future<void> _logHistoricalLift() async {
     final app = context.app;
-    final workouts = app.workouts.workouts;
-    if (workouts.isEmpty) {
+    final all = app.workouts.workouts;
+    if (all.isEmpty) {
       showSxSnack(context, 'Create a workout first', icon: Icons.info_outline);
       return;
     }
+    // Your schedule first (rotation order), then workouts that are not in the rotation.
+    final byId = {for (final w in all) w.id: w};
+    final inRotation = [for (final id in app.workouts.rotation.workoutIds) if (byId[id] != null) byId[id]!];
+    final scheduled = inRotation.map((w) => w.id).toSet();
+    final workouts = [...inRotation, for (final w in all) if (!scheduled.contains(w.id)) w];
     final picked = await showSxSheet<Workout>(
       context,
       builder: (ctx) => Padding(
         padding: const EdgeInsets.fromLTRB(SxSpace.md, 8, SxSpace.md, SxSpace.md),
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('LOG HISTORICAL LIFT', style: SxText.headlineMd.copyWith(color: ctx.sx.textHigh)),
+          Text('INSERT WORKOUT', style: SxText.headlineMd.copyWith(color: ctx.sx.textHigh)),
           const SizedBox(height: 4),
-          Text('Which workout did you do on ${Fmt.dateLong(_selected)}?', style: SxText.bodyMd.copyWith(color: ctx.sx.textBody)),
+          Text('Which workout from your schedule did you do on ${Fmt.dateLong(_selected)}? You will fill in the sets next.', style: SxText.bodyMd.copyWith(color: ctx.sx.textBody)),
           const SizedBox(height: SxSpace.md),
           Flexible(
             child: ListView.separated(
@@ -87,7 +93,10 @@ class _CalendarPageState extends State<CalendarPage> {
                   Expanded(
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                       Text(workouts[i].name, style: SxText.headlineSm.copyWith(color: ctx.sx.textHigh)),
-                      Text('${workouts[i].exercises.length} exercises · ${workouts[i].totalSets} sets', style: SxText.bodySm.copyWith(color: ctx.sx.textBody)),
+                      Text(
+                        '${scheduled.contains(workouts[i].id) ? 'Day ${i + 1} · ' : 'Not in schedule · '}${workouts[i].exercises.length} exercises · ${workouts[i].totalSets} sets',
+                        style: SxText.bodySm.copyWith(color: ctx.sx.textBody),
+                      ),
                     ]),
                   ),
                   Icon(Icons.chevron_right, color: ctx.sx.textBody),
@@ -196,10 +205,14 @@ class _CalendarPageState extends State<CalendarPage> {
                             style: SxText.headlineSm.copyWith(color: c.textHigh)),
                         const SizedBox(height: 4),
                         Text(
-                          isFuture ? 'Future dates can\'t be logged. Your rotation, not the calendar, decides the next workout.' : (day.isEmpty ? 'No sessions logged. Add a past workout below if you trained.' : 'Change the filter to see this day\'s sessions.'),
+                          isFuture ? 'Future dates can\'t be logged. Your rotation, not the calendar, decides the next workout.' : (day.isEmpty ? 'No sessions logged. Insert a workout if you trained.' : 'Change the filter to see this day\'s sessions.'),
                           textAlign: TextAlign.center,
                           style: SxText.bodySm.copyWith(color: c.textBody),
                         ),
+                        if (!isFuture && day.isEmpty) ...[
+                          const SizedBox(height: 12),
+                          SxButton(label: 'Insert workout', icon: Icons.add, height: 48, onPressed: _logHistoricalLift),
+                        ],
                       ]),
                     ),
                   for (final (i, s) in strengthList.indexed) Padding(padding: const EdgeInsets.only(bottom: SxSpace.md), child: SxStagger(index: i, child: _StrengthCard(session: s))),
@@ -209,7 +222,7 @@ class _CalendarPageState extends State<CalendarPage> {
             ),
             const SectionHeader('Record retroactive data'),
             Row(children: [
-              Expanded(child: SxButton(label: 'Log lift', icon: Icons.fitness_center, variant: SxButtonVariant.secondary, height: 52, onPressed: isFuture ? null : _logHistoricalLift)),
+              Expanded(child: SxButton(label: 'Insert workout', icon: Icons.add_circle_outline, variant: SxButtonVariant.secondary, height: 52, onPressed: isFuture ? null : _logHistoricalLift)),
               const SizedBox(width: 8),
               Expanded(child: SxButton(label: 'Backdate cardio', icon: Icons.directions_run, variant: SxButtonVariant.secondary, height: 52, onPressed: isFuture ? null : () => AppNav.backdateCardio(context, date: _selected))),
             ]),
@@ -527,6 +540,12 @@ class _StrengthCard extends StatelessWidget {
               Expanded(child: Text('${cardio.kind.label} finisher · ${Fmt.durationShort(cardio.durationSeconds)}${cardio.distanceKm != null ? ' · ${Fmt.km(cardio.distanceKm! * (miles ? 0.621371 : 1))} ${miles ? 'mi' : 'km'}' : ''}', style: SxText.bodySm.copyWith(color: c.textHigh))),
             ]),
           ),
+        const SizedBox(height: 8),
+        Row(children: [
+          Expanded(child: SxButton(label: 'Edit', icon: Icons.edit_outlined, variant: SxButtonVariant.secondary, height: 44, onPressed: () => AppNav.editWorkoutSession(context, session.id))),
+          const SizedBox(width: 8),
+          SxIconButton(icon: Icons.delete_outline, tooltip: 'Delete ${session.name}', iconColor: c.danger, size: 44, onPressed: () => deleteSessionWithConfirm(context, session)),
+        ]),
       ]),
     );
   }

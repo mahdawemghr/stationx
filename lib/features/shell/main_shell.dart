@@ -53,6 +53,19 @@ class _MainShellState extends State<MainShell> with SingleTickerProviderStateMix
     super.dispose();
   }
 
+  /// Fling speed (logical px/s) that counts as a tab swipe; slower drags are ignored.
+  static const _swipeVelocity = 300.0;
+
+  /// Swipe left -> next tab, swipe right -> previous tab (no wrap). Horizontal scrollers inside
+  /// a page (chip rows, charts) win the gesture arena, so they keep working.
+  void _onSwipe(DragEndDetails d) {
+    final v = d.primaryVelocity ?? 0;
+    if (v.abs() < _swipeVelocity) return;
+    final dir = Directionality.of(context) == TextDirection.rtl ? -1 : 1;
+    final next = _index + (v < 0 ? dir : -dir);
+    if (next >= 0 && next < _pages.length) _go(next);
+  }
+
   static const _pages = <Widget>[TodayPage(), WorkoutsHubPage(), ProgressPage(), ProfilePage()];
 
   @override
@@ -60,11 +73,15 @@ class _MainShellState extends State<MainShell> with SingleTickerProviderStateMix
     _built.add(_index);
     return Scaffold(
       backgroundColor: context.sx.canvas,
-      body: FadeTransition(
-        opacity: _opacity,
-        child: IndexedStack(
-          index: _index,
-          children: [for (var i = 0; i < _pages.length; i++) _built.contains(i) ? _pages[i] : const SizedBox.shrink()],
+      body: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onHorizontalDragEnd: _onSwipe,
+        child: FadeTransition(
+          opacity: _opacity,
+          child: IndexedStack(
+            index: _index,
+            children: [for (var i = 0; i < _pages.length; i++) _built.contains(i) ? _pages[i] : const SizedBox.shrink()],
+          ),
         ),
       ),
       bottomNavigationBar: SxBottomNav(index: _index, onChanged: _go),

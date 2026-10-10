@@ -25,7 +25,7 @@ class AuthTopBar extends StatelessWidget implements PreferredSizeWidget {
           child: Row(children: [
             IconButton(tooltip: 'Back', icon: Icon(Icons.arrow_back, color: c.textHigh), onPressed: () => Navigator.of(context).maybePop()),
             const SxLogo(size: 36, decorative: true),
-            const SizedBox(width: 8),
+            const SizedBox(width: 16),
             Expanded(child: Text('StationX', maxLines: 1, overflow: TextOverflow.ellipsis, style: SxText.headlineSm.copyWith(color: c.textHigh, fontWeight: FontWeight.w700))),
             const SizedBox(width: 8),
             Flexible(child: Text(label.toUpperCase(), maxLines: 1, overflow: TextOverflow.ellipsis, style: SxText.labelCaps.copyWith(color: c.textBody))),

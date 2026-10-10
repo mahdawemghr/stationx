@@ -64,7 +64,7 @@ class SxTopBar extends StatelessWidget implements PreferredSizeWidget {
                     const SizedBox(width: 8),
                   if (showLogo) ...[
                     const SxLogo(size: 32, decorative: true),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 16),
                   ],
                   Expanded(
                     child: Column(
@@ -247,7 +247,7 @@ class SxBrandBar extends StatelessWidget implements PreferredSizeWidget {
             child: Row(
               children: [
                 const SxLogo(size: 40, decorative: true),
-                const SizedBox(width: 12),
+                const SizedBox(width: 16),
                 Flexible(
                   flex: 1000,
                   child: Text(

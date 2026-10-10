@@ -23,6 +23,7 @@ import '../features/exercises/exercise_library_page.dart';
 import '../features/health/health_import_page.dart';
 import '../features/health/health_sync_settings_page.dart';
 import '../features/history/calendar_page.dart';
+import '../features/history/edit_session_page.dart';
 import '../features/onboarding/schedule_setup_flow.dart';
 import '../features/progress/personal_records_page.dart';
 import '../features/shell/main_shell.dart';
@@ -70,6 +71,7 @@ abstract final class AppNav {
   /// Replaces the active workout screen with the completion screen.
   static Future<void> workoutComplete(BuildContext c, String sessionId) => _replace(c, WorkoutCompletePage(sessionId: sessionId));
   static Future<void> viewWorkoutSession(BuildContext c, String sessionId) => _push(c, WorkoutCompletePage(sessionId: sessionId));
+  static Future<void> editWorkoutSession(BuildContext c, String sessionId) => _push(c, EditSessionPage(sessionId: sessionId));
 
   // ── exercises ──
   static Future<Exercise?> exercisePicker(BuildContext c) => _push<Exercise>(c, const ExerciseLibraryPage(pickMode: true));

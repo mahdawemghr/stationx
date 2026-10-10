@@ -10,6 +10,7 @@ import '../../core/theme/sx_typography.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/widgets/widgets.dart';
 import '../../domain/domain.dart';
+import '../history/session_delete_dialog.dart';
 import '../today/today_page.dart' show AutoEndNoticeCard;
 import 'session_analysis.dart';
 import 'widgets/cardio_block.dart' show cardioIcon;
@@ -65,6 +66,9 @@ class _WorkoutCompletePageState extends State<WorkoutCompletePage> {
             title: 'Workout Summary',
             showLogo: true,
             pill: const StatusPill('Complete', dot: true),
+            actions: [
+              SxIconButton(icon: Icons.edit_outlined, tooltip: 'Edit workout', filled: false, onPressed: () => AppNav.editWorkoutSession(context, s.id)),
+            ],
           ),
           bottom: Column(mainAxisSize: MainAxisSize.min, children: [
             SxButton(label: 'Done', icon: Icons.check, onPressed: () => AppNav.switchTab(context, 0)),
@@ -74,6 +78,14 @@ class _WorkoutCompletePageState extends State<WorkoutCompletePage> {
               variant: SxButtonVariant.secondary,
               height: 48,
               onPressed: empty ? null : _toggleDetails,
+            ),
+            TextButton(
+              onPressed: () async {
+                final nav = Navigator.of(context);
+                if (await deleteSessionWithConfirm(context, s)) nav.pop();
+              },
+              style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
+              child: Text('Delete workout', style: SxText.bodyMd.copyWith(color: context.sx.danger)),
             ),
           ]),
           children: [

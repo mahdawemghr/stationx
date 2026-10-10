@@ -593,7 +593,7 @@ class _TodayBar extends StatelessWidget implements PreferredSizeWidget {
               final showPill = box.maxWidth / MediaQuery.textScalerOf(context).scale(1) >= 340;
               return Row(children: [
                 const SxLogo(size: 40, decorative: true),
-                const SizedBox(width: 12),
+                const SizedBox(width: 16),
                 Flexible(flex: 1000, child: Text('StationX', maxLines: 1, overflow: TextOverflow.ellipsis, style: SxText.headlineMd.copyWith(color: c.textHigh, fontWeight: FontWeight.w700))),
                 if (showPill) ...[const SizedBox(width: 10), const StatusPill('Local', dot: true)],
                 const Spacer(),

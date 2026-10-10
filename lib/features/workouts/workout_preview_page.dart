@@ -9,6 +9,7 @@ import '../../core/theme/sx_typography.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/widgets/widgets.dart';
 import '../../domain/domain.dart';
+import 'workout_history_section.dart';
 import 'workout_section_header.dart';
 import 'workout_stats.dart';
 
@@ -175,6 +176,8 @@ class _Preview extends StatelessWidget {
               unit: unit,
               lastSet: (id) => _lastSet(sessions, id),
             ),
+          const SizedBox(height: SxSpace.lg),
+          WorkoutHistorySection(workoutId: workout.id),
         ],
       ),
     );

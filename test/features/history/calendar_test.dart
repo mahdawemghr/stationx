@@ -48,11 +48,14 @@ void main() {
 
   testWidgets('calendar: log historical lift opens workout picker', (t) async {
     await pumpPage(t, const CalendarPage());
-    final btn = find.text('LOG LIFT');
+    final btn = find.text('INSERT WORKOUT').last;
     await t.scrollUntilVisible(btn, 300, scrollable: find.byType(Scrollable).first);
+    await t.ensureVisible(btn);
+    await t.pump();
     await t.tap(btn);
     await t.pumpAndSettle();
-    expect(find.text('LOG HISTORICAL LIFT'), findsOneWidget);
+    expect(find.text('INSERT WORKOUT'), findsWidgets);
+    expect(find.textContaining('Which workout from your schedule'), findsOneWidget);
     expect(find.text('Back + Triceps'), findsWidgets);
   });
 

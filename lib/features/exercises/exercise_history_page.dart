@@ -7,6 +7,7 @@ import '../../core/theme/sx_typography.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/widgets/widgets.dart';
 import '../../domain/domain.dart';
+import '../history/session_delete_dialog.dart';
 import 'exercise_widgets.dart';
 import 'exercise_stats.dart';
 
@@ -228,6 +229,12 @@ class _SessionCard extends StatelessWidget {
         Row(children: [
           Expanded(child: Text('${sets.length} sets completed', style: SxText.labelXs.copyWith(color: c.textBody))),
           Flexible(child: Text('Total volume: ${Fmt.volume(stat.volume, u: unit)}', style: SxText.labelXs.copyWith(color: c.primary), overflow: TextOverflow.ellipsis)),
+        ]),
+        const SizedBox(height: 8),
+        Row(children: [
+          Expanded(child: SxButton(label: 'Edit', icon: Icons.edit_outlined, variant: SxButtonVariant.secondary, height: 44, onPressed: () => AppNav.editWorkoutSession(context, stat.session.id))),
+          const SizedBox(width: 8),
+          SxIconButton(icon: Icons.delete_outline, tooltip: 'Delete ${Fmt.dateMedium(stat.date)} workout', iconColor: c.danger, size: 44, onPressed: () => deleteSessionWithConfirm(context, stat.session)),
         ]),
       ]),
     );
