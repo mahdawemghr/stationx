@@ -1,3 +1,4 @@
+import '../../core/utils/remote_ops.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -20,7 +21,12 @@ Future<Exercise?> showCreateExerciseSheet(
   final repo = context.app.exercises;
   return showSxSheet<Exercise>(
     context,
-    builder: (_) => _CreateBody(repo: repo, initialMuscle: initialMuscle, initialRegion: initialRegion, initialName: initialName),
+    builder: (_) => _CreateBody(
+      repo: repo,
+      initialMuscle: initialMuscle,
+      initialRegion: initialRegion,
+      initialName: initialName,
+    ),
   );
 }
 
@@ -139,8 +145,13 @@ class _CreateBodyState extends State<_CreateBody> {
           ),
       ],
     );
-    await widget.repo.addCustom(ex);
-    if (mounted) Navigator.of(context).pop(ex);
+    final ok = await runRemote(
+      context,
+      () => widget.repo.addCustom(ex),
+      what: 'save the exercise',
+      key: 'add-exercise',
+    );
+    if (ok && mounted) Navigator.of(context).pop(ex);
   }
 
   Widget _rowCard(int i, _TargetRow r, SxColors c) {

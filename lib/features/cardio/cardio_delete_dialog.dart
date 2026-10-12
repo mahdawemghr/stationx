@@ -14,7 +14,8 @@ Future<bool> confirmDeleteCardio(BuildContext context, CardioSession session) {
   return showSxConfirm(
     context,
     title: 'Delete cardio session?',
-    message: 'This workout will be permanently removed from your history, '
+    message:
+        'This workout will be permanently removed from your history, '
         'volume totals and weekly goals. This cannot be undone.',
     confirmLabel: 'Delete session',
     destructive: true,
@@ -32,23 +33,44 @@ class _SessionPreview extends StatelessWidget {
     final c = context.sx;
     final miles = !context.app.profile.profile.cardioDistanceUnitKm;
     return SxInset(
-      child: Row(children: [
-        Icon(Icons.directions_run, color: c.primary, size: 22),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(session.kind.label, overflow: TextOverflow.ellipsis, style: SxText.headlineSm.copyWith(color: c.textHigh)),
-            Text('${Fmt.dateMedium(session.workoutDate)} • ${Fmt.time(session.workoutDate)}',
-                overflow: TextOverflow.ellipsis, style: SxText.bodySm.copyWith(color: c.textBody)),
-          ]),
-        ),
-        const SizedBox(width: 8),
-        Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-          Text(Fmt.clock(session.durationSeconds), style: SxText.metricSm.copyWith(color: c.textHigh)),
-          if (session.distanceKm != null)
-            Text('${Fmt.km(session.distanceKm, miles: miles)} ${miles ? 'mi' : 'km'}', style: SxText.bodySm.copyWith(color: c.textBody)),
-        ]),
-      ]),
+      child: Row(
+        children: [
+          Icon(Icons.directions_run, color: c.primary, size: 22),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  session.kind.label,
+                  overflow: TextOverflow.ellipsis,
+                  style: SxText.headlineSm.copyWith(color: c.textHigh),
+                ),
+                Text(
+                  '${Fmt.dateMedium(session.workoutDate)} • ${Fmt.time(session.workoutDate)}',
+                  overflow: TextOverflow.ellipsis,
+                  style: SxText.bodySm.copyWith(color: c.textBody),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                Fmt.clock(session.durationSeconds),
+                style: SxText.metricSm.copyWith(color: c.textHigh),
+              ),
+              if (session.distanceKm != null)
+                Text(
+                  '${Fmt.km(session.distanceKm, miles: miles)} ${miles ? 'mi' : 'km'}',
+                  style: SxText.bodySm.copyWith(color: c.textBody),
+                ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

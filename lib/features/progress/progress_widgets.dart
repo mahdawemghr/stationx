@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../core/theme/sx_spacing.dart';
-import '../../core/theme/sx_theme.dart';
-import '../../core/theme/sx_typography.dart';
 import '../../core/widgets/widgets.dart';
 
 /// Stat tile whose headline number counts up on first build (and on change).
@@ -31,57 +28,15 @@ class CountStatTile extends StatelessWidget {
   final Duration delay;
 
   @override
-  Widget build(BuildContext context) {
-    final c = context.sx;
-    final valueColor = accent ? c.primary : c.textHigh;
-    return Semantics(
-      container: true,
-      label: '$label: ${format(value)}${unit == null ? '' : ' $unit'}${caption == null ? '' : '. $caption'}',
-      excludeSemantics: true,
-      child: Container(
-        constraints: BoxConstraints(minHeight: height),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: c.surface1,
-          borderRadius: BorderRadius.circular(SxRadius.lg),
-          border: Border.all(color: c.hairline),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(children: [
-              Expanded(
-                child: Text(label.toUpperCase(), overflow: TextOverflow.ellipsis, style: SxText.labelCaps.copyWith(color: c.textBody)),
-              ),
-              if (icon != null) Icon(icon, size: 18, color: accent ? c.primary : c.textBody),
-            ]),
-            const SizedBox(height: 8),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.baseline,
-              textBaseline: TextBaseline.alphabetic,
-              children: [
-                Flexible(
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
-                    child: SxCountUp(value: value, formatter: format, delay: delay, style: SxText.metricLg.copyWith(color: valueColor)),
-                  ),
-                ),
-                if (unit != null) ...[
-                  const SizedBox(width: 4),
-                  Text(unit!, style: SxText.bodySm.copyWith(color: accent ? c.primary : c.textBody)),
-                ],
-              ],
-            ),
-            if (caption != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Text(caption!, style: SxText.bodySm.copyWith(color: c.textMuted)),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => StatTile.number(
+    label: label,
+    value: value,
+    formatter: format,
+    unit: unit,
+    icon: icon,
+    accent: accent,
+    height: height,
+    caption: caption,
+    delay: delay,
+  );
 }

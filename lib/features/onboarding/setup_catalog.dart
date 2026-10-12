@@ -4,7 +4,8 @@ import '../../domain/domain.dart';
 typedef SetupGroup = ({String? label, String hint, List<Exercise> exercises});
 
 /// The section (broad muscle) an exercise belongs to, exactly as workouts section it.
-SectionMuscle sectionOf(Exercise e) => SectionMuscle.of(MuscleProfiles.of(e).primaryRegion);
+SectionMuscle sectionOf(Exercise e) =>
+    SectionMuscle.of(MuscleProfiles.of(e).primaryRegion);
 
 /// The catalog functions the setup flow needs. Defaults to [SplitCatalog];
 /// tests inject small fixtures instead.
@@ -17,7 +18,11 @@ class SetupCatalog {
   }) : presets = presets ?? SplitCatalog.presets;
 
   final List<SplitPreset> presets;
-  final List<({SplitSection section, List<Exercise> exercises})> Function(MuscleGroup, List<Exercise>) grouped;
+  final List<({SplitSection section, List<Exercise> exercises})> Function(
+    MuscleGroup,
+    List<Exercise>,
+  )
+  grouped;
   final String? Function(String exerciseId) reasonFor;
   final List<RoutineExercise> Function(MuscleGroup, List<Exercise>) suggest;
 
@@ -34,7 +39,10 @@ class SetupCatalog {
             (
               label: g.section.label,
               hint: g.section.hint,
-              exercises: [for (final e in g.exercises) if (sectionOf(e) == m) e],
+              exercises: [
+                for (final e in g.exercises)
+                  if (sectionOf(e) == m) e,
+              ],
             ),
       ];
     }
@@ -49,36 +57,62 @@ class SetupCatalog {
     for (final e in all) {
       if (seen.add(e.id)) ordered.add(e);
     }
-    final mine = [for (final e in ordered) if (sectionOf(e) == m) e];
+    final mine = [
+      for (final e in ordered)
+        if (sectionOf(e) == m) e,
+    ];
     if (mine.isEmpty) return const [];
     final byId = {for (final e in mine) e.id: e};
-    final sections = WorkoutSections.group([for (final e in mine) RoutineExercise(exerciseId: e.id)], all);
+    final sections = WorkoutSections.group([
+      for (final e in mine) RoutineExercise(exerciseId: e.id),
+    ], all);
     return [
       for (final s in sections)
         if (s.muscle == m)
           for (final g in s.groups)
-            (label: g.label, hint: '', exercises: [for (final r in g.items) byId[r.exerciseId]!]),
+            (
+              label: g.label,
+              hint: '',
+              exercises: [for (final r in g.items) byId[r.exerciseId]!],
+            ),
     ];
   }
 
   /// The recommended picks for a section's regions (forearms included; may be empty or short).
-  List<RoutineExercise> suggestSection(SectionMuscle m, List<Exercise> all) {
+  /// [equipment] limits the suggestions to what the user owns (`null` = no limit).
+  List<RoutineExercise> suggestSection(
+    SectionMuscle m,
+    List<Exercise> all, {
+    Set<Equipment>? equipment,
+    Difficulty? level,
+  }) {
+    final usable = [
+      for (final e in all)
+        if (EquipmentAccess.permits(equipment, e)) e,
+    ];
     List<RoutineExercise> picks;
     if (m == SectionMuscle.forearms && _defaultSuggest) {
       picks = ExerciseRecommender.forDay(
         regions: const [MuscleRegion.forearms],
-        catalog: [for (final e in all) if (sectionOf(e) == m) e],
+        catalog: [
+          for (final e in usable)
+            if (sectionOf(e) == m) e,
+        ],
         daysPerWeek: 3,
         maxExercises: 3,
         minExercises: 1,
+        level: level,
       );
     } else {
-      picks = suggest(m.legacy, all);
+      picks = _defaultSuggest
+          ? SplitCatalog.suggest(m.legacy, usable, level: level)
+          : suggest(m.legacy, usable);
     }
     final byId = {for (final e in all) e.id: e};
     return [
       for (final r in picks)
-        if (byId[r.exerciseId] != null && sectionOf(byId[r.exerciseId]!) == m) r,
+        if (byId[r.exerciseId] != null && sectionOf(byId[r.exerciseId]!) == m)
+          r,
     ];
   }
 }

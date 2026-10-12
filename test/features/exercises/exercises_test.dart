@@ -90,7 +90,9 @@ void main() {
     await t.tap(find.text('CUSTOM'));
     await t.pumpAndSettle();
     await t.enterText(find.byType(TextField).last, 'Zercher Squat');
-    await t.ensureVisible(find.text('SAVE EXERCISE')); // 9 equipment chips make the sheet scroll
+    await t.ensureVisible(
+      find.text('SAVE EXERCISE'),
+    ); // 9 equipment chips make the sheet scroll
     await t.pumpAndSettle();
     await t.tap(find.text('SAVE EXERCISE'));
     await t.pumpAndSettle();

@@ -93,14 +93,17 @@ final Map<String, ExerciseMuscleProfile> profilesCore = {
   ),
   // Sources: StrengthLog / Sole — the exercise exists to load the inner thigh; obliques are co-primary.
   'copenhagen_plank': _x(
-    [_p(Muscle.obliques), _pr(_glu, 'Inner thigh (adductors)')],
+    [_p(Muscle.obliques), _p(Muscle.adductors)],
     [_s(Muscle.transverseAbdominis), _s(Muscle.gluteusMedius)],
   ),
   'side_plank_hip_dip': _x(
     [_p(Muscle.obliques)],
     [_s(Muscle.transverseAbdominis)],
   ),
-  'kb_windmill': _x([_p(Muscle.obliques)], [_sr(MuscleRegion.shoulders), _s(Muscle.gluteusMaximus), _sr(_ham)]),
+  'kb_windmill': _x(
+    [_p(Muscle.obliques)],
+    [_sr(MuscleRegion.shoulders), _s(Muscle.gluteusMaximus), _sr(_ham)],
+  ),
   'turkish_get_up': _x([_pr(_core)], [_sr(MuscleRegion.shoulders), _sr(_glu)]),
   'db_overhead_carry': _x(
     [_pr(_core)],

@@ -37,7 +37,8 @@ const Map<String, IconData> cardioCustomIcons = {
   'local_fire_department': Icons.local_fire_department,
 };
 
-IconData customActivityIcon(String key) => cardioCustomIcons[key] ?? Icons.fitness_center;
+IconData customActivityIcon(String key) =>
+    cardioCustomIcons[key] ?? Icons.fitness_center;
 
 /// Distance/pace display in the user's cardio unit (storage stays km, sec/km).
 class CardioUnits {
@@ -50,10 +51,12 @@ class CardioUnits {
   String get paceUnit => km ? '/km' : '/mi';
 
   double distance(double distanceKm) => km ? distanceKm : distanceKm / _kmPerMi;
-  double toKm(double shown) => km ? shown : shown * _kmPerMi;
-  String distanceText(double? distanceKm) => distanceKm == null ? '—' : Fmt.number(distance(distanceKm), decimals: 2);
-  String paceText(double? secPerKm) => secPerKm == null ? '—' : Fmt.pace(km ? secPerKm : secPerKm * _kmPerMi);
-  String speedText(double? kmh) => kmh == null ? '—' : Fmt.number(km ? kmh : kmh / _kmPerMi, decimals: 1);
+  String distanceText(double? distanceKm) =>
+      distanceKm == null ? '—' : Fmt.number(distance(distanceKm), decimals: 2);
+  String paceText(double? secPerKm) =>
+      secPerKm == null ? '—' : Fmt.pace(km ? secPerKm : secPerKm * _kmPerMi);
+  String speedText(double? kmh) =>
+      kmh == null ? '—' : Fmt.number(km ? kmh : kmh / _kmPerMi, decimals: 1);
 }
 
 /// Sequence number ("Session #12") = chronological position of the session.
@@ -79,51 +82,73 @@ String? cardioPrLabel(CardioSession session, List<CardioSession> all) {
 // ── goals ──
 
 String goalMetricLabel(GoalMetric m) => switch (m) {
-      GoalMetric.durationMinutes => 'Duration',
-      GoalMetric.distanceKm => 'Distance',
-      GoalMetric.sessions => 'Sessions',
-      GoalMetric.calories => 'Calories',
-    };
+  GoalMetric.durationMinutes => 'Duration',
+  GoalMetric.distanceKm => 'Distance',
+  GoalMetric.sessions => 'Sessions',
+  GoalMetric.calories => 'Calories',
+};
 
 String goalMetricUnit(GoalMetric m) => switch (m) {
-      GoalMetric.durationMinutes => 'MIN',
-      GoalMetric.distanceKm => 'KM',
-      GoalMetric.sessions => 'SESSIONS',
-      GoalMetric.calories => 'KCAL',
-    };
+  GoalMetric.durationMinutes => 'MIN',
+  GoalMetric.distanceKm => 'KM',
+  GoalMetric.sessions => 'SESSIONS',
+  GoalMetric.calories => 'KCAL',
+};
 
 IconData goalMetricIcon(GoalMetric m) => switch (m) {
-      GoalMetric.durationMinutes => Icons.timer_outlined,
-      GoalMetric.distanceKm => Icons.straighten,
-      GoalMetric.sessions => Icons.event_repeat,
-      GoalMetric.calories => Icons.local_fire_department_outlined,
-    };
+  GoalMetric.durationMinutes => Icons.timer_outlined,
+  GoalMetric.distanceKm => Icons.straighten,
+  GoalMetric.sessions => Icons.event_repeat,
+  GoalMetric.calories => Icons.local_fire_department_outlined,
+};
 
-String goalPeriodLabel(GoalPeriod p) => p == GoalPeriod.week ? 'Weekly' : 'Monthly';
+String goalPeriodLabel(GoalPeriod p) =>
+    p == GoalPeriod.week ? 'Weekly' : 'Monthly';
 
 /// [from, to) of the goal period containing [now], shifted back by [offset] periods.
-(DateTime, DateTime) goalPeriodRange(GoalPeriod p, DateTime now, {int offset = 0}) {
+(DateTime, DateTime) goalPeriodRange(
+  GoalPeriod p,
+  DateTime now, {
+  int offset = 0,
+}) {
   if (p == GoalPeriod.week) {
     final day = DateTime(now.year, now.month, now.day);
-    final start = DateTime(day.year, day.month, day.day - (day.weekday - 1 + 7 * offset));
+    final start = DateTime(
+      day.year,
+      day.month,
+      day.day - (day.weekday - 1 + 7 * offset),
+    );
     return (start, DateTime(start.year, start.month, start.day + 7));
   }
   final start = DateTime(now.year, now.month - offset);
   return (start, DateTime(start.year, start.month + 1));
 }
 
-List<CardioSession> sessionsInRange(List<CardioSession> all, (DateTime, DateTime) r) =>
-    all.where((s) => !s.workoutDate.isBefore(r.$1) && s.workoutDate.isBefore(r.$2)).toList();
+List<CardioSession> sessionsInRange(
+  List<CardioSession> all,
+  (DateTime, DateTime) r,
+) => all
+    .where((s) => !s.workoutDate.isBefore(r.$1) && s.workoutDate.isBefore(r.$2))
+    .toList();
 
 /// Activity kinds a goal is scoped to. [CardioGoal] has no kind field (no schema change), so the
 /// "Weekly Running Distance" goal is recognised by its title and counts running kinds only.
 Set<CardioKind>? goalKinds(CardioGoal g) =>
-    g.metric == GoalMetric.distanceKm && g.title.toLowerCase().contains('running')
-        ? const {CardioKind.outdoorRun, CardioKind.treadmill, CardioKind.trailRun}
-        : null;
+    g.metric == GoalMetric.distanceKm &&
+        g.title.toLowerCase().contains('running')
+    ? const {CardioKind.outdoorRun, CardioKind.treadmill, CardioKind.trailRun}
+    : null;
 
-double goalValueForPeriod(CardioGoal g, List<CardioSession> all, DateTime now, {int offset = 0}) =>
-    CardioMetrics.goalValue(g, sessionsInRange(all, goalPeriodRange(g.period, now, offset: offset)), kinds: goalKinds(g));
+double goalValueForPeriod(
+  CardioGoal g,
+  List<CardioSession> all,
+  DateTime now, {
+  int offset = 0,
+}) => CardioMetrics.goalValue(
+  g,
+  sessionsInRange(all, goalPeriodRange(g.period, now, offset: offset)),
+  kinds: goalKinds(g),
+);
 
 /// "92" / "18.4" — goal numbers without trailing zeros.
 String goalNumber(GoalMetric m, double v) =>
@@ -136,23 +161,42 @@ int daysLeftInPeriod(GoalPeriod p, DateTime now) {
 }
 
 /// Honest pace status computed from progress vs elapsed time in the period.
-({String text, bool good}) goalPaceStatus(CardioGoal g, double value, DateTime now) {
-  if (value >= g.target) return (text: 'Goal reached for this ${g.period == GoalPeriod.week ? 'week' : 'month'}', good: true);
+({String text, bool good}) goalPaceStatus(
+  CardioGoal g,
+  double value,
+  DateTime now,
+) {
+  if (value >= g.target) {
+    return (
+      text:
+          'Goal reached for this ${g.period == GoalPeriod.week ? 'week' : 'month'}',
+      good: true,
+    );
+  }
   final r = goalPeriodRange(g.period, now);
   final total = r.$2.difference(r.$1).inDays;
   final today = DateTime(now.year, now.month, now.day);
   final elapsed = (today.difference(r.$1).inDays + 1).clamp(1, total);
   final expected = g.target * elapsed / total;
   final left = daysLeftInPeriod(g.period, now);
-  if (value >= expected) return (text: 'On track — $left day${left == 1 ? '' : 's'} left in the period', good: true);
+  if (value >= expected) {
+    return (
+      text: 'On track — $left day${left == 1 ? '' : 's'} left in the period',
+      good: true,
+    );
+  }
   final gap = expected - value;
-  return (text: 'Behind pace by ${goalNumber(g.metric, gap)} ${goalMetricUnit(g.metric).toLowerCase()}', good: false);
+  return (
+    text:
+        'Behind pace by ${goalNumber(g.metric, gap)} ${goalMetricUnit(g.metric).toLowerCase()}',
+    good: false,
+  );
 }
 
 /// "+32 min" / "+5.2 km" contribution of one session to a goal.
 String goalContribution(CardioGoal g, CardioSession s) => switch (g.metric) {
-      GoalMetric.durationMinutes => '+${(s.durationSeconds / 60).round()}',
-      GoalMetric.distanceKm => '+${Fmt.number(s.distanceKm ?? 0, decimals: 1)}',
-      GoalMetric.sessions => '+1',
-      GoalMetric.calories => '+${s.calories ?? 0}',
-    };
+  GoalMetric.durationMinutes => '+${(s.durationSeconds / 60).round()}',
+  GoalMetric.distanceKm => '+${Fmt.number(s.distanceKm ?? 0, decimals: 1)}',
+  GoalMetric.sessions => '+1',
+  GoalMetric.calories => '+${s.calories ?? 0}',
+};

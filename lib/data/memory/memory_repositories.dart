@@ -38,6 +38,16 @@ class MemoryExerciseRepository extends ChangeNotifier
     _index[e.id] = e;
     notifyListeners();
   }
+
+  /// Replaces the exercise with the same id in place (an idempotent retry of [addCustom]).
+  @protected
+  void replaceCustom(Exercise e) {
+    final i = _items.indexWhere((x) => x.id == e.id);
+    if (i < 0) return;
+    _items[i] = e;
+    _index[e.id] = e;
+    notifyListeners();
+  }
 }
 
 class MemoryWorkoutRepository extends ChangeNotifier
@@ -86,7 +96,10 @@ class MemoryWorkoutRepository extends ChangeNotifier
       return (items, _rotation);
     }
     items.add(w);
-    return (items, _rotation.copyWith(workoutIds: [..._rotation.workoutIds, w.id]));
+    return (
+      items,
+      _rotation.copyWith(workoutIds: [..._rotation.workoutIds, w.id]),
+    );
   }
 
   /// Pure plan for deleting [id]. The CURRENT workout keeps its identity: removing an entry before
@@ -122,6 +135,26 @@ class MemoryWorkoutRepository extends ChangeNotifier
   Future<void> setRotation(Rotation r) async {
     _rotation = r;
     notifyListeners();
+  }
+
+  /// Pure plan for [saveSchedule]: the list with [ws] added/replaced.
+  @protected
+  List<Workout> planSchedule(List<Workout> ws) {
+    final items = [..._items];
+    for (final w in ws) {
+      final i = items.indexWhere((x) => x.id == w.id);
+      if (i >= 0) {
+        items[i] = w;
+      } else {
+        items.add(w);
+      }
+    }
+    return items;
+  }
+
+  @override
+  Future<void> saveSchedule(List<Workout> ws, Rotation rotation) async {
+    reset(planSchedule(ws), rotation);
   }
 
   @override
@@ -176,7 +209,9 @@ class MemorySessionRepository extends ChangeNotifier
   @override
   Future<void> update(WorkoutSession s) async {
     final i = _items.indexWhere((x) => x.id == s.id);
-    if (i < 0) return; // never resurrects a deleted row (same as the Isar repositories)
+    if (i < 0) {
+      return; // never resurrects a deleted row (same as the Isar repositories)
+    }
     _items[i] = s;
     _sort();
     notifyListeners();
@@ -257,7 +292,9 @@ class MemoryCardioRepository extends ChangeNotifier
   @override
   Future<void> update(CardioSession s) async {
     final i = _items.indexWhere((x) => x.id == s.id);
-    if (i < 0) return; // never resurrects a deleted row (same as the Isar repositories)
+    if (i < 0) {
+      return; // never resurrects a deleted row (same as the Isar repositories)
+    }
     _items[i] = s;
     _sort();
     notifyListeners();
@@ -300,6 +337,15 @@ class MemoryCardioRepository extends ChangeNotifier
     _custom.add(a);
     notifyListeners();
   }
+
+  /// Replaces the custom activity with the same id in place (an idempotent retry).
+  @protected
+  void replaceCustomActivity(CustomCardioActivity a) {
+    final i = _custom.indexWhere((x) => x.id == a.id);
+    if (i < 0) return;
+    _custom[i] = a;
+    notifyListeners();
+  }
 }
 
 class MemoryProfileRepository extends ChangeNotifier
@@ -320,10 +366,11 @@ class MemoryProfileRepository extends ChangeNotifier
   }
 }
 
-/// Volatile store (tests / previews). Production uses IsarStore.
+/// Volatile draft store (tests / previews). Production uses IsarWorkoutDraftStore.
 /// Holds the draft as a JSON string (like the persistent store) so tests exercise
 /// the real serialisation. Unreadable data reads as "no draft".
-class MemoryWorkoutDraftStore extends ChangeNotifier implements WorkoutDraftStore {
+class MemoryWorkoutDraftStore extends ChangeNotifier
+    implements WorkoutDraftStore {
   MemoryWorkoutDraftStore([this._json]);
   String? _json;
 
@@ -333,7 +380,9 @@ class MemoryWorkoutDraftStore extends ChangeNotifier implements WorkoutDraftStor
   static WorkoutDraft? decode(String? json) {
     if (json == null) return null;
     try {
-      return WorkoutDraft.fromJson((jsonDecode(json) as Map).cast<String, Object?>());
+      return WorkoutDraft.fromJson(
+        (jsonDecode(json) as Map).cast<String, Object?>(),
+      );
     } catch (_) {
       return null;
     }
@@ -356,7 +405,7 @@ class MemoryWorkoutDraftStore extends ChangeNotifier implements WorkoutDraftStor
   }
 }
 
-class MemoryStore implements DataStore, LocalSettingsStore {
+class MemoryStore implements DataStore {
   MemoryStore(SeedData seed, {UserProfile profile = const UserProfile()})
     : exercises = MemoryExerciseRepository(seed.exercises),
       workouts = MemoryWorkoutRepository(seed.workouts, seed.rotation),
@@ -378,32 +427,26 @@ class MemoryStore implements DataStore, LocalSettingsStore {
   @override
   final MemoryWorkoutDraftStore workoutDraft;
 
-  bool _signedIn = false;
-  @override
-  bool get signedIn => _signedIn;
-  @override
-  Future<void> setSignedIn(bool v) async => _signedIn = v;
-
-  int? _maxRaw;
-  String? _noticeJson;
-  @override
-  int? get maxWorkoutMinutesRaw => _maxRaw;
-  @override
-  Future<void> setMaxWorkoutMinutesRaw(int? raw) async => _maxRaw = raw;
-  @override
-  String? get autoEndNoticeJson => _noticeJson;
-  @override
-  Future<void> setAutoEndNoticeJson(String? json) async => _noticeJson = json;
-
-  @override
+  /// Replaces all data (tests / previews).
   Future<void> replaceAll(SeedData seed, UserProfile profile) async {
     exercises.reset(seed.exercises);
     workouts.reset(seed.workouts, seed.rotation);
     sessions.reset(seed.sessions);
     cardio.reset(seed.cardio, seed.goals, const []);
     this.profile.reset(profile);
-    await workoutDraft.clear(); // a draft of the replaced data would be orphaned
+    await workoutDraft.clear();
   }
+
+  @override
+  Future<void> load({required String userId, required String username}) async {}
+
+  @override
+  Future<void> clear() async {
+    await replaceAll(SeedData.fresh(), const UserProfile());
+  }
+
+  @override
+  Future<void> resetData() => replaceAll(SeedData.fresh(), profile.profile);
 
   @override
   Future<void> close() async {}

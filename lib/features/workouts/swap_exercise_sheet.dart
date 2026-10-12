@@ -43,7 +43,11 @@ Future<Exercise?> showSwapExerciseSheet(
 
 enum _EquipFilter {
   cables('Cables', {Equipment.cable}),
-  free('Free Weights', {Equipment.dumbbell, Equipment.barbell, Equipment.kettlebell}),
+  free('Free Weights', {
+    Equipment.dumbbell,
+    Equipment.barbell,
+    Equipment.kettlebell,
+  }),
   machines('Machines', {Equipment.machine, Equipment.smithMachine}),
   bodyweight('Bodyweight', {Equipment.bodyweight}),
   bandsOther('Bands & other', {Equipment.band, Equipment.other});
@@ -87,7 +91,9 @@ class _SwapExerciseBodyState extends State<SwapExerciseBody> {
   String? _selectedId;
 
   List<SwapCandidate> get _alts {
-    final allowed = _filters.isEmpty ? null : {for (final f in _filters) ...f.equipment};
+    final allowed = _filters.isEmpty
+        ? null
+        : {for (final f in _filters) ...f.equipment};
     return ExerciseRecommender.replacements(
       current: widget.current,
       catalog: widget.catalog,
@@ -102,20 +108,30 @@ class _SwapExerciseBodyState extends State<SwapExerciseBody> {
     final c = context.sx;
     final alts = _alts;
     // Keep the selection valid; default to the best match.
-    final selected = alts.where((a) => a.exercise.id == _selectedId).firstOrNull ?? (alts.isEmpty ? null : alts.first);
+    final selected =
+        alts.where((a) => a.exercise.id == _selectedId).firstOrNull ??
+        (alts.isEmpty ? null : alts.first);
     final cur = widget.current;
     final secondary = cur.secondaryMuscles.map((m) => m.label).join(', ');
 
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(SxSpace.md, 4, SxSpace.md, SxSpace.sm),
+          padding: const EdgeInsets.fromLTRB(
+            SxSpace.md,
+            4,
+            SxSpace.md,
+            SxSpace.sm,
+          ),
           child: Row(
             children: [
               Container(
                 width: 44,
                 height: 44,
-                decoration: BoxDecoration(color: c.surface2, borderRadius: BorderRadius.circular(SxRadius.md)),
+                decoration: BoxDecoration(
+                  color: c.surface2,
+                  borderRadius: BorderRadius.circular(SxRadius.md),
+                ),
                 child: Icon(Icons.swap_horiz, color: c.primary),
               ),
               const SizedBox(width: 12),
@@ -123,18 +139,33 @@ class _SwapExerciseBodyState extends State<SwapExerciseBody> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Swap Exercise', style: SxText.headlineMd.copyWith(color: c.textHigh)),
-                    Text('Match mechanics & preserve strain', style: SxText.bodySm.copyWith(color: c.textBody)),
+                    Text(
+                      'Swap Exercise',
+                      style: SxText.headlineMd.copyWith(color: c.textHigh),
+                    ),
+                    Text(
+                      'Match mechanics & preserve strain',
+                      style: SxText.bodySm.copyWith(color: c.textBody),
+                    ),
                   ],
                 ),
               ),
-              SxIconButton(icon: Icons.close, tooltip: 'Close', onPressed: widget.onClose),
+              SxIconButton(
+                icon: Icons.close,
+                tooltip: 'Close',
+                onPressed: widget.onClose,
+              ),
             ],
           ),
         ),
         Expanded(
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(SxSpace.md, 0, SxSpace.md, SxSpace.md),
+            padding: const EdgeInsets.fromLTRB(
+              SxSpace.md,
+              0,
+              SxSpace.md,
+              SxSpace.md,
+            ),
             children: [
               SxCard(
                 color: c.surface2,
@@ -146,7 +177,18 @@ class _SwapExerciseBodyState extends State<SwapExerciseBody> {
                         const StatusPill('Current target', dot: true),
                         const SizedBox(width: 8),
                         if (widget.slotLabel != null)
-                          Expanded(child: Text(widget.slotLabel!, textAlign: TextAlign.end, maxLines: 1, overflow: TextOverflow.ellipsis, style: SxText.metricSm.copyWith(color: c.textBody, fontSize: 12))),
+                          Expanded(
+                            child: Text(
+                              widget.slotLabel!,
+                              textAlign: TextAlign.end,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: SxText.metricSm.copyWith(
+                                color: c.textBody,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
                       ],
                     ),
                     const SizedBox(height: 10),
@@ -158,16 +200,34 @@ class _SwapExerciseBodyState extends State<SwapExerciseBody> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(cur.name, style: SxText.headlineMd.copyWith(color: c.textHigh)),
+                              Text(
+                                cur.name,
+                                style: SxText.headlineMd.copyWith(
+                                  color: c.textHigh,
+                                ),
+                              ),
                               Text(
                                 'Primary: ${cur.primaryMuscle.label}${secondary.isEmpty ? '' : ' • Secondary: $secondary'}',
-                                style: SxText.bodySm.copyWith(color: c.textBody),
+                                style: SxText.bodySm.copyWith(
+                                  color: c.textBody,
+                                ),
                               ),
                               const SizedBox(height: 6),
-                              Wrap(spacing: 8, runSpacing: 4, crossAxisAlignment: WrapCrossAlignment.center, children: [
-                                _MonoTag(cur.equipment.label),
-                                Text('${widget.sets} sets • ${widget.repRange} reps', style: SxText.metricSm.copyWith(color: c.textBody, fontSize: 12)),
-                              ]),
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 4,
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                children: [
+                                  _MonoTag(cur.equipment.label),
+                                  Text(
+                                    '${widget.sets} sets • ${widget.repRange} reps',
+                                    style: SxText.metricSm.copyWith(
+                                      color: c.textBody,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ],
                           ),
                         ),
@@ -182,14 +242,22 @@ class _SwapExerciseBodyState extends State<SwapExerciseBody> {
                 child: ListView(
                   scrollDirection: Axis.horizontal,
                   children: [
-                    SxChip(label: 'Target: ${cur.primaryMuscle.label}', selected: true, icon: Icons.check),
+                    SxChip(
+                      label: 'Target: ${cur.primaryMuscle.label}',
+                      selected: true,
+                      icon: Icons.check,
+                    ),
                     for (final f in _EquipFilter.values) ...[
                       const SizedBox(width: 8),
                       SxChip(
                         label: f.label,
                         icon: _filters.contains(f) ? Icons.check : null,
                         selected: _filters.contains(f),
-                        onTap: () => setState(() => _filters.contains(f) ? _filters.remove(f) : _filters.add(f)),
+                        onTap: () => setState(
+                          () => _filters.contains(f)
+                              ? _filters.remove(f)
+                              : _filters.add(f),
+                        ),
                       ),
                     ],
                   ],
@@ -198,23 +266,31 @@ class _SwapExerciseBodyState extends State<SwapExerciseBody> {
               const SizedBox(height: SxSpace.sm),
               SxInset(
                 padding: const EdgeInsets.all(12),
-                child: Row(children: [
-                  Icon(Icons.sync, size: 20, color: c.primary),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text('Preserves workout order, target rep ranges, and historical volume calculation.',
-                        style: SxText.bodySm.copyWith(color: c.textBody)),
-                  ),
-                ]),
+                child: Row(
+                  children: [
+                    Icon(Icons.sync, size: 20, color: c.primary),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'Preserves workout order, target rep ranges, and historical volume calculation.',
+                        style: SxText.bodySm.copyWith(color: c.textBody),
+                      ),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: SxSpace.md),
-              SectionHeader('Recommended alternatives', trailingText: '${alts.length} available'),
+              SectionHeader(
+                'Recommended alternatives',
+                trailingText: '${alts.length} available',
+              ),
               const SizedBox(height: SxSpace.sm),
               if (alts.isEmpty)
                 const EmptyState(
                   icon: Icons.search_off,
                   title: 'No alternatives',
-                  message: 'Nothing in your library matches this muscle with the selected equipment. Clear a filter to see more.',
+                  message:
+                      'Nothing in your library matches this muscle with the selected equipment. Clear a filter to see more.',
                 )
               else
                 for (final a in alts)
@@ -230,23 +306,52 @@ class _SwapExerciseBodyState extends State<SwapExerciseBody> {
           ),
         ),
         Container(
-          decoration: BoxDecoration(color: c.surface3, border: Border(top: BorderSide(color: c.hairline))),
-          padding: const EdgeInsets.fromLTRB(SxSpace.md, 10, SxSpace.md, SxSpace.md),
+          decoration: BoxDecoration(
+            color: c.surface3,
+            border: Border(top: BorderSide(color: c.hairline)),
+          ),
+          padding: const EdgeInsets.fromLTRB(
+            SxSpace.md,
+            10,
+            SxSpace.md,
+            SxSpace.md,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Row(children: [
-                Icon(Icons.info_outline, size: 16, color: c.primary),
-                const SizedBox(width: 6),
-                Expanded(child: Text('Replaces all ${widget.sets} set targets', maxLines: 1, overflow: TextOverflow.ellipsis, style: SxText.bodySm.copyWith(color: c.textHigh))),
-                if (selected != null)
-                  Flexible(child: Text(selected.exercise.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: SxText.metricSm.copyWith(color: c.textBody, fontSize: 12))),
-              ]),
+              Row(
+                children: [
+                  Icon(Icons.info_outline, size: 16, color: c.primary),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      'Replaces all ${widget.sets} set targets',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: SxText.bodySm.copyWith(color: c.textHigh),
+                    ),
+                  ),
+                  if (selected != null)
+                    Flexible(
+                      child: Text(
+                        selected.exercise.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: SxText.metricSm.copyWith(
+                          color: c.textBody,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
               const SizedBox(height: 10),
               SxButton(
                 label: 'Replace exercise',
                 trailingIcon: Icons.arrow_forward,
-                onPressed: selected == null ? null : () => widget.onReplace(selected.exercise),
+                onPressed: selected == null
+                    ? null
+                    : () => widget.onReplace(selected.exercise),
               ),
             ],
           ),
@@ -257,7 +362,11 @@ class _SwapExerciseBodyState extends State<SwapExerciseBody> {
 }
 
 class _AltCard extends StatelessWidget {
-  const _AltCard({required this.candidate, required this.selected, required this.onTap});
+  const _AltCard({
+    required this.candidate,
+    required this.selected,
+    required this.onTap,
+  });
   final SwapCandidate candidate;
   final bool selected;
   final VoidCallback onTap;
@@ -283,14 +392,29 @@ class _AltCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(e.name, style: SxText.headlineSm.copyWith(color: c.textHigh)),
+                  Text(
+                    e.name,
+                    style: SxText.headlineSm.copyWith(color: c.textHigh),
+                  ),
                   const SizedBox(height: 6),
-                  Wrap(spacing: 8, runSpacing: 4, crossAxisAlignment: WrapCrossAlignment.center, children: [
-                    StatusPill('${candidate.matchPercent}% match', icon: Icons.verified_outlined, color: selected ? c.primary : c.textBody),
-                    _MonoTag(e.equipment.label),
-                  ]),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 4,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      StatusPill(
+                        '${candidate.matchPercent}% match',
+                        icon: Icons.verified_outlined,
+                        color: selected ? c.primary : c.textBody,
+                      ),
+                      _MonoTag(e.equipment.label),
+                    ],
+                  ),
                   const SizedBox(height: 6),
-                  Text(candidate.reason, style: SxText.bodySm.copyWith(color: c.textBody)),
+                  Text(
+                    candidate.reason,
+                    style: SxText.bodySm.copyWith(color: c.textBody),
+                  ),
                 ],
               ),
             ),
@@ -304,7 +428,9 @@ class _AltCard extends StatelessWidget {
                 color: selected ? c.primary : c.surface3,
                 shape: BoxShape.circle,
               ),
-              child: selected ? SxPop(child: Icon(Icons.check, size: 18, color: c.onAccent)) : null,
+              child: selected
+                  ? SxPop(child: Icon(Icons.check, size: 18, color: c.onAccent))
+                  : null,
             ),
           ],
         ),
@@ -324,7 +450,11 @@ class _EquipTile extends StatelessWidget {
     return Container(
       width: size,
       height: size,
-      decoration: BoxDecoration(color: c.surface3, borderRadius: BorderRadius.circular(SxRadius.md), border: Border.all(color: c.hairline)),
+      decoration: BoxDecoration(
+        color: c.surface3,
+        borderRadius: BorderRadius.circular(SxRadius.md),
+        border: Border.all(color: c.hairline),
+      ),
       child: Icon(equipmentIcon(equipment), color: c.primary, size: size * 0.5),
     );
   }
@@ -339,7 +469,10 @@ class _MonoTag extends StatelessWidget {
     final c = context.sx;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(color: c.surface3, borderRadius: BorderRadius.circular(SxRadius.sm)),
+      decoration: BoxDecoration(
+        color: c.surface3,
+        borderRadius: BorderRadius.circular(SxRadius.sm),
+      ),
       child: Text(text, style: SxText.labelXs.copyWith(color: c.textBody)),
     );
   }

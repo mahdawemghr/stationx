@@ -44,12 +44,19 @@ void main() {
       expectPushed(t, ActiveWorkoutPage);
     });
 
-    testWidgets('Change next workout sets the index and never advances/logs', (t) async {
+    testWidgets('Change next workout sets the index and never advances/logs', (
+      t,
+    ) async {
       final app = await pumpPage(t, const WorkoutsHubPage());
       final sessionsBefore = app.sessions.sessions.length;
       await t.tap(find.text('CHANGE NEXT'));
       await settle(t);
-      await t.tap(find.descendant(of: find.byType(BottomSheet), matching: find.text('Legs + Shoulders')));
+      await t.tap(
+        find.descendant(
+          of: find.byType(BottomSheet),
+          matching: find.text('Legs + Shoulders'),
+        ),
+      );
       await settle(t);
       expect(app.workouts.rotation.currentIndex, 2);
       expect(app.workouts.currentWorkout!.id, 'w3');
@@ -59,7 +66,10 @@ void main() {
 
     testWidgets('empty account shows rotation without history', (t) async {
       await pumpPage(t, const WorkoutsHubPage(), demo: false);
-      expect(find.text('Not logged yet'), findsNothing); // only shown for earlier days; current index 0
+      expect(
+        find.text('Not logged yet'),
+        findsNothing,
+      ); // only shown for earlier days; current index 0
       expect(find.text('Day 1 / 3'), findsOneWidget);
       expect(find.text('Not done yet'), findsWidgets);
     });
@@ -85,7 +95,11 @@ void main() {
       await settle(t);
       expect(app.workouts.workouts.length, before + 3);
       expect(app.workouts.rotation.length, before + 3);
-      expect(app.workouts.rotation.currentIndex, 1, reason: 'adding must not move the rotation');
+      expect(
+        app.workouts.rotation.currentIndex,
+        1,
+        reason: 'adding must not move the rotation',
+      );
     });
 
     testWidgets('cardio segment embeds CardioHomeView', (t) async {
@@ -106,7 +120,11 @@ void main() {
 
     testWidgets('delete routine asks for confirmation', (t) async {
       final app = await pumpPage(t, const WorkoutsHubPage());
-      await t.scrollUntilVisible(find.byTooltip('Routine options').first, 200, scrollable: find.byType(Scrollable).first);
+      await t.scrollUntilVisible(
+        find.byTooltip('Routine options').first,
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
       await t.ensureVisible(find.byTooltip('Routine options').first);
       await t.pump();
       await t.tap(find.byTooltip('Routine options').first);
@@ -120,9 +138,19 @@ void main() {
     });
 
     // 320 px @ 1.3x overflows inside the shared SxBrandBar (core) — reported to the owner.
-    for (final (size, scale) in [(const Size(320, 568), 1.0), (const Size(320, 568), 2.0), (const Size(360, 800), 1.3), (const Size(412, 915), 1.0)]) {
+    for (final (size, scale) in [
+      (const Size(320, 568), 1.0),
+      (const Size(320, 568), 2.0),
+      (const Size(360, 800), 1.3),
+      (const Size(412, 915), 1.0),
+    ]) {
       testWidgets('layout ok at $size x$scale', (t) async {
-        await pumpPage(t, const WorkoutsHubPage(), size: size, textScale: scale);
+        await pumpPage(
+          t,
+          const WorkoutsHubPage(),
+          size: size,
+          textScale: scale,
+        );
         await t.drag(find.byType(ListView).first, const Offset(0, -600));
         await settle(t);
         expect(t.takeException(), isNull);
@@ -131,7 +159,9 @@ void main() {
   });
 
   group('Preview', () {
-    testWidgets('shows sequence with last session numbers and starts workout', (t) async {
+    testWidgets('shows sequence with last session numbers and starts workout', (
+      t,
+    ) async {
       await pumpPage(t, const WorkoutPreviewPage(workoutId: 'w2'));
       expect(find.text('BACK + TRICEPS'), findsOneWidget);
       expect(find.text('Lat Pulldown'), findsOneWidget);
@@ -156,19 +186,50 @@ void main() {
       await pumpPage(t, const WorkoutPreviewPage(workoutId: 'w2'));
       await t.tap(find.text('EDIT WORKOUT STRUCTURE'));
       await settle(t);
-      expect(find.text('WorkoutEditorPage'), findsNothing); // real editor, not a stub
+      expect(
+        find.text('WorkoutEditorPage'),
+        findsNothing,
+      ); // real editor, not a stub
       expect(find.text('ROUTINE ARCHITECTURE'), findsOneWidget);
     });
 
     testWidgets('small screen, large text: no exception', (t) async {
-      await pumpPage(t, const WorkoutPreviewPage(workoutId: 'w3'), size: const Size(320, 568), textScale: 1.3);
+      await pumpPage(
+        t,
+        const WorkoutPreviewPage(workoutId: 'w3'),
+        size: const Size(320, 568),
+        textScale: 1.3,
+      );
       expect(t.takeException(), isNull);
     });
   });
 
   group('Editor', () {
-    Future<AppController> open(WidgetTester t, String id, {bool demo = true, Size size = const Size(390, 844), double scale = 1}) async {
-      final app = await pumpPage(t, Builder(builder: (c) => Scaffold(body: TextButton(onPressed: () => Navigator.of(c).push(MaterialPageRoute<void>(builder: (_) => WorkoutEditorPage(workoutId: id))), child: const Text('go')))), demo: demo, size: size, textScale: scale);
+    Future<AppController> open(
+      WidgetTester t,
+      String id, {
+      bool demo = true,
+      Size size = const Size(390, 844),
+      double scale = 1,
+    }) async {
+      final app = await pumpPage(
+        t,
+        Builder(
+          builder: (c) => Scaffold(
+            body: TextButton(
+              onPressed: () => Navigator.of(c).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => WorkoutEditorPage(workoutId: id),
+                ),
+              ),
+              child: const Text('go'),
+            ),
+          ),
+        ),
+        demo: demo,
+        size: size,
+        textScale: scale,
+      );
       await t.tap(find.text('go'));
       await settle(t);
       return app;
@@ -204,7 +265,9 @@ void main() {
       expect(app.workouts.byId('w2')!.exercises.length, 6);
     });
 
-    testWidgets('new draft needs an exercise, then joins the rotation end', (t) async {
+    testWidgets('new draft needs an exercise, then joins the rotation end', (
+      t,
+    ) async {
       final app = await open(t, 'new_1');
       expect(find.text('New Routine'), findsWidgets);
       await t.tap(find.text('SAVE WORKOUT STRUCTURE'));
@@ -213,7 +276,9 @@ void main() {
       expect(app.workouts.byId('new_1'), isNull);
     });
 
-    testWidgets('sets/reps sheet edits the draft and rep range stays valid', (t) async {
+    testWidgets('sets/reps sheet edits the draft and rep range stays valid', (
+      t,
+    ) async {
       final app = await open(t, 'w2');
       await t.tap(find.byTooltip('Edit sets and reps').first);
       await settle(t);
@@ -234,7 +299,11 @@ void main() {
 
     testWidgets('reorder mode moves exercises', (t) async {
       final app = await open(t, 'w2');
-      await t.scrollUntilVisible(find.text('REORDER'), 200, scrollable: find.byType(Scrollable).first);
+      await t.scrollUntilVisible(
+        find.text('REORDER'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
       await t.ensureVisible(find.text('REORDER'));
       await t.pump();
       await t.tap(find.text('REORDER'));
@@ -246,7 +315,10 @@ void main() {
       await settle(t);
       await t.tap(find.text('SAVE WORKOUT STRUCTURE'));
       await settle(t);
-      expect(app.workouts.byId('w2')!.exercises.first.exerciseId, 'seated_cable_row');
+      expect(
+        app.workouts.byId('w2')!.exercises.first.exerciseId,
+        'seated_cable_row',
+      );
     });
 
     testWidgets('small screen, large text: no exception', (t) async {
@@ -267,46 +339,89 @@ void main() {
     Future<void> mount(WidgetTester t, ValueChanged<Exercise> onReplace) async {
       await pumpPage(
         t,
-        Scaffold(body: SwapExerciseBody(current: lat, catalog: catalog, sets: 4, repRange: '8-12', slotLabel: 'Slot 1/6', onClose: () {}, onReplace: onReplace)),
+        Scaffold(
+          body: SwapExerciseBody(
+            current: lat,
+            catalog: catalog,
+            sets: 4,
+            repRange: '8-12',
+            slotLabel: 'Slot 1/6',
+            onClose: () {},
+            onReplace: onReplace,
+          ),
+        ),
       );
     }
 
     testWidgets('lists computed, ranked same-muscle alternatives', (t) async {
       await mount(t, (_) {});
-      final expected = SmartSwapService.alternatives(current: lat, catalog: catalog);
+      final expected = SmartSwapService.alternatives(
+        current: lat,
+        catalog: catalog,
+      );
       expect(find.text('${expected.length} available'), findsOneWidget);
       expect(find.text('${expected.first.matchPercent}% MATCH'), findsWidgets);
-      expect(find.text('Lat Pulldown'), findsOneWidget); // current only, not an alternative
+      expect(
+        find.text('Lat Pulldown'),
+        findsOneWidget,
+      ); // current only, not an alternative
     });
 
-    testWidgets('equipment filter narrows and replace returns selection', (t) async {
+    testWidgets('equipment filter narrows and replace returns selection', (
+      t,
+    ) async {
       Exercise? picked;
       await mount(t, (e) => picked = e);
       await t.drag(find.text('Free Weights'), const Offset(-250, 0));
       await t.pump();
       await t.tap(find.text('Machines'));
       await t.pump();
-      final machines = SmartSwapService.alternatives(current: lat, catalog: catalog, allowedEquipment: {Equipment.machine, Equipment.smithMachine}); // 'Machines' chip also covers smith machines
+      final machines = SmartSwapService.alternatives(
+        current: lat,
+        catalog: catalog,
+        allowedEquipment: {Equipment.machine, Equipment.smithMachine},
+      ); // 'Machines' chip also covers smith machines
       expect(find.text('${machines.length} available'), findsOneWidget);
       await t.tap(find.text('REPLACE EXERCISE'));
       await t.pump();
       expect(picked!.id, machines.first.exercise.id);
-      expect({Equipment.machine, Equipment.smithMachine}, contains(picked!.equipment));
+      expect({
+        Equipment.machine,
+        Equipment.smithMachine,
+      }, contains(picked!.equipment));
     });
 
     testWidgets('no candidates → none returned', (t) async {
-      final none = SmartSwapService.alternatives(current: lat, catalog: catalog, excludeIds: {for (final e in catalog) e.id});
+      final none = SmartSwapService.alternatives(
+        current: lat,
+        catalog: catalog,
+        excludeIds: {for (final e in catalog) e.id},
+      );
       expect(none, isEmpty);
     });
 
     testWidgets('excluded ids are omitted; small screen ok', (t) async {
       await pumpPage(
         t,
-        Scaffold(body: SwapExerciseBody(current: lat, catalog: catalog, sets: 4, repRange: '8-12', excludeIds: {for (final e in catalog) e.id}, onClose: () {}, onReplace: (_) {})),
+        Scaffold(
+          body: SwapExerciseBody(
+            current: lat,
+            catalog: catalog,
+            sets: 4,
+            repRange: '8-12',
+            excludeIds: {for (final e in catalog) e.id},
+            onClose: () {},
+            onReplace: (_) {},
+          ),
+        ),
         size: const Size(320, 568),
         textScale: 1.3,
       );
-      await t.scrollUntilVisible(find.text('No alternatives'), 200, scrollable: find.byType(Scrollable).first);
+      await t.scrollUntilVisible(
+        find.text('No alternatives'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
       expect(find.text('No alternatives'), findsOneWidget);
       expect(t.takeException(), isNull);
     });

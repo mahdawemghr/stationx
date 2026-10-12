@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:isolate';
 
 import '../../domain/domain.dart';
-import '../sync/text_limits.dart';
+import '../remote/text_limits.dart';
 import 'exercise_aliases.dart';
 
 /// Why a file could not be imported (maps to a friendly message in the UI).
@@ -592,6 +592,12 @@ class GymTrackerImport {
     if (has('back')) return const _Pick(MuscleRegion.back, null);
     if (has('quad')) return const _Pick(MuscleRegion.quadriceps, null);
     if (has('hamstring')) return const _Pick(MuscleRegion.hamstrings, null);
+    if (has('adductor') || has('inner thigh') || has('groin')) {
+      return const _Pick(MuscleRegion.adductors, Muscle.adductors);
+    }
+    if (has('tibialis') || has('shin')) {
+      return const _Pick(MuscleRegion.calves, Muscle.tibialisAnterior);
+    }
     if (has('glute') || has('abductor') || has('hip')) {
       return const _Pick(MuscleRegion.glutes, null);
     }
@@ -619,6 +625,10 @@ class GymTrackerImport {
         has('nordic')) {
       return r(MuscleRegion.hamstrings);
     }
+    if (has('adduction') || has('adductor') || has('copenhagen')) {
+      return r(MuscleRegion.adductors);
+    }
+    if (has('tibialis')) return r(MuscleRegion.calves);
     if (has('hip thrust') ||
         has('glute') ||
         has('bridge') ||

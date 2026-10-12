@@ -90,4 +90,34 @@ void main() {
       expect(eq('Cable Row'), Equipment.cable);
     },
   );
+
+  test(
+    'drift: the profile equipment preference check lists exactly the enum names',
+    () {
+      final sql = File(
+        'supabase/migrations/20261015000000_profile_training_prefs.sql',
+      ).readAsStringSync();
+      final list = RegExp(
+        r'array\[([^\]]*)\]::text\[\]',
+      ).firstMatch(sql)!.group(1)!;
+      final names = RegExp(
+        r"'(\w+)'",
+      ).allMatches(list).map((m) => m.group(1)!).toSet();
+      expect(names, Equipment.values.map((e) => e.name).toSet());
+    },
+  );
+
+  test(
+    'drift: the experience-level check lists exactly the Difficulty names',
+    () {
+      final sql = File(
+        'supabase/migrations/20261016000000_profile_experience_level.sql',
+      ).readAsStringSync();
+      final list = RegExp(r"in \(([^)]*)\)").firstMatch(sql)!.group(1)!;
+      final names = RegExp(
+        r"'(\w+)'",
+      ).allMatches(list).map((m) => m.group(1)!).toSet();
+      expect(names, Difficulty.values.map((d) => d.name).toSet());
+    },
+  );
 }

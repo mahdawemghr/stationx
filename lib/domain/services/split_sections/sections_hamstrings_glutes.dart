@@ -113,7 +113,7 @@ const List<SectionDef> sectionsHamstringsGlutes = [
   ),
   SectionDef(
     'glutes_adduct',
-    'Glutes · Adductors',
+    'Adductors (inner thigh)',
     'Hip adduction for the inner thigh.',
     [
       'hip_adduction_machine',
@@ -121,6 +121,5 @@ const List<SectionDef> sectionsHamstringsGlutes = [
       'band_hip_adduction',
       'side_lying_hip_adduction',
     ],
-    family: 'glutes',
   ),
 ];

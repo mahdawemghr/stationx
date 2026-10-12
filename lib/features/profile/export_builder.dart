@@ -26,11 +26,17 @@ abstract final class ExportBuilder {
                 {
                   'exerciseId': e.exerciseId,
                   'sets': [
-                    for (final x in e.sets) {'weightKg': x.weightKg, 'reps': x.reps, 'done': x.done, if (x.rpe != null) 'rpe': x.rpe}
+                    for (final x in e.sets)
+                      {
+                        'weightKg': x.weightKg,
+                        'reps': x.reps,
+                        'done': x.done,
+                        if (x.rpe != null) 'rpe': x.rpe,
+                      },
                   ],
-                }
+                },
             ],
-          }
+          },
       ],
       'cardioSessions': [
         for (final c in cardio)
@@ -46,27 +52,36 @@ abstract final class ExportBuilder {
             if (c.resistance != null) 'resistance': c.resistance,
             if (c.calories != null) 'calories': c.calories,
             if (c.avgHeartRate != null) 'avgHeartRate': c.avgHeartRate,
-          }
+          },
       ],
     };
     return const JsonEncoder.withIndent('  ').convert(data);
   }
 
   /// One row per logged set + one row per cardio session.
-  static String csv({required List<WorkoutSession> sessions, required List<CardioSession> cardio}) {
-    final b = StringBuffer('type,workout_date,created_at,name,exercise_id,set,weight_kg,reps,duration_s,distance_km\n');
+  static String csv({
+    required List<WorkoutSession> sessions,
+    required List<CardioSession> cardio,
+  }) {
+    final b = StringBuffer(
+      'type,workout_date,created_at,name,exercise_id,set,weight_kg,reps,duration_s,distance_km\n',
+    );
     String q(String v) => '"${v.replaceAll('"', '""')}"';
     for (final s in sessions) {
       for (final e in s.exercises) {
         for (var i = 0; i < e.sets.length; i++) {
           final x = e.sets[i];
           if (!x.done) continue;
-          b.writeln('strength,${s.workoutDate.toIso8601String()},${s.meta.createdAt.toIso8601String()},${q(s.name)},${e.exerciseId},${i + 1},${x.weightKg},${x.reps},,');
+          b.writeln(
+            'strength,${s.workoutDate.toIso8601String()},${s.meta.createdAt.toIso8601String()},${q(s.name)},${e.exerciseId},${i + 1},${x.weightKg},${x.reps},,',
+          );
         }
       }
     }
     for (final c in cardio) {
-      b.writeln('cardio,${c.workoutDate.toIso8601String()},${c.meta.createdAt.toIso8601String()},${q(c.kind.label)},,,,,${c.durationSeconds},${c.distanceKm ?? ''}');
+      b.writeln(
+        'cardio,${c.workoutDate.toIso8601String()},${c.meta.createdAt.toIso8601String()},${q(c.kind.label)},,,,,${c.durationSeconds},${c.distanceKm ?? ''}',
+      );
     }
     return b.toString();
   }

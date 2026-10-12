@@ -13,10 +13,11 @@ class UserProfile {
     this.defaultSets = 3,
     this.defaultRepMin = 8,
     this.defaultRepMax = 12,
-    this.autoRestSeconds = 90,
     this.progressionEnabled = true,
     this.weeklySessionTarget = 4,
     this.cardioDistanceUnitKm = true,
+    this.equipment,
+    this.experienceLevel,
   });
 
   final String name;
@@ -30,10 +31,20 @@ class UserProfile {
   final int defaultSets;
   final int defaultRepMin;
   final int defaultRepMax;
-  final int autoRestSeconds;
   final bool progressionEnabled;
   final int weeklySessionTarget;
   final bool cardioDistanceUnitKm;
+
+  /// Equipment the user can train with; `null` = never chosen (nothing is filtered). Bodyweight is
+  /// always available. Used only when a program is generated; saved programs are never changed by it.
+  final Set<Equipment>? equipment;
+
+  /// Experience level used ONLY when exercises are generated; null = never chosen (treated as
+  /// intermediate, see [effectiveExperience]). Changing it never touches a saved program.
+  final Difficulty? experienceLevel;
+
+  Difficulty get effectiveExperience =>
+      experienceLevel ?? Difficulty.intermediate;
 
   UserProfile copyWith({
     String? name,
@@ -47,10 +58,12 @@ class UserProfile {
     int? defaultSets,
     int? defaultRepMin,
     int? defaultRepMax,
-    int? autoRestSeconds,
     bool? progressionEnabled,
     int? weeklySessionTarget,
     bool? cardioDistanceUnitKm,
+    Set<Equipment>? equipment,
+    bool clearEquipment = false,
+    Difficulty? experienceLevel,
   }) => UserProfile(
     name: name ?? this.name,
     email: email ?? this.email,
@@ -63,9 +76,10 @@ class UserProfile {
     defaultSets: defaultSets ?? this.defaultSets,
     defaultRepMin: defaultRepMin ?? this.defaultRepMin,
     defaultRepMax: defaultRepMax ?? this.defaultRepMax,
-    autoRestSeconds: autoRestSeconds ?? this.autoRestSeconds,
     progressionEnabled: progressionEnabled ?? this.progressionEnabled,
     weeklySessionTarget: weeklySessionTarget ?? this.weeklySessionTarget,
     cardioDistanceUnitKm: cardioDistanceUnitKm ?? this.cardioDistanceUnitKm,
+    equipment: clearEquipment ? null : (equipment ?? this.equipment),
+    experienceLevel: experienceLevel ?? this.experienceLevel,
   );
 }

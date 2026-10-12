@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show SystemUiOverlayStyle;
 
 /// StationX colour tokens, extracted from the Stitch "Kinetic Obsidian"
-/// design system (see docs/STATIONX_UI_IMPLEMENTATION_ROADMAP.md §D).
+/// design system.
 /// Screens must use these tokens instead of raw hex values.
 class SxColors {
   const SxColors({

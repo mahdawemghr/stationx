@@ -248,8 +248,7 @@ class SxBrandBar extends StatelessWidget implements PreferredSizeWidget {
               children: [
                 const SxLogo(size: 40, decorative: true),
                 const SizedBox(width: 16),
-                Flexible(
-                  flex: 1000,
+                Expanded(
                   child: Text(
                     'StationX',
                     maxLines: 1,
@@ -263,10 +262,10 @@ class SxBrandBar extends StatelessWidget implements PreferredSizeWidget {
                 // Hide the pill on narrow / large-text layouts instead of overflowing.
                 if (MediaQuery.sizeOf(context).width >= 400 &&
                     MediaQuery.textScalerOf(context).scale(1) <= 1.15) ...[
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 12),
                   _LocalPill(),
+                  const SizedBox(width: 12),
                 ],
-                const Spacer(),
                 _AvatarButton(name: name, onTap: onAvatarTap),
               ],
             ),

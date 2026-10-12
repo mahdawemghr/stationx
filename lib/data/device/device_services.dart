@@ -5,9 +5,6 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 abstract class DeviceFeedback {
   /// A set was marked done.
   void setDone();
-
-  /// The rest countdown reached zero (double pulse).
-  void restEnded();
 }
 
 class HapticDeviceFeedback implements DeviceFeedback {
@@ -15,12 +12,6 @@ class HapticDeviceFeedback implements DeviceFeedback {
 
   @override
   void setDone() => _run(() => HapticFeedback.mediumImpact());
-
-  @override
-  void restEnded() {
-    _run(() => HapticFeedback.heavyImpact());
-    Future<void>.delayed(const Duration(milliseconds: 180), () => _run(() => HapticFeedback.heavyImpact()));
-  }
 
   static void _run(Future<void> Function() f) {
     try {

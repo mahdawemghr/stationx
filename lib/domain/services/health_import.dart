@@ -7,6 +7,8 @@ class HealthImportPlan {
   const HealthImportPlan({
     required this.sessions,
     required this.externalIds,
+    this.strengthSessions = const [],
+    this.strengthExternalIds = const [],
     required this.skippedOwn,
     required this.skippedAlreadyImported,
     required this.skippedUnsupported,
@@ -19,6 +21,13 @@ class HealthImportPlan {
 
   /// External record id for each entry of [sessions] (same order).
   final List<String> externalIds;
+
+  /// Watch-recorded strength sessions to add (no exercises or sets: the watch only knows time,
+  /// calories and heart rate). Oldest first.
+  final List<WorkoutSession> strengthSessions;
+
+  /// External record id for each entry of [strengthSessions] (same order).
+  final List<String> strengthExternalIds;
   final int skippedOwn;
   final int skippedAlreadyImported;
   final int skippedUnsupported;
@@ -27,14 +36,23 @@ class HealthImportPlan {
   /// Friendly origin names found among the sessions (e.g. `Samsung Health`).
   final Set<String> sourceLabels;
 
-  bool get isEmpty => sessions.isEmpty;
+  /// Everything that would be added.
+  int get count => sessions.length + strengthSessions.length;
+
+  List<String> get allExternalIds => [...externalIds, ...strengthExternalIds];
+
+  bool get isEmpty => count == 0;
 }
 
 abstract final class HealthImport {
   static const idPrefix = 'hc_';
   static const defaultDays = 30;
-  static const maxDays = 90;
-  static const maxSessions = 500;
+
+  /// "All available" in the UI. Health Connect only returns older data when the history
+  /// permission was granted; the plan itself just filters by this window.
+  static const maxDays = 3650;
+  static const maxSessions = 2000;
+  static const strengthName = 'Strength training';
   static const minDuration = Duration(minutes: 1);
   static const maxDuration = Duration(hours: 24);
   static const maxDistanceKm = 1000.0;
@@ -72,6 +90,7 @@ abstract final class HealthImport {
     Set<String> ownRecordIds = const {},
     Set<String> alreadyImported = const {},
     Set<String> existingSessionIds = const {},
+    Set<String> existingStrengthIds = const {},
     String sourceNote = 'Imported from Health Connect',
     DateTime? now,
     int? days,
@@ -80,6 +99,7 @@ abstract final class HealthImport {
     final earliest = t.subtract(Duration(days: clampDays(days)));
     final latest = t.add(const Duration(minutes: 5));
     final out = <(HealthWorkout, CardioKind)>[];
+    final strength = <HealthWorkout>[];
     final seen = <String>{};
     var own = 0, dup = 0, unsupported = 0, invalid = 0;
     for (final w in candidates) {
@@ -92,14 +112,15 @@ abstract final class HealthImport {
         continue;
       }
       final sid = sessionIdFor(w.id);
-      if (alreadyImported.contains(w.id) || existingSessionIds.contains(sid)) {
+      if (alreadyImported.contains(w.id) ||
+          existingSessionIds.contains(sid) ||
+          existingStrengthIds.contains(sid)) {
         dup++;
         continue;
       }
-      final kind = WorkoutMapping.cardioKindFor(
-        WorkoutMapping.activityFromName(w.activityName),
-      );
-      if (kind == null) {
+      final activity = WorkoutMapping.activityFromName(w.activityName);
+      final kind = WorkoutMapping.cardioKindFor(activity);
+      if (kind == null && activity != HealthActivity.strength) {
         unsupported++;
         continue;
       }
@@ -111,12 +132,20 @@ abstract final class HealthImport {
         invalid++; // also drops not-yet-completed (end in the future) sessions
         continue;
       }
-      out.add((w, kind));
+      if (kind == null) {
+        strength.add(w);
+      } else {
+        out.add((w, kind));
+      }
     }
     out.sort((a, b) => a.$1.start.compareTo(b.$1.start));
+    strength.sort((a, b) => a.start.compareTo(b.start));
     final picked = out.length > maxSessions
         ? out.sublist(out.length - maxSessions)
         : out;
+    final pickedStrength = strength.length > maxSessions
+        ? strength.sublist(strength.length - maxSessions)
+        : strength;
     final labels = <String>{};
     final sessions = <CardioSession>[];
     for (final (w, kind) in picked) {
@@ -153,9 +182,39 @@ abstract final class HealthImport {
         ),
       );
     }
+    final strengthSessions = <WorkoutSession>[];
+    for (final w in pickedStrength) {
+      final label = knownSources[w.sourceName];
+      if (label != null) labels.add(label);
+      final cal =
+          (w.energyKcal != null &&
+              w.energyKcal!.isFinite &&
+              w.energyKcal! >= 1 &&
+              w.energyKcal! <= maxCalories)
+          ? w.energyKcal!.round()
+          : null;
+      final parts = [
+        label == null ? sourceNote : '$sourceNote ($label)',
+        if (cal != null) '$cal kcal',
+      ];
+      strengthSessions.add(
+        WorkoutSession(
+          id: sessionIdFor(w.id),
+          workoutId: '',
+          name: strengthName,
+          workoutDate: w.start,
+          exercises: const [],
+          durationSeconds: w.end.difference(w.start).inSeconds,
+          notes: parts.join(' · '),
+          meta: SyncMeta(createdAt: t, updatedAt: t),
+        ),
+      );
+    }
     return HealthImportPlan(
       sessions: sessions,
       externalIds: [for (final (w, _) in picked) w.id],
+      strengthSessions: strengthSessions,
+      strengthExternalIds: [for (final w in pickedStrength) w.id],
       skippedOwn: own,
       skippedAlreadyImported: dup,
       skippedUnsupported: unsupported,
@@ -164,17 +223,26 @@ abstract final class HealthImport {
     );
   }
 
-  /// Adds the planned sessions to [cardio] (never touches strength history). Skips ids that
+  /// Adds the planned cardio sessions to [cardio] and, when [sessions] is given, the watch
+  /// strength sessions to it (existing sessions are never changed). Skips ids that
   /// appeared in the meantime, so applying twice adds nothing. Returns how many were added.
   static Future<int> apply(
     HealthImportPlan plan,
-    CardioRepository cardio,
-  ) async {
+    CardioRepository cardio, [
+    SessionRepository? sessions,
+  ]) async {
     var added = 0;
     for (final s in plan.sessions) {
       if (cardio.byId(s.id) != null) continue;
       await cardio.add(s);
       added++;
+    }
+    if (sessions != null) {
+      for (final s in plan.strengthSessions) {
+        if (sessions.byId(s.id) != null) continue;
+        await sessions.add(s);
+        added++;
+      }
     }
     return added;
   }

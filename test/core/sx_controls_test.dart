@@ -10,10 +10,21 @@ void main() {
       final h = t.ensureSemantics();
       var v = 1;
       late StateSetter set;
-      await pumpKit(t, StatefulBuilder(builder: (_, s) {
-        set = s;
-        return SxStepper.int(value: v, min: 0, max: 2, label: 'Sets', onChanged: (n) => set(() => v = n));
-      }));
+      await pumpKit(
+        t,
+        StatefulBuilder(
+          builder: (_, s) {
+            set = s;
+            return SxStepper.int(
+              value: v,
+              min: 0,
+              max: 2,
+              label: 'Sets',
+              onChanged: (n) => set(() => v = n),
+            );
+          },
+        ),
+      );
       for (final label in ['Decrease Sets', 'Increase Sets']) {
         final r = t.getRect(find.bySemanticsLabel(label));
         expect(r.width, greaterThanOrEqualTo(48));
@@ -23,7 +34,15 @@ void main() {
       await t.pump();
       expect(v, 2);
       // At max the increase button is disabled.
-      expect(t.getSemantics(find.bySemanticsLabel('Increase Sets')), matchesSemantics(label: 'Increase Sets', isButton: true, hasEnabledState: true, isEnabled: false));
+      expect(
+        t.getSemantics(find.bySemanticsLabel('Increase Sets')),
+        matchesSemantics(
+          label: 'Increase Sets',
+          isButton: true,
+          hasEnabledState: true,
+          isEnabled: false,
+        ),
+      );
       await t.tap(find.bySemanticsLabel('Increase Sets'));
       await t.pump();
       expect(v, 2);
@@ -41,10 +60,22 @@ void main() {
       var v = 20.0;
       var edits = 0;
       late StateSetter set;
-      await pumpKit(t, StatefulBuilder(builder: (_, s) {
-        set = s;
-        return SxStepper.double(value: v, step: 2.5, unit: 'kg', label: 'Weight', onTapValue: () => edits++, onChanged: (n) => set(() => v = n));
-      }));
+      await pumpKit(
+        t,
+        StatefulBuilder(
+          builder: (_, s) {
+            set = s;
+            return SxStepper.double(
+              value: v,
+              step: 2.5,
+              unit: 'kg',
+              label: 'Weight',
+              onTapValue: () => edits++,
+              onChanged: (n) => set(() => v = n),
+            );
+          },
+        ),
+      );
       expect(find.textContaining('20 kg'), findsOneWidget);
       await t.tap(find.bySemanticsLabel('Increase Weight'));
       await t.pump();
@@ -57,10 +88,19 @@ void main() {
     testWidgets('long press repeats and stops', (t) async {
       var v = 0;
       late StateSetter set;
-      await pumpKit(t, StatefulBuilder(builder: (_, s) {
-        set = s;
-        return SxStepper.int(value: v, max: 100, onChanged: (n) => set(() => v = n));
-      }));
+      await pumpKit(
+        t,
+        StatefulBuilder(
+          builder: (_, s) {
+            set = s;
+            return SxStepper.int(
+              value: v,
+              max: 100,
+              onChanged: (n) => set(() => v = n),
+            );
+          },
+        ),
+      );
       final g = await t.startGesture(t.getCenter(find.byIcon(Icons.add)));
       for (var i = 0; i < 50; i++) {
         await t.pump(const Duration(milliseconds: 16));
@@ -75,17 +115,39 @@ void main() {
   });
 
   group('SxCheck', () {
-    testWidgets('28dp box in 48dp target, checked semantics, toggles', (t) async {
+    testWidgets('28dp box in 48dp target, checked semantics, toggles', (
+      t,
+    ) async {
       final h = t.ensureSemantics();
       var on = false;
       late StateSetter set;
-      await pumpKit(t, StatefulBuilder(builder: (_, s) {
-        set = s;
-        return SxCheck(checked: on, semanticLabel: 'Set 1 done', haptic: false, onChanged: (v) => set(() => on = v));
-      }));
+      await pumpKit(
+        t,
+        StatefulBuilder(
+          builder: (_, s) {
+            set = s;
+            return SxCheck(
+              checked: on,
+              semanticLabel: 'Set 1 done',
+              haptic: false,
+              onChanged: (v) => set(() => on = v),
+            );
+          },
+        ),
+      );
       expect(t.getSize(find.byType(SxCheck)), const Size(48, 48));
       expect(t.getSize(find.byType(AnimatedContainer)), const Size(28, 28));
-      expect(t.getSemantics(find.byType(SxCheck)), matchesSemantics(label: 'Set 1 done', hasCheckedState: true, isChecked: false, hasEnabledState: true, isEnabled: true, hasTapAction: true));
+      expect(
+        t.getSemantics(find.byType(SxCheck)),
+        matchesSemantics(
+          label: 'Set 1 done',
+          hasCheckedState: true,
+          isChecked: false,
+          hasEnabledState: true,
+          isEnabled: true,
+          hasTapAction: true,
+        ),
+      );
       await t.tap(find.byType(SxCheck));
       await t.pumpAndSettle();
       expect(on, isTrue);
@@ -95,7 +157,16 @@ void main() {
   });
 
   testWidgets('SxTag / SxPill / SxSpinner render', (t) async {
-    await pumpKit(t, const Column(children: [SxTag('pr', icon: Icons.star), SxPill('x', filled: true), SxSpinner()]));
+    await pumpKit(
+      t,
+      const Column(
+        children: [
+          SxTag('pr', icon: Icons.star),
+          SxPill('x', filled: true),
+          SxSpinner(),
+        ],
+      ),
+    );
     expect(find.text('PR'), findsOneWidget);
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
   });

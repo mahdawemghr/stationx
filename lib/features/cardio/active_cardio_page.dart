@@ -1,7 +1,9 @@
+import '../../core/utils/remote_ops.dart';
 import 'dart:async';
 
 import 'cardio_pace.dart';
 import 'package:flutter/material.dart';
+import '../health/heart_rate_widgets.dart';
 
 import '../../app/app_scope.dart';
 import '../../app/nav.dart';
@@ -17,7 +19,13 @@ import 'active_cardio_clock.dart';
 /// Time is tracked automatically; distance (and treadmill speed / incline /
 /// bike resistance) are entered manually — there is no GPS/sensor layer.
 class ActiveCardioPage extends StatefulWidget {
-  const ActiveCardioPage({super.key, required this.kind, this.targetMinutes, this.targetKm, this.customActivityId});
+  const ActiveCardioPage({
+    super.key,
+    required this.kind,
+    this.targetMinutes,
+    this.targetKm,
+    this.customActivityId,
+  });
   final CardioKind kind;
   final int? targetMinutes;
   final double? targetKm;
@@ -61,7 +69,8 @@ class _ActiveCardioPageState extends State<ActiveCardioPage> {
     return null;
   }
 
-  List<CardioField> _fields(CardioRepository repo) => _custom(repo)?.fields ?? widget.kind.fields;
+  List<CardioField> _fields(CardioRepository repo) =>
+      _custom(repo)?.fields ?? widget.kind.fields;
 
   bool get _dirty => _clock.activeSeconds > 0 || _km != null;
 
@@ -72,42 +81,67 @@ class _ActiveCardioPageState extends State<ActiveCardioPage> {
       if (mounted) Navigator.of(context).pop();
       return;
     }
-    final ok = await showSxConfirm(context,
-        title: 'Discard session?',
-        message: 'This session has not been saved. Its time and distance will be lost.',
-        confirmLabel: 'Discard',
-        cancelLabel: 'Keep going',
-        destructive: true,
-        icon: Icons.delete_forever);
+    final ok = await showSxConfirm(
+      context,
+      title: 'Discard session?',
+      message:
+          'This session has not been saved. Its time and distance will be lost.',
+      confirmLabel: 'Discard',
+      cancelLabel: 'Keep going',
+      destructive: true,
+      icon: Icons.delete_forever,
+    );
     if (ok && mounted) {
       _finished = true;
       Navigator.of(context).pop();
     }
   }
 
+  String? _saveId;
+
   Future<void> _finish() async {
     final repo = context.app.cardio;
     final secs = _clock.activeSeconds;
     if (secs <= 0) {
-      showSxSnack(context, 'Nothing recorded yet — keep moving or discard.', icon: Icons.info_outline);
+      showSxSnack(
+        context,
+        'Nothing recorded yet — keep moving or discard.',
+        icon: Icons.info_outline,
+      );
       return;
     }
     _clock.pause();
     sxHaptic();
-    final id = 'cardio_${DateTime.now().microsecondsSinceEpoch}';
+    // One id per screen: a retry after a lost response re-sends the SAME session (idempotent upsert).
+    final id = _saveId ??= 'cardio_${DateTime.now().microsecondsSinceEpoch}';
     final fields = _fields(repo);
-    await repo.add(CardioSession(
-      id: id,
-      kind: widget.kind,
-      workoutDate: _clock.startedAt,
-      durationSeconds: secs,
-      distanceKm: fields.contains(CardioField.distance) ? _km : null,
-      speedKmh: fields.contains(CardioField.speed) && widget.kind == CardioKind.treadmill ? _speed : null,
-      inclinePct: fields.contains(CardioField.incline) ? _incline : null,
-      resistance: fields.contains(CardioField.resistance) ? _resistance : null,
-      customActivityId: widget.customActivityId,
-    ));
-    if (!mounted) return;
+    final ok = await runRemote(
+      context,
+      () => repo.add(
+        CardioSession(
+          id: id,
+          kind: widget.kind,
+          workoutDate: _clock.startedAt,
+          durationSeconds: secs,
+          distanceKm: fields.contains(CardioField.distance) ? _km : null,
+          speedKmh:
+              fields.contains(CardioField.speed) &&
+                  widget.kind == CardioKind.treadmill
+              ? _speed
+              : null,
+          inclinePct: fields.contains(CardioField.incline) ? _incline : null,
+          resistance: fields.contains(CardioField.resistance)
+              ? _resistance
+              : null,
+          customActivityId: widget.customActivityId,
+        ),
+      ),
+      what: 'save the cardio session',
+      key: 'cardio-finish',
+    );
+    if (!ok || !mounted) {
+      return; // still on this screen, the recording is intact; Finish tries again
+    }
     _finished = true;
     AppNav.cardioComplete(context, id);
   }
@@ -125,23 +159,54 @@ class _ActiveCardioPageState extends State<ActiveCardioPage> {
 
   Future<void> _editDistance(bool miles) async {
     final cur = _km == null ? null : (miles ? _km! * 0.621371 : _km!);
-    final v = await showNumericKeypad(context, title: 'Distance', initial: cur, unit: miles ? 'mi' : 'km', step: 0.1, max: 1000);
-    if (v != null && mounted) setState(() => _km = v <= 0 ? null : (miles ? v / 0.621371 : v));
+    final v = await showNumericKeypad(
+      context,
+      title: 'Distance',
+      initial: cur,
+      unit: miles ? 'mi' : 'km',
+      step: 0.1,
+      max: 1000,
+    );
+    if (v != null && mounted) {
+      setState(() => _km = v <= 0 ? null : (miles ? v / 0.621371 : v));
+    }
   }
 
   Future<void> _editSpeed() async {
-    final v = await showNumericKeypad(context, title: 'Speed', initial: _speed, unit: 'km/h', step: 0.5, max: 40);
+    final v = await showNumericKeypad(
+      context,
+      title: 'Speed',
+      initial: _speed,
+      unit: 'km/h',
+      step: 0.5,
+      max: 40,
+    );
     if (v != null && mounted) setState(() => _speed = v <= 0 ? null : v);
   }
 
   Future<void> _editIncline() async {
-    final v = await showNumericKeypad(context, title: 'Incline', initial: _incline, unit: '%', step: 0.5, max: 30);
+    final v = await showNumericKeypad(
+      context,
+      title: 'Incline',
+      initial: _incline,
+      unit: '%',
+      step: 0.5,
+      max: 30,
+    );
     if (v != null && mounted) setState(() => _incline = v <= 0 ? null : v);
   }
 
   Future<void> _editResistance() async {
-    final v = await showNumericKeypad(context, title: 'Resistance level', initial: _resistance?.toDouble(), allowDecimal: false, max: 50);
-    if (v != null && mounted) setState(() => _resistance = v <= 0 ? null : v.round());
+    final v = await showNumericKeypad(
+      context,
+      title: 'Resistance level',
+      initial: _resistance?.toDouble(),
+      allowDecimal: false,
+      max: 50,
+    );
+    if (v != null && mounted) {
+      setState(() => _resistance = v <= 0 ? null : v.round());
+    }
   }
 
   @override
@@ -157,7 +222,8 @@ class _ActiveCardioPageState extends State<ActiveCardioPage> {
         final name = custom?.name ?? widget.kind.label;
         final hasDistance = fields.contains(CardioField.distance);
         final isTreadmill = widget.kind == CardioKind.treadmill;
-        final hasTarget = widget.targetMinutes != null || widget.targetKm != null;
+        final hasTarget =
+            widget.targetMinutes != null || widget.targetKm != null;
 
         return PopScope(
           canPop: _finished,
@@ -169,7 +235,15 @@ class _ActiveCardioPageState extends State<ActiveCardioPage> {
               title: 'Active Session',
               subtitle: name.toUpperCase(),
               onBack: _confirmDiscard,
-              pill: SxSwap(child: StatusPill(_paused ? 'Paused' : 'Tracking', key: ValueKey(_paused), dot: true, color: _paused ? c.textBody : c.primary)),
+              actions: const [LiveHeartRateChip()],
+              pill: SxSwap(
+                child: StatusPill(
+                  _paused ? 'Paused' : 'Tracking',
+                  key: ValueKey(_paused),
+                  dot: true,
+                  color: _paused ? c.textBody : c.primary,
+                ),
+              ),
             ),
             gap: SxSpace.md,
             bottom: _Controls(
@@ -193,7 +267,17 @@ class _ActiveCardioPageState extends State<ActiveCardioPage> {
                     if (_paused) ...[
                       _PausedBanner(tick: _tick, clock: _clock),
                       const SizedBox(height: SxSpace.md),
-                      _PausedHero(tick: _tick, clock: _clock, km: hasDistance ? _km : null, miles: miles, kind: widget.kind, fields: fields, onEditDistance: _locked ? null : () => _editDistance(miles)),
+                      _PausedHero(
+                        tick: _tick,
+                        clock: _clock,
+                        km: hasDistance ? _km : null,
+                        miles: miles,
+                        kind: widget.kind,
+                        fields: fields,
+                        onEditDistance: _locked
+                            ? null
+                            : () => _editDistance(miles),
+                      ),
                     ] else ...[
                       _HeroCard(
                         tick: _tick,
@@ -201,11 +285,20 @@ class _ActiveCardioPageState extends State<ActiveCardioPage> {
                         label: name,
                         km: hasDistance ? (_km ?? 0) : null,
                         miles: miles,
-                        onEditDistance: _locked ? null : () => _editDistance(miles),
+                        onEditDistance: _locked
+                            ? null
+                            : () => _editDistance(miles),
                       ),
                       if (hasTarget) ...[
                         const SizedBox(height: SxSpace.md),
-                        _GoalCard(tick: _tick, clock: _clock, targetMinutes: widget.targetMinutes, targetKm: widget.targetKm, km: _km ?? 0, miles: miles),
+                        _GoalCard(
+                          tick: _tick,
+                          clock: _clock,
+                          targetMinutes: widget.targetMinutes,
+                          targetKm: widget.targetKm,
+                          km: _km ?? 0,
+                          miles: miles,
+                        ),
                       ],
                       const SizedBox(height: SxSpace.md),
                       _MetricGrid(
@@ -237,7 +330,14 @@ class _ActiveCardioPageState extends State<ActiveCardioPage> {
 }
 
 class _HeroCard extends StatelessWidget {
-  const _HeroCard({required this.tick, required this.clock, required this.label, required this.km, required this.miles, required this.onEditDistance});
+  const _HeroCard({
+    required this.tick,
+    required this.clock,
+    required this.label,
+    required this.km,
+    required this.miles,
+    required this.onEditDistance,
+  });
   final ValueNotifier<int> tick;
   final CardioClock clock;
   final String label;
@@ -249,47 +349,80 @@ class _HeroCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.sx;
     return SxCard(
-      padding: const EdgeInsets.symmetric(vertical: SxSpace.lg, horizontal: SxSpace.md),
-      child: Column(children: [
-        Text(label.toUpperCase(), maxLines: 1, overflow: TextOverflow.ellipsis, style: SxText.labelCaps.copyWith(color: c.textBody, letterSpacing: 1.4)),
-        const SizedBox(height: SxSpace.sm),
-        ValueListenableBuilder<int>(
-          valueListenable: tick,
-          builder: (_, _, _) => FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(Fmt.clockHms(clock.activeSeconds), key: const Key('cardio-clock'), style: SxText.metricXl.copyWith(color: c.primary, fontSize: 52)),
+      padding: const EdgeInsets.symmetric(
+        vertical: SxSpace.lg,
+        horizontal: SxSpace.md,
+      ),
+      child: Column(
+        children: [
+          Text(
+            label.toUpperCase(),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: SxText.labelCaps.copyWith(
+              color: c.textBody,
+              letterSpacing: 1.4,
+            ),
           ),
-        ),
-        if (km != null) ...[
           const SizedBox(height: SxSpace.sm),
-          InkWell(
-            key: const Key('cardio-distance'),
-            onTap: onEditDistance,
-            borderRadius: BorderRadius.circular(SxRadius.md),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Row(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
-                  // Distance only changes when the user edits it (not per tick): animate it.
-                  SxCountUp(
-                    value: km!,
-                    fromZero: false,
-                    duration: SxMotion.standard,
-                    formatter: (v) => Fmt.km(v, miles: miles) == '0' ? '0.00' : Fmt.km(v, miles: miles),
-                    style: SxText.metricXl.copyWith(color: c.textHigh),
-                  ),
-                  const SizedBox(width: 6),
-                  Text(miles ? 'MI' : 'KM', style: SxText.metricMd.copyWith(color: c.textBody)),
-                  const SizedBox(width: 8),
-                  Icon(Icons.edit, size: 16, color: c.textMuted),
-                ]),
+          ValueListenableBuilder<int>(
+            valueListenable: tick,
+            builder: (_, _, _) => FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                Fmt.clockHms(clock.activeSeconds),
+                key: const Key('cardio-clock'),
+                style: SxText.metricXl.copyWith(color: c.primary, fontSize: 52),
               ),
             ),
           ),
-          Text('TAP TO UPDATE DISTANCE', style: SxText.labelXs.copyWith(color: c.textMuted)),
+          if (km != null) ...[
+            const SizedBox(height: SxSpace.sm),
+            InkWell(
+              key: const Key('cardio-distance'),
+              onTap: onEditDistance,
+              borderRadius: BorderRadius.circular(SxRadius.md),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
+                    children: [
+                      // Distance only changes when the user edits it (not per tick): animate it.
+                      SxCountUp(
+                        value: km!,
+                        fromZero: false,
+                        duration: SxMotion.standard,
+                        formatter: (v) => Fmt.km(v, miles: miles) == '0'
+                            ? '0.00'
+                            : Fmt.km(v, miles: miles),
+                        style: SxText.metricXl.copyWith(color: c.textHigh),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        miles ? 'MI' : 'KM',
+                        style: SxText.metricMd.copyWith(color: c.textBody),
+                      ),
+                      const SizedBox(width: 8),
+                      Icon(Icons.edit, size: 16, color: c.textMuted),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Text(
+              'TAP TO UPDATE DISTANCE',
+              style: SxText.labelXs.copyWith(color: c.textMuted),
+            ),
+          ],
         ],
-      ]),
+      ),
     );
   }
 }
@@ -303,34 +436,59 @@ class _PausedBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.sx;
     return SxCard(
-      child: Row(children: [
-        Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(color: c.primarySoft, borderRadius: BorderRadius.circular(SxRadius.md)),
-          child: Icon(Icons.pause, color: c.primary),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('WORKOUT PAUSED', style: SxText.headlineSm.copyWith(color: c.textHigh)),
-            Text('Tap Resume whenever you are set', style: SxText.bodySm.copyWith(color: c.textBody)),
-          ]),
-        ),
-        const SizedBox(width: 8),
-        Icon(Icons.timer_outlined, size: 18, color: c.textBody),
-        const SizedBox(width: 4),
-        ValueListenableBuilder<int>(
-          valueListenable: tick,
-          builder: (_, _, _) => Text(Fmt.clock(clock.pausedSeconds), style: SxText.metricSm.copyWith(color: c.textBody)),
-        ),
-      ]),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: c.primarySoft,
+              borderRadius: BorderRadius.circular(SxRadius.md),
+            ),
+            child: Icon(Icons.pause, color: c.primary),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'WORKOUT PAUSED',
+                  style: SxText.headlineSm.copyWith(color: c.textHigh),
+                ),
+                Text(
+                  'Tap Resume whenever you are set',
+                  style: SxText.bodySm.copyWith(color: c.textBody),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Icon(Icons.timer_outlined, size: 18, color: c.textBody),
+          const SizedBox(width: 4),
+          ValueListenableBuilder<int>(
+            valueListenable: tick,
+            builder: (_, _, _) => Text(
+              Fmt.clock(clock.pausedSeconds),
+              style: SxText.metricSm.copyWith(color: c.textBody),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
 
 class _PausedHero extends StatelessWidget {
-  const _PausedHero({required this.tick, required this.clock, required this.km, required this.miles, required this.kind, required this.fields, required this.onEditDistance});
+  const _PausedHero({
+    required this.tick,
+    required this.clock,
+    required this.km,
+    required this.miles,
+    required this.kind,
+    required this.fields,
+    required this.onEditDistance,
+  });
   final ValueNotifier<int> tick;
   final CardioClock clock;
   final double? km;
@@ -346,56 +504,119 @@ class _PausedHero extends StatelessWidget {
     final paceKm = CardioMetrics.paceSecPerKm(secs, km);
     final pace = CardioPace.convert(kind, paceKm, miles: miles);
     return SxCard(
-      child: Column(children: [
-        SxInset(
-          padding: const EdgeInsets.symmetric(vertical: SxSpace.lg),
-          alignment: Alignment.center,
-          child: Column(children: [
-            Row(mainAxisSize: MainAxisSize.min, children: [
-              Icon(Icons.timelapse, size: 14, color: c.textBody),
-              const SizedBox(width: 6),
-              Text('ACTIVE DURATION', style: SxText.labelCaps.copyWith(color: c.textBody)),
-            ]),
-            const SizedBox(height: 6),
-            FittedBox(child: Text(Fmt.clock(secs), key: const Key('cardio-clock-paused'), style: SxText.metricXl.copyWith(color: c.textHigh, fontSize: 52))),
-          ]),
-        ),
-        if (fields.contains(CardioField.distance)) ...[
-          const SizedBox(height: 8),
-          Row(children: [
-            Expanded(
-              child: SxInset(
-                onTap: onEditDistance,
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text('DISTANCE', style: SxText.labelXs.copyWith(color: c.textBody)),
-                  const SizedBox(height: 6),
-                  FittedBox(fit: BoxFit.scaleDown, child: Text(km == null ? '—' : Fmt.km(km, miles: miles), style: SxText.metricLg.copyWith(color: c.textHigh))),
-                  Text(miles ? 'MILES' : 'KILOMETERS', style: SxText.labelXs.copyWith(color: c.textMuted)),
-                ]),
-              ),
-            ),
-            if (CardioPace.has(kind)) ...[ 
-              const SizedBox(width: 8),
-              Expanded(
-                child: SxInset(
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text('AVG PACE', style: SxText.labelXs.copyWith(color: c.textBody)),
-                    const SizedBox(height: 6),
-                    FittedBox(fit: BoxFit.scaleDown, child: Text(Fmt.pace(pace), style: SxText.metricLg.copyWith(color: c.textHigh))),
-                    Text(CardioPace.unit(kind, miles: miles).replaceFirst('/', '/ ').toUpperCase(), style: SxText.labelXs.copyWith(color: c.textMuted)),
-                  ]),
+      child: Column(
+        children: [
+          SxInset(
+            padding: const EdgeInsets.symmetric(vertical: SxSpace.lg),
+            alignment: Alignment.center,
+            child: Column(
+              children: [
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.timelapse, size: 14, color: c.textBody),
+                    const SizedBox(width: 6),
+                    Text(
+                      'ACTIVE DURATION',
+                      style: SxText.labelCaps.copyWith(color: c.textBody),
+                    ),
+                  ],
                 ),
-              ),
-            ],
-          ]),
+                const SizedBox(height: 6),
+                FittedBox(
+                  child: Text(
+                    Fmt.clock(secs),
+                    key: const Key('cardio-clock-paused'),
+                    style: SxText.metricXl.copyWith(
+                      color: c.textHigh,
+                      fontSize: 52,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (fields.contains(CardioField.distance)) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: SxInset(
+                    onTap: onEditDistance,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'DISTANCE',
+                          style: SxText.labelXs.copyWith(color: c.textBody),
+                        ),
+                        const SizedBox(height: 6),
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            km == null ? '—' : Fmt.km(km, miles: miles),
+                            style: SxText.metricLg.copyWith(color: c.textHigh),
+                          ),
+                        ),
+                        Text(
+                          miles ? 'MILES' : 'KILOMETERS',
+                          style: SxText.labelXs.copyWith(color: c.textMuted),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                if (CardioPace.has(kind)) ...[
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: SxInset(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'AVG PACE',
+                            style: SxText.labelXs.copyWith(color: c.textBody),
+                          ),
+                          const SizedBox(height: 6),
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              Fmt.pace(pace),
+                              style: SxText.metricLg.copyWith(
+                                color: c.textHigh,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            CardioPace.unit(
+                              kind,
+                              miles: miles,
+                            ).replaceFirst('/', '/ ').toUpperCase(),
+                            style: SxText.labelXs.copyWith(color: c.textMuted),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ],
         ],
-      ]),
+      ),
     );
   }
 }
 
 class _GoalCard extends StatelessWidget {
-  const _GoalCard({required this.tick, required this.clock, required this.targetMinutes, required this.targetKm, required this.km, required this.miles});
+  const _GoalCard({
+    required this.tick,
+    required this.clock,
+    required this.targetMinutes,
+    required this.targetKm,
+    required this.km,
+    required this.miles,
+  });
   final ValueNotifier<int> tick;
   final CardioClock clock;
   final int? targetMinutes;
@@ -416,25 +637,50 @@ class _GoalCard extends StatelessWidget {
           final done = byTime ? secs.toDouble() : km;
           final pct = total <= 0 ? 0.0 : (done / total);
           final left = (total - done).clamp(0, double.infinity);
-          return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Row(children: [
-              Icon(Icons.flag_outlined, color: c.primary, size: 20),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(byTime ? 'GOAL: $targetMinutes MIN' : 'GOAL: ${Fmt.km(targetKm, miles: miles)} ${miles ? 'MI' : 'KM'}',
-                    style: SxText.headlineSm.copyWith(color: c.textHigh), overflow: TextOverflow.ellipsis),
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.flag_outlined, color: c.primary, size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      byTime
+                          ? 'GOAL: $targetMinutes MIN'
+                          : 'GOAL: ${Fmt.km(targetKm, miles: miles)} ${miles ? 'MI' : 'KM'}',
+                      style: SxText.headlineSm.copyWith(color: c.textHigh),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Text(
+                    '${(pct * 100).clamp(0, 999).round()}% COMPLETE',
+                    style: SxText.labelCaps.copyWith(color: c.primary),
+                  ),
+                ],
               ),
-              Text('${(pct * 100).clamp(0, 999).round()}% COMPLETE', style: SxText.labelCaps.copyWith(color: c.primary)),
-            ]),
-            const SizedBox(height: SxSpace.sm),
-            SxLinearMeter(value: pct, height: 8),
-            const SizedBox(height: SxSpace.sm),
-            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              Text(byTime ? 'ELAPSED: ${Fmt.clock(secs)}' : 'DONE: ${Fmt.km(km, miles: miles)}', style: SxText.labelXs.copyWith(color: c.textBody)),
-              Text(byTime ? 'REMAINING: ${Fmt.clock(left.round())}' : 'REMAINING: ${Fmt.km(left.toDouble(), miles: miles)}',
-                  style: SxText.labelXs.copyWith(color: c.textBody)),
-            ]),
-          ]);
+              const SizedBox(height: SxSpace.sm),
+              SxLinearMeter(value: pct, height: 8),
+              const SizedBox(height: SxSpace.sm),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    byTime
+                        ? 'ELAPSED: ${Fmt.clock(secs)}'
+                        : 'DONE: ${Fmt.km(km, miles: miles)}',
+                    style: SxText.labelXs.copyWith(color: c.textBody),
+                  ),
+                  Text(
+                    byTime
+                        ? 'REMAINING: ${Fmt.clock(left.round())}'
+                        : 'REMAINING: ${Fmt.km(left.toDouble(), miles: miles)}',
+                    style: SxText.labelXs.copyWith(color: c.textBody),
+                  ),
+                ],
+              ),
+            ],
+          );
         },
       ),
     );
@@ -481,35 +727,91 @@ class _MetricGrid extends StatelessWidget {
         final tiles = <Widget>[];
         if (CardioPace.has(kind)) {
           final p = CardioMetrics.paceSecPerKm(secs, km);
-          tiles.add(_Tile(label: 'Avg pace', icon: Icons.timer_outlined, value: CardioPace.text(kind, p, miles: miles), unit: CardioPace.unit(kind, miles: miles), caption: km == null ? 'Enter distance' : null));
+          tiles.add(
+            _Tile(
+              label: 'Avg pace',
+              icon: Icons.timer_outlined,
+              value: CardioPace.text(kind, p, miles: miles),
+              unit: CardioPace.unit(kind, miles: miles),
+              caption: km == null ? 'Enter distance' : null,
+            ),
+          );
         }
         if (fields.contains(CardioField.speed)) {
           if (kind == CardioKind.treadmill) {
-            tiles.add(_Tile(label: 'Speed', icon: Icons.speed, value: speed == null ? '—' : Fmt.number(speed!), unit: 'km/h', caption: 'Tap to set', onTap: locked ? null : onEditSpeed));
+            tiles.add(
+              _Tile(
+                label: 'Speed',
+                icon: Icons.speed,
+                value: speed == null ? '—' : Fmt.number(speed!),
+                unit: 'km/h',
+                caption: 'Tap to set',
+                onTap: locked ? null : onEditSpeed,
+              ),
+            );
           } else {
             final s = CardioMetrics.speedKmh(secs, km);
-            tiles.add(_Tile(label: 'Avg speed', icon: Icons.speed, value: s == null ? '—' : Fmt.number(miles ? s * 0.621371 : s), unit: miles ? 'mph' : 'km/h', caption: km == null ? 'Enter distance' : null));
+            tiles.add(
+              _Tile(
+                label: 'Avg speed',
+                icon: Icons.speed,
+                value: s == null ? '—' : Fmt.number(miles ? s * 0.621371 : s),
+                unit: miles ? 'mph' : 'km/h',
+                caption: km == null ? 'Enter distance' : null,
+              ),
+            );
           }
         }
         if (fields.contains(CardioField.incline)) {
-          tiles.add(_Tile(label: 'Incline', icon: Icons.landscape_outlined, value: incline == null ? '—' : Fmt.number(incline!), unit: '%', caption: 'Tap to set', onTap: locked ? null : onEditIncline));
+          tiles.add(
+            _Tile(
+              label: 'Incline',
+              icon: Icons.landscape_outlined,
+              value: incline == null ? '—' : Fmt.number(incline!),
+              unit: '%',
+              caption: 'Tap to set',
+              onTap: locked ? null : onEditIncline,
+            ),
+          );
         }
         if (fields.contains(CardioField.resistance)) {
-          tiles.add(_Tile(label: 'Resistance', icon: Icons.tune, value: resistance == null ? '—' : '$resistance', unit: 'lvl', caption: 'Tap to set', onTap: locked ? null : onEditResistance));
+          tiles.add(
+            _Tile(
+              label: 'Resistance',
+              icon: Icons.tune,
+              value: resistance == null ? '—' : '$resistance',
+              unit: 'lvl',
+              caption: 'Tap to set',
+              onTap: locked ? null : onEditResistance,
+            ),
+          );
         }
         if (tiles.isEmpty) return const SizedBox.shrink();
-        return LayoutBuilder(builder: (context, cons) {
-          const gap = 12.0;
-          final w = (cons.maxWidth - gap) / 2;
-          return Wrap(spacing: gap, runSpacing: gap, children: [for (final t in tiles) SizedBox(width: w, child: t)]);
-        });
+        return LayoutBuilder(
+          builder: (context, cons) {
+            const gap = 12.0;
+            final w = (cons.maxWidth - gap) / 2;
+            return Wrap(
+              spacing: gap,
+              runSpacing: gap,
+              children: [for (final t in tiles) SizedBox(width: w, child: t)],
+            );
+          },
+        );
       },
     );
   }
 }
 
 class _Tile extends StatelessWidget {
-  const _Tile({required this.label, required this.icon, required this.value, required this.unit, this.caption, this.onTap});
+  const _Tile({
+    required this.label,
+    required this.icon,
+    required this.value,
+    required this.unit,
+    this.caption,
+    this.onTap,
+  });
   final String label;
   final IconData icon;
   final String value;
@@ -523,26 +825,52 @@ class _Tile extends StatelessWidget {
     return SxCard(
       onTap: onTap,
       padding: const EdgeInsets.all(14),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: [
-          Expanded(child: Text(label.toUpperCase(), maxLines: 1, overflow: TextOverflow.ellipsis, style: SxText.labelCaps.copyWith(color: c.textBody))),
-          Icon(onTap != null ? Icons.edit : icon, size: 16, color: c.primary),
-        ]),
-        const SizedBox(height: 10),
-        FittedBox(
-          fit: BoxFit.scaleDown,
-          alignment: Alignment.centerLeft,
-          child: Row(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
-            Text(value, style: SxText.metricLg.copyWith(color: c.textHigh)),
-            const SizedBox(width: 4),
-            Text(unit, style: SxText.bodySm.copyWith(color: c.textBody)),
-          ]),
-        ),
-        if (caption != null) ...[
-          const SizedBox(height: 6),
-          Text(caption!.toUpperCase(), maxLines: 1, overflow: TextOverflow.ellipsis, style: SxText.labelXs.copyWith(color: c.textMuted)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  label.toUpperCase(),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: SxText.labelCaps.copyWith(color: c.textBody),
+                ),
+              ),
+              Icon(
+                onTap != null ? Icons.edit : icon,
+                size: 16,
+                color: c.primary,
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.baseline,
+              textBaseline: TextBaseline.alphabetic,
+              children: [
+                Text(value, style: SxText.metricLg.copyWith(color: c.textHigh)),
+                const SizedBox(width: 4),
+                Text(unit, style: SxText.bodySm.copyWith(color: c.textBody)),
+              ],
+            ),
+          ),
+          if (caption != null) ...[
+            const SizedBox(height: 6),
+            Text(
+              caption!.toUpperCase(),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: SxText.labelXs.copyWith(color: c.textMuted),
+            ),
+          ],
         ],
-      ]),
+      ),
     );
   }
 }
@@ -556,16 +884,18 @@ class _SensorNote extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.sx;
     return SxInset(
-      child: Row(children: [
-        Icon(Icons.sensors_off, size: 18, color: c.textMuted),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Text(
-            'Heart rate, cadence and GPS are not connected. ${hasDistance ? 'Update distance by hand — pace is calculated from it.' : 'Time is tracked automatically.'}',
-            style: SxText.bodySm.copyWith(color: c.textBody),
+      child: Row(
+        children: [
+          Icon(Icons.sensors_off, size: 18, color: c.textMuted),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'Heart rate, cadence and GPS are not connected. ${hasDistance ? 'Update distance by hand — pace is calculated from it.' : 'Time is tracked automatically.'}',
+              style: SxText.bodySm.copyWith(color: c.textBody),
+            ),
           ),
-        ),
-      ]),
+        ],
+      ),
     );
   }
 }
@@ -593,33 +923,77 @@ class _Controls extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.sx;
-    return Column(mainAxisSize: MainAxisSize.min, children: [
-      AbsorbPointer(
-        absorbing: locked,
-        // Locked controls are dimmed with a translucent scrim (no saveLayer like Opacity).
-        child: _Dim(
-          dim: locked,
-          child: paused
-              ? Column(mainAxisSize: MainAxisSize.min, children: [
-                  SxButton(key: const Key('cardio-resume'), label: 'Resume', icon: Icons.play_arrow, onPressed: onTogglePause),
-                  const SizedBox(height: 8),
-                  SxButton(key: const Key('cardio-finish'), label: 'Finish & save', icon: Icons.flag_outlined, variant: SxButtonVariant.secondary, height: 48, onPressed: onFinish),
-                  TextButton.icon(
-                    onPressed: onDiscard,
-                    icon: Icon(Icons.delete_outline, size: 18, color: c.danger),
-                    label: Text('Discard session (unsaved)', style: SxText.bodyMd.copyWith(color: c.danger)),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        AbsorbPointer(
+          absorbing: locked,
+          // Locked controls are dimmed with a translucent scrim (no saveLayer like Opacity).
+          child: _Dim(
+            dim: locked,
+            child: paused
+                ? Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SxButton(
+                        key: const Key('cardio-resume'),
+                        label: 'Resume',
+                        icon: Icons.play_arrow,
+                        onPressed: onTogglePause,
+                      ),
+                      const SizedBox(height: 8),
+                      SxButton(
+                        key: const Key('cardio-finish'),
+                        label: 'Finish & save',
+                        icon: Icons.flag_outlined,
+                        variant: SxButtonVariant.secondary,
+                        height: 48,
+                        onPressed: onFinish,
+                      ),
+                      TextButton.icon(
+                        onPressed: onDiscard,
+                        icon: Icon(
+                          Icons.delete_outline,
+                          size: 18,
+                          color: c.danger,
+                        ),
+                        label: Text(
+                          'Discard session (unsaved)',
+                          style: SxText.bodyMd.copyWith(color: c.danger),
+                        ),
+                      ),
+                    ],
+                  )
+                : Row(
+                    children: [
+                      Expanded(
+                        flex: 2,
+                        child: SxButton(
+                          key: const Key('cardio-pause'),
+                          label: 'Pause',
+                          icon: Icons.pause,
+                          variant: SxButtonVariant.secondary,
+                          onPressed: onTogglePause,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        flex: 3,
+                        child: SxButton(
+                          key: const Key('cardio-finish'),
+                          label: 'Finish',
+                          icon: Icons.stop_circle_outlined,
+                          onPressed: onFinish,
+                        ),
+                      ),
+                    ],
                   ),
-                ])
-              : Row(children: [
-                  Expanded(flex: 2, child: SxButton(key: const Key('cardio-pause'), label: 'Pause', icon: Icons.pause, variant: SxButtonVariant.secondary, onPressed: onTogglePause)),
-                  const SizedBox(width: 12),
-                  Expanded(flex: 3, child: SxButton(key: const Key('cardio-finish'), label: 'Finish', icon: Icons.stop_circle_outlined, onPressed: onFinish)),
-                ]),
+          ),
         ),
-      ),
-      const SizedBox(height: 8),
-      _LockRow(locked: locked, onLock: onLock, onUnlock: onUnlock),
-    ]);
+        const SizedBox(height: 8),
+        _LockRow(locked: locked, onLock: onLock, onUnlock: onUnlock),
+      ],
+    );
   }
 }
 
@@ -632,26 +1006,35 @@ class _Dim extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.sx;
-    return Stack(fit: StackFit.passthrough, children: [
-      child,
-      Positioned.fill(
-        child: IgnorePointer(
-          child: AnimatedContainer(
-            duration: SxMotion.of(context, SxMotion.short),
-            decoration: BoxDecoration(
-              color: dim ? c.canvas.withValues(alpha: 0.55) : c.canvas.withValues(alpha: 0),
-              borderRadius: BorderRadius.circular(SxRadius.lg),
+    return Stack(
+      fit: StackFit.passthrough,
+      children: [
+        child,
+        Positioned.fill(
+          child: IgnorePointer(
+            child: AnimatedContainer(
+              duration: SxMotion.of(context, SxMotion.short),
+              decoration: BoxDecoration(
+                color: dim
+                    ? c.canvas.withValues(alpha: 0.55)
+                    : c.canvas.withValues(alpha: 0),
+                borderRadius: BorderRadius.circular(SxRadius.lg),
+              ),
             ),
           ),
         ),
-      ),
-    ]);
+      ],
+    );
   }
 }
 
 /// Tap to lock; hold ~1s to unlock (prevents sweaty accidental touches).
 class _LockRow extends StatefulWidget {
-  const _LockRow({required this.locked, required this.onLock, required this.onUnlock});
+  const _LockRow({
+    required this.locked,
+    required this.onLock,
+    required this.onUnlock,
+  });
   final bool locked;
   final VoidCallback onLock;
   final VoidCallback onUnlock;
@@ -660,14 +1043,18 @@ class _LockRow extends StatefulWidget {
   State<_LockRow> createState() => _LockRowState();
 }
 
-class _LockRowState extends State<_LockRow> with SingleTickerProviderStateMixin {
-  late final AnimationController _hold = AnimationController(vsync: this, duration: const Duration(milliseconds: 900))
-    ..addStatusListener((s) {
-      if (s == AnimationStatus.completed) {
-        widget.onUnlock();
-        _hold.reset();
-      }
-    });
+class _LockRowState extends State<_LockRow>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _hold =
+      AnimationController(
+        vsync: this,
+        duration: const Duration(milliseconds: 900),
+      )..addStatusListener((s) {
+        if (s == AnimationStatus.completed) {
+          widget.onUnlock();
+          _hold.reset();
+        }
+      });
 
   @override
   void dispose() {
@@ -684,30 +1071,56 @@ class _LockRowState extends State<_LockRow> with SingleTickerProviderStateMixin 
     return GestureDetector(
       key: const Key('cardio-lock'),
       behavior: HitTestBehavior.opaque,
-      onTap: widget.locked ? (screenReader ? widget.onUnlock : null) : widget.onLock,
+      onTap: widget.locked
+          ? (screenReader ? widget.onUnlock : null)
+          : widget.onLock,
       onTapDown: widget.locked ? (_) => _hold.forward() : null,
       onTapUp: widget.locked ? (_) => _hold.reverse() : null,
       onTapCancel: widget.locked ? () => _hold.reverse() : null,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 14),
-        child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-          AnimatedBuilder(
-            animation: _hold,
-            builder: (_, _) => SizedBox(
-              width: 22,
-              height: 22,
-              child: Stack(alignment: Alignment.center, children: [
-                if (widget.locked) CircularProgressIndicator(value: _hold.value, strokeWidth: 2, color: c.primary, backgroundColor: c.surface3),
-                Icon(widget.locked ? Icons.lock : Icons.lock_open, size: 14, color: widget.locked ? c.primary : c.textBody),
-              ]),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            AnimatedBuilder(
+              animation: _hold,
+              builder: (_, _) => SizedBox(
+                width: 22,
+                height: 22,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    if (widget.locked)
+                      CircularProgressIndicator(
+                        value: _hold.value,
+                        strokeWidth: 2,
+                        color: c.primary,
+                        backgroundColor: c.surface3,
+                      ),
+                    Icon(
+                      widget.locked ? Icons.lock : Icons.lock_open,
+                      size: 14,
+                      color: widget.locked ? c.primary : c.textBody,
+                    ),
+                  ],
+                ),
+              ),
             ),
-          ),
-          const SizedBox(width: 8),
-          Flexible(
-            child: Text(widget.locked ? 'LOCKED • HOLD TO UNLOCK' : 'TAP TO LOCK SCREEN CONTROLS',
-                maxLines: 1, overflow: TextOverflow.ellipsis, style: SxText.labelXs.copyWith(color: widget.locked ? c.primary : c.textBody)),
-          ),
-        ]),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                widget.locked
+                    ? 'LOCKED • HOLD TO UNLOCK'
+                    : 'TAP TO LOCK SCREEN CONTROLS',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: SxText.labelXs.copyWith(
+                  color: widget.locked ? c.primary : c.textBody,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

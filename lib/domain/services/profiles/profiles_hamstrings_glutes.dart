@@ -50,7 +50,7 @@ final Map<String, ExerciseMuscleProfile> profilesHamstringsGlutes = {
     [_p(Muscle.gluteusMedius)],
     [_s(Muscle.gluteusMinimus)],
   ),
-  'hip_adduction_machine': _x([_pr(_glu, 'Inner thigh (adductors)')]),
+  'hip_adduction_machine': _x([_p(Muscle.adductors)]),
   'kettlebell_swing': _x(
     [_p(Muscle.gluteusMaximus)],
     [_sr(_ham), _s(Muscle.lowerBack), _stab],
@@ -103,8 +103,8 @@ final Map<String, ExerciseMuscleProfile> profilesHamstringsGlutes = {
     [_sr(_ham), _s(Muscle.lowerBack)],
   ),
   'kb_sumo_deadlift': _x(
-    [_p(Muscle.gluteusMaximus, 'Wide stance, inner thigh'), _pr(_quad)],
-    [_sr(_ham), _s(Muscle.lowerBack)],
+    [_p(Muscle.gluteusMaximus, 'Wide stance'), _pr(_quad)],
+    [_sr(_ham), _s(Muscle.lowerBack), _s(Muscle.adductors)],
   ),
   'kb_single_arm_swing': _x(
     [_p(Muscle.gluteusMaximus)],

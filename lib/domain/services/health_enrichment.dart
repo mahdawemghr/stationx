@@ -32,6 +32,49 @@ abstract final class HealthEnrichmentService {
   }
 
   /// Applies a confirmed suggestion; still only fills fields that are empty at apply time.
+  /// Average / max of the plausible samples, or null when there are none.
+  static HrStats? statsFor(Iterable<double> samples) {
+    final ok = [
+      for (final b in samples)
+        if (b.isFinite && b >= minBpm && b <= maxBpm) b,
+    ];
+    if (ok.isEmpty) return null;
+    final avg = ok.reduce((a, b) => a + b) / ok.length;
+    final max = ok.reduce((a, b) => a > b ? a : b);
+    return HrStats(avg: avg.round(), max: max.round(), samples: ok.length);
+  }
+
+  /// Maps what was found to the first setup problem (pure; the service gathers the inputs).
+  static WatchDiagnosis diagnose({
+    required bool storeAvailable,
+    required bool permissionsGranted,
+    required Iterable<HealthWorkout> recentWorkouts,
+    required int recentHeartRateSamples,
+    required Set<String> ownSourceIds,
+    Map<String, String> knownSources = const {},
+  }) {
+    if (!storeAvailable) {
+      return const WatchDiagnosis(step: WatchSetupStep.storeMissing);
+    }
+    if (!permissionsGranted) {
+      return const WatchDiagnosis(step: WatchSetupStep.permissions);
+    }
+    final foreign = [
+      for (final w in recentWorkouts)
+        if (!ownSourceIds.contains(w.sourceName)) w,
+    ];
+    if (foreign.isEmpty && recentHeartRateSamples == 0) {
+      return const WatchDiagnosis(step: WatchSetupStep.noRecentData);
+    }
+    return WatchDiagnosis(
+      step: WatchSetupStep.ok,
+      sources: {
+        for (final w in foreign)
+          if (knownSources[w.sourceName] != null) knownSources[w.sourceName]!,
+      },
+    );
+  }
+
   static CardioSession apply(CardioSession s, HealthEnrichment e) => s.copyWith(
     avgHeartRate: s.avgHeartRate == null ? e.avgHeartRate : null,
     calories: s.calories == null ? e.calories : null,

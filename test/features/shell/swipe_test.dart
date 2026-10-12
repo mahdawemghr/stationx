@@ -7,9 +7,12 @@ import '../../helpers/pump.dart';
 void main() {
   setUpAll(loadAppFonts);
 
-  int tab(WidgetTester t) => t.widget<SxBottomNav>(find.byType(SxBottomNav)).index;
+  int tab(WidgetTester t) =>
+      t.widget<SxBottomNav>(find.byType(SxBottomNav)).index;
 
-  testWidgets('swipe left/right moves between tabs and stops at the ends', (t) async {
+  testWidgets('swipe left/right moves between tabs and stops at the ends', (
+    t,
+  ) async {
     await pumpPage(t, const MainShell());
     expect(tab(t), 0);
     await t.fling(find.byType(MainShell), const Offset(-300, 0), 1000);

@@ -578,8 +578,11 @@ abstract final class SplitCatalog {
     Muscle.gluteusMaximus: 'glutes',
     Muscle.gluteusMedius: 'glutes',
     Muscle.gluteusMinimus: 'glutes',
+    Muscle.adductors:
+        'glutes_adduct', // own sub-area (no longer a glutes family member)
     Muscle.gastrocnemius: 'calves',
     Muscle.soleus: 'calves',
+    Muscle.tibialisAnterior: 'calves_tibialis',
     Muscle.rectusAbdominis: 'abs',
     Muscle.obliques: 'stability',
     Muscle.transverseAbdominis: 'stability',
@@ -590,6 +593,7 @@ abstract final class SplitCatalog {
     // region-level quad profile cannot be placed by derivation (curated only).
     MuscleRegion.hamstrings: 'hams',
     MuscleRegion.glutes: 'glutes',
+    MuscleRegion.adductors: 'glutes_adduct',
     MuscleRegion.calves: 'calves',
     MuscleRegion.forearms: 'forearms',
   };
@@ -660,7 +664,11 @@ abstract final class SplitCatalog {
   /// [ExerciseRecommender.forDay] for the muscle's regions so picks do not over-stack on one area. The
   /// hand-picked [_suggested] list only acts as a gentle preference. Only exercises present in [all]
   /// whose primary muscle is [m] are returned (2–4 when available).
-  static List<RoutineExercise> suggest(MuscleGroup m, List<Exercise> all) {
+  static List<RoutineExercise> suggest(
+    MuscleGroup m,
+    List<Exercise> all, {
+    Difficulty? level,
+  }) {
     final pool = [
       for (final e in all)
         if (e.primaryMuscle == m) e,
@@ -668,7 +676,10 @@ abstract final class SplitCatalog {
     if (pool.isEmpty) return const [];
     final regions = [
       for (final r in MuscleRegion.values)
-        if (r.legacy == m && r != MuscleRegion.forearms) r,
+        if (r.legacy == m &&
+            r != MuscleRegion.forearms &&
+            r != MuscleRegion.adductors)
+          r,
     ];
     final picks = ExerciseRecommender.forDay(
       regions: regions,
@@ -681,6 +692,7 @@ abstract final class SplitCatalog {
         for (final r in _suggested[m] ?? const <RoutineExercise>[])
           r.exerciseId,
       ],
+      level: level,
     );
     // The recommender returns compounds first in pick order; the user-facing list leads with the classic
     // lifts of [_suggested] (in their curated order), then the rest in recommender order.

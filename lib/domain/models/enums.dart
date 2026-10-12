@@ -33,6 +33,25 @@ enum Equipment {
   bool get isUnloaded => this == bodyweight || this == band;
 }
 
+/// How demanding an exercise is, and also the user's experience level (same three steps):
+/// beginner, intermediate, advanced. An exercise without a level (custom) has `null`.
+enum Difficulty {
+  beginner('Beginner'),
+  intermediate('Intermediate'),
+  advanced('Advanced');
+
+  const Difficulty(this.label);
+  final String label;
+
+  /// Parses a stored name; unknown or missing -> null.
+  static Difficulty? tryParse(Object? v) {
+    for (final d in values) {
+      if (d.name == v) return d;
+    }
+    return null;
+  }
+}
+
 enum WeightUnit { kg, lb }
 
 /// Interface theme (Profile › Interface Theme).

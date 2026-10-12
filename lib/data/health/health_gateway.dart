@@ -22,13 +22,6 @@ abstract class HealthGateway {
   Future<bool> hasPermissions();
   Future<bool> requestPermissions();
 
-  /// Sleep stage intervals classified as asleep.
-  Future<List<TimeSpan>> sleepAsleep(DateTime from, DateTime to);
-
-  /// Whole sleep sessions (fallback when no stage data exists).
-  Future<List<TimeSpan>> sleepSessions(DateTime from, DateTime to);
-
-  Future<List<BpmPoint>> restingHeartRate(DateTime from, DateTime to);
   Future<void> revoke();
   Future<void> installProvider();
 
@@ -46,7 +39,8 @@ abstract class HealthGateway {
   Future<bool> requestFeaturePermissions(HealthFeature feature) async => false;
 
   /// Writes ONE exercise session. Returns null on failure (nothing is left half-written).
-  Future<HealthWriteReceipt?> writeWorkout(HealthWriteRequest request) async => null;
+  Future<HealthWriteReceipt?> writeWorkout(HealthWriteRequest request) async =>
+      null;
 
   /// Deletes exactly what [receipt] describes (StationX's own records). True on success.
   Future<bool> deleteWorkout(HealthWriteReceipt receipt) async => false;
@@ -58,6 +52,19 @@ abstract class HealthGateway {
   /// Heart-rate samples and energy within [from, to), StationX's own records excluded.
   /// Null on failure.
   Future<HealthMetrics?> readMetrics(DateTime from, DateTime to) async => null;
+
+  /// Timestamped heart-rate samples within [from, to), StationX's own records excluded.
+  /// Empty on failure.
+  Future<List<BpmPoint>> heartRateSamples(DateTime from, DateTime to) async =>
+      const [];
+
+  /// Whether data older than ~30 days before the first grant can be read (Android needs a
+  /// separate permission; iOS always can).
+  Future<HealthHistoryAccess> historyAccess() async =>
+      HealthHistoryAccess.notSupported;
+
+  /// Shows the system sheet for the "read older data" permission. True when granted.
+  Future<bool> requestHistoryAccess() async => false;
 }
 
 class _InertGateway extends HealthGateway {
@@ -66,17 +73,12 @@ class _InertGateway extends HealthGateway {
   @override
   bool get canQueryPermissions => false;
   @override
-  Future<GatewayAvailability> availability() async => GatewayAvailability.unsupported;
+  Future<GatewayAvailability> availability() async =>
+      GatewayAvailability.unsupported;
   @override
   Future<bool> hasPermissions() async => false;
   @override
   Future<bool> requestPermissions() async => false;
-  @override
-  Future<List<TimeSpan>> sleepAsleep(DateTime from, DateTime to) async => const [];
-  @override
-  Future<List<TimeSpan>> sleepSessions(DateTime from, DateTime to) async => const [];
-  @override
-  Future<List<BpmPoint>> restingHeartRate(DateTime from, DateTime to) async => const [];
   @override
   Future<void> revoke() async {}
   @override

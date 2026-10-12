@@ -1,347 +1,845 @@
 STATIONX — FULL PROJECT DETAILS
 ================================
+Last rewritten: 2026-10-11, from a full read of the code in the working tree (lib/, supabase/, android/,
+docs/, test/). Where this file and an older document disagree, the CODE wins. Documents that are partly
+out of date are listed in section 22.
+
+Contents
+  1. What it is                         13. Muscle taxonomy, profiles, recommender
+  2. Identity & tech stack              14. Schedule setup (onboarding)
+  3. The big picture (online-first)     15. Cardio
+  4. Product rules (do not break)       16. Health integration (Health Connect / Apple Health)
+  5. Source tree                        17. Import / export
+  6. App lifecycle & accounts           18. Design system & UI kit
+  7. Data flow: reads & writes          19. Security & privacy
+  8. Backend: Supabase                  20. Testing & quality
+  9. Device-local storage (Isar)        21. Build, run, release
+ 10. Domain layer (models, services)    22. Documentation map
+ 11. Screens & features                 23. Known limitations / open work
+ 12. Strength logging & progression     24. Glossary
+
 
 1. WHAT IT IS
 -------------
-StationX is a local-first strength and cardio training log for phones, built with
-Flutter (Dart). You log every set, rep and weight of your workouts, follow a fixed
-rotation of workouts (for example Chest + Biceps -> Back + Triceps -> Legs + Shoulders),
-and the app calculates volume, estimated one-rep max (1RM), progression suggestions and
-personal records (PRs) for you. Cardio (runs, treadmill, bike, etc.) is tracked too.
+StationX is a strength + cardio training log for phones, built with Flutter (Dart). You follow a fixed
+ROTATION of workouts (for example Chest + Biceps -> Back + Triceps -> Legs + Shoulders), log every set,
+rep and weight, and the app calculates volume, estimated one-rep max (1RM), progression suggestions
+("add a rep", "go up 2.5 kg"), personal records (PRs) and muscle coverage for you. Cardio (runs, treadmill,
+bike, rowing, swimming, sports and 33 activity types in total) is logged as well, live or after the fact.
 
-Everything works offline. Your data lives in a database on your device. An optional cloud
-backup/sync (Supabase) and optional read-only Health Connect / Apple Health sleep and
-resting-heart-rate data can be turned on by the user; both are off by default.
+IMPORTANT — the app is ONLINE-FIRST (it used to be local-first; that was replaced on 2026-10-10/14):
+  * Every user has a USERNAME + PASSWORD account (no e-mail). All training data lives in a private
+    account on Supabase (PostgreSQL). Supabase is the ONLY source of truth for user data.
+  * You must be online to log in, load your data and save changes. A change is shown as saved only after
+    the server confirmed it. If the network fails, the screen says so, keeps what you typed and offers Retry.
+  * There is no guest mode, no offline mode, no local database of workouts and no background sync engine.
+  * The only things kept on the phone are temporary/device-level state: the workout you are recording right
+    now (a draft that survives the app being killed), the Health Connect opt-in and the Health Connect work queue.
+  * Optional, off by default: Health Connect (Android) / Apple Health (iOS) integration (saving workouts there,
+    importing workouts from a watch, heart-rate info). Sleep / resting heart rate / the "recovery" summary were REMOVED.
+  * PROGRAM RULES (2026-10-11): the training program is generated ONCE (onboarding) or when the user explicitly asks
+    to regenerate (with a confirmation). It never changes on login, restart, refresh, workout completion or rotation
+    advance. New accounts start with NO routines. Generation, the weekly goal (training days + rest days = 7) and the
+    rotation pointer are three separate things. The strength logger has no rest timer, no elapsed timer and no
+    automatic ending by duration; new strength sessions store no duration (old ones keep theirs).
 
-  App name ........ StationX
-  Version ......... 1.0.0+1
-  Package / app id  dev.mahdi_haji.stationx
-  Platforms ....... Android (primary, min SDK 26), iOS/desktop scaffolding present
-  Framework ....... Flutter 3.47 / Dart 3.13, Material 3
-  Author .......... Mahdi Ramadhan
+2. IDENTITY & TECH STACK
+------------------------
+  App name ............ StationX                    (pubspec description: "StationX — online strength and cardio tracker.")
+  Version ............. 1.0.0+1                      (pubspec.yaml; shown in Profile > App & safety)
+  Android applicationId dev.mahdi_haji.stationx      (minSdk 26; targetSdk/compileSdk from Flutter)
+  iOS/macOS bundle id . dev.mahdi-haji.stationx      (iOS ids cannot contain "_")
+  Author / owner ...... Mahdi Ramadhan (Mahdi Haji)
+  Platforms ........... Android = primary and the only tested target. iOS/desktop folders exist (scaffolding,
+                        HealthKit entitlement wired) but iOS has NEVER been built or run.
+  Framework ........... Flutter 3.47.6 (stable), Dart SDK ^3.11.5, Material 3, dark-only UI
+  State management .... plain Flutter: ChangeNotifier + ListenableBuilder + an AppScope InheritedNotifier.
+                        No state-management package. All navigation goes through one helper, AppNav.
+  Packages (pubspec) .. supabase_flutter ^2.18 (auth + PostgREST + RPC)
+                        isar_community ^3.3.2 + isar_community_flutter_libs (device-local state ONLY)
+                        health ^13.3 (Health Connect / HealthKit)
+                        file_picker ^13 (import / export file dialogs)
+                        wakelock_plus (screen stays on during a workout / live cardio)
+                        path_provider, package_info_plus
+                        dev: flutter_test, flutter_lints, build_runner + isar_community_generator,
+                        flutter_launcher_icons
+  Assets .............. 3 bundled fonts (Space Grotesk, Geist, JetBrains Mono, with OFL licence texts)
+                        and the launcher icon (assets/icon/app_icon*.png). No network font requests.
+  Size ................ ~222 Dart files in lib/ (~45.7k lines incl. the generated Isar file) and ~84 test files.
 
 
-2. DESIGN
----------
-The UI/UX was designed in Google Stitch (reference exports are kept in design_reference/)
-and implemented as the "Kinetic Obsidian" dark theme: near-black canvas (#121416) with a
-lime accent (#B8F000). Fonts are bundled (Space Grotesk, Geist, JetBrains Mono) so the app
-makes no font requests. Design tokens live in lib/core/theme (colours, typography, spacing,
-radius, motion) and shared widgets in lib/core/widgets (buttons, cards, chips, sheets,
-charts, numeric keypad, muscle map, etc.). Screens never use raw colours; they use
-context.sx and the Sx* tokens.
+3. THE BIG PICTURE (ONLINE-FIRST)
+---------------------------------
+   Widgets ── read ──▶ Repositories (synchronous getters over an in-memory READ MODEL of the signed-in user)
+      │                       ▲  filled by OnlineStore.load() after login / on app resume (paged, parallel)
+      └─ write ─▶ Repository.write() ─▶ RemoteGateway (PostgREST upsert/delete or an sx_* RPC; 20 s timeout)
+                       │  one serial "write lane" per store (writes never interleave)
+                       └─ ONLY after the server confirmed: update the read model + notify listeners
 
-Stitch's mock-only content (sensors, mesocycles, social features) was replaced with honest
-empty/"not available" states. Exercise "images" are vector muscle-map illustrations drawn in
-code instead of photos.
+Why this shape: the whole domain layer (PRs, progression, calendar, recommender, coverage) is pure Dart that
+works synchronously over the full history. Keeping synchronous repository interfaces over an in-memory cache
+meant ~40 screens did not need to be rewritten as async queries. The read model is NEVER persisted: it is
+rebuilt from Supabase on login and cleared on logout.
 
-
-3. FEATURES
------------
-Entry
-  * Landing page, local account (create / log in), "Continue as Guest (Offline Mode)".
-  * Optional cloud sign-in and "Restore from cloud backup" on a new phone.
-
-Workout sections & limits
-  * Workout preview, editor and the live logger group exercises into muscle sections (for example
-    Legs, Shoulders) from the muscle metadata, keeping your exercise order.
-  * Maximum workout length (Profile > Workout configuration: 2 h / 3 h / 4 h / Off, default 3 h,
-    device-only). When it is reached the workout ends and saves automatically (only sets you marked
-    done; duration capped; rotation advances once) - also if the app was closed meanwhile.
-  * An in-progress workout survives the app being killed ("Resume workout" on Today).
-
-Health apps (opt-in, off by default; Profile > Health & workouts)
-  * Samsung Health works through Android Health Connect (Apple Health on iOS): save your cardio and
-    strength sessions there, fill heart rate / calories from your watch (you confirm), and import
-    workouts recorded elsewhere (preview first, never duplicated).
-
-Schedule setup (after registering; optional for guests; also in Workouts and Profile)
-  * Choose a program: Full Body, Upper / Lower, Push / Pull / Legs, Bro split, or Custom.
-  * "Quick start" takes a preset as is: pick, answer "How many days a week?", review, save.
-    "Customize exercises" lets you tick exercises per day and per muscle, grouped into
-    practical sub-sections (for example Back -> Lats . Pull-ups / Pulldowns, Upper back . rows,
-    Traps, Lower back; no section holds more than 13 exercises), with
-    a one-line reason per suggestion and sets/reps steppers.
-  * "+ Add exercise" inside the flow creates your own exercise and ticks it immediately.
-  * Custom: name your days, choose muscles per day; suggestions come from the recommender.
-  * Days per week only sets the weekly session goal. The program is a SEQUENCE: if you miss
-    a day you simply continue with the next workout.
-  * Review shows sets and minutes per day plus a collapsible "Muscle coverage" summary and
-    calm optional hints. Skip is available everywhere; leaving midway asks first.
-  * Saving a new schedule archives the previous workouts (never deletes them) and keeps all
-    history. Guests get a dismissible prompt on Today while they have no schedule or history.
-
-Today (home)
-  * Next workout from the rotation, with exercise/set/minute estimates, Start / Preview.
-  * Weekly summary (sessions done, volume, records), recent progress, recovery summary
-    from Health Connect / Apple Health when connected.
-
-Workouts
-  * Workout library and detail, create / edit / delete workouts, reorder exercises.
-  * "Change next workout" (move the rotation pointer).
-  * Replace / Smart Swap: ranks replacement exercises with the muscle-aware recommender
-    (same muscle subgroup first, then movement, purpose, equipment, your history).
-  * "Archived" section: workouts that are no longer in the rotation (for example after you
-    change your schedule). They stay openable, editable and startable, can be added back to
-    the rotation, and are only deleted if you delete them yourself.
-
-Active workout (strength logger)
-  * Per-exercise set rows (weight, reps, done), numeric keypad, previous performance,
-    progression suggestion, rest timer, plate calculator, notes, finish / discard.
-  * Finishing a workout advances the rotation; backdated sessions are supported.
-
-Exercises
-  * Library of 420 built-in exercises with search, muscle filter, sub-muscle filter (for
-    example Back -> Lats / Upper back / Traps / Lower back), equipment filter and a
-    "Common" quick filter.
-  * Exercise details: muscle map, primary and assisting muscles (from the muscle profile),
-    history, PRs, e1RM chart. Custom exercises can be created.
-
-Progress
-  * Volume and strength trends, estimated 1RM chart, personal records, muscle-group
-    breakdown, improvement summaries.
-
-History
-  * Session list, calendar view, session details, edit and delete.
-
-Cardio
-  * 33 activity types + custom: Treadmill Run, Indoor Walk / Walking Pad, outdoor/trail run, walking,
-    hiking, Nordic walking, rucking, cycling, upright/recumbent/spin/air bike, bike trainer, rowing
-    (machine and on water), ski erg, kayak/canoe/SUP, elliptical, arc trainer, stair climber, vertical
-    climber, pool and open-water swimming, cross-country skiing, skating, climbing, dance/zumba, HIIT,
-    boxing/martial arts, jump rope. Rowing/paddling show pace per 500 m, swimming per 100 m. The picker
-    has search (aliases like '12-3-30', 'stepmill'), recents, group headings and one-tap templates for
-    sports (padel, tennis, soccer, ...).
-  * Live cardio session and manual logging for run / treadmill / bike / row / etc.
-    Fields adapt to the activity type (distance, duration, pace, incline, resistance, heart
-    rate, calories...). Cardio goals, records, history, edit and delete.
-
-Profile
-  * Name, body metrics, weight unit (kg / lb), theme (including OLED), workout config.
-  * Integrations & storage: Health Connect / Apple Health, cloud backup & sync, JSON/CSV
-    export (to clipboard), Import from Gym Tracker (see section 9).
-  * App & safety: privacy policy page, delete all local data, version label.
+Key guarantees
+  * Server-first writes: a repository write throws a typed RemoteException on failure and leaves the read model
+    untouched. UI shows an error + Retry and keeps the user's input. No fake success.
+  * Atomic multi-row changes: saving workouts together with the rotation, finishing a workout together with the
+    rotation move, first-time account set-up and "delete all my data" are single Postgres functions (RPC).
+  * Epoch guard: a counter bumped on login/logout/account change. A load or write that started under an older
+    epoch never touches the read model afterwards, so a late response for user A can never appear for user B.
+  * Snapshot guard: if a save started or finished while a refresh snapshot was in flight, the snapshot is
+    discarded (it might predate the save and undo a confirmed change); the next refresh catches up.
+  * Idempotent writes: ids are generated on the client, so a retry after a lost response cannot duplicate data
+    (upsert on (user_id, id); sx_finish_workout is idempotent on the session id).
+  * Hard deletes: deleting removes the row on the server immediately. No tombstones, no soft-delete columns.
+  * No realtime subscriptions: single-user private data; data is re-read when the app returns to the foreground
+    (throttled to once per 30 s) or on "Retry".
 
 
 4. PRODUCT RULES (do not break)
 -------------------------------
-  * Workout rotation is index-based, not calendar-based. It advances only when a workout
-    is completed.
-  * "workout_date" (when you trained; can be backdated) is always separate from
-    "created_at" (when the row was entered).
-  * Progression, 1RM (Epley), volume and PR calculations live in the pure-Dart domain
-    layer. UI widgets never calculate them.
-  * Cardio fields adapt by activity type.
-  * Local-first: the app is fully usable offline; the network is optional.
-  * No fake data where real data exists. Seed/demo data is only shown for guests/demo mode
-    and is marked "clean" so it never syncs as if the user created it.
+  P1  ROTATION IS A SEQUENCE, NOT A CALENDAR. The next workout is the next one in the program; if you skip a day
+      you just continue. The rotation advances ONLY when a workout is completed. Backdated entries never move it.
+        - Completing the CURRENT workout -> index + 1 (wraps).
+        - Completing a different workout that is in the rotation -> pointer moves to the position AFTER it
+          (first occurrence at/after the pointer).
+        - Completing a workout that is NOT in the rotation (archived / ad hoc) -> rotation unchanged.
+  P2  workoutDate (when you trained; editable / backdatable) is ALWAYS separate from createdAt (when the row was
+      entered). Windows, calendars, charts and PRs use workoutDate.
+  P3  All calculations (e1RM, volume, PRs, progression, coverage, recommendations) live in the pure-Dart domain
+      layer. UI widgets never calculate them.
+  P4  Server confirms before the UI says "saved". Every write call site uses runRemote() (single-flight per key,
+      success message only after confirmation, error snackbar with Retry that says plainly nothing was saved).
+  P5  Cardio input fields adapt to the activity type (distance, pace, speed, incline, resistance, calories...).
+  P6  Honest data: no fake numbers. Stitch mock-only features (GPS, sensors, mesocycles, social) were replaced with
+      honest "not available" states. Health data written/read only contains what the user logged or confirmed.
+  P7  Exercise weights are stored in kg everywhere; kg/lb is a display setting. Distances are stored in km.
+  P8  Screens use theme tokens (context.sx, SxText, SxSpace); no raw colours.
+  P9  Saving a new schedule ARCHIVES previous workouts (they stay openable/startable/editable and can be added
+      back); they are deleted only if the user deletes them.
+  P10 Seed/built-in exercises ship in the app; only CUSTOM exercises are user data.
 
 
-5. ARCHITECTURE
----------------
-State management: plain Flutter (ChangeNotifier + ListenableBuilder + an AppScope
-InheritedWidget). No state-management package. Navigation goes through one AppNav helper.
-
+5. SOURCE TREE
+--------------
 lib/
-  app/        AppController, bootstrap (opens Isar, health, cloud), app shell, navigation
-  core/       theme tokens, shared widgets, formatters
-  domain/     PURE DART: models (Exercise, Workout, WorkoutSession, CardioSession, profile,
-              records...), SyncMeta {createdAt, updatedAt, syncStatus}, repository
-              interfaces, services (RotationService, ProgressionService, PrService,
-              VolumeService, SmartSwapService, PlateCalculator, WorkoutCompletion,
-              cardio metrics, health summary, formulas)
+  main.dart                      -> bootstrap()
+  app/
+    bootstrap.dart               global error handling, Supabase config check, opens the Isar device store, wires
+                                 Health, builds OnlineStore + AppController, runs the app
+    app_controller.dart          AppController: dependency container + account lifecycle (SessionPhase), accounts,
+                                 refresh, account deletion / data reset
+    app_scope.dart               InheritedNotifier exposing AppController; `context.app`
+    stationx_app.dart            MaterialApp, theme (Obsidian / OLED), phase-driven root, resume refresh
+    session_screens.dart         SessionSplash ("Loading your training…") and LoadFailedScreen (Try again / Log out)
+    startup_error_app.dart       "StationX is not configured" / "Couldn't start" recovery screens
+    nav.dart                     AppNav: every route in one place
+    app_version.dart             "v1.0.0 (1)" label
+  core/
+    theme/                       sx_colors (Obsidian + OLED), sx_typography, sx_spacing (+radius), sx_motion, sx_theme
+    widgets/                     shared UI kit (section 18)
+    utils/                       formatters (Fmt), equipment_icons, remote_ops (runRemote)
+  domain/                        PURE DART (no Flutter, no I/O)
+    models/                      enums, exercise, workout (+Rotation, SetLog, WorkoutSession), cardio, profile,
+                                 records, health, health_workout, muscle, section_muscle, workout_draft, sync_meta
+    repositories/repositories.dart  repository interfaces (+AtomicWorkoutFinisher, WorkoutDraftStore)
+    services/                    ~40 services (section 10), profiles/ (muscle profiles), split_sections/
   data/
-    memory/   in-memory repositories (tests, demo)
-    isar/     Isar persistence: entities, mappers, write-through-cache repositories
-    seed/     exercise catalog, default workouts, demo history
-    health/   Health Connect / HealthKit gateway (read-only sleep + resting heart rate),
-              consent store
-    sync/     Supabase sync: config guard, auth, gateway, SyncEngine, controller
-    import/   Gym Tracker importer (plan -> apply), exercise alias map, file source
-  features/   one folder per area: landing, auth, today, workouts, active_workout,
-              exercises, progress, history, cardio, profile, cloud, health, shell,
-              onboarding (schedule setup flow)
-
-The UI depends only on repository interfaces and domain services, so storage can change
-without touching screens.
-
-Muscle and recommendation layer (all pure Dart, in lib/domain):
-  models/muscle.dart ........ taxonomy: MuscleRegion (11) -> Muscle (practical subdivisions),
-                              MuscleTarget (region, optional subgroup, primary/assisting role,
-                              optional emphasis/weight), ExerciseMuscleProfile (many targets),
-                              MuscleWeights (primary 1.0, assisting 0.5 - one place)
-  services/muscle_profiles .. detailed profile for each of the 420 built-in exercises; broad
-                              fallback derived from the stored fields when nothing else exists
-  services/muscle_coverage .. coverage of a workout, a program or logged history: direct sets
-                              (primary only) vs weighted sets (plus assisting), High /
-                              Moderate / Low levels per week (practical guideline numbers)
-  services/exercise_recommender  one engine for day generation, replacement ranking and
-                              informational gap hints; SmartSwapService delegates to it
-  services/split_catalog .... presets, sub-sections (split_sections/: big sub-areas are split into
-                              "families" such as Mid chest . Presses + Cable, push-ups & band; profile
-                              derivation works per family, with a documented override table),
-                              "common" list (39), suggestions (classic compound first)
-  services/split_models + schedule_builder .. the designed days and saving them as workouts
-                              and a rotation (never deletes, can restore archived workouts)
-The simplified 7-way MuscleGroup stays as the broad layer used by storage, sync and simple
-UI, so the detailed taxonomy needed no schema change for built-in exercises.
+    data_store.dart              DataStore / DeviceStore / LocalSettingsStore abstractions
+    remote/                      the Supabase layer: gateway, online store + repositories, auth, mappers, errors
+    isar/                        IsarDeviceStore + the single AppMeta entity (device-local state only)
+    memory/                      in-memory repositories (read model base class + tests/previews)
+    seed/                        exercise catalogue (420), default routines, demo data (tests only)
+    health/                      Health Connect / HealthKit gateway, repository, sync service, local store, consent
+    import/                      Gym Tracker importer, alias map, file source
+    device/                      haptics + keep-awake abstractions
+  features/                      one folder per area: landing, auth, cloud (sign-out/strings), onboarding,
+                                 shell, today, workouts, active_workout, exercises, progress, history, cardio,
+                                 profile, health
+supabase/                        migrations (8 files), tests/ (SQL), README.md
+env/supabase.example.json        template for the build-time config (the real env/supabase.json is git-ignored)
+assets/                          fonts, icon
+design_reference/                Google Stitch exports (HTML + screenshots) of ~35 screens + DESIGN.md files
+docs/                            roadmap, privacy policy, release guide, store answers, hosted-page templates
+test/                            ~84 test files (section 20)
+android/ ios/ linux/ macos/ web/ windows/   Flutter platform folders (Android is the real target)
 
 
-6. DATA & PERSISTENCE
----------------------
-  * Isar (isar_community 3.3.2, the maintained fork) is the on-device database, behind a
-    DataStore abstraction. Repositories keep an in-memory cache and write through to Isar.
-  * Every record carries SyncMeta (createdAt, updatedAt, syncStatus) so sync is possible
-    without changing the data model.
-  * Batch writes (for example imports) use a single transaction and a single notification.
-  * Opening the app tops up the exercise catalog: seed exercises that are missing are added;
-    existing and custom exercises are never overwritten or deleted.
-
-
-6b. MUSCLE TAXONOMY & RECOMMENDATIONS
--------------------------------------
-  * Taxonomy: Chest (upper / mid / lower), Back (lats, upper back, traps, lower back),
-    Shoulders (front / side / rear delts), Biceps (long head, short head, brachialis),
-    Triceps (long / lateral / medial head), Forearms, Quadriceps, Hamstrings, Glutes, Calves,
-    Core (abs, obliques, deep core). It is practical gym terminology, not an anatomy claim.
-  * Every built-in exercise has structured targets: primary and assisting muscles, with a
-    subgroup only where it is defensible; otherwise the whole region (no fake precision).
-    Examples: Lat Pulldown = Back -> Lats (assisting: biceps, upper back); Incline DB Press =
-    Chest -> Upper chest (assisting: triceps, front delts); Romanian Deadlift = hamstrings
-    (assisting: glutes, lower back).
-  * Primary vs assisting is never treated the same: a primary set counts 1.0, an assisting set
-    0.5. "Direct" coverage counts only primary work, so Bench Press is direct chest work and
-    only assisting work for triceps and front delts.
-  * Used for: schedule/day generation (a day stops adding exercises to a muscle once it is
-    covered), replacement ranking, muscle coverage (workout, program, history), weekly volume
-    levels and informational "might be under-trained" hints. Hints are optional suggestions,
-    never commands.
-  * Equipment filtering is supported by the engine (allowedEquipment) but there is no
-    equipment question in onboarding yet (planned for later).
-  * Custom exercises use the SAME structure as built-ins: region, optional subgroup, role
-    (primary / assisting) and optional emphasis, stored in a new nullable field (Isar
-    muscleTargetsJson, Supabase column muscle_targets jsonb). The create-exercise sheet has a
-    "Muscles trained" editor. The same 1.0 / 0.5 weighting and recommender apply. Exercises
-    created before this change keep working with broad, region-level targets.
-    IMPORTANT: apply supabase/migrations/20261009000000_exercise_muscle_targets.sql to the
-    Supabase project BEFORE shipping this build; without the column, exercise sync shows the
-    normal sync error and retries (nothing is lost).
-
-7. OPTIONAL CLOUD SYNC (SUPABASE)
----------------------------------
-  * Off unless the build is configured with a Supabase URL + PUBLISHABLE (anon) key and the
-    user signs in. The config guard refuses secret keys (sbp_..., sb_secret_..., service_role).
-  * Backend (supabase/migrations/20261008000000_initial_schema.sql): per-user tables with
-    composite primary key (user_id, id), Row Level Security (owner-only), last-write-wins
-    trigger, server_updated_at pull cursor, tombstones (deleted_at) for deletions and a
-    delete_account() RPC that removes the account and all its data.
-  * Client SyncEngine: push -> tombstones -> pull; idempotent and safe to repeat. The
-    CloudSyncController adds debounce, retry, single-flight and resume throttling, and
-    handles the "signed into a different account" decision (merge or replace).
-  * Config lives in env/supabase.json (git-ignored; template env/supabase.example.json).
-    Only the publishable key may ever be in the app. See supabase/README.md.
-
-
-8. HEALTH INTEGRATION
----------------------
-Read-only sleep and resting heart rate from Health Connect (Android) or Apple Health (iOS)
-through the "health" package. Strictly opt-in: the app explains what is read before asking
-for permission, never writes to the health store, and the data stays on the device.
-
-
-9. IMPORT FROM GYM TRACKER (ONE-TIME MIGRATION)
------------------------------------------------
-StationX replaces an older personal app, Gym Tracker (../gym_tracker). Gym Tracker got a new
-Settings > Data > "Export Data" button that writes a versioned JSON file
-("gym_tracker_export" v1; spec in gym_tracker/docs/EXPORT_FORMAT.md). In StationX:
-Profile > Integrations > "Import from Gym Tracker" -> choose the file (or paste copied data)
--> review a preview -> Import.
-
-  * Only completed workouts are imported; each keeps the date you trained.
-  * Importing the same file twice adds nothing (ids are gt_s<id>).
-  * Existing StationX data is never modified or deleted.
-  * Exercises are matched by name (exact, then a curated alias list); unknown ones become
-    custom exercises with an inferred muscle group and equipment (shown in the preview).
-  * PRs and estimated 1RM are recomputed from the imported history; achievements are ignored.
-  * Optional checkbox: make the next workout match where Gym Tracker left off.
-  * Weights are kg on both sides (no unit conversion). Malformed entries are skipped one by
-    one; files over 50 MB are refused.
-  * Code: lib/data/import/ and lib/features/profile/gym_tracker_import_flow.dart.
-
-
-10. SECURITY & PRIVACY
-----------------------
-  * No analytics, no ads, no tracking; no network access unless the user turns on cloud sync.
-  * Passwords are validated by forms only and never stored or logged; cloud auth uses
-    Supabase Auth.
-  * RLS makes every cloud row owner-only; verified against the real Supabase project by an
-    opt-in end-to-end test (including attempts to read/modify another user's rows).
-  * Secrets are never committed; env/supabase.json is git-ignored.
-  * Privacy policy: docs/PRIVACY_POLICY.md (also shown in the app).
-
-
-11. ACCESSIBILITY & QUALITY
+6. APP LIFECYCLE & ACCOUNTS
 ---------------------------
-  * TalkBack pass: semantic labels, 48dp touch targets, large-text (up to 2x) overflow
-    checks, a11y sweep tests.
-  * Performance tests with large seeded histories.
-  * Responsive layout with a maximum content width on tablets.
+6.1 Start-up (bootstrap.dart)
+  1. Global error handling: in release builds ErrorWidget becomes a friendly message and exceptions are logged by
+     TYPE only (no data).
+  2. SupabaseConfig.validate(url, key). Missing/invalid config -> StartupErrorApp.notConfigured ("StationX is not
+     configured") and nothing else runs. The config guard REFUSES: non-https URLs, "sbp_" access tokens,
+     "sb_secret_" keys and JWTs whose payload contains "service_role".
+  3. Open the Isar device store (documents directory, db name "stationx"). On failure -> StartupErrorApp with
+     "Try again" and "Reset device storage" (deletes only the draft + preferences file; never user data).
+  4. Supabase.initialize(url, publishableKey). On failure -> "Couldn't start" with Try again.
+  5. Health Connect (Android/iOS) or no-op repository; HealthSyncService with a JSON file store next to the DB.
+  6. OnlineStore(SupabaseRemote(client), device) + AppController(... auth: SupabaseCloudAuth(client)).
+  7. runApp(StationXApp) then controller.init() restores the saved Supabase session and loads the data.
+  The system navigation-bar colour follows the theme (Obsidian / OLED).
+
+6.2 SessionPhase (the root widget switches on it)
+  restoring  -> looking for a saved session at start-up          (SessionSplash)
+  signedOut  -> nobody signed in / session ended                 (LandingPage)
+  loading    -> signed in, loading the user's data               (SessionSplash)
+  ready      -> data loaded, app usable                          (MainShell: 4 tabs)
+  loadFailed -> signed in but loading failed (offline/server)    (LoadFailedScreen: Try again / Log out)
+  Rules: every boot carries a generation number (stale boots are discarded); boot is single-flight per user;
+  an auth-expired error anywhere (read, write, RPC) ends the session; a session ending from ANYWHERE pops every
+  pushed screen and shows the landing page so nothing of the previous user stays visible; the landing page can
+  show "Your session expired. Please log in again."
+  Resume: when the app returns to the foreground the Health status is refreshed and the server data is re-read
+  (throttled 30 s, skipped while a save is in flight). A failed background refresh only shows a small
+  "may be out of date — tap to retry" banner above the bottom navigation; it never replaces the screen.
+
+6.3 Accounts (USERNAME + PASSWORD only — no e-mail, ever)
+  * Username: trimmed + lower-cased everywhere; validated by Username.validate (allowed chars A-Z a-z 0-9 _ . -,
+    must start/end alphanumeric, length limits, reserved names such as the app/staff/system names are rejected).
+  * Supabase Auth needs an e-mail-shaped identifier, so the username is mapped to a PRIVATE, non-routable
+    "<username>@stationx.local" (never shown; Username.fromIdentifier maps it back). No mail is ever sent.
+  * Password policy shown while creating an account: >= 8 characters, one uppercase letter, one digit (the server
+    itself enforces only min length 8). Password goes straight to Supabase Auth; never stored or logged.
+  * Server auth settings (verified 2026-10-10): e-mail auto-confirm ON (sign-up returns a session immediately),
+    min password 8, Site URL = dev.mahdi-haji.stationx://auth-callback.
+  * NO password reset by design (no e-mail on file). The Create-account screen and the privacy policy say so.
+  * Register: AccountForm -> signUp -> boot (loads data; the server creates the profile via the signup trigger and
+    the client calls sx_init_account with NO routines, exactly once, so the new account is empty) -> About you -> Schedule setup
+    (split -> equipment -> [days] -> training/rest days -> review -> save).
+    If signing up worked but the data could not be loaded, the session is ended again so the form can simply be
+    re-submitted. Login: signIn -> boot -> enter the app.
+  * Friendly auth errors (CloudAuthStatus): invalid credentials, user exists, weak password, rate limited, network,
+    unavailable, sign-up incomplete, unknown (strings in features/cloud/cloud_strings.dart).
+  * Log out: confirm dialog (warns only about an unfinished workout, which lives on the phone and is discarded);
+    clears the read model, the draft and the notice, drops the Supabase session, shows the landing page.
+  * Delete account: Profile > Delete account -> RPC delete_account() (security definer; deletes only auth.uid(),
+    cascades to every table) then local sign-out.
+  * "Delete all my data": RPC sx_reset_account_data() wipes every training row but keeps the login and profile
+    settings; the account is re-initialised, still without any routine.
+  * Public deletion page for Google Play: docs/web/delete-account.html (to be hosted).
 
 
-12. TESTING
------------
-About 900 tests across test/{domain,data,features,a11y,perf,app,core,store,helpers,e2e}:
-  * unit tests for the domain services, mappers and sync engine (two simulated phones plus a
-    fake server with the same last-write-wins rules);
-  * widget tests for every feature, including overflow and empty states;
-  * the Gym Tracker importer tested against a file produced by the REAL exporter;
-  * an opt-in end-to-end suite against the real Supabase project
-    (SUPABASE_E2E=1 flutter test test/e2e ...);
-  * a store-screenshot generator (STORE_SHOTS=1 flutter test test/store) producing
-    1080x2400 phone screenshots into docs/store/screenshots.
-  * schedule setup, archive/restore, muscle profiles/coverage and the recommender have their
-    own unit and widget tests (including overflow checks at 320x568 with 2x text).
-Latest status: flutter analyze clean, 893 tests passing (+10 opt-in skipped), live Supabase e2e (4) passing, debug APK builds.
+7. DATA FLOW: READS & WRITES
+----------------------------
+7.1 Reads
+  OnlineStore.load(userId, username) fetches in parallel: profile, rotation, exercises (custom), workouts,
+  workout_sessions, cardio_sessions, cardio_goals, custom_cardio_activities. List tables are paged with a
+  keyset cursor (order column + id, 500 rows/page; sessions newest-first by workout_date). Rows the client cannot
+  parse are skipped and counted (one bad row never makes an account unloadable). If the profile has no
+  initialized_at, the client calls sx_init_account (no routines) to mark it initialised, then reads again.
+  _apply() then fills the repositories: exercises = built-in catalogue (420) + the user's custom ones (a custom
+  row with the same id as a built-in replaces it); workouts sorted by `position`; sessions; cardio + goals +
+  custom activities; profile (username shown from the stored identifier).
+
+7.2 Writes (online_repositories.dart)
+  Every write goes through OnlineContext.write(): serialized in one lane, server call first, read model second,
+  skipped silently if the epoch changed meanwhile. Mapping:
+    ExerciseRepository.addCustom ...... upsert exercises
+    WorkoutRepository.saveWorkout ..... RPC sx_save_workouts(workouts, delete_ids, rotation)  (plan computed when
+                                         the write's turn comes, so it starts from the latest read model)
+    .deleteWorkout / .saveSchedule /
+    .replaceAll ....................... RPC sx_save_workouts (atomic: routines + rotation together)
+    .setRotation / setCurrentWorkout .. upsert rotations
+    Finish workout .................... RPC sx_finish_workout(session, rotation|null)  (AtomicWorkoutFinisher)
+    SessionRepository.add/update/delete  upsert / delete workout_sessions;  addAll = one upsert call per <=100 rows
+                                         (a huge import is therefore several requests; NOT atomic across batches,
+                                         but idempotent, so re-running it completes the rest)
+    CardioRepository ................... upsert/delete cardio_sessions, cardio_goals, custom_cardio_activities
+                                         (saveGoals saves several goals in one request)
+    ProfileRepository.update .......... upsert profiles
+    resetData ......................... RPC sx_reset_account_data, then re-init + re-read
+
+7.3 Errors (RemoteException, remote_exception.dart)
+  Every failed Supabase call becomes one of:
+    offline      no connection / timeout / DNS — nothing saved, retry is safe
+    authExpired  session gone/expired/revoked — user must log in again (handled globally)
+    rejected     server refused the data (constraint/policy/validation: PostgreSQL 22xxx, 23xxx, 42501, PGRST1xx,
+                 HTTP 400/409/413) — retrying the same input fails again
+    server       5xx — retry later
+    unknown
+  `userMessage` always says plainly what happened and that nothing was saved. A request longer than 20 s is
+  treated as offline.
+
+7.4 Row mapping (data/remote/row_mappers.dart, text_limits.dart)
+  Domain <-> table rows. Timestamps UTC ISO-8601; enums stored by Dart enum `name` (so appending enum values is
+  safe; unknown values from a newer app map to a safe fallback); numerics rounded to the column's scale; text
+  clipped and cleaned (NUL / unpaired surrogates removed) and numbers clamped so no value can violate a server
+  CHECK constraint. `user_id` is added by the gateway; `updated_at` is owned by the server and never sent.
 
 
-13. RUNNING / BUILDING
+8. BACKEND: SUPABASE
+--------------------
+Project ref fyigpfuddgegvkibnvgd, URL https://fyigpfuddgegvkibnvgd.supabase.co (public; region Tokyo). Config is
+injected at BUILD time with --dart-define-from-file=env/supabase.json (SUPABASE_URL + SUPABASE_ANON_KEY, i.e. the
+PUBLISHABLE key only; env/supabase.json is git-ignored, env/supabase.example.json is the template). Without it the
+app shows the "not configured" screen.
+
+8.1 Tables (all: composite primary key (user_id, id) with a client-generated text id, user_id default auth.uid(),
+    FK -> auth.users ON DELETE CASCADE, created_at, server-owned updated_at)
+  profiles ................ one row per user (PK user_id), created by the on_auth_user_created trigger:
+                            name, email (holds the username / private identifier), weight_kg, height_cm, age,
+                            unit kg|lb, theme_mode dark|oled|system, default_sets, default_rep_min/max,
+                            auto_rest_seconds, progression_enabled, weekly_session_target,
+                            cardio_distance_unit_km, initialized_at. Clients can select/insert/update, NOT delete.
+  exercises ............... CUSTOM exercises only: name, primary_muscle (7 broad groups), secondary_muscles[],
+                            equipment, movement_pattern, instructions jsonb, tempo, muscle_targets jsonb
+  workouts ................ routines: name, description, position (order), exercises jsonb (<=100), rest_seconds,
+                            cardio_finisher jsonb
+  rotations ............... PK user_id: workout_ids text[], current_index
+  workout_sessions ........ history: workout_id (logical ref), name, workout_date, duration_seconds, exercises
+                            jsonb (sets), cardio jsonb (finisher), notes
+  cardio_sessions ......... kind (34 allowed values), workout_date, duration_seconds, distance_km, speed_kmh,
+                            incline_pct, resistance, calories, avg_heart_rate, rpe, route_name, notes,
+                            custom_activity_id (logical ref)
+  cardio_goals ............ title, metric durationMinutes|distanceKm|sessions|calories, target, period week|month,
+                            is_primary
+  custom_cardio_activities  name, category, icon_key, fields[], round_seconds, rest_seconds, rounds
+  Deliberately NO foreign keys for workout_sessions.workout_id, cardio_sessions.custom_activity_id and
+  rotations.workout_ids[]: history must survive deleting a routine or a custom activity.
+  Check constraints validate enums, ranges, text lengths and jsonb size (byte caps added in the hardening
+  migration). No Storage buckets are used.
+
+8.2 Functions (SECURITY INVOKER so RLS stays in force; auth.uid() inside; no user-id parameter; EXECUTE for
+    `authenticated` only; search_path = '')
+  sx_save_workouts(workouts jsonb, delete_ids text[], rotation jsonb)  upsert/delete routines + rotation atomically
+  sx_finish_workout(session jsonb, rotation jsonb)   insert/update the session + set the rotation, idempotent on id
+  sx_init_account(workouts, rotation)               one-time defaults; row-locks the profile so two devices
+                                                    cannot both initialise; returns true only when it created them
+  sx_reset_account_data()                           "delete all my data" (keeps account + profile, clears
+                                                    initialized_at)
+  delete_account()                                  SECURITY DEFINER; deletes only auth.uid()
+  Triggers: sx_touch (server-authoritative updated_at; user_id and created_at immutable),
+  handle_new_user (creates the profile).
+
+8.3 Security model
+  * Row Level Security enabled on all 8 tables; each has an owner-only policy `user_id = (select auth.uid())`
+    (profiles split into select / insert / update — no delete). The `anon` role has no privileges.
+  * Verified live on 2026-10-10 with an anonymous request using the publishable key: every table -> 401/42501,
+    delete_account RPC as anon -> 42501.
+  * TRUNCATE/REFERENCES/TRIGGER revoked from authenticated and anon (defence in depth).
+
+8.4 Migrations (supabase/migrations, apply in order)
+  20261008000000_initial_schema        8 tables, RLS, triggers, signup trigger, delete_account()
+  20261009000000_exercise_muscle_targets  exercises.muscle_targets jsonb (custom-exercise muscle targets)
+  20261010000000_hardening             byte caps on jsonb, id-length checks, tombstone blanking
+  20261011000000_cardio_kinds          more cardio kinds
+  20261012000000_cardio_kinds_2        full list of 34 kinds (must equal the Dart enum; a test checks drift)
+  20261012010000_equipment_values      kettlebell, band, smithMachine, other
+  20261013000000_sync_gaps             keyset indexes for the old sync engine
+  20261014000000_online_first          THE online-first change: drops deleted_at/server_updated_at/LWW and tombstones,
+                                       server-owned updated_at, profiles.initialized_at, tighter profile policies,
+                                       history indexes (workout_sessions/cardio_sessions by user_id, workout_date
+                                       desc, id; workouts by user_id, position, id), the sx_* functions.
+  IMPORTANT: the online-first migration must be applied TOGETHER with the online-first client (old sync clients
+  stop working by design). Back up first (`supabase db dump`). At the time of writing the owner still has to run
+  it and the SQL test (see section 23).
+
+8.5 SQL test: supabase/tests/rls_and_rpc_test.sql (manual, needs the migration applied; every line must say
+    PASS): profiles auto-created on signup, init idempotent, save/finish RPC behaviour, failed finish leaves the
+    rotation untouched, user_id immutable, cannot insert rows for another user, client cannot delete own profile,
+    user B sees none of user A's data, anon has no access, reset clears the caller's data.
+
+
+9. DEVICE-LOCAL STORAGE (ISAR)
+------------------------------
+Isar (isar_community) now holds ONE singleton collection, AppMetaEntity (id = 1). It contains no user training
+data and is never the source of truth for anything that exists on the server:
+  * healthConnected ........ the user opted in to the platform health store (iOS cannot report read access)
+  * workoutDraftJson ....... the in-progress workout (see 12.3)
+  * ownerUserId ............ which account the draft belongs to
+Account switching: when a different user loads, the previous user's draft is discarded.
+Logout / expired session / account deletion: draft + owner are removed. The health opt-in is kept.
+(Older builds also stored a maximum-workout-length preference and an auto-end notice; those fields were removed.) Old builds stored every table in Isar; those collections are no longer in the schema, so Isar
+drops them when it opens an old file (local-only data of the pre-online builds was NOT migrated — the app was
+unreleased).
+Other device files: health_sync.json (Health Connect queue, receipts, imported-record ids, heart-rate stats; written
+atomically via temp + rename; local only, never uploaded) and the Supabase SDK's own session storage.
+Android Auto Backup / device transfer is OFF (allowBackup=false).
+Regenerate Isar code after editing entities.dart: `dart run build_runner build`.
+
+
+10. DOMAIN LAYER (lib/domain — pure Dart)
+-----------------------------------------
+10.1 Models
+  Exercise ............ id, name, primaryMuscle (7-way MuscleGroup), secondaryMuscles, equipment, movementPattern,
+                        instructions (steps), isCustom, tempo, muscleTargets (custom exercises).
+                        Exercise.custom(...) DERIVES the broad fields from the detailed targets.
+  Equipment ........... cable, dumbbell, barbell, machine, bodyweight, kettlebell, band, smithMachine, other
+                        (isUnloaded: bodyweight + band -> no kg prompt, no load progression)
+  MuscleGroup ......... chest, back, shoulders, biceps, triceps, legs, core  (storage/sync/simple UI layer)
+  Workout ............. id, name, description, exercises (RoutineExercise: exerciseId, sets, repMin, repMax),
+                        restSeconds, optional cardioFinisher (CardioTarget); estimate ~3 min per working set
+  Rotation ............ ordered workoutIds + currentIndex (current / next workout, wraps)
+  SetLog / ExerciseLog / WorkoutSession  weightKg, reps, done, rpe; session has workoutDate, durationSeconds,
+                        optional cardio finisher, notes, SyncMeta(createdAt/updatedAt)
+  WorkoutDraft ........ compact JSON snapshot of a running workout (sets, current index, notes, backdate)
+  CardioSession ....... kind, workoutDate, durationSeconds, distanceKm, speedKmh, inclinePct, resistance,
+                        calories, avgHeartRate, rpe, routeName, notes, customActivityId; derived pace (/km, /500 m,
+                        /100 m), average speed
+  CardioKind .......... 33 activities + `custom` (section 15); CardioField (duration, distance, pace, speed,
+                        incline, resistance, calories, heartRate, rpe); CardioPaceBasis (perKm, per500m, per100m)
+  CardioGoal .......... metric (minutes / km / sessions / calories), target, period (week/month), isPrimary
+  CustomCardioActivity  name, category, iconKey, fields, optional interval template (rounds/round/rest seconds)
+  UserProfile ......... name, email(=username), weightKg, heightCm, age, unit kg|lb, themeMode dark|oled|system,
+                        defaultSets, defaultRepMin/Max, progressionEnabled,
+                        weeklySessionTarget (= training days per week; rest days = 7 - training, see WeekPlan),
+                        equipment (Set<Equipment>?; null = never chosen, empty = bodyweight only),
+                        experienceLevel (Difficulty?; null = never chosen = intermediate), cardioDistanceUnitKm
+  Records ............. StrengthPr (heaviestWeight, mostReps, estimated1Rm, highestVolume), CardioPr
+                        (longestDuration, longestDistance, fastestPace), ProgressionRecommendation
+  Health models ....... HealthStatus, HealthFeature
+                        (writeWorkouts, enrichCardio, importWorkouts), HealthActivity, HealthWriteRequest/
+                        Receipt, HealthWorkout, HealthMetrics, HealthEnrichment, HrStats, HeartRateDay,
+                        WatchDiagnosis
+  Muscle models ....... MuscleRegion (12), Muscle (sub-muscles), MuscleTarget, ExerciseMuscleProfile,
+                        SectionMuscle (8 workout sections) — section 13
+
+10.2 Repository interfaces (repositories.dart)
+  Exercise, Workout (+rotation), Session, Cardio (+goals, +custom activities), Profile, Health (read-only
+  snapshot), WorkoutDraftStore, AtomicWorkoutFinisher. Reads are synchronous over the loaded data; writes are
+  async and (in production) complete only after the server confirmed. Every repository is a Listenable.
+
+10.3 Services (all pure and unit-tested)
+  formulas ............... Epley e1RM = W x (1 + R/30); single rep = the weight; 0 ("no reliable estimate") for
+                           <= 0 weight/reps and for more than 12 reps (Epley extrapolates absurdly beyond that)
+  progression_service .... conservative double progression (section 12.2)
+  pr_service ............. strength PRs per exercise (earliest wins ties), PRs set in a window, "new PR in this
+                           session", cardio PRs (duration global; distance and pace PER activity kind; pace needs
+                           >= 1 km)
+  rotation_service ....... advance / afterCompleting / pointAt / dayOf
+  workout_completion ..... saves a finished session and moves the rotation (atomic when the store supports it)
+  week_plan .............. training days + rest days = 7 (the weekly goal; never pins workouts to weekdays)
+  exercise_difficulty .... BuiltInDifficulty: reviewed beginner/intermediate/advanced classification of ALL 420 built-in
+                           exercises (three disjoint sets + a test that every id is in exactly one); custom = null
+  equipment_access ....... EquipmentAccess (which equipment a search may use; bodyweight always allowed) and
+                           ProgramEquipmentFit (fits a preset to the user's equipment: keeps what they can do,
+                           swaps the rest for the closest same-muscle exercise, leaves out what has no close match)
+  volume_service ......... week start (Monday, DST-safe), total volume/sets, direct sets per muscle group,
+                           weekly set-range guidelines, per-exercise volume series
+  progress_service ....... strength changes (top weight rise), push/pull balance
+  workout_stats_service, exercise_history_service  per-routine and per-exercise stats and history rows
+  plate_calculator ....... greedy per-side plates for a barbell target (default bar 20 kg)
+  cardio_metrics ......... pace / speed, goal progress
+  percent_change ......... "+12%" deltas (hidden without a positive baseline)
+  body_metrics ........... parsing/validation/conversion of age/height/weight (cm<->ft+in, kg<->lb)
+  username ............... Username + PasswordPolicy
+  exercise_search ........ normalised, tokenised, synonym-aware ranked search (e.g. "rdl" -> Romanian deadlift;
+                           Arabic text kept as typed); exercise_name = canonical name key
+  muscle_profiles / muscle_coverage / exercise_recommender / smart_swap_service / split_catalog / split_models /
+  schedule_builder / workout_sections ... section 13 and 14
+  health_summary, health_workout_mapping, health_import, health_enrichment ... section 16
+
+
+11. SCREENS & FEATURES (what the user sees)
+-------------------------------------------
+11.1 Entry (features/landing, features/auth)
+  Landing: logo, hero, three module cards (Strength / Cardio / Progress), "Create account", "Log in", and the
+  expired-session notice when relevant. Register ("Create your account": username + password, live rules
+  checklist, "Saved to your account. Needs a connection."), Login, shared AccountForm (busy state, show/hide
+  password, errors keep the username; the typed password is kept only for connection problems).
+  About you (right after Create account only): age, height, weight with Metric (cm/kg) or Imperial (ft+in/lb)
+  switch; saved to the profile as cm/kg; "Skip for now" always available; editable later in Profile.
+  Then Schedule setup (section 14), then the app.
+
+11.2 Main shell (features/shell): 4 tabs — Today, Workouts, Progress, Profile. Tab roots are kept alive
+  (IndexedStack, built lazily), cross-fade on change, horizontal swipe changes tab, pushed screens cover the nav
+  bar. On start and on resume it runs the opt-in automatic watch-workout import and shows "Imported N new
+  workouts". The stale-data banner lives here.
+
+11.3 Today
+  Date header + greeting, the NEXT workout from the rotation (exercise/set/minute estimates, Start / Preview),
+  "Resume workout" card for a saved draft (an old draft is never ended or saved automatically), schedule-setup
+  prompt card (dismissible; shown for accounts with no history and no program), weekly summary (sessions vs the
+  weekly goal "N training days · M rest days", volume, records) and recent progress.
+
+11.4 Workouts tab: segmented Routines / Templates / Saved / Cardio
+  Routines: active rotation ("Day N / M"), "My routines", "Archived" (workouts no longer in the rotation: still
+  openable, editable, startable, can be added back; deleted only by the user). Header actions: Set up my
+  schedule, History calendar, New routine. Per-routine: Preview, Edit, "Change next" (move the rotation pointer),
+  "Make next in rotation", "Add back to rotation", "Delete routine" (rotation pointer keeps pointing at the same
+  current workout; if the current one is deleted its successor becomes current), 30-day volume, average session
+  length, sessions count.
+  Templates: built-in templates (Push/Pull/Legs, Upper/Lower, Full Body, Bro split) to preview/add.
+  Saved: saved/archived workouts. Cardio: the cardio home (section 15).
+  Workout preview: target sequence grouped into collapsible muscle sections with last-session numbers.
+  Workout editor: routine architecture — sections by muscle, add/remove/reorder exercises, sets and rep range
+  steppers, rest, optional cardio finisher, rename; a new routine exists only after Save (and is then appended to
+  the rotation). Save/delete go through the atomic RPC.
+  Smart Swap sheet: ranks replacement exercises with the recommender (same muscle subgroup first, then movement
+  pattern, purpose, equipment, your history) with a computed match %.
+
+11.5 Active workout (strength logger) — section 12
+11.6 Exercises
+  Library of 420 built-in exercises + your custom ones: search (synonym-aware), muscle filter, sub-muscle filter
+  (e.g. Back -> Lats / Upper back / Traps / Lower back), equipment filter, "Common" quick filter (39 staple
+  lifts). Pick mode (used by the editor / logger / setup flow) returns the chosen exercise.
+  Exercise details: vector muscle-map illustration (drawn in code, no photos), primary and assisting muscles from
+  the muscle profile, execution steps, PRs, e1RM and volume. History page: milestones, trend chart, set-by-set
+  log. Create custom exercise sheet: name, equipment, "Muscles trained" editor (region, optional sub-muscle,
+  primary/assisting role) -> stored as muscle_targets.
+11.7 Progress tab
+  Strength / Cardio switch + period selector (windows on workoutDate; the previous window is cut to the same
+  elapsed time mid-period so deltas compare like with like). Strength: volume and strength trends, e1RM chart,
+  PR count, muscle-group breakdown vs weekly guideline, improvement summaries, push/pull balance. Personal
+  Records page: by type (heaviest weight, most reps, estimated 1RM, highest volume) with a muscle filter.
+  Cardio progress view: totals, trends, PRs (no heart-rate zones/GPS — not in the data model).
+11.8 History
+  Calendar (month grid + per-day detail of strength and cardio sessions, backdating entry points), session
+  details (the same summary page used right after finishing), edit session (sets, add/remove sets and exercises,
+  date, notes — keeps createdAt, never touches the rotation) and delete (confirm dialog).
+11.9 Profile tab
+  Identity card (avatar, display name editable, username, sessions logged, "Rotation Day N / M"); Your data
+  (weight, height, age tiles with numeric keypad); Workout configuration (default sets, default rep window,
+  "Suggest weights & reps" switch, training days per week + rest days per week (linked, sum 7), equipment, "Set up my schedule"); Preferences (measurement unit kg/lb, interface theme Dark /
+  OLED / System[=dark], cardio distance unit); Integrations & storage ("Saved to your account" note, Export your
+  data, Import from Gym Tracker, Health & workouts); App & safety (Privacy page, Log out, Delete all my data,
+  Delete account, version label). Every control saves to the server through runRemote and shows the new value
+  only after confirmation.
+
+
+12. STRENGTH LOGGING & PROGRESSION
+----------------------------------
+12.1 Active workout page (features/active_workout)
+  * Layout: strength-only, or a mixed layout (strength + cardio block) when the routine has/gains a cardio block.
+  * Exercises are grouped into muscle sections with sub-area captions (WorkoutSections.groupContiguous: a running
+    workout is never reordered); headers show exercises done/total and sets done/total; finished sections dim.
+  * Per set: weight, reps, done toggle (the live strength logger has no RPE input; RPE is kept for cardio sessions and
+    stays readable/editable in history, imports and exports — product decision 2026-10-11: keep RPE); numeric keypad sheet; +/- stepper (2.5 kg / 5 lb steps); "same as
+    last set"; remove set with undo; add set. A weighted exercise cannot be marked done at 0 kg (the keypad
+    opens). PREV column shows the previous session's sets.
+  * Progression suggestion chip ("Use ...") applies the recommended weight/reps to the not-yet-done sets.
+  * No rest timer, no elapsed timer, no automatic ending (removed). Plate calculator sheet, notes, per-session exercise swap (Smart Swap), add exercise (inserted at its canonical place
+    in the muscle section), haptic feedback on completing a set / finishing, screen kept awake.
+  * Finish: builds the session (only done sets; exercises with none are dropped; workoutDate = backdate ?? start;
+    createdAt = now) and saves it with sx_finish_workout (session + rotation move in ONE call). If the server
+    call fails, the draft is kept and the screen offers Retry. Discard asks first; leaving with nothing logged
+    exits silently. A Retry path exists for "session saved but rotation did not move".
+  * Backdating: a workout can be logged for a past date (from the calendar); the rotation is NOT advanced.
+  * Workout complete page: summary (duration, volume, sets), PR cards with a staggered pop (<= 450 ms, one
+    haptic), comparison with the previous session per exercise, heart-rate card (opt-in), cardio block summary,
+    "Next up: <workout>".
+12.2 Progression (ProgressionService — conservative double progression)
+  * Needs >= 2 done sets in the last session and >= 2 sessions of history, load-tracked exercise (not
+    bodyweight/band/timed work such as planks, holds, carries) and positive weight; otherwise only the last
+    performance is shown.
+  * "Working weight" = the heaviest weight with 2+ sets or that reached the rep minimum; otherwise the most
+    common weight (a lone heavy single never dictates).
+  * If every set at that weight hit the top of the rep range (and there were >= 2 such sets) -> increase the
+    weight by the exercise's increment; otherwise keep the weight and ask for last best reps + 1 (capped at the
+    top of the range). If the last session is older than 21 days -> "start again from <weight>".
+  * Increments (display units): barbell compounds 5 kg, machines/cables/dumbbell compounds 2.5, small dumbbell
+    isolation 1, other small isolation 2.5, kettlebells 2; lb: 5 or 2.5. Can be turned off in Profile.
+12.3 Draft persistence
+  Every change in the running workout is saved (debounced) as a WorkoutDraft JSON in Isar so an OS kill or crash
+  loses nothing. "Resume workout" appears on Today. The draft belongs to the signed-in account and is wiped on
+  logout / account change. A conflicting older draft is resolved before persistence continues.
+12.4 No automatic ending
+  A workout stays open until the user finishes or discards it. There is no maximum length, no heads-up and no
+  automatic save. A draft left from a previous run is offered on Today as "Resume workout".
+
+
+13. MUSCLE TAXONOMY, PROFILES, RECOMMENDER
+------------------------------------------
+Pure Dart in lib/domain. Practical gym terminology, not an anatomy claim.
+  Regions (12): Chest, Back, Shoulders, Biceps, Triceps, Forearms, Quadriceps, Hamstrings, Glutes, Adductors,
+  Calves, Core. Each maps to the 7-way storage MuscleGroup (forearms -> biceps; quads/hams/glutes/adductors/calves
+  -> legs), which never changes, so the detailed layer needed no schema change for built-ins.
+  Sub-muscles: Chest (upper/mid/lower), Back (lats, upper back, traps, lower back), Shoulders (front/side/rear
+  delts), Biceps (long head, short head, brachialis), Triceps (long/lateral/medial), Forearms (wrist flexors,
+  wrist extensors, brachioradialis/grip), Quads (rectus femoris, vastus lateralis/medialis/intermedius),
+  Hamstrings (biceps femoris, semitendinosus, semimembranosus), Glutes (max/med/min), Adductors (inner thigh —
+  own region so hip adduction never credits the glutes), Calves (gastrocnemius, soleus, tibialis = front of the
+  lower leg), Core (abs, obliques, deep core).
+  SectionMuscle (8): Chest, Back, Shoulders, Biceps, Triceps, Forearms, Legs, Core — the muscles that own a workout
+  SECTION in preview/editor/logger.
+  Profiles: every one of the 420 built-in exercises has structured MuscleTargets (primary / assisting, a sub-muscle
+  only where defensible, else the whole region — "no fake precision"). Example: Lat Pulldown = Back > Lats
+  (assisting biceps, upper back); Incline DB Press = Chest > Upper chest (assisting triceps, front delts);
+  Romanian Deadlift = hamstrings (assisting glutes, lower back). Profiles are written in a small DSL
+  (profile_dsl.dart, profiles/ per region). Custom exercises use the same structure (stored as muscle_targets).
+  Weights: primary set = 1.0, assisting = 0.5 (one place: MuscleWeights). "Direct" coverage counts only primary
+  work (bench press = direct chest work, only assisting for triceps/front delts).
+  Coverage (MuscleCoverage): for a workout, a program (rotation per week) or logged history: direct vs weighted
+  sets; levels none/low/moderate/high judged per week on WEIGHTED sets — region thresholds 4 / 10, sub-muscle 2 / 5,
+  adductors 2 / 6 (practical guidelines for a UI hint, not scientific claims).
+  Recommender (ExerciseRecommender): ONE engine for day generation, replacement ranking and informational "might
+  be under-trained" hints. Deterministic (ties -> catalog order). A day stops adding exercises to a muscle once
+  its per-day target is covered; the target depends on weekly adequate sets divided by how often the region is
+  trained (from days/week). Hints are optional suggestions, never commands. SmartSwapService delegates to it.
+  Equipment: onboarding asks which equipment the user has (step after the split choice; "Full gym" / "Bodyweight
+  only" shortcuts; saved in profiles.equipment and editable in Profile). Presets are fitted with ProgramEquipmentFit;
+  the custom path's suggestions (SetupCatalog.suggestSection) and the recommender use allowedEquipment. Manually
+  picked exercises are never restricted. Changing the preference later never rewrites a saved program.
+  Pattern repetition: ExerciseRecommender.forDay takes patternRepeatPenalty (1.5) off a candidate for every
+  exercise of the same movement pattern already in the day (measured: removed the double calf-raise / third curl).
+  Difficulty (2026-10-12): Exercise.difficulty (null = unspecified/custom). Experience level (profile, default
+  intermediate, asked in onboarding after equipment, editable in Profile) drives AUTOMATIC suggestions only:
+  beginner = hard filter (no advanced) with a controlled fallback (ONE advanced exercise for a region that would
+  otherwise get no direct work; reported and listed on Review); intermediate = advanced allowed but penalised
+  (-2.5, never below "useful", so coverage is kept); advanced = everything. Presets are fitted the same way
+  (ProgramEquipmentFit.fitReport: beginners swap advanced curated exercises, intermediates avoid advanced
+  REPLACEMENTS). Manual picks, the swap sheet and custom exercises are never restricted. Changing the level or
+  adding catalogue metadata never touches a saved program (a saved workout stores only id/sets/reps).
+  WorkoutSections: canonical arrangement — one section per muscle; MAIN exercises (general/compound) first with no
+  sub-header, then sub-areas in canonical order (Back: Lats + Upper back main, then Traps, then Lower back; custom
+  exercises count as main). Section headers show only when a workout has 2+ sections.
+
+
+14. SCHEDULE SETUP (ONBOARDING)
+-------------------------------
+Flow (features/onboarding): choose a program -> [custom days] -> [one page per day unless Quick start] -> "How
+many days a week?" (1-7) -> Review -> Save. Entry points: right after registering, Workouts tab, Profile ("Set
+up my schedule"), and the dismissible Today prompt. Skippable everywhere; leaving midway asks before discarding.
+  * Presets: Full Body (A/B/C), Upper / Lower, Push / Pull / Legs, Bro split (Chest, Back, Shoulders, Arms, Legs),
+    or Custom.
+  * Quick start takes a preset as is. Customize lets the user tick exercises per day and per muscle, grouped into
+    practical sub-sections (e.g. Back -> Lats . Pull-ups / Pulldowns, Upper back . rows, Traps, Lower back; no
+    section holds more than 13 exercises; big sub-areas are split into "families" such as Mid chest . Presses +
+    Cable, push-ups & band), with a one-line reason per suggestion (classic compound first) and sets/reps steppers.
+    "+ Add exercise" creates a custom exercise and ticks it immediately.
+  * Custom: name your days, choose muscles per day (reorder/add/remove); suggestions come from the recommender.
+  * Days per week only sets the weekly session goal; the program stays a SEQUENCE.
+  * Review: sets and minutes per day, a collapsible "Muscle coverage" summary and calm optional hints.
+  * Save = ScheduleBuilder + WorkoutRepository.saveSchedule -> ONE atomic sx_save_workouts call: new routines +
+    new rotation; previous routines that are not reused are archived (kept), archived ones can be restored. When
+    routines already exist, a confirmation first explains that the rotation will be replaced.
+  New accounts get NO routines (SeedData.defaultWorkouts is test data only, used by the in-memory MemoryStore).
+  The 420-exercise catalogue splits per region: back 74, hamstrings/glutes 55, quads 52, biceps/forearms 50,
+  core 43, shoulders 43, chest 42, triceps 32, calves/adductors 25, other 4.
+
+
+15. CARDIO
+----------
+  * 33 activity kinds + Custom: Outdoor Run, Outdoor Walk, Treadmill Run, Cycling, Upright Bike, Elliptical,
+    Rowing Machine, Stair Climber/Stepper, Jump Rope, Trail Run, Hiking, Spin/Indoor Cycle, Air Bike, Ski Erg, Arc
+    Trainer, Vertical Climber, Pool Swim, Arm Ergometer, HIIT/Circuit/Conditioning, Boxing/Heavy Bag, Indoor
+    Walk/Walking Pad, Nordic Walking, Rucking, Recumbent Bike, Bike Trainer/Zwift, Cross-Country Skiing, Open
+    Water Swim, Rowing (On Water), Kayak/Canoe/SUP, Dance/Zumba/Aerobics, Skating/Rollerblading, Climbing/
+    Bouldering, Kickboxing/Martial Arts. Enum values are APPEND-ONLY (stored by name); the server CHECK must equal
+    the enum (test/domain/cardio_kinds_test.dart checks drift).
+  * Each kind exposes only the fields that make sense (distance, pace, speed, incline, resistance, calories...).
+    Pace is shown in the convention of the sport: per km, per 500 m (rowing, ski erg, paddling) or per 100 m
+    (swimming). Pace PRs exist only for kinds with a pace convention (and treadmill).
+  * Select activity page: search with aliases ('12-3-30', 'stepmill'), recents, group headings, and one-tap
+    templates for sports without a kind (padel, tennis, soccer, ...) that create a custom activity.
+  * Custom activities: name, category, icon, which fields it uses, optional interval template.
+  * Live session: prepare page (objective open / time / distance, target, hint from the last session of the same
+    activity) -> live page (running + paused states, wall-clock stopwatch that stays correct in the background,
+    tiles adapt to the activity, screen lock: tap to lock, hold ~1 s to unlock) -> complete page. Time is
+    automatic; distance (and treadmill speed/incline, bike resistance) are typed manually — there is NO GPS or
+    sensor layer (a treadmill with speed set can estimate distance = speed x time, flagged as an estimate).
+  * Manual logging / backdating, edit, delete (with confirm), session details, history list.
+  * Goals: weekly/monthly targets on minutes, km, sessions or calories; a primary goal with a weekly strip,
+    sub-targets, details page and past achievements. Progress = every logged cardio session in the goal period.
+  * Cardio home (inside the Workouts tab), cardio settings (units, honest sensor status, export), week-over-week
+    change shown only when last week has data, empty states instead of fake data.
+  * Cardio can also be a "finisher" block attached to a strength routine and saved inside the workout session.
+  * Optional health extras on the complete page: fill in heart rate / calories from the watch (confirmed by the
+    user, never overwrites typed values).
+
+
+16. HEALTH INTEGRATION (HEALTH CONNECT / APPLE HEALTH)
+------------------------------------------------------
+Everything is opt-in and OFF by default; the app explains what it will read/write BEFORE the system permission
+sheet. Samsung Health works through Health Connect (StationX never talks to Samsung directly, no Samsung SDK).
+Android permissions requested per feature (declared in AndroidManifest.xml; INTERNET is also declared):
+WRITE_EXERCISE, WRITE_DISTANCE, WRITE_TOTAL_CALORIES_BURNED | READ_EXERCISE,
+READ_DISTANCE, READ_TOTAL_CALORIES_BURNED, READ_ACTIVE_CALORIES_BURNED, READ_HEART_RATE, READ_STEPS (needed only
+because the plugin's workout reader sums steps per session; steps are neither stored nor shown) |
+READ_HEALTH_DATA_HISTORY (optional older data). The permissions-rationale activity and the Android 14
+VIEW_PERMISSION_USAGE alias are declared.
+  Features
+  1. (removed) The recovery summary (sleep / resting heart rate) no longer exists; the base "connect" permission
+     now only reads exercise sessions.
+  2. Save workouts (write, HealthFeature.writeWorkouts): each finished cardio/strength session becomes ONE exercise
+     session (type, title, start/duration, ONLY the distance/calories the user logged — no heart rate, sets, reps
+     or weights). Edits replace StationX's own record, deletes remove it; StationX only ever deletes records it
+     created (receipts remembered). Failed writes are queued on the device and retried; they never block logging.
+  3. Fill in heart rate and calories (read, HealthFeature.enrichCardio): suggests average HR / calories for a
+     cardio session's time window; applied only after the user confirms. Also average/max HR on a finished workout
+     (kept locally in health_sync.json), a recent-HR chip while training (polls every 15 s, hides when no sample in
+     the last 2 min — Health Connect is not a live stream) and an average HR trend (7/14/30 days, read on
+     demand, not stored).
+  4. Import workouts (read, HealthFeature.importWorkouts): lists sessions other apps/watches recorded (last 30 days
+     by default, up to 90 per preview; all history with the extra permission, read in 60-day windows), preview first;
+     cardio -> cardio sessions, watch strength sessions -> strength sessions with duration/calories only (marked
+     "Imported from Health Connect"). Never duplicated. Optional AUTOMATIC import when the app opens (throttled,
+     silent on failure). Own StationX records are excluded.
+  5. "Connect your watch" page: a read-only 7-day check that finds the first step that is not working (store
+     missing -> permissions -> no recent data -> ok).
+  The sync service observes the session/cardio repositories so every new or edited session anywhere is mirrored
+  without feature code calling it; sessions that merely arrive from a load or an import are not written back.
+  Health data that is read stays on the device unless the user accepts/imports it into their history (then it is
+  ordinary workout data stored in the account). iOS (Apple Health / HealthKit) is coded and wired but NEVER built.
+
+
+17. IMPORT / EXPORT
+-------------------
+  Import from Gym Tracker (Profile > Integrations): a one-time migration from the author's older app.
+  The older app's Settings > Data > "Export Data" writes a versioned JSON ("gym_tracker_export" v1; spec in
+  gym_tracker/docs/EXPORT_FORMAT.md). In StationX: choose the file (or paste, up to 10 MB in the UI; files over 50 MB
+  are refused) -> preview -> Import.
+    * Only completed workouts; workoutDate = when the workout was started; createdAt = now.
+    * Importing the same file twice adds nothing (ids are gt_s<id>).
+    * Existing data is never modified or deleted. Exercises matched by exact name, then a curated alias list, then
+      a previously imported custom exercise, else a new custom exercise with inferred muscle group/equipment.
+    * PRs / e1RM are recomputed from history; achievements ignored. Optional: make the next workout match where
+      Gym Tracker left off. Weights are kg on both sides. Malformed entries are skipped one by one.
+    * Applying uses SessionRepository.addAll -> upserts to the server in batches of <= 100.
+    * Code: lib/data/import/, lib/features/profile/gym_tracker_import_flow.dart.
+  Export (Profile > Export your data): plain-text JSON or CSV of profile, sessions and cardio built by
+  ExportBuilder (formatting only, no calculations); "Save as file" (system save dialog) or "Copy to clipboard".
+
+
+18. DESIGN SYSTEM & UI KIT
+--------------------------
+Designed in Google Stitch (exports in design_reference/) as the "Kinetic Obsidian" dark theme, implemented in
+lib/core/theme. Two palettes: Obsidian (canvas #121416, surfaces #1A1C1E/#1E2022/#282A2C, lime accent #B8F000,
+text #FFFFFF / #A6B0BA / #8B959F [muted lightened from #606A74 to pass WCAG AA 4.5:1 on every surface]) and OLED
+(true-black canvas #000000, same accent). The app is dark-only; "System" resolves to Obsidian.
+  Typography: Space Grotesk (headlines), Geist (body/UI), JetBrains Mono (numbers, labels, metrics) — bundled.
+  Spacing: 4-pt scale (xs 4, sm 8, md 16, lg 24, xl 40), 16 dp screen margin, max content width 640 (tablets);
+  radii 4 / 6 / 8 / 12 / 16 / 24 / full.
+  Motion tokens (SxMotion): micro 120 ms, short 200, standard 300, emphasis 500, stagger 40 ms (cap 8), enter
+  easeOutCubic, overshoot easeOutBack. Every animation goes through SxMotion.of(context, ...) so Android's
+  "remove animations" setting is honoured (no slides/scales/count-ups).
+  UI kit (core/widgets): SxScaffold/SxTopBar/SxBrandBar/SxBottomCta, SxBottomNav, SxButton/SxIconButton, SxCard/
+  SxInset, SxChip/SxChipRow/SxSegmented, SxTextField, SxStepper/SxCheck/SxTag/SxSpinner, SectionHeader/StatTile/
+  StatusPill/PrBadge/DeltaBadge/MetricValue, SxLinearMeter/SegmentedProgress/SxRing, SxLineChart/SxBarChart/
+  SxSparkline, MuscleMap (vector muscle illustration), numeric keypad sheet, showSxSheet, EmptyState/ErrorState/
+  skeletons/showSxConfirm, SxLogo/SxAvatar, motion widgets (FadeSlideIn, Stagger, Pressable, CountUp, Grow, Swap,
+  StepTransition).
+  Stitch mock-only content (sensors, mesocycles, social) was replaced with honest "not available" states.
+  Exercise "images" are vector muscle maps drawn in code. Brand mark + launcher icon are drawn from the Stitch
+  "kinetic app icon" (regenerate with `dart run flutter_launcher_icons`).
+  Accessibility: semantic labels, 48 dp touch targets, large-text (up to 2x) overflow checks at 320x568, contrast
+  tests for the tokens, rest-timer "Rest over" announcement. A code-level TalkBack pass is done; a real-device
+  TalkBack/Switch Access pass is still open.
+
+
+19. SECURITY & PRIVACY
 ----------------------
+  * No analytics, ads, tracking or third-party crash-reporting SDKs. The only network peer is Supabase.
+  * The app needs the INTERNET permission (login, loading and saving are online).
+  * Passwords go to Supabase Auth only; never stored/logged by the app; the server keeps a one-way hash. No e-mail
+    or phone is collected; the username maps to a private "<username>@stationx.local" identifier.
+  * Server: RLS owner-only on every table, anon denied, check constraints and size caps, SECURITY INVOKER
+    functions with auth.uid(), account deletion via a SECURITY DEFINER function limited to the caller.
+  * Client: only the publishable key can ever be in the app (the config guard refuses secret keys / sbp_ tokens /
+    service_role JWTs); secrets are never committed (env/supabase.json, key.properties, *.jks are git-ignored);
+    release logs contain exception types only.
+  * Android Auto Backup / device transfer OFF; release signing guard (a release build FAILS without
+    android/key.properties — no debug-key fallback). R8 shrinking is opt-in (-Pstationx.minify=true) and has not
+    been device-tested.
+  * Because anyone can create an account (no e-mail verification), Supabase rate limits should stay ON and CAPTCHA
+    is recommended; leaked-password protection needs the Supabase Pro plan.
+  * Privacy policy: docs/PRIVACY_POLICY.md (source of truth) -> mirrored into docs/web/privacy.html and the in-app
+    Privacy page (features/profile/privacy_page.dart). It documents: what is on the device (section 9), what is
+    stored on the server and where (Supabase, Tokyo), health data handling, no password recovery, export/delete
+    options, retention, 13+ audience. Two placeholders still need the owner: [DATE] and [CONTACT EMAIL].
+
+
+20. TESTING & QUALITY
+---------------------
+  Layout (test/): a11y (5), app (release readiness), core (UI kit + motion), data (online-first, row mappers,
+  config guard, draft store, health, Gym Tracker import, seed parts, cloud auth errors), domain (~22 files:
+  progression, muscle profiles/coverage, recommender, search, schedule builder, split catalog, workout limit,
+  workout sections, cardio kinds drift, equipment drift, username, body metrics...), features (active workout,
+  auth/About you, cardio live + manage, cloud UI, entry, exercises, health, history, onboarding, profile...),
+  helpers (online_fakes.dart: an in-memory Supabase with per-user isolation + failure injection, used by AppController
+  tests), perf (large seeded history), store (STORE_SHOTS=1 screenshot generator), fixtures (real Gym Tracker
+  export). 1001 tests run (+7 skipped) across 84 files.
+  online_first_test.dart covers: registration + init, login/restore, logout/account switch (no leak), fetch,
+  create/edit/delete workouts, logging and finishing, network failure, double submit, expired session,
+  cross-user isolation, empty data, UI after success, failed write not shown as success, stale responses.
+  Not covered by automated tests: the live Supabase project (the old opt-in e2e suite was deleted), the SQL RLS/RPC
+  test (manual), real devices, iOS.
+  Commands: flutter analyze / flutter test / dart format --set-exit-if-changed.
+  Latest run (2026-10-11): flutter analyze: no issues; flutter test: 1001 passed, 7 skipped (opt-in), 0 failed.
+
+
+21. BUILD, RUN, RELEASE
+-----------------------
   flutter pub get
-  flutter run                       # runs fully offline with local data
+  flutter run --dart-define-from-file=env/supabase.json     # REQUIRED: without it the app shows "not configured"
   flutter analyze
   flutter test
-  flutter build apk --debug
-
-To enable cloud sync, copy env/supabase.example.json to env/supabase.json, fill in the
-project URL and PUBLISHABLE key, and pass it with --dart-define-from-file=env/supabase.json.
-Release steps (signing, store listing, data-safety form) are in docs/RELEASE.md.
-
-
-14. DOCUMENTATION MAP
----------------------
-  README.md ............................. quick start and architecture rules
-  docs/STATIONX_UI_IMPLEMENTATION_ROADMAP.md  living roadmap + verification record
-  docs/PRIVACY_POLICY.md ................ privacy policy
-  docs/RELEASE.md ....................... release checklist and owner decisions
-  docs/store/ ........................... Play icon, feature graphic, screenshots
-  supabase/README.md .................... backend setup, schema, RLS tests
-  design_reference/ ..................... Google Stitch design exports
+  flutter build apk --debug --dart-define-from-file=env/supabase.json
+  dart run build_runner build        # after editing lib/data/isar/entities.dart
+  dart run flutter_launcher_icons    # after editing assets/icon/*
+  STORE_SHOTS=1 flutter test test/store    # regenerate Play screenshots (docs/store/screenshots)
+  Persistence tests that open Isar download its native core on first run (git-ignored libisar.so).
+  Release (details in docs/RELEASE.md): bump the build number every upload (1.0.0+2 ...); create an upload keystore
+  with scripts/make_release_keystore.sh (outside the repo, BACK IT UP), android/key.properties from the example;
+  `flutter build appbundle --release --dart-define-from-file=env/supabase.json`; enrol in Play App Signing; fill
+  the Play Console forms from docs/store/play_console_answers.md (Data safety, Health Connect declaration, content
+  rating, listing); closed test (>= 12 testers for 14 days for new personal accounts) before production.
 
 
-15. KNOWN LIMITATIONS / TO DO
------------------------------
-  * Not yet tested on a real phone: sign-in/sync over flaky networks, long-idle token
-    refresh, Health Connect on device, the Gym Tracker file import with real data, and iOS
-    (never built).
-  * The Supabase migration for custom-exercise muscle targets (see 6b) has NOT been applied
-    to the live project and must be run by the owner before shipping; its SQL checks were
-    written but not executed.
-  * The Workouts tab header overflows at 320 px width with 2x text (pre-existing).
-  * Swap match percentages changed with the new ranking; they are a ranking aid, not a claim.
-  * Cloud conflicts are resolved per row (newest wins), not per field.
-  * Password reset needs a hosted page; Supabase Site URL, min password length and SMTP
-    settings are owner decisions.
-  * Google Play: account-deletion URL, data-safety form and store listing text still need
-    to be completed by the owner. Note: Play expects phone screenshots no taller than 2x
-    their width; the current 1080x2400 shots are slightly over that.
-  * Sensors/GPS live tracking and share-as-file export are not implemented.
+22. DOCUMENTATION MAP (and what is stale)
+-----------------------------------------
+  PROJECT_DETAILS.txt ................... THIS file (current as of 2026-10-11)
+  supabase/README.md .................... backend setup, functions, security model, test instructions (current)
+  docs/PRIVACY_POLICY.md ................ privacy policy (current: online-first wording)
+  docs/web/ ............................. hosting templates: privacy.html, delete-account.html, index.html, README.md
+                                          (privacy.html is GENERATED from docs/PRIVACY_POLICY.md:
+                                          python3 scripts/build_privacy_html.py)
+  docs/store/ ........................... Play icon, feature graphic, screenshots, play_console_answers.md
+  docs/RELEASE.md ....................... release checklist (updated 2026-10-11 for the online-first build)
+  FUNCTIONAL_REQUIREMENTS.txt ........... use cases/requirements (updated 2026-10-11; older sections may still say local-first)
+  README.md ............................. overview (updated)
+  design_reference/ ..................... Stitch exports; DESIGN.md = design-system source
+
+
+23. KNOWN LIMITATIONS / OPEN WORK
+---------------------------------
+  Needs the owner
+  * DONE 2026-10-11: migrations 20261014 and 20261015 applied to the live project after a rolled-back dry run;
+    supabase/tests/rls_and_rpc_test.sql = 22 PASS / 0 FAIL against the live project; a throwaway account went through
+    sign-up -> init (empty) -> save program -> finish workout -> delete account on the real API. The live project
+    has NO backups (no PITR) - set up a routine before real users arrive.
+  * Revoke any Supabase access token (sbp_...) that was ever pasted into chat (one was used on 2026-10-11).
+  * Host docs/web pages (fill [DATE], [CONTACT EMAIL], [OWNER...] placeholders), create the release keystore,
+    complete the Play Console forms (Data safety must now say account data is REQUIRED and stored on a server),
+    closed testing. (docs/RELEASE.md, README.md, the store answers and the privacy policy were refreshed for
+    online-first on 2026-10-11.)
+  * Supabase dashboard: keep auth rate limits on; consider CAPTCHA.
+  Product / technical
+  * Online-only by design: no network = cannot log in or save (only the running-workout draft survives locally).
+  * Whole history is downloaded on login (paged 500 rows/page, tables in parallel). Fine for thousands of
+    sessions; very large histories would need server-side aggregates.
+  * No password reset and no e-mail verification (by design).
+  * Multi-device: no realtime; another phone's changes appear after a resume-refresh (<= 30 s throttle) or Retry.
+  * Large imports (> 100 sessions) are several requests, not one transaction (idempotent, so re-running finishes it).
+  * Never tested on a real phone: sign-in/saving over flaky networks, long-idle token refresh, Health Connect on
+    device, the release build (and R8), the Gym Tracker import with real data, TalkBack. iOS has never been built.
+  * The Workouts tab / Today / Profile / Progress / Calendar lay out without overflow from 280 dp wide at 2x text
+    (test/a11y/responsive_matrix_test.dart); the old 320 px header overflow no longer reproduces. Swap match % is a
+    ranking aid, not a claim. No at-rest encryption of the small device database.
+  * Password recovery does not exist. Sensors / GPS tracking, share-as-file beyond the save
+    dialog, social features, nutrition, push notifications and exercise videos are out of scope.
+  * Play expects phone screenshots no taller than 2x their width (docs/store screenshots are 1080x2160 = 2:1; the
+    older 2400-high ones would be rejected).
+  * The git working tree contains a large amount of uncommitted work (~140 modified files from earlier phases plus the
+    online-first migration); nothing in this migration was committed by the assistant.
+
+
+24. GLOSSARY
+------------
+  Rotation ........ the ordered list of workouts you cycle through; an index points at the current one
+  Routine / Workout  one training day (e.g. "Back + Triceps") with exercises, sets and rep ranges
+  Archived ........ routines no longer in the rotation but still kept
+  Session ......... one completed strength workout in history (WorkoutSession); cardio has CardioSession
+  Draft ........... the saved snapshot of the workout in progress (device only)
+  e1RM / 1RM ...... estimated one-rep max (Epley)
+  PR .............. personal record
+  RPE ............. rate of perceived exertion (0-10)
+  RLS ............. Row Level Security (PostgreSQL) — makes every row owner-only
+  RPC ............. a Postgres function called through the Supabase API (the sx_* functions)
+  Read model ...... the in-memory copy of the signed-in user's data the screens read from
+  Epoch ........... counter that invalidates in-flight loads/writes when the user changes
+  Publishable key . the public Supabase client key (safe in the app, protected by RLS)
+  Health Connect .. Android's health data store (Samsung Health and most watches sync into it)

@@ -34,7 +34,8 @@ abstract final class ScheduleBuilder {
   }
 
   /// Saves the days as workouts (ids `w_<stamp>_<i>`), makes them the rotation (starting at day 1) and
-  /// archives the previous rotation. NEVER deletes anything: archived workouts simply leave the
+  /// archives the previous rotation. [mode] is `full` (canonical order) for the setup flow; pass
+  /// `musclesOnly` when re-saving days whose manual sub-area order must be kept. NEVER deletes anything: archived workouts simply leave the
   /// rotation, and workouts that were never in it stay untouched. Sessions are never modified.
   static Future<ScheduleSaveResult> save(
     List<SplitDayPlan> days, {
@@ -43,17 +44,19 @@ abstract final class ScheduleBuilder {
     required List<Exercise> catalog,
     required String stamp,
     String description = 'My schedule',
+    ArrangeMode mode = ArrangeMode.full,
   }) async {
     final error = validate(days, catalog);
     if (error != null) throw ArgumentError(error);
     final known = {for (final e in catalog) e.id};
     final old = [...workouts.rotation.workoutIds];
     final ids = <String>[];
+    final built = <Workout>[];
     for (var i = 0; i < days.length; i++) {
       final d = days[i];
       final id = 'w_${stamp}_$i';
       ids.add(id);
-      await workouts.saveWorkout(
+      built.add(
         Workout(
           id: id,
           name: d.name.trim(),
@@ -65,11 +68,16 @@ abstract final class ScheduleBuilder {
             ],
             catalog,
             muscleOrder: d.sectionMuscles,
+            mode: mode,
           ),
         ),
       );
     }
-    await workouts.setRotation(Rotation(workoutIds: ids, currentIndex: 0));
+    // One atomic save: the new days and the rotation that points at them are stored together.
+    await workouts.saveSchedule(
+      built,
+      Rotation(workoutIds: ids, currentIndex: 0),
+    );
     final archived = [
       for (final id in old)
         if (!ids.contains(id)) id,

@@ -26,7 +26,13 @@ List<SplitPreset> orderedPresets(List<SplitPreset> presets) {
 
 /// Step 1: choose a preset split (then Quick start or Customize) or build a custom one.
 class SetupPickStep extends StatefulWidget {
-  const SetupPickStep({super.key, required this.presets, required this.onQuick, required this.onCustomize, required this.onCustom});
+  const SetupPickStep({
+    super.key,
+    required this.presets,
+    required this.onQuick,
+    required this.onCustomize,
+    required this.onCustom,
+  });
   final List<SplitPreset> presets;
   final ValueChanged<SplitPreset> onQuick;
   final ValueChanged<SplitPreset> onCustomize;
@@ -44,33 +50,53 @@ class _SetupPickStepState extends State<SetupPickStep> {
     final c = context.sx;
     return SetupList(
       children: [
-        Text('How do you train?', style: SxText.headlineLg.copyWith(color: c.textHigh)),
-        Text('Pick a split. Quick start sets it up for you; you can still change everything later.',
-            style: SxText.bodyMd.copyWith(color: c.textBody)),
+        Text(
+          'How do you train?',
+          style: SxText.headlineLg.copyWith(color: c.textHigh),
+        ),
+        Text(
+          'Pick a split. Quick start sets it up for you; you can still change everything later.',
+          style: SxText.bodyMd.copyWith(color: c.textBody),
+        ),
         for (final p in orderedPresets(widget.presets))
-          Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            _Card(
-              title: p.name,
-              blurb: p.blurb,
-              days: p.days.map((d) => d.name).join(' / '),
-              meta: p.suggestedDaysPerWeek,
-              selected: _selected == p.id,
-              onTap: () => setState(() => _selected = _selected == p.id ? null : p.id),
-            ),
-            AnimatedSize(
-              duration: SxMotion.of(context, SxMotion.short),
-              curve: SxMotion.enter,
-              alignment: Alignment.topCenter,
-              child: _selected == p.id
-                  ? Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                      const SizedBox(height: 8),
-                      SxButton(label: 'Quick start', icon: Icons.bolt, onPressed: () => widget.onQuick(p)),
-                      const SizedBox(height: 8),
-                      SxButton(label: 'Customize exercises', variant: SxButtonVariant.secondary, onPressed: () => widget.onCustomize(p)),
-                    ])
-                  : const SizedBox(width: double.infinity),
-            ),
-          ]),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _Card(
+                title: p.name,
+                blurb: p.blurb,
+                days: p.days.map((d) => d.name).join(' / '),
+                meta: p.suggestedDaysPerWeek,
+                selected: _selected == p.id,
+                onTap: () =>
+                    setState(() => _selected = _selected == p.id ? null : p.id),
+              ),
+              AnimatedSize(
+                duration: SxMotion.of(context, SxMotion.short),
+                curve: SxMotion.enter,
+                alignment: Alignment.topCenter,
+                child: _selected == p.id
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const SizedBox(height: 8),
+                          SxButton(
+                            label: 'Quick start',
+                            icon: Icons.bolt,
+                            onPressed: () => widget.onQuick(p),
+                          ),
+                          const SizedBox(height: 8),
+                          SxButton(
+                            label: 'Customize exercises',
+                            variant: SxButtonVariant.secondary,
+                            onPressed: () => widget.onCustomize(p),
+                          ),
+                        ],
+                      )
+                    : const SizedBox(width: double.infinity),
+              ),
+            ],
+          ),
         _Card(
           title: 'Custom',
           blurb: 'Name your days and choose the muscles for each.',
@@ -85,7 +111,15 @@ class _SetupPickStepState extends State<SetupPickStep> {
 }
 
 class _Card extends StatelessWidget {
-  const _Card({required this.title, required this.blurb, required this.days, required this.meta, required this.onTap, this.icon = Icons.view_week_outlined, this.selected = false});
+  const _Card({
+    required this.title,
+    required this.blurb,
+    required this.days,
+    required this.meta,
+    required this.onTap,
+    this.icon = Icons.view_week_outlined,
+    this.selected = false,
+  });
   final String title;
   final String blurb;
   final String days;
@@ -107,30 +141,51 @@ class _Card extends StatelessWidget {
         borderColor: selected ? c.primary : null,
         child: ConstrainedBox(
           constraints: const BoxConstraints(minHeight: 48),
-          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Icon(icon, color: c.primary),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(title, style: SxText.headlineMd.copyWith(color: c.textHigh)),
-                const SizedBox(height: 2),
-                Text(blurb, style: SxText.bodyMd.copyWith(color: c.textBody)),
-                if (days.isNotEmpty) ...[
-                  const SizedBox(height: 6),
-                  Text(days, style: SxText.bodySm.copyWith(color: c.textMuted)),
-                ],
-                if (meta.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Text(meta, style: SxText.labelCaps.copyWith(color: c.primary)),
-                ],
-              ]),
-            ),
-            AnimatedRotation(
-              turns: selected ? 0.25 : 0,
-              duration: SxMotion.of(context, SxMotion.short),
-              child: Icon(Icons.chevron_right, color: selected ? c.primary : c.textMuted),
-            ),
-          ]),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(icon, color: c.primary),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: SxText.headlineMd.copyWith(color: c.textHigh),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      blurb,
+                      style: SxText.bodyMd.copyWith(color: c.textBody),
+                    ),
+                    if (days.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        days,
+                        style: SxText.bodySm.copyWith(color: c.textMuted),
+                      ),
+                    ],
+                    if (meta.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        meta,
+                        style: SxText.labelCaps.copyWith(color: c.primary),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              AnimatedRotation(
+                turns: selected ? 0.25 : 0,
+                duration: SxMotion.of(context, SxMotion.short),
+                child: Icon(
+                  Icons.chevron_right,
+                  color: selected ? c.primary : c.textMuted,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

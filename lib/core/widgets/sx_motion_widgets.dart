@@ -205,7 +205,8 @@ class _SxPressableState extends State<SxPressable> {
       );
     }
     // A disabled pressable still reports button semantics (enabled: false).
-    final interactive = widget.onTap != null || widget.onLongPress != null || !widget.enabled;
+    final interactive =
+        widget.onTap != null || widget.onLongPress != null || !widget.enabled;
     if (interactive) {
       w = GestureDetector(
         behavior: widget.behavior,

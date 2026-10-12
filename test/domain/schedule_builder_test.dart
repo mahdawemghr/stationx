@@ -1,8 +1,6 @@
-import 'dart:io';
-
 import 'package:flutter_test/flutter_test.dart';
-import 'package:isar_community/isar.dart';
-import 'package:stationx/data/isar/isar_store.dart';
+import 'package:stationx/data/remote/remote_exception.dart';
+import '../helpers/online_fakes.dart';
 import 'package:stationx/data/memory/memory_repositories.dart';
 import 'package:stationx/data/seed/seed_catalog.dart';
 import 'package:stationx/data/seed/seed_data.dart';
@@ -206,18 +204,10 @@ void main() {
     });
   });
 
-  group('save (Isar)', () {
-    late Directory dir;
-    setUpAll(() async => Isar.initializeIsarCore(download: true));
-    setUp(
-      () => dir = Directory.systemTemp.createTempSync('stationx_sched_test'),
-    );
-    tearDown(() {
-      if (dir.existsSync()) dir.deleteSync(recursive: true);
-    });
-
-    test('persists across a restart', () async {
-      var s = await IsarStore.open(directory: dir.path, name: 'sched');
+  group('save (server)', () {
+    test('persists on the server and survives a restart', () async {
+      final r = await OnlineRig.signedIn();
+      final s = r.app;
       await ScheduleBuilder.save(
         [
           day('Push'),
@@ -228,37 +218,64 @@ void main() {
         catalog: s.exercises.all,
         stamp: 'k',
       );
-      await s.close();
-      s = await IsarStore.open(directory: dir.path, name: 'sched');
+      final again = await r.restart();
       expect(
-        s.workouts.workouts.map((w) => w.id),
+        again.workouts.workouts.map((w) => w.id),
         containsAll(['w_k_0', 'w_k_1']),
       );
-      expect(s.workouts.rotation.workoutIds, ['w_k_0', 'w_k_1']);
-      expect(s.workouts.rotation.currentIndex, 0);
-      await s.close();
+      expect(again.workouts.rotation.workoutIds, ['w_k_0', 'w_k_1']);
+      expect(again.workouts.rotation.currentIndex, 0);
     });
 
-    test('archived workouts survive a restart and can be restored', () async {
-      var s = await IsarStore.open(directory: dir.path, name: 'sched2');
+    test(
+      'the days and the rotation are saved in ONE server call; a failure saves nothing',
+      () async {
+        final r = await OnlineRig.signedIn();
+        final before = r.app.workouts.workouts.map((w) => w.id).toList();
+        r.remote.failNext(const RemoteException(RemoteFailure.offline));
+        await expectLater(
+          ScheduleBuilder.save(
+            [day('Push')],
+            workouts: r.app.workouts,
+            sessions: r.app.sessions,
+            catalog: r.app.exercises.all,
+            stamp: 'k',
+          ),
+          throwsA(isA<RemoteException>()),
+        );
+        expect(r.app.workouts.workouts.map((w) => w.id), before);
+        expect(r.app.workouts.rotation.workoutIds, before);
+        r.remote.calls.clear();
+        await ScheduleBuilder.save(
+          [day('Push')],
+          workouts: r.app.workouts,
+          sessions: r.app.sessions,
+          catalog: r.app.exercises.all,
+          stamp: 'k',
+        );
+        expect(r.remote.calls, ['rpc:sx_save_workouts']);
+      },
+    );
+
+    test('archived workouts stay on the server and can be restored', () async {
+      final r = await OnlineRig.signedIn();
+      final s = r.app;
       final oldIds = [...s.workouts.rotation.workoutIds];
       expect(oldIds, isNotEmpty);
-      final r = await ScheduleBuilder.save(
+      final res = await ScheduleBuilder.save(
         [day('Push')],
         workouts: s.workouts,
         sessions: s.sessions,
         catalog: s.exercises.all,
         stamp: 'k',
       );
-      expect(r.archivedOld, oldIds);
-      await s.close();
-      s = await IsarStore.open(directory: dir.path, name: 'sched2');
+      expect(res.archivedOld, oldIds);
+      final again = await r.restart();
       for (final id in oldIds) {
-        expect(s.workouts.byId(id), isNotNull, reason: id);
+        expect(again.workouts.byId(id), isNotNull, reason: id);
       }
-      await ScheduleBuilder.restore(oldIds.first, s.workouts);
-      expect(s.workouts.rotation.workoutIds, ['w_k_0', oldIds.first]);
-      await s.close();
+      await ScheduleBuilder.restore(oldIds.first, again.workouts);
+      expect(again.workouts.rotation.workoutIds, ['w_k_0', oldIds.first]);
     });
   });
 }

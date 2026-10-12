@@ -6,8 +6,9 @@ import '../theme/sx_typography.dart';
 import 'sx_motion_widgets.dart';
 
 /// Line chart with gradient fade. [values] evenly spaced; optional x labels.
-/// Painting is isolated by a RepaintBoundary and only repaints on data change.
-class SxLineChart extends StatelessWidget {
+/// Painting is isolated by a RepaintBoundary. On first build the line is revealed left to right
+/// ([SxGrow], clip based: no per-frame path allocations; instant under reduced motion).
+class SxLineChart extends StatefulWidget {
   const SxLineChart({
     super.key,
     required this.values,
@@ -18,6 +19,7 @@ class SxLineChart extends StatelessWidget {
     this.minY,
     this.maxY,
     this.semanticLabel,
+    this.animate = true,
   });
 
   /// Spoken summary; a generated one (point count, first/last/min/max) is used when null.
@@ -30,33 +32,64 @@ class SxLineChart extends StatelessWidget {
   final double? minY;
   final double? maxY;
 
+  /// Play the grow-in on first build.
+  final bool animate;
+
+  @override
+  State<SxLineChart> createState() => _SxLineChartState();
+}
+
+class _SxLineChartState extends State<SxLineChart> {
+  final _PathCache _cache = _PathCache();
+
   @override
   Widget build(BuildContext context) {
     final c = context.sx;
+    final w = widget;
     return Semantics(
-      label: semanticLabel ?? _summary(values),
+      label: w.semanticLabel ?? _summary(w.values),
       image: true,
       excludeSemantics: true,
       child: RepaintBoundary(
         child: SizedBox(
-          height: height,
+          height: w.height,
           width: double.infinity,
-          child: CustomPaint(
-            painter: _LinePainter(
-              values,
-              labels,
-              color ?? c.primary,
-              c.hairline,
-              c.textMuted,
-              highlightLast,
-              minY,
-              maxY,
+          child: SxGrow(
+            value: 1,
+            from: w.animate ? 0 : 1,
+            duration: SxMotion.emphasis,
+            builder: (_, t) => CustomPaint(
+              painter: _LinePainter(
+                w.values,
+                w.labels,
+                w.color ?? c.primary,
+                c.hairline,
+                c.textMuted,
+                w.highlightLast,
+                w.minY,
+                w.maxY,
+                progress: t,
+                cache: _cache,
+              ),
             ),
           ),
         ),
       ),
     );
   }
+}
+
+/// Geometry of one line chart, recomputed only when the data or size changes.
+class _PathCache {
+  List<double>? v;
+  Size? size;
+  double? minY, maxY;
+  bool hasLabels = false;
+  late Path path;
+  late Path fill;
+  late Rect area;
+  late Offset first;
+  late Offset last;
 }
 
 class _LinePainter extends CustomPainter {
@@ -68,8 +101,12 @@ class _LinePainter extends CustomPainter {
     this.labelColor,
     this.hl,
     this.minY,
-    this.maxY,
-  );
+    this.maxY, {
+    this.progress = 1,
+    this.cache,
+  });
+  final double progress;
+  final _PathCache? cache;
   final List<double> v;
   final List<String>? labels;
   final Color color;
@@ -96,6 +133,79 @@ class _LinePainter extends CustomPainter {
       canvas.drawLine(Offset(area.left, y), Offset(area.right, y), gp);
     }
     if (v.isEmpty) return;
+    final g = _geometry(size, area);
+    final t = progress.clamp(0.0, 1.0);
+    final full = t >= 1;
+    if (!full) {
+      canvas.save();
+      canvas.clipRect(
+        Rect.fromLTRB(
+          0,
+          0,
+          g.first.dx + (g.last.dx - g.first.dx) * t,
+          size.height,
+        ),
+      );
+    }
+    canvas.drawPath(
+      g.fill,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [color.withValues(alpha: 0.18), color.withValues(alpha: 0)],
+        ).createShader(area),
+    );
+    canvas.drawPath(
+      g.path,
+      Paint()
+        ..color = color
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2
+        ..strokeCap = StrokeCap.round,
+    );
+    if (!full) canvas.restore();
+    if (hl && t > 0.85) {
+      final k = ((t - 0.85) / 0.15).clamp(0.0, 1.0);
+      canvas.drawCircle(
+        g.last,
+        6 * k,
+        Paint()..color = color.withValues(alpha: 0.25),
+      );
+      canvas.drawCircle(g.last, 3.5 * k, Paint()..color = color);
+    }
+    if (labels != null) {
+      for (var i = 0; i < labels!.length && i < v.length; i++) {
+        final tp = TextPainter(
+          text: TextSpan(
+            text: labels![i],
+            style: SxText.labelXs.copyWith(color: labelColor),
+          ),
+          textDirection: TextDirection.ltr,
+        )..layout();
+        final x = (_x(i, area) - tp.width / 2).clamp(
+          0.0,
+          size.width - tp.width,
+        );
+        tp.paint(canvas, Offset(x, size.height - tp.height));
+      }
+    }
+  }
+
+  double _x(int i, Rect area) => v.length == 1
+      ? area.center.dx
+      : area.left + area.width * i / (v.length - 1);
+
+  _PathCache _geometry(Size size, Rect area) {
+    final g = cache ?? _PathCache();
+    if (cache != null &&
+        identical(g.v, v) &&
+        g.size == size &&
+        g.minY == minY &&
+        g.maxY == maxY &&
+        g.hasLabels == (labels != null)) {
+      return g;
+    }
     var lo = minY ?? v.reduce((a, b) => a < b ? a : b);
     var hi = maxY ?? v.reduce((a, b) => a > b ? a : b);
     if (hi - lo < 1e-6) {
@@ -107,9 +217,7 @@ class _LinePainter extends CustomPainter {
       hi += pad;
     }
     Offset pt(int i) => Offset(
-      v.length == 1
-          ? area.center.dx
-          : area.left + area.width * i / (v.length - 1),
+      _x(i, area),
       area.bottom - area.height * ((v[i] - lo) / (hi - lo)),
     );
     final path = Path()..moveTo(pt(0).dx, pt(0).dy);
@@ -118,50 +226,29 @@ class _LinePainter extends CustomPainter {
       final mx = (p0.dx + p1.dx) / 2;
       path.cubicTo(mx, p0.dy, mx, p1.dy, p1.dx, p1.dy);
     }
-    final fill = Path.from(path)
-      ..lineTo(pt(v.length - 1).dx, area.bottom)
-      ..lineTo(pt(0).dx, area.bottom)
-      ..close();
-    canvas.drawPath(
-      fill,
-      Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [color.withValues(alpha: 0.18), color.withValues(alpha: 0)],
-        ).createShader(area),
-    );
-    canvas.drawPath(
-      path,
-      Paint()
-        ..color = color
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2
-        ..strokeCap = StrokeCap.round,
-    );
-    if (hl) {
-      final p = pt(v.length - 1);
-      canvas.drawCircle(p, 6, Paint()..color = color.withValues(alpha: 0.25));
-      canvas.drawCircle(p, 3.5, Paint()..color = color);
-    }
-    if (labels != null) {
-      for (var i = 0; i < labels!.length && i < v.length; i++) {
-        final tp = TextPainter(
-          text: TextSpan(
-            text: labels![i],
-            style: SxText.labelXs.copyWith(color: labelColor),
-          ),
-          textDirection: TextDirection.ltr,
-        )..layout();
-        final x = (pt(i).dx - tp.width / 2).clamp(0.0, size.width - tp.width);
-        tp.paint(canvas, Offset(x, size.height - tp.height));
-      }
-    }
+    g
+      ..v = v
+      ..size = size
+      ..minY = minY
+      ..maxY = maxY
+      ..hasLabels = labels != null
+      ..area = area
+      ..first = pt(0)
+      ..last = pt(v.length - 1)
+      ..path = path
+      ..fill = (Path.from(path)
+        ..lineTo(pt(v.length - 1).dx, area.bottom)
+        ..lineTo(pt(0).dx, area.bottom)
+        ..close());
+    return g;
   }
 
   @override
   bool shouldRepaint(_LinePainter o) =>
-      o.v != v || o.color != color || o.labels != labels;
+      o.v != v ||
+      o.color != color ||
+      o.labels != labels ||
+      o.progress != progress;
 }
 
 /// Simple vertical bar chart. [target] draws a dashed horizontal goal line.

@@ -4,7 +4,11 @@ import 'package:stationx/features/progress/progress_widgets.dart';
 
 import '../../core/_kit_harness.dart';
 
-Widget _tile() => CountStatTile(label: 'Workouts', value: 12, format: (v) => v.round().toString());
+Widget _tile() => CountStatTile(
+  label: 'Workouts',
+  value: 12,
+  format: (v) => v.round().toString(),
+);
 
 void main() {
   testWidgets('headline number counts up from 0 to its end value', (t) async {
@@ -20,7 +24,9 @@ void main() {
     expect(find.text('12'), findsOneWidget);
   });
 
-  testWidgets('semantic label carries the final value, not the animated one', (t) async {
+  testWidgets('semantic label carries the final value, not the animated one', (
+    t,
+  ) async {
     final h = t.ensureSemantics();
     await pumpKit(t, _tile());
     await t.pump(const Duration(milliseconds: 50));

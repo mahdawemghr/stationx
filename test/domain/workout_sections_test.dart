@@ -386,7 +386,10 @@ void main() {
         'tibialis_raise',
       ]);
       final s = WorkoutSections.group(a, catalog).single;
-      expect([for (final g in s.groups) g.label], [null, 'Glutes', 'Calves']);
+      expect(
+        [for (final g in s.groups) g.label],
+        [null, 'Glutes', 'Calves', 'Tibialis'],
+      );
     },
   );
 
@@ -404,4 +407,97 @@ void main() {
       expect(a.groups.first.items.length, 4);
     },
   );
+
+  group('ArrangeMode.musclesOnly', () {
+    test(
+      'merges non-contiguous muscles but keeps the order inside each block',
+      () {
+        final input = [
+          r('decline_bench_press'),
+          r('lat_pulldown'),
+          r('incline_bench_press'),
+          r('bench_press'),
+          r('seated_cable_row'),
+        ];
+        expect(
+          ids(
+            WorkoutSections.arrange(
+              input,
+              catalog,
+              mode: ArrangeMode.musclesOnly,
+            ),
+          ),
+          [
+            'decline_bench_press',
+            'incline_bench_press',
+            'bench_press',
+            'lat_pulldown',
+            'seated_cable_row',
+          ],
+        );
+        // full stays canonical (main, upper, lower).
+        expect(ids(WorkoutSections.arrange(input, catalog)).take(3), [
+          'bench_press',
+          'incline_bench_press',
+          'decline_bench_press',
+        ]);
+      },
+    );
+
+    test('is idempotent and never drops or duplicates', () {
+      final input = [
+        r('cable_fly'),
+        r('squat_x'),
+        r('bench_press'),
+        r('back_squat'),
+      ];
+      final a = WorkoutSections.arrange(
+        input,
+        catalog,
+        mode: ArrangeMode.musclesOnly,
+      );
+      expect(ids(a).toSet(), ids(input).toSet());
+      expect(a.length, input.length);
+      expect(
+        ids(WorkoutSections.arrange(a, catalog, mode: ArrangeMode.musclesOnly)),
+        ids(a),
+      );
+    });
+
+    test('group makes one sub-header per contiguous run (manual order)', () {
+      final s = WorkoutSections.group(
+        [
+          r('decline_bench_press'),
+          r('incline_bench_press'),
+          r('cable_fly'),
+          r('incline_db_press'),
+        ],
+        catalog,
+        mode: ArrangeMode.musclesOnly,
+      ).single;
+      expect(
+        [for (final g in s.groups) g.label],
+        ['Lower chest', 'Upper chest', 'Flyes & isolation', 'Upper chest'],
+      );
+    });
+
+    test('insertionIndex follows the group in a manually ordered list', () {
+      final cur = [
+        r('decline_bench_press'),
+        r('incline_bench_press'),
+        r('bench_press'),
+        r('cable_fly'),
+      ];
+      // Same sub-area as incline -> right after it.
+      expect(
+        WorkoutSections.insertionIndex(cur, r('incline_db_press'), catalog),
+        2,
+      );
+      // Same main group -> after the last main.
+      expect(
+        WorkoutSections.insertionIndex(cur, r('db_bench_press'), catalog),
+        3,
+      );
+    });
+  });
 }

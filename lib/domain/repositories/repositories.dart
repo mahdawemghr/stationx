@@ -2,8 +2,9 @@ import 'package:flutter/foundation.dart';
 
 import '../models/models.dart';
 
-/// Repository contracts. UI + services depend ONLY on these; the in-memory
-/// implementations in lib/data/memory are mock and will be replaced by Isar.
+/// Repository contracts. UI + services depend ONLY on these. Reads are synchronous over the
+/// signed-in user's loaded data; every write is async and, in production (lib/data/remote), completes
+/// only after Supabase confirmed it — a failed write throws and changes nothing.
 /// Every repository is a [Listenable] that notifies after any mutation.
 
 abstract class ExerciseRepository implements Listenable {
@@ -28,6 +29,10 @@ abstract class WorkoutRepository implements Listenable {
   /// Deleting a workout that is not in the rotation never moves the pointer.
   Future<void> deleteWorkout(String id);
   Future<void> setRotation(Rotation r);
+
+  /// Saves [workouts] (new or replacing the same id) AND sets the rotation as ONE operation: either
+  /// both are stored or neither (used when a whole schedule is created).
+  Future<void> saveSchedule(List<Workout> workouts, Rotation rotation);
 
   /// "Change Next Workout": point the rotation at [workoutId].
   Future<void> setCurrentWorkout(String workoutId);
@@ -55,6 +60,13 @@ abstract class SessionRepository implements Listenable {
 
   /// Most recent session that logged [exerciseId], excluding [excludeId].
   WorkoutSession? lastWithExercise(String exerciseId, {String? excludeId});
+}
+
+/// Optional capability of a backend that can save a finished workout AND move the rotation as ONE
+/// atomic operation (a Postgres function online). [WorkoutCompletion] uses it when present.
+abstract class AtomicWorkoutFinisher {
+  /// Saves [session] (idempotent on its id) and, when [rotation] is non-null, sets the rotation.
+  Future<void> finishWorkout(WorkoutSession session, Rotation? rotation);
 }
 
 abstract class CardioRepository implements Listenable {
@@ -88,22 +100,16 @@ abstract class HealthRepository implements Listenable {
 
   HealthStatus get status;
 
-  /// Latest successful read, or null if not connected / never read.
-  HealthSnapshot? get snapshot;
-
-  /// True while a connect/refresh is in flight.
+  /// True while a connect is in flight.
   bool get busy;
 
-  /// Detects availability and, when already granted, loads data. Safe to call repeatedly.
+  /// Detects availability and whether read access is already granted. Safe to call repeatedly.
   Future<void> init();
 
   /// Asks the system for read permission. Returns true when granted.
   Future<bool> connect();
 
-  /// Re-reads data. No-op unless connected; throttled unless [force].
-  Future<void> refresh({bool force = false});
-
-  /// Clears cached data and forgets consent. Android: also revokes the
+  /// Forgets consent. Android: also revokes the
   /// permission (needs an app restart to fully apply). iOS cannot revoke
   /// programmatically — the user removes access in Settings › Health.
   Future<void> disconnect();
@@ -112,7 +118,8 @@ abstract class HealthRepository implements Listenable {
   Future<void> installProvider();
 }
 
-/// Local-only store for the single in-progress workout draft. Never synced.
+/// Device-local store for the single in-progress workout draft (temporary UI state, never uploaded;
+/// cleared on logout / account change).
 /// A corrupt/unreadable stored draft reads as "no draft".
 abstract class WorkoutDraftStore implements Listenable {
   WorkoutDraft? get current;

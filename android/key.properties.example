@@ -1,0 +1,7 @@
+# Copy to android/key.properties (gitignored) and fill in - or run scripts/make_release_keystore.sh.
+# NEVER commit key.properties or the keystore (*.jks / *.keystore). BACK UP the keystore and both passwords.
+storePassword=CHANGE_ME
+keyPassword=CHANGE_ME
+keyAlias=upload
+# Absolute path (or relative to the android/ folder) of the keystore, kept OUTSIDE the repo.
+storeFile=/home/YOU/keys/stationx-upload.jks

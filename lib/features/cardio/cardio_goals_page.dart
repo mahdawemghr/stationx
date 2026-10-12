@@ -27,7 +27,13 @@ class CardioGoalsPage extends StatelessWidget {
         final now = DateTime.now();
         final topBar = SxTopBar(
           title: 'Cardio Goals',
-          actions: [SxIconButton(icon: Icons.add, tooltip: 'New goal', onPressed: () => showCardioGoalSheet(context))],
+          actions: [
+            SxIconButton(
+              icon: Icons.add,
+              tooltip: 'New goal',
+              onPressed: () => showCardioGoalSheet(context),
+            ),
+          ],
         );
         if (goals.isEmpty) {
           return SxScaffold(
@@ -38,7 +44,8 @@ class CardioGoalsPage extends StatelessWidget {
                   icon: Icons.flag_outlined,
                   eyebrow: 'No targets yet',
                   title: 'Set your first cardio goal',
-                  message: 'Pick weekly minutes, distance, sessions or calories and track progress from your logged sessions.',
+                  message:
+                      'Pick weekly minutes, distance, sessions or calories and track progress from your logged sessions.',
                   actionLabel: 'New goal',
                   onAction: () => showCardioGoalSheet(context),
                 ),
@@ -46,20 +53,33 @@ class CardioGoalsPage extends StatelessWidget {
             ),
           );
         }
-        final primary = goals.firstWhere((g) => g.isPrimary, orElse: () => goals.first);
+        final primary = goals.firstWhere(
+          (g) => g.isPrimary,
+          orElse: () => goals.first,
+        );
         final others = goals.where((g) => g.id != primary.id).toList();
         final done = _achievements(goals, sessions, now);
         return SxScaffold(
           topBar: topBar,
           children: [
             _PrimaryCard(goal: primary, sessions: sessions, now: now),
-            if (others.isNotEmpty) SectionHeader('Sub-targets', trailingText: '${others.length} active'),
-            for (final g in others) _SubGoalCard(goal: g, sessions: sessions, now: now),
+            if (others.isNotEmpty)
+              SectionHeader(
+                'Sub-targets',
+                trailingText: '${others.length} active',
+              ),
+            for (final g in others)
+              _SubGoalCard(goal: g, sessions: sessions, now: now),
             if (done.isNotEmpty) ...[
               const SectionHeader('Completed periods'),
               for (final d in done) _Achievement(d),
             ],
-            SxButton(label: 'Add another cardio goal', icon: Icons.add_circle_outline, variant: SxButtonVariant.secondary, onPressed: () => showCardioGoalSheet(context)),
+            SxButton(
+              label: 'Add another cardio goal',
+              icon: Icons.add_circle_outline,
+              variant: SxButtonVariant.secondary,
+              onPressed: () => showCardioGoalSheet(context),
+            ),
           ],
         );
       },
@@ -67,13 +87,26 @@ class CardioGoalsPage extends StatelessWidget {
   }
 
   /// Past periods (not the current one) in which a goal was met, newest first.
-  List<_Done> _achievements(List<CardioGoal> goals, List<CardioSession> sessions, DateTime now) {
+  List<_Done> _achievements(
+    List<CardioGoal> goals,
+    List<CardioSession> sessions,
+    DateTime now,
+  ) {
     final out = <_Done>[];
     for (final g in goals) {
       for (var off = 1; off <= 12; off++) {
-        if (goalValueForPeriod(g, sessions, now, offset: off) >= g.target && g.target > 0) {
+        if (goalValueForPeriod(g, sessions, now, offset: off) >= g.target &&
+            g.target > 0) {
           final r = goalPeriodRange(g.period, now, offset: off);
-          out.add(_Done(g, r.$1, g.period == GoalPeriod.week ? 'Week of ${Fmt.dateShort(r.$1)}' : '${Fmt.monthName(r.$1.month)} ${r.$1.year}'));
+          out.add(
+            _Done(
+              g,
+              r.$1,
+              g.period == GoalPeriod.week
+                  ? 'Week of ${Fmt.dateShort(r.$1)}'
+                  : '${Fmt.monthName(r.$1.month)} ${r.$1.year}',
+            ),
+          );
         }
       }
     }
@@ -98,28 +131,49 @@ class _Achievement extends StatelessWidget {
     final c = context.sx;
     return SxCard(
       onTap: () => AppNav.cardioGoalDetails(context, d.goal.id),
-      child: Row(children: [
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(color: c.surface2, borderRadius: BorderRadius.circular(SxRadius.base)),
-          child: Icon(Icons.military_tech_outlined, color: c.textBody),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(d.goal.title, style: SxText.headlineSm.copyWith(color: c.textHigh), maxLines: 1, overflow: TextOverflow.ellipsis),
-            Text('ACHIEVED • ${d.label.toUpperCase()}', style: SxText.labelXs.copyWith(color: c.primary), overflow: TextOverflow.ellipsis),
-          ]),
-        ),
-        Icon(Icons.verified_outlined, color: c.textMuted),
-      ]),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: c.surface2,
+              borderRadius: BorderRadius.circular(SxRadius.base),
+            ),
+            child: Icon(Icons.military_tech_outlined, color: c.textBody),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  d.goal.title,
+                  style: SxText.headlineSm.copyWith(color: c.textHigh),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  'ACHIEVED • ${d.label.toUpperCase()}',
+                  style: SxText.labelXs.copyWith(color: c.primary),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          Icon(Icons.verified_outlined, color: c.textMuted),
+        ],
+      ),
     );
   }
 }
 
 class _PrimaryCard extends StatelessWidget {
-  const _PrimaryCard({required this.goal, required this.sessions, required this.now});
+  const _PrimaryCard({
+    required this.goal,
+    required this.sessions,
+    required this.now,
+  });
   final CardioGoal goal;
   final List<CardioSession> sessions;
   final DateTime now;
@@ -133,39 +187,91 @@ class _PrimaryCard extends StatelessWidget {
     final left = daysLeftInPeriod(goal.period, now);
     return SxCard(
       onTap: () => AppNav.cardioGoalDetails(context, goal.id),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: [
-          const StatusPill('Primary target', icon: Icons.timer_outlined),
-          const SizedBox(width: 8),
-          Expanded(child: Text('$left day${left == 1 ? '' : 's'} left', style: SxText.labelXs.copyWith(color: c.textBody), overflow: TextOverflow.ellipsis)),
-          SxIconButton(icon: Icons.more_horiz, tooltip: 'Adjust goal', filled: false, onPressed: () => showCardioGoalSheet(context, goal: goal)),
-        ]),
-        Text(goalPeriodLabel(goal.period).toUpperCase(), style: SxText.labelCaps.copyWith(color: c.textBody)),
-        const SizedBox(height: 2),
-        Text(goal.title, style: SxText.headlineLg.copyWith(color: c.textHigh)),
-        const SizedBox(height: SxSpace.md),
-        Wrap(crossAxisAlignment: WrapCrossAlignment.end, spacing: 10, runSpacing: 8, children: [
-          Row(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
-            Text(goalNumber(goal.metric, value), style: SxText.metricXl.copyWith(color: c.textHigh)),
-            Flexible(child: Text(' / ${goalNumber(goal.metric, goal.target)} ${goalMetricUnit(goal.metric)}', overflow: TextOverflow.ellipsis, style: SxText.metricMd.copyWith(color: c.textBody))),
-          ]),
-          DeltaBadge('${(frac * 100).round()}% completed', positive: true),
-        ]),
-        const SizedBox(height: 12),
-        SxLinearMeter(value: frac, height: 10),
-        const SizedBox(height: 6),
-        _Ticks(goal: goal),
-        if (goal.period == GoalPeriod.week) ...[
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const StatusPill('Primary target', icon: Icons.timer_outlined),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  '$left day${left == 1 ? '' : 's'} left',
+                  style: SxText.labelXs.copyWith(color: c.textBody),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              SxIconButton(
+                icon: Icons.more_horiz,
+                tooltip: 'Adjust goal',
+                filled: false,
+                onPressed: () => showCardioGoalSheet(context, goal: goal),
+              ),
+            ],
+          ),
+          Text(
+            goalPeriodLabel(goal.period).toUpperCase(),
+            style: SxText.labelCaps.copyWith(color: c.textBody),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            goal.title,
+            style: SxText.headlineLg.copyWith(color: c.textHigh),
+          ),
+          const SizedBox(height: SxSpace.md),
+          Wrap(
+            crossAxisAlignment: WrapCrossAlignment.end,
+            spacing: 10,
+            runSpacing: 8,
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Text(
+                    goalNumber(goal.metric, value),
+                    style: SxText.metricXl.copyWith(color: c.textHigh),
+                  ),
+                  Flexible(
+                    child: Text(
+                      ' / ${goalNumber(goal.metric, goal.target)} ${goalMetricUnit(goal.metric)}',
+                      overflow: TextOverflow.ellipsis,
+                      style: SxText.metricMd.copyWith(color: c.textBody),
+                    ),
+                  ),
+                ],
+              ),
+              DeltaBadge('${(frac * 100).round()}% completed', positive: true),
+            ],
+          ),
           const SizedBox(height: 12),
-          _DayStrip(sessions: sessions, now: now),
+          SxLinearMeter(value: frac, height: 10),
+          const SizedBox(height: 6),
+          _Ticks(goal: goal),
+          if (goal.period == GoalPeriod.week) ...[
+            const SizedBox(height: 12),
+            _DayStrip(sessions: sessions, now: now),
+          ],
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Icon(
+                status.good ? Icons.check_circle : Icons.info_outline,
+                color: status.good ? c.primary : c.danger,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  status.text,
+                  style: SxText.bodyMd.copyWith(color: c.textHigh),
+                ),
+              ),
+            ],
+          ),
         ],
-        const SizedBox(height: 12),
-        Row(children: [
-          Icon(status.good ? Icons.check_circle : Icons.info_outline, color: status.good ? c.primary : c.danger, size: 20),
-          const SizedBox(width: 8),
-          Expanded(child: Text(status.text, style: SxText.bodyMd.copyWith(color: c.textHigh))),
-        ]),
-      ]),
+      ),
     );
   }
 }
@@ -178,15 +284,21 @@ class _Ticks extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.sx;
     final suffix = goal.metric == GoalMetric.durationMinutes ? 'm' : '';
-    return Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-      for (var i = 0; i <= 5; i++)
-        Flexible(
-          child: FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text('${goalNumber(goal.metric, goal.target * i / 5)}$suffix', style: SxText.labelXs.copyWith(color: c.textMuted)),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        for (var i = 0; i <= 5; i++)
+          Flexible(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                '${goalNumber(goal.metric, goal.target * i / 5)}$suffix',
+                style: SxText.labelXs.copyWith(color: c.textMuted),
+              ),
+            ),
           ),
-        ),
-    ]);
+      ],
+    );
   }
 }
 
@@ -200,42 +312,84 @@ class _DayStrip extends StatelessWidget {
     final c = context.sx;
     final start = goalPeriodRange(GoalPeriod.week, now).$1;
     final today = DateTime(now.year, now.month, now.day);
-    return Row(children: [
-      for (var i = 0; i < 7; i++)
-        Expanded(
-          child: Builder(builder: (context) {
-            final day = DateTime(start.year, start.month, start.day + i);
-            final mins = sessions.where((s) => Fmt.sameDay(s.workoutDate, day)).fold(0, (a, s) => a + s.durationSeconds) ~/ 60;
-            final isToday = Fmt.sameDay(day, today);
-            final future = day.isAfter(today);
-            final IconData icon = mins > 0 ? Icons.check_circle_outline : (future ? Icons.hourglass_empty : (isToday ? Icons.directions_run : Icons.bed_outlined));
-            final label = mins > 0 ? '${mins}m' : (future ? 'Open' : (isToday ? 'Today' : 'Rest'));
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 2),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                decoration: BoxDecoration(
-                  color: isToday ? c.primarySoft : c.surface2,
-                  borderRadius: BorderRadius.circular(SxRadius.base),
-                  border: Border.all(color: isToday ? c.primary : c.hairline),
-                ),
-                child: Column(mainAxisSize: MainAxisSize.min, children: [
-                  Text(Fmt.dayShort(day.weekday).toUpperCase(), style: SxText.labelXs.copyWith(color: isToday ? c.primary : c.textBody)),
-                  const SizedBox(height: 4),
-                  Icon(icon, size: 16, color: mins > 0 ? c.primary : c.textMuted),
-                  const SizedBox(height: 4),
-                  FittedBox(fit: BoxFit.scaleDown, child: Text(label, style: SxText.labelXs.copyWith(color: mins > 0 ? c.textHigh : c.textMuted))),
-                ]),
-              ),
-            );
-          }),
-        ),
-    ]);
+    return Row(
+      children: [
+        for (var i = 0; i < 7; i++)
+          Expanded(
+            child: Builder(
+              builder: (context) {
+                final day = DateTime(start.year, start.month, start.day + i);
+                final mins =
+                    sessions
+                        .where((s) => Fmt.sameDay(s.workoutDate, day))
+                        .fold(0, (a, s) => a + s.durationSeconds) ~/
+                    60;
+                final isToday = Fmt.sameDay(day, today);
+                final future = day.isAfter(today);
+                final IconData icon = mins > 0
+                    ? Icons.check_circle_outline
+                    : (future
+                          ? Icons.hourglass_empty
+                          : (isToday
+                                ? Icons.directions_run
+                                : Icons.bed_outlined));
+                final label = mins > 0
+                    ? '${mins}m'
+                    : (future ? 'Open' : (isToday ? 'Today' : 'Rest'));
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 2),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                      color: isToday ? c.primarySoft : c.surface2,
+                      borderRadius: BorderRadius.circular(SxRadius.base),
+                      border: Border.all(
+                        color: isToday ? c.primary : c.hairline,
+                      ),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          Fmt.dayShort(day.weekday).toUpperCase(),
+                          style: SxText.labelXs.copyWith(
+                            color: isToday ? c.primary : c.textBody,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Icon(
+                          icon,
+                          size: 16,
+                          color: mins > 0 ? c.primary : c.textMuted,
+                        ),
+                        const SizedBox(height: 4),
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            label,
+                            style: SxText.labelXs.copyWith(
+                              color: mins > 0 ? c.textHigh : c.textMuted,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+      ],
+    );
   }
 }
 
 class _SubGoalCard extends StatelessWidget {
-  const _SubGoalCard({required this.goal, required this.sessions, required this.now});
+  const _SubGoalCard({
+    required this.goal,
+    required this.sessions,
+    required this.now,
+  });
   final CardioGoal goal;
   final List<CardioSession> sessions;
   final DateTime now;
@@ -248,69 +402,132 @@ class _SubGoalCard extends StatelessWidget {
     final remaining = (goal.target - value).clamp(0, double.infinity);
     final left = daysLeftInPeriod(goal.period, now);
     final isFreq = goal.metric == GoalMetric.sessions;
-    final inPeriod = sessionsInRange(sessions, goalPeriodRange(goal.period, now)).length;
+    final inPeriod = sessionsInRange(
+      sessions,
+      goalPeriodRange(goal.period, now),
+    ).length;
     return SxCard(
       onTap: () => AppNav.cardioGoalDetails(context, goal.id),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(color: c.surface2, borderRadius: BorderRadius.circular(SxRadius.md)),
-            child: Icon(goalMetricIcon(goal.metric), color: c.primary),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(goal.title, style: SxText.headlineSm.copyWith(color: c.textHigh), maxLines: 2, overflow: TextOverflow.ellipsis),
-              Text('${goalPeriodLabel(goal.period)} • ${goalMetricLabel(goal.metric)}', style: SxText.bodySm.copyWith(color: c.textBody)),
-            ]),
-          ),
-          SxIconButton(icon: Icons.more_vert, tooltip: 'Adjust goal', filled: false, onPressed: () => showCardioGoalSheet(context, goal: goal)),
-        ]),
-        const SizedBox(height: 12),
-        Row(children: [
-          Expanded(
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.centerLeft,
-              child: Row(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
-                Text(goalNumber(goal.metric, value), style: SxText.metricLg.copyWith(color: c.textHigh)),
-                Text(' / ${goalNumber(goal.metric, goal.target)} ${goalMetricUnit(goal.metric)}', style: SxText.metricSm.copyWith(color: c.textBody)),
-              ]),
-            ),
-          ),
-          Text('${(frac * 100).toStringAsFixed(frac * 100 == (frac * 100).roundToDouble() ? 0 : 1)}%', style: SxText.labelCaps.copyWith(color: c.primary)),
-        ]),
-        const SizedBox(height: 10),
-        if (isFreq)
-          Row(children: [
-            for (var i = 0; i < goal.target.round().clamp(0, 10); i++)
-              Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: Container(
-                  width: 24,
-                  height: 24,
-                  decoration: BoxDecoration(shape: BoxShape.circle, color: i < value ? c.primary : c.surface3),
-                  child: i < value ? Icon(Icons.check, size: 14, color: c.onPrimary) : null,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: c.surface2,
+                  borderRadius: BorderRadius.circular(SxRadius.md),
+                ),
+                child: Icon(goalMetricIcon(goal.metric), color: c.primary),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      goal.title,
+                      style: SxText.headlineSm.copyWith(color: c.textHigh),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      '${goalPeriodLabel(goal.period)} • ${goalMetricLabel(goal.metric)}',
+                      style: SxText.bodySm.copyWith(color: c.textBody),
+                    ),
+                  ],
                 ),
               ),
-          ])
-        else
-          SxLinearMeter(value: frac, height: 8),
-        const SizedBox(height: 8),
-        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-          Flexible(
-            child: Text(remaining <= 0 ? 'Target met' : '${goalNumber(goal.metric, remaining.toDouble())} ${goalMetricUnit(goal.metric).toLowerCase()} remaining',
-                style: SxText.labelXs.copyWith(color: c.textBody), overflow: TextOverflow.ellipsis),
+              SxIconButton(
+                icon: Icons.more_vert,
+                tooltip: 'Adjust goal',
+                filled: false,
+                onPressed: () => showCardioGoalSheet(context, goal: goal),
+              ),
+            ],
           ),
-          const SizedBox(width: 8),
-          Flexible(
-            child: Text(isFreq ? '$left day${left == 1 ? '' : 's'} left' : '$inPeriod session${inPeriod == 1 ? '' : 's'} logged',
-                style: SxText.labelXs.copyWith(color: c.textBody), overflow: TextOverflow.ellipsis),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
+                    children: [
+                      Text(
+                        goalNumber(goal.metric, value),
+                        style: SxText.metricLg.copyWith(color: c.textHigh),
+                      ),
+                      Text(
+                        ' / ${goalNumber(goal.metric, goal.target)} ${goalMetricUnit(goal.metric)}',
+                        style: SxText.metricSm.copyWith(color: c.textBody),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Text(
+                '${(frac * 100).toStringAsFixed(frac * 100 == (frac * 100).roundToDouble() ? 0 : 1)}%',
+                style: SxText.labelCaps.copyWith(color: c.primary),
+              ),
+            ],
           ),
-        ]),
-      ]),
+          const SizedBox(height: 10),
+          if (isFreq)
+            Row(
+              children: [
+                for (var i = 0; i < goal.target.round().clamp(0, 10); i++)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: Container(
+                      width: 24,
+                      height: 24,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: i < value ? c.primary : c.surface3,
+                      ),
+                      child: i < value
+                          ? Icon(Icons.check, size: 14, color: c.onPrimary)
+                          : null,
+                    ),
+                  ),
+              ],
+            )
+          else
+            SxLinearMeter(value: frac, height: 8),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Flexible(
+                child: Text(
+                  remaining <= 0
+                      ? 'Target met'
+                      : '${goalNumber(goal.metric, remaining.toDouble())} ${goalMetricUnit(goal.metric).toLowerCase()} remaining',
+                  style: SxText.labelXs.copyWith(color: c.textBody),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  isFreq
+                      ? '$left day${left == 1 ? '' : 's'} left'
+                      : '$inPeriod session${inPeriod == 1 ? '' : 's'} logged',
+                  style: SxText.labelXs.copyWith(color: c.textBody),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

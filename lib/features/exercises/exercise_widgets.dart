@@ -11,7 +11,9 @@ import '../../domain/domain.dart';
 /// "Lats • Biceps" style label.
 String muscleLine(Exercise e) {
   final sec = e.secondaryMuscles.map((m) => m.label).join(', ');
-  return sec.isEmpty ? e.primaryMuscle.label : '${e.primaryMuscle.label}  •  $sec';
+  return sec.isEmpty
+      ? e.primaryMuscle.label
+      : '${e.primaryMuscle.label}  •  $sec';
 }
 
 /// Square thumbnail tile with equipment glyph + caps label.
@@ -42,7 +44,11 @@ class ExerciseThumb extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 4),
               child: FittedBox(
                 fit: BoxFit.scaleDown,
-                child: Text(exercise.equipment.label.toUpperCase(), maxLines: 1, style: SxText.labelXs.copyWith(color: c.textBody)),
+                child: Text(
+                  exercise.equipment.label.toUpperCase(),
+                  maxLines: 1,
+                  style: SxText.labelXs.copyWith(color: c.textBody),
+                ),
               ),
             ),
           ),
@@ -59,6 +65,10 @@ class StretchRow extends StatelessWidget {
   final List<Widget> children;
 
   @override
-  Widget build(BuildContext context) =>
-      IntrinsicHeight(child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: children));
+  Widget build(BuildContext context) => IntrinsicHeight(
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: children,
+    ),
+  );
 }

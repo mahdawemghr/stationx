@@ -42,8 +42,10 @@ final screens = <String, Widget Function()>{
   'active_mixed': () => const ActiveWorkoutPage(workoutId: 'w1'),
   'workout_complete': () => const WorkoutCompletePage(sessionId: 'seed_s0'),
   'exercise_library': () => const ExerciseLibraryPage(),
-  'exercise_details': () => const ExerciseDetailsPage(exerciseId: 'lat_pulldown'),
-  'exercise_history': () => const ExerciseHistoryPage(exerciseId: 'lat_pulldown'),
+  'exercise_details': () =>
+      const ExerciseDetailsPage(exerciseId: 'lat_pulldown'),
+  'exercise_history': () =>
+      const ExerciseHistoryPage(exerciseId: 'lat_pulldown'),
   'personal_records': () => const PersonalRecordsPage(),
   'calendar': () => const CalendarPage(),
   'cardio_select': () => const SelectCardioActivityPage(),
@@ -60,4 +62,3 @@ final screens = <String, Widget Function()>{
   'cardio_settings': () => const CardioSettingsPage(),
   'privacy': () => const PrivacyPage(),
 };
-

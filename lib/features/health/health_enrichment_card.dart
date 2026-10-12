@@ -1,3 +1,4 @@
+import '../../core/utils/remote_ops.dart';
 import 'package:flutter/material.dart';
 
 import '../../app/app_scope.dart';
@@ -38,7 +39,9 @@ class _HealthEnrichmentCardState extends State<HealthEnrichmentCard> {
   Future<void> _check() async {
     final app = context.app;
     final s = app.cardio.byId(widget.sessionId);
-    if (s == null || !app.healthSync.isEnabled(HealthFeature.enrichCardio)) return;
+    if (s == null || !app.healthSync.isEnabled(HealthFeature.enrichCardio)) {
+      return;
+    }
     final token = ++_token;
     setState(() => _phase = _Phase.loading);
     HealthEnrichment? e;
@@ -60,10 +63,15 @@ class _HealthEnrichmentCardState extends State<HealthEnrichmentCard> {
     final s = app.cardio.byId(widget.sessionId);
     if (e == null || s == null) return;
     final updated = HealthEnrichmentService.apply(s, e);
-    await app.cardio.update(updated);
-    if (!mounted) return;
+    final ok = await runRemote(
+      context,
+      () => app.cardio.update(updated),
+      what: 'add this to your session',
+      success: 'Added to your session',
+      key: 'cardio-${s.id}',
+    );
+    if (!ok || !mounted) return;
     setState(() => _phase = _Phase.done);
-    showSxSnack(context, 'Added to your session');
   }
 
   @override
@@ -72,7 +80,9 @@ class _HealthEnrichmentCardState extends State<HealthEnrichmentCard> {
     return ListenableBuilder(
       listenable: app.healthSync,
       builder: (context, _) {
-        if (!app.healthSync.isEnabled(HealthFeature.enrichCardio) || _phase == _Phase.dismissed || _phase == _Phase.done) {
+        if (!app.healthSync.isEnabled(HealthFeature.enrichCardio) ||
+            _phase == _Phase.dismissed ||
+            _phase == _Phase.done) {
           return const SizedBox.shrink();
         }
         final c = context.sx;
@@ -95,49 +105,128 @@ class _HealthEnrichmentCardState extends State<HealthEnrichmentCard> {
         return Semantics(
           liveRegion: true,
           label: 'Checking $provider for heart rate and calories',
-          child: Row(children: [
-            const SxSpinner(size: 18),
-            const SizedBox(width: 12),
-            Expanded(child: Text('Checking $provider for heart rate & calories...', style: SxText.bodyMd.copyWith(color: c.textBody))),
-          ]),
+          child: Row(
+            children: [
+              const SxSpinner(size: 18),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Checking $provider for heart rate & calories...',
+                  style: SxText.bodyMd.copyWith(color: c.textBody),
+                ),
+              ),
+            ],
+          ),
         );
       case _Phase.none:
-        return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('Nothing from your watch yet', style: SxText.bodyLg.copyWith(color: c.textHigh, fontWeight: FontWeight.w600)),
-          const SizedBox(height: 4),
-          Text(
-            'Heart rate can take a few minutes to arrive, especially from Samsung Health. You can check again later.',
-            style: SxText.bodySm.copyWith(color: c.textBody),
-          ),
-          const SizedBox(height: SxSpace.sm),
-          Row(children: [
-            Expanded(child: SxButton(label: 'Check again', icon: Icons.refresh, variant: SxButtonVariant.secondary, height: 48, onPressed: _check)),
-            const SizedBox(width: 8),
-            Expanded(child: SxButton(label: 'Dismiss', variant: SxButtonVariant.ghost, height: 48, onPressed: () => setState(() => _phase = _Phase.dismissed))),
-          ]),
-        ]);
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Nothing from your watch yet',
+              style: SxText.bodyLg.copyWith(
+                color: c.textHigh,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Heart rate can take a few minutes to arrive, especially from Samsung Health. You can check again later.',
+              style: SxText.bodySm.copyWith(color: c.textBody),
+            ),
+            const SizedBox(height: SxSpace.sm),
+            Row(
+              children: [
+                Expanded(
+                  child: SxButton(
+                    label: 'Check again',
+                    icon: Icons.refresh,
+                    variant: SxButtonVariant.secondary,
+                    height: 48,
+                    onPressed: _check,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: SxButton(
+                    label: 'Dismiss',
+                    variant: SxButtonVariant.ghost,
+                    height: 48,
+                    onPressed: () => setState(() => _phase = _Phase.dismissed),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
       case _Phase.suggestion:
         final e = _e!;
-        return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(children: [
-            Icon(Icons.watch_outlined, size: 18, color: c.primary),
-            const SizedBox(width: 8),
-            Expanded(child: Text('Add heart rate & calories from your watch?', style: SxText.bodyLg.copyWith(color: c.textHigh, fontWeight: FontWeight.w600))),
-          ]),
-          const SizedBox(height: SxSpace.sm),
-          Wrap(spacing: 12, runSpacing: 8, children: [
-            if (e.avgHeartRate != null) _Value(label: 'Avg heart rate', value: '${e.avgHeartRate}', unit: 'bpm'),
-            if (e.calories != null) _Value(label: 'Calories', value: Fmt.thousands(e.calories!), unit: 'kcal'),
-          ]),
-          const SizedBox(height: 6),
-          Text('From $provider. Only empty fields are filled; nothing you typed is changed.', style: SxText.bodySm.copyWith(color: c.textBody)),
-          const SizedBox(height: SxSpace.sm),
-          Row(children: [
-            Expanded(child: SxButton(label: 'Apply', icon: Icons.check, height: 48, onPressed: _apply)),
-            const SizedBox(width: 8),
-            Expanded(child: SxButton(label: 'Dismiss', variant: SxButtonVariant.secondary, height: 48, onPressed: () => setState(() => _phase = _Phase.dismissed))),
-          ]),
-        ]);
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.watch_outlined, size: 18, color: c.primary),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Add heart rate & calories from your watch?',
+                    style: SxText.bodyLg.copyWith(
+                      color: c.textHigh,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: SxSpace.sm),
+            Wrap(
+              spacing: 12,
+              runSpacing: 8,
+              children: [
+                if (e.avgHeartRate != null)
+                  _Value(
+                    label: 'Avg heart rate',
+                    value: '${e.avgHeartRate}',
+                    unit: 'bpm',
+                  ),
+                if (e.calories != null)
+                  _Value(
+                    label: 'Calories',
+                    value: Fmt.thousands(e.calories!),
+                    unit: 'kcal',
+                  ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'From $provider. Only empty fields are filled; nothing you typed is changed.',
+              style: SxText.bodySm.copyWith(color: c.textBody),
+            ),
+            const SizedBox(height: SxSpace.sm),
+            Row(
+              children: [
+                Expanded(
+                  child: SxButton(
+                    label: 'Apply',
+                    icon: Icons.check,
+                    height: 48,
+                    onPressed: _apply,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: SxButton(
+                    label: 'Dismiss',
+                    variant: SxButtonVariant.secondary,
+                    height: 48,
+                    onPressed: () => setState(() => _phase = _Phase.dismissed),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
       case _Phase.done:
       case _Phase.dismissed:
         return const SizedBox.shrink();
@@ -159,10 +248,20 @@ class _Value extends StatelessWidget {
       excludeSemantics: true,
       child: SxInset(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-          Text(label.toUpperCase(), style: SxText.labelCaps.copyWith(color: c.textBody)),
-          Text('$value $unit', style: SxText.metricSm.copyWith(color: c.textHigh)),
-        ]),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label.toUpperCase(),
+              style: SxText.labelCaps.copyWith(color: c.textBody),
+            ),
+            Text(
+              '$value $unit',
+              style: SxText.metricSm.copyWith(color: c.textHigh),
+            ),
+          ],
+        ),
       ),
     );
   }

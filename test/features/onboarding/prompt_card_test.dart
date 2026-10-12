@@ -7,7 +7,10 @@ void main() {
     final app = AppController();
     addTearDown(() => ScheduleSetupPrompt.dismissed.value = false);
     ScheduleSetupPrompt.dismissed.value = false;
-    expect(ScheduleSetupPromptCard.shouldShow(app), app.profile.profile.isGuest && app.sessions.sessions.isEmpty);
+    expect(
+      ScheduleSetupPromptCard.shouldShow(app),
+      app.profile.profile.isGuest && app.sessions.sessions.isEmpty,
+    );
     ScheduleSetupPrompt.dismissed.value = true;
     expect(ScheduleSetupPromptCard.shouldShow(app), isFalse);
   });

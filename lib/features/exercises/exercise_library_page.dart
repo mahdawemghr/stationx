@@ -71,7 +71,9 @@ class _ExerciseLibraryPageState extends State<ExerciseLibraryPage> {
     if (!identical(app, _watched)) {
       _watched?.sessions.removeListener(_invalidate);
       _watched?.exercises.removeListener(_invalidate);
-      _watched = app..sessions.addListener(_invalidate)..exercises.addListener(_invalidate);
+      _watched = app
+        ..sessions.addListener(_invalidate)
+        ..exercises.addListener(_invalidate);
       _invalidate();
     }
   }
@@ -85,23 +87,24 @@ class _ExerciseLibraryPageState extends State<ExerciseLibraryPage> {
     super.dispose();
   }
 
-  StrengthPr? _prOf(Exercise e, List<WorkoutSession> sessions) => _prCache.putIfAbsent(e.id, () {
+  StrengthPr? _prOf(Exercise e, List<WorkoutSession> sessions) =>
+      _prCache.putIfAbsent(e.id, () {
         prComputations++;
         return PrService.forExercise(e.id, sessions)[PrType.estimated1Rm];
       });
 
-  SectionMuscle _sectionOf(Exercise e) =>
-      _sectionCache[e.id] ??= SectionMuscle.of(MuscleProfiles.of(e).primaryRegion);
+  SectionMuscle _sectionOf(Exercise e) => _sectionCache[e.id] ??=
+      SectionMuscle.of(MuscleProfiles.of(e).primaryRegion);
 
   Set<String> _recent(List<WorkoutSession> sessions) => _recentCache ??= () {
-        final cutoff = DateTime.now().subtract(const Duration(days: recentDays));
-        return {
-          for (final s in sessions)
-            if (!s.workoutDate.isBefore(cutoff))
-              for (final l in s.exercises)
-                if (l.doneSets.isNotEmpty) l.exerciseId,
-        };
-      }();
+    final cutoff = DateTime.now().subtract(const Duration(days: recentDays));
+    return {
+      for (final s in sessions)
+        if (!s.workoutDate.isBefore(cutoff))
+          for (final l in s.exercises)
+            if (l.doneSets.isNotEmpty) l.exerciseId,
+    };
+  }();
 
   bool _subMatches(Exercise e) {
     final sub = _sub;
@@ -146,16 +149,26 @@ class _ExerciseLibraryPageState extends State<ExerciseLibraryPage> {
         }
       }
       if (g == SectionMuscle.legs) {
-        return <Object>[for (final r in g.regions) if (present.contains(r)) r];
+        return <Object>[
+          for (final r in g.regions)
+            if (present.contains(r)) r,
+        ];
       }
-      return <Object>[for (final m in Muscle.values) if (present.contains(m)) m];
+      return <Object>[
+        for (final m in Muscle.values)
+          if (present.contains(m)) m,
+      ];
     }();
   }
 
-  static String _subLabel(Object o) => o is MuscleRegion ? o.label : (o as Muscle).label;
+  static String _subLabel(Object o) =>
+      o is MuscleRegion ? o.label : (o as Muscle).label;
 
   int get _activeFilters =>
-      (_muscle != null ? 1 : 0) + (_sub != null ? 1 : 0) + (_equipment != null ? 1 : 0) + (_mode != _Mode.all ? 1 : 0);
+      (_muscle != null ? 1 : 0) +
+      (_sub != null ? 1 : 0) +
+      (_equipment != null ? 1 : 0) +
+      (_mode != _Mode.all ? 1 : 0);
 
   void _setQuery(String v) {
     _debounce?.cancel();
@@ -169,16 +182,16 @@ class _ExerciseLibraryPageState extends State<ExerciseLibraryPage> {
   }
 
   void _clearFilters({bool query = false}) => setState(() {
-        _muscle = null;
-        _sub = null;
-        _equipment = null;
-        _mode = _Mode.all;
-        if (query) {
-          _debounce?.cancel();
-          _searchField.clear();
-          _query = '';
-        }
-      });
+    _muscle = null;
+    _sub = null;
+    _equipment = null;
+    _mode = _Mode.all;
+    if (query) {
+      _debounce?.cancel();
+      _searchField.clear();
+      _query = '';
+    }
+  });
 
   Future<void> _create() async {
     final q = _query.trim();
@@ -188,7 +201,9 @@ class _ExerciseLibraryPageState extends State<ExerciseLibraryPage> {
       initialRegion: _muscle?.regions.first,
       initialName: q,
     );
-    if (created != null && mounted) showSxSnack(context, '${created.name} added');
+    if (created != null && mounted) {
+      showSxSnack(context, '${created.name} added');
+    }
   }
 
   @override
@@ -202,52 +217,108 @@ class _ExerciseLibraryPageState extends State<ExerciseLibraryPage> {
         final sessions = app.sessions.sessions;
         final list = _filtered(all, sessions);
         final unit = app.profile.profile.unit;
-        final muscleLabels = ['All', ...SectionMuscle.values.map((g) => g.label)];
-        final muscleIndex = _muscle == null ? 0 : SectionMuscle.values.indexOf(_muscle!) + 1;
+        final muscleLabels = [
+          'All',
+          ...SectionMuscle.values.map((g) => g.label),
+        ];
+        final muscleIndex = _muscle == null
+            ? 0
+            : SectionMuscle.values.indexOf(_muscle!) + 1;
         final subs = _subs(all);
         final subIndex = _sub == null ? 0 : subs.indexOf(_sub!) + 1;
-        final eqLabels = ['All Equipment', ...Equipment.values.map((e) => e.label)];
-        final eqIndex = _equipment == null ? 0 : Equipment.values.indexOf(_equipment!) + 1;
+        final eqLabels = [
+          'All Equipment',
+          ...Equipment.values.map((e) => e.label),
+        ];
+        final eqIndex = _equipment == null
+            ? 0
+            : Equipment.values.indexOf(_equipment!) + 1;
         final active = _activeFilters;
-        final count = '${list.length} ${list.length == 1 ? 'exercise' : 'exercises'}';
+        final count =
+            '${list.length} ${list.length == 1 ? 'exercise' : 'exercises'}';
         final q = _query.trim();
 
         return Scaffold(
           backgroundColor: c.canvas,
-          appBar: SxTopBar(title: widget.pickMode ? 'Select Exercise' : 'Exercise Library', showLogo: true),
+          appBar: SxTopBar(
+            title: widget.pickMode ? 'Select Exercise' : 'Exercise Library',
+            showLogo: true,
+          ),
           body: Align(
             alignment: Alignment.topCenter,
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: SxSpace.maxContentWidth),
+              constraints: const BoxConstraints(
+                maxWidth: SxSpace.maxContentWidth,
+              ),
               child: CustomScrollView(
-                keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
                 slivers: [
                   SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(SxSpace.md, SxSpace.md, SxSpace.md, 0),
+                    padding: const EdgeInsets.fromLTRB(
+                      SxSpace.md,
+                      SxSpace.md,
+                      SxSpace.md,
+                      0,
+                    ),
                     sliver: SliverToBoxAdapter(
-                      child: Row(children: [
-                        Flexible(
-                          child: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            alignment: Alignment.centerLeft,
-                            child: Row(mainAxisSize: MainAxisSize.min, children: [
-                              Text('EXERCISES', style: SxText.headlineLg.copyWith(color: c.textHigh, fontWeight: FontWeight.w700)),
-                              const SizedBox(width: 10),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                decoration: BoxDecoration(color: c.surface2, borderRadius: BorderRadius.circular(SxRadius.full)),
-                                child: Text('${all.length}', style: SxText.metricSm.copyWith(color: c.primary)),
+                      child: Row(
+                        children: [
+                          Flexible(
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.centerLeft,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    'EXERCISES',
+                                    style: SxText.headlineLg.copyWith(
+                                      color: c.textHigh,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: c.surface2,
+                                      borderRadius: BorderRadius.circular(
+                                        SxRadius.full,
+                                      ),
+                                    ),
+                                    child: Text(
+                                      '${all.length}',
+                                      style: SxText.metricSm.copyWith(
+                                        color: c.primary,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ]),
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        SxButton(label: 'Custom', icon: Icons.add, expanded: false, onPressed: _create),
-                      ]),
+                          const SizedBox(width: 12),
+                          SxButton(
+                            label: 'Custom',
+                            icon: Icons.add,
+                            expanded: false,
+                            onPressed: _create,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(SxSpace.md, SxSpace.md, SxSpace.md, 0),
+                    padding: const EdgeInsets.fromLTRB(
+                      SxSpace.md,
+                      SxSpace.md,
+                      SxSpace.md,
+                      0,
+                    ),
                     sliver: SliverToBoxAdapter(
                       child: TextField(
                         controller: _searchField,
@@ -273,11 +344,23 @@ class _ExerciseLibraryPageState extends State<ExerciseLibraryPage> {
                                       _searchField.clear();
                                       _query = '';
                                     });
-                                  }),
-                          contentPadding: const EdgeInsets.symmetric(vertical: 14),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(SxRadius.md), borderSide: BorderSide(color: c.hairline)),
-                          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(SxRadius.md), borderSide: BorderSide(color: c.hairline)),
-                          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(SxRadius.md), borderSide: BorderSide(color: c.primary)),
+                                  },
+                                ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 14,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(SxRadius.md),
+                            borderSide: BorderSide(color: c.hairline),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(SxRadius.md),
+                            borderSide: BorderSide(color: c.hairline),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(SxRadius.md),
+                            borderSide: BorderSide(color: c.primary),
+                          ),
                         ),
                       ),
                     ),
@@ -287,16 +370,34 @@ class _ExerciseLibraryPageState extends State<ExerciseLibraryPage> {
                     child: SxChipRow(
                       labels: const ['All exercises', 'Common', 'Recent'],
                       selectedIndex: _mode.index,
-                      onSelected: (i) => setState(() => _mode = _Mode.values[i]),
+                      onSelected: (i) =>
+                          setState(() => _mode = _Mode.values[i]),
                     ),
                   ),
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(SxSpace.md + 4, SxSpace.md, SxSpace.md, 8),
-                      child: Row(children: [
-                        Expanded(child: Text('TARGET MUSCLE', style: SxText.labelCaps.copyWith(color: c.textBody))),
-                        Text('${SectionMuscle.values.length} zones', style: SxText.bodySm.copyWith(color: c.textBody)),
-                      ]),
+                      padding: const EdgeInsets.fromLTRB(
+                        SxSpace.md + 4,
+                        SxSpace.md,
+                        SxSpace.md,
+                        8,
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'TARGET MUSCLE',
+                              style: SxText.labelCaps.copyWith(
+                                color: c.textBody,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            '${SectionMuscle.values.length} zones',
+                            style: SxText.bodySm.copyWith(color: c.textBody),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   SliverToBoxAdapter(
@@ -326,12 +427,18 @@ class _ExerciseLibraryPageState extends State<ExerciseLibraryPage> {
                                 child: Semantics(
                                   key: ValueKey('sub_${_muscle!.name}'),
                                   container: true,
-                                  label: 'Specific ${_muscle!.label.toLowerCase()} muscle filter',
+                                  label:
+                                      'Specific ${_muscle!.label.toLowerCase()} muscle filter',
                                   child: SxChipRow(
                                     key: const ValueKey('subMuscleChips'),
-                                    labels: ['All ${_muscle!.label.toLowerCase()}', ...subs.map(_subLabel)],
+                                    labels: [
+                                      'All ${_muscle!.label.toLowerCase()}',
+                                      ...subs.map(_subLabel),
+                                    ],
                                     selectedIndex: subIndex < 0 ? 0 : subIndex,
-                                    onSelected: (i) => setState(() => _sub = i == 0 ? null : subs[i - 1]),
+                                    onSelected: (i) => setState(
+                                      () => _sub = i == 0 ? null : subs[i - 1],
+                                    ),
                                   ),
                                 ),
                               ),
@@ -348,35 +455,53 @@ class _ExerciseLibraryPageState extends State<ExerciseLibraryPage> {
                         key: const ValueKey('equipmentChips'),
                         labels: eqLabels,
                         selectedIndex: eqIndex,
-                        onSelected: (i) => setState(() => _equipment = i == 0 ? null : Equipment.values[i - 1]),
+                        onSelected: (i) => setState(
+                          () => _equipment = i == 0
+                              ? null
+                              : Equipment.values[i - 1],
+                        ),
                       ),
                     ),
                   ),
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(SxSpace.md + 4, 4, SxSpace.md, 4),
+                      padding: const EdgeInsets.fromLTRB(
+                        SxSpace.md + 4,
+                        4,
+                        SxSpace.md,
+                        4,
+                      ),
                       child: ConstrainedBox(
                         constraints: const BoxConstraints(minHeight: 48),
-                        child: Row(children: [
-                          Expanded(
-                            child: Semantics(
-                              liveRegion: true,
-                              container: true,
-                              child: Text(
-                                active == 0 ? count : '$count · $active ${active == 1 ? 'filter' : 'filters'}',
-                                key: const ValueKey('resultCount'),
-                                style: SxText.labelCaps.copyWith(color: c.textBody),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Semantics(
+                                liveRegion: true,
+                                container: true,
+                                child: Text(
+                                  active == 0
+                                      ? count
+                                      : '$count · $active ${active == 1 ? 'filter' : 'filters'}',
+                                  key: const ValueKey('resultCount'),
+                                  style: SxText.labelCaps.copyWith(
+                                    color: c.textBody,
+                                  ),
+                                ),
                               ),
                             ),
-                          ),
-                          if (active > 0)
-                            TextButton(
-                              key: const ValueKey('clearFilters'),
-                              style: TextButton.styleFrom(minimumSize: const Size(48, 48), foregroundColor: c.primary),
-                              onPressed: _clearFilters,
-                              child: const Text('Clear'),
-                            ),
-                        ]),
+                            if (active > 0)
+                              TextButton(
+                                key: const ValueKey('clearFilters'),
+                                style: TextButton.styleFrom(
+                                  minimumSize: const Size(48, 48),
+                                  foregroundColor: c.primary,
+                                ),
+                                onPressed: _clearFilters,
+                                child: const Text('Clear'),
+                              ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -390,9 +515,11 @@ class _ExerciseLibraryPageState extends State<ExerciseLibraryPage> {
                           message: q.isNotEmpty
                               ? 'Nothing matches "$q".'
                               : _mode == _Mode.recent
-                                  ? 'Nothing logged in the last $recentDays days.'
-                                  : 'Try a different muscle or equipment filter.',
-                          actionLabel: q.isNotEmpty ? 'Create custom exercise "$q"' : 'Create custom exercise',
+                              ? 'Nothing logged in the last $recentDays days.'
+                              : 'Try a different muscle or equipment filter.',
+                          actionLabel: q.isNotEmpty
+                              ? 'Create custom exercise "$q"'
+                              : 'Create custom exercise',
                           onAction: _create,
                           secondaryLabel: 'Clear filters',
                           onSecondary: () => _clearFilters(query: true),
@@ -401,7 +528,12 @@ class _ExerciseLibraryPageState extends State<ExerciseLibraryPage> {
                     )
                   else
                     SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(SxSpace.md, 0, SxSpace.md, SxSpace.lg),
+                      padding: const EdgeInsets.fromLTRB(
+                        SxSpace.md,
+                        0,
+                        SxSpace.md,
+                        SxSpace.lg,
+                      ),
                       sliver: SliverList.separated(
                         itemCount: list.length,
                         separatorBuilder: (_, _) => const SizedBox(height: 8),
@@ -420,7 +552,8 @@ class _ExerciseLibraryPageState extends State<ExerciseLibraryPage> {
                                 AppNav.exerciseDetails(context, list[i].id);
                               }
                             },
-                            onHistory: () => AppNav.exerciseHistory(context, list[i].id),
+                            onHistory: () =>
+                                AppNav.exerciseHistory(context, list[i].id),
                           ),
                         ),
                       ),
@@ -436,7 +569,14 @@ class _ExerciseLibraryPageState extends State<ExerciseLibraryPage> {
 }
 
 class _ExerciseRow extends StatelessWidget {
-  const _ExerciseRow({required this.exercise, required this.pr, required this.unit, required this.pickMode, required this.onTap, required this.onHistory});
+  const _ExerciseRow({
+    required this.exercise,
+    required this.pr,
+    required this.unit,
+    required this.pickMode,
+    required this.onTap,
+    required this.onHistory,
+  });
   final Exercise exercise;
   final StrengthPr? pr;
   final WeightUnit unit;
@@ -450,52 +590,111 @@ class _ExerciseRow extends StatelessWidget {
     return SxCard(
       padding: const EdgeInsets.all(12),
       onTap: onTap,
-      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        ExerciseThumb(exercise),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Row(children: [
-              Expanded(
-                child: Text(exercise.name,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: SxText.headlineSm.copyWith(color: c.textHigh, fontWeight: FontWeight.w600)),
-              ),
-              if (!pickMode)
-                PopupMenuButton<String>(
-                  tooltip: 'More',
-                  icon: Icon(Icons.more_vert, color: c.textBody, size: 20),
-                  color: c.surface3,
-                  onSelected: (v) => v == 'history' ? onHistory() : onTap(),
-                  itemBuilder: (_) => const [
-                    PopupMenuItem(value: 'details', child: Text('Details')),
-                    PopupMenuItem(value: 'history', child: Text('History & charts')),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ExerciseThumb(exercise),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        exercise.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: SxText.headlineSm.copyWith(
+                          color: c.textHigh,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    if (!pickMode)
+                      PopupMenuButton<String>(
+                        tooltip: 'More',
+                        icon: Icon(
+                          Icons.more_vert,
+                          color: c.textBody,
+                          size: 20,
+                        ),
+                        color: c.surface3,
+                        onSelected: (v) =>
+                            v == 'history' ? onHistory() : onTap(),
+                        itemBuilder: (_) => const [
+                          PopupMenuItem(
+                            value: 'details',
+                            child: Text('Details'),
+                          ),
+                          PopupMenuItem(
+                            value: 'history',
+                            child: Text('History & charts'),
+                          ),
+                        ],
+                      ),
                   ],
                 ),
-            ]),
-            const SizedBox(height: 2),
-            Text(muscleLine(exercise), maxLines: 1, overflow: TextOverflow.ellipsis, style: SxText.bodySm.copyWith(color: c.textBody)),
-            const SizedBox(height: 6),
-            Wrap(spacing: 8, runSpacing: 6, crossAxisAlignment: WrapCrossAlignment.center, children: [
-              if (pr != null) ...[
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(color: c.surface2, borderRadius: BorderRadius.circular(SxRadius.base)),
-                  child: Row(mainAxisSize: MainAxisSize.min, children: [
-                    Icon(Icons.workspace_premium, size: 14, color: c.primary),
-                    const SizedBox(width: 6),
-                    Text('PR ${Fmt.setLabel(pr!.weightKg, pr!.reps, unit)}', style: SxText.metricSm.copyWith(color: c.primary, fontSize: 12)),
-                  ]),
+                const SizedBox(height: 2),
+                Text(
+                  muscleLine(exercise),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: SxText.bodySm.copyWith(color: c.textBody),
                 ),
-                Text('1RM: ${Fmt.weight(pr!.value, unit)} ${Fmt.unit(unit)}', style: SxText.labelXs.copyWith(color: c.textBody)),
-              ] else
-                Text('NOT LOGGED YET', style: SxText.labelXs.copyWith(color: c.textMuted)),
-              if (exercise.isCustom) const StatusPill('Custom'),
-            ]),
-          ]),
-        ),
-      ]),
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 6,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    if (pr != null) ...[
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: c.surface2,
+                          borderRadius: BorderRadius.circular(SxRadius.base),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.workspace_premium,
+                              size: 14,
+                              color: c.primary,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'PR ${Fmt.setLabel(pr!.weightKg, pr!.reps, unit)}',
+                              style: SxText.metricSm.copyWith(
+                                color: c.primary,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Text(
+                        '1RM: ${Fmt.weight(pr!.value, unit)} ${Fmt.unit(unit)}',
+                        style: SxText.labelXs.copyWith(color: c.textBody),
+                      ),
+                    ] else
+                      Text(
+                        'NOT LOGGED YET',
+                        style: SxText.labelXs.copyWith(color: c.textMuted),
+                      ),
+                    if (exercise.isCustom) const StatusPill('Custom'),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

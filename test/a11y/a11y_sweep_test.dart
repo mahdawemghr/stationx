@@ -29,13 +29,19 @@ void main() {
           // text look darker than it is (e.g. 7.8:1 text reported as 3.4:1). Real contrast of
           // every text token is verified mathematically in token_contrast_test.dart; only
           // report text ≥ 13dp here, where pixel measurement is reliable.
-          final sizes = RegExp(r'font size of (\d+(?:\.\d+)?)').allMatches(reason).map((m) => double.parse(m.group(1)!));
+          final sizes = RegExp(
+            r'font size of (\d+(?:\.\d+)?)',
+          ).allMatches(reason).map((m) => double.parse(m.group(1)!));
           if (sizes.isNotEmpty && sizes.every((s) => s < 13)) continue;
         }
         problems.add('  [${g.key}] $reason');
       }
       handle.dispose();
-      expect(problems, isEmpty, reason: 'A11Y ${entry.key}:\n${problems.join('\n')}');
+      expect(
+        problems,
+        isEmpty,
+        reason: 'A11Y ${entry.key}:\n${problems.join('\n')}',
+      );
     });
   }
 }

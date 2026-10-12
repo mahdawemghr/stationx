@@ -7,7 +7,9 @@ import '../../helpers/pump.dart';
 void main() {
   setUpAll(loadAppFonts);
 
-  testWidgets('calendar: renders month, selects a day with a session', (t) async {
+  testWidgets('calendar: renders month, selects a day with a session', (
+    t,
+  ) async {
     final app = await pumpPage(t, const CalendarPage());
     await shot(t, 'calendar_today');
     final s = app.sessions.sessions.first;
@@ -42,35 +44,81 @@ void main() {
     await t.tap(find.byTooltip('Next month'));
     await t.pump();
     expect(find.text('Upcoming day'), findsOneWidget);
-    await t.scrollUntilVisible(find.textContaining('Pick today or an earlier date'), 200, scrollable: find.byType(Scrollable).first);
-    expect(find.textContaining('Pick today or an earlier date'), findsOneWidget);
+    await t.scrollUntilVisible(
+      find.textContaining('Pick today or an earlier date'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(
+      find.textContaining('Pick today or an earlier date'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('calendar: log historical lift opens workout picker', (t) async {
     await pumpPage(t, const CalendarPage());
     final btn = find.text('INSERT WORKOUT').last;
-    await t.scrollUntilVisible(btn, 300, scrollable: find.byType(Scrollable).first);
+    await t.scrollUntilVisible(
+      btn,
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
     await t.ensureVisible(btn);
     await t.pump();
     await t.tap(btn);
     await t.pumpAndSettle();
     expect(find.text('INSERT WORKOUT'), findsWidgets);
-    expect(find.textContaining('Which workout from your schedule'), findsOneWidget);
+    expect(
+      find.textContaining('Which workout from your schedule'),
+      findsOneWidget,
+    );
     expect(find.text('Back + Triceps'), findsWidgets);
   });
 
   testWidgets('calendar: small screen no overflow', (t) async {
-    await pumpPage(t, const CalendarPage(), size: const Size(320, 568), textScale: 1.3);
+    await pumpPage(
+      t,
+      const CalendarPage(),
+      size: const Size(320, 568),
+      textScale: 1.3,
+    );
     expect(t.takeException(), isNull);
-    await pumpPage(t, const CalendarPage(), size: const Size(320, 568), textScale: 1.3, demo: false);
+    await pumpPage(
+      t,
+      const CalendarPage(),
+      size: const Size(320, 568),
+      textScale: 1.3,
+      demo: false,
+    );
     expect(t.takeException(), isNull);
   });
 }
 
 class Fmt2 {
   static String long(DateTime d) {
-    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-    const m = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const days = [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday',
+    ];
+    const m = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
     return '${days[d.weekday - 1]}, ${m[d.month - 1]} ${d.day}';
   }
 }

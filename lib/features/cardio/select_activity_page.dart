@@ -1,3 +1,4 @@
+import '../../core/utils/remote_ops.dart';
 import 'package:flutter/material.dart';
 
 import '../../app/app_scope.dart';
@@ -21,29 +22,49 @@ class SelectCardioActivityPage extends StatefulWidget {
   const SelectCardioActivityPage({super.key});
 
   @override
-  State<SelectCardioActivityPage> createState() => _SelectCardioActivityPageState();
+  State<SelectCardioActivityPage> createState() =>
+      _SelectCardioActivityPageState();
 }
 
 /// One selectable entry: a built-in kind or a user's custom activity.
 class _Entry {
   const _Entry.kind(this.kind) : custom = null;
-  const _Entry.custom(CustomCardioActivity this.custom) : kind = CardioKind.custom;
+  const _Entry.custom(CustomCardioActivity this.custom)
+    : kind = CardioKind.custom;
   final CardioKind kind;
   final CustomCardioActivity? custom;
 
   String get name => custom?.name ?? kind.label;
-  IconData get icon => custom != null ? cardioIconForKey(custom!.iconKey) : cardioKindIcon(kind);
+  IconData get icon =>
+      custom != null ? cardioIconForKey(custom!.iconKey) : cardioKindIcon(kind);
   String get blurb => custom?.category ?? cardioKindBlurb(kind);
-  String get metrics => custom != null ? 'METRICS: ${custom!.fields.map(cardioFieldLabel).join(' • ')}' : cardioMetricsLine(kind);
+  String get metrics => custom != null
+      ? 'METRICS: ${custom!.fields.map(cardioFieldLabel).join(' • ')}'
+      : cardioMetricsLine(kind);
   List<String> get terms => custom != null ? const [] : cardioSearchTerms(kind);
   Set<CardioGroup> get groups => custom != null ? const {} : cardioGroups(kind);
 
-  void open(BuildContext context) => AppNav.cardioPrepare(context, kind, customActivityId: custom?.id);
+  void open(BuildContext context) =>
+      AppNav.cardioPrepare(context, kind, customActivityId: custom?.id);
 }
 
 class _SelectCardioActivityPageState extends State<SelectCardioActivityPage> {
-  static const _filters = ['All', 'Outdoor', 'Machines', 'Classes', 'High Intensity', 'Low Impact'];
-  static const _groups = [null, CardioGroup.outdoor, CardioGroup.gym, CardioGroup.classes, CardioGroup.highIntensity, CardioGroup.lowImpact];
+  static const _filters = [
+    'All',
+    'Outdoor',
+    'Machines',
+    'Classes',
+    'High Intensity',
+    'Low Impact',
+  ];
+  static const _groups = [
+    null,
+    CardioGroup.outdoor,
+    CardioGroup.gym,
+    CardioGroup.classes,
+    CardioGroup.highIntensity,
+    CardioGroup.lowImpact,
+  ];
   final _search = TextEditingController();
   int _filter = 0;
 
@@ -76,7 +97,10 @@ class _SelectCardioActivityPageState extends State<SelectCardioActivityPage> {
   }
 
   /// Up to 4 distinct recently used activities (newest first), custom ones only while they exist.
-  List<_Entry> _recents(Iterable<CardioSession> sessions, Iterable<CustomCardioActivity> customs) {
+  List<_Entry> _recents(
+    Iterable<CardioSession> sessions,
+    Iterable<CustomCardioActivity> customs,
+  ) {
     final out = <_Entry>[];
     final seen = <String>{};
     for (final s in sessions) {
@@ -108,29 +132,40 @@ class _SelectCardioActivityPageState extends State<SelectCardioActivityPage> {
         final raw = _search.text.trim();
         final q = raw.toLowerCase();
         final group = _groups[_filter];
-        bool inFilter(_Entry e) => group == null ? true : e.groups.contains(group);
+        bool inFilter(_Entry e) =>
+            group == null ? true : e.groups.contains(group);
 
         final all = <_Entry>[
-          for (final k in CardioKind.values) if (k != CardioKind.custom) _Entry.kind(k),
+          for (final k in CardioKind.values)
+            if (k != CardioKind.custom) _Entry.kind(k),
           for (final a in customs) _Entry.custom(a),
         ];
-        final shown = [for (final e in all) if (inFilter(e) && (q.isEmpty || _matches(e, q))) e];
+        final shown = [
+          for (final e in all)
+            if (inFilter(e) && (q.isEmpty || _matches(e, q))) e,
+        ];
         final searching = q.isNotEmpty;
         final grouped = !searching && group == null;
-        final recents = grouped ? _recents(sessions, customs) : const <_Entry>[];
+        final recents = grouped
+            ? _recents(sessions, customs)
+            : const <_Entry>[];
 
-        String? last(_Entry e) => _lastLabel(lastOfKind(sessions, e.kind, customId: e.custom?.id), miles);
+        String? last(_Entry e) => _lastLabel(
+          lastOfKind(sessions, e.kind, customId: e.custom?.id),
+          miles,
+        );
 
         Widget row(_Entry e) => _CompactRow(
-              icon: e.icon,
-              name: e.name,
-              metrics: e.metrics,
-              last: last(e),
-              onTap: () => e.open(context),
-            );
+          icon: e.icon,
+          name: e.name,
+          metrics: e.metrics,
+          last: last(e),
+          onTap: () => e.open(context),
+        );
 
         final body = <Widget>[
-          if (recents.isNotEmpty) _RecentStrip(entries: recents, onTap: (e) => e.open(context)),
+          if (recents.isNotEmpty)
+            _RecentStrip(entries: recents, onTap: (e) => e.open(context)),
           if (searching)
             for (final e in shown)
               _ActivityTile(
@@ -144,21 +179,35 @@ class _SelectCardioActivityPageState extends State<SelectCardioActivityPage> {
               )
           else if (grouped) ...[
             for (final section in cardioSections)
-              if (section != 'Custom' && shown.any((e) => e.custom == null && cardioSection(e.kind) == section))
+              if (section != 'Custom' &&
+                  shown.any(
+                    (e) => e.custom == null && cardioSection(e.kind) == section,
+                  ))
                 _Section(
                   title: section,
-                  children: [for (final e in shown) if (e.custom == null && cardioSection(e.kind) == section) row(e)],
+                  children: [
+                    for (final e in shown)
+                      if (e.custom == null && cardioSection(e.kind) == section)
+                        row(e),
+                  ],
                 ),
           ] else
             _Section(title: null, children: [for (final e in shown) row(e)]),
-          if (searching && shown.isEmpty) _NoResult(query: raw, onCreate: () => AppNav.createCustomCardio(context, initialName: raw)),
           if (searching && shown.isEmpty)
-            for (final t in cardioTemplatesMatching(q)) _TemplateRow(template: t, onTap: () => _useTemplate(t)),
+            _NoResult(
+              query: raw,
+              onCreate: () =>
+                  AppNav.createCustomCardio(context, initialName: raw),
+            ),
+          if (searching && shown.isEmpty)
+            for (final t in cardioTemplatesMatching(q))
+              _TemplateRow(template: t, onTap: () => _useTemplate(t)),
           if (grouped)
             _Section(
               title: 'Custom',
               children: [
-                for (final e in shown) if (e.custom != null) row(e),
+                for (final e in shown)
+                  if (e.custom != null) row(e),
                 _CompactRow(
                   icon: Icons.add_circle_outline,
                   name: 'Custom Cardio Activity',
@@ -177,7 +226,11 @@ class _SelectCardioActivityPageState extends State<SelectCardioActivityPage> {
               onTap: () => AppNav.createCustomCardio(context, initialName: raw),
             ),
           if (!searching && group != null && shown.isEmpty)
-            const EmptyState(icon: Icons.search_off, title: 'No activity found', message: 'Try a different filter, or create a custom activity.'),
+            const EmptyState(
+              icon: Icons.search_off,
+              title: 'No activity found',
+              message: 'Try a different filter, or create a custom activity.',
+            ),
           const _SensorLine(),
         ];
 
@@ -185,9 +238,20 @@ class _SelectCardioActivityPageState extends State<SelectCardioActivityPage> {
           topBar: SxTopBar(
             title: 'Select Activity',
             subtitle: 'CARDIO ENGINE',
-            actions: [SxIconButton(icon: Icons.history, tooltip: 'Log past session', onPressed: () => AppNav.backdateCardio(context))],
+            actions: [
+              SxIconButton(
+                icon: Icons.history,
+                tooltip: 'Log past session',
+                onPressed: () => AppNav.backdateCardio(context),
+              ),
+            ],
           ),
-          padding: const EdgeInsets.fromLTRB(SxSpace.screenMargin, SxSpace.md, SxSpace.screenMargin, SxSpace.lg),
+          padding: const EdgeInsets.fromLTRB(
+            SxSpace.screenMargin,
+            SxSpace.md,
+            SxSpace.screenMargin,
+            SxSpace.lg,
+          ),
           gap: 12,
           children: [
             TextField(
@@ -207,15 +271,28 @@ class _SelectCardioActivityPageState extends State<SelectCardioActivityPage> {
                     : IconButton(
                         tooltip: 'Clear',
                         icon: Icon(Icons.close, color: c.textMuted),
-                        onPressed: () => setState(_search.clear)),
+                        onPressed: () => setState(_search.clear),
+                      ),
                 contentPadding: const EdgeInsets.symmetric(vertical: 14),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(SxRadius.md), borderSide: BorderSide(color: c.hairline)),
-                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(SxRadius.md), borderSide: BorderSide(color: c.hairline)),
-                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(SxRadius.md), borderSide: BorderSide(color: c.primary)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(SxRadius.md),
+                  borderSide: BorderSide(color: c.hairline),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(SxRadius.md),
+                  borderSide: BorderSide(color: c.hairline),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(SxRadius.md),
+                  borderSide: BorderSide(color: c.primary),
+                ),
               ),
             ),
             SxChipRow(
-              labels: [for (var i = 0; i < _filters.length; i++) i == 0 ? 'All (${all.length})' : _filters[i]],
+              labels: [
+                for (var i = 0; i < _filters.length; i++)
+                  i == 0 ? 'All (${all.length})' : _filters[i],
+              ],
               selectedIndex: _filter,
               onSelected: (i) => setState(() => _filter = i),
               padding: EdgeInsets.zero,
@@ -231,22 +308,35 @@ class _SelectCardioActivityPageState extends State<SelectCardioActivityPage> {
   Future<void> _useTemplate(CardioActivityTemplate t) async {
     final cardio = context.app.cardio;
     final nav = context;
-    final existing = cardio.customActivities.where((a) => a.name.toLowerCase() == t.name.toLowerCase());
+    final existing = cardio.customActivities.where(
+      (a) => a.name.toLowerCase() == t.name.toLowerCase(),
+    );
     String id;
     if (existing.isNotEmpty) {
       id = existing.first.id;
     } else {
       id = 'custom_${DateTime.now().microsecondsSinceEpoch}';
-      await cardio.addCustomActivity(CustomCardioActivity(
-        id: id,
-        name: t.name,
-        category: t.category,
-        iconKey: t.iconKey,
-        fields: [CardioField.duration, ...t.fields.where((f) => f != CardioField.duration)],
-        roundSeconds: t.roundSeconds,
-        restSeconds: t.restSeconds,
-        rounds: t.rounds,
-      ));
+      final saved = await runRemote(
+        context,
+        () => cardio.addCustomActivity(
+          CustomCardioActivity(
+            id: id,
+            name: t.name,
+            category: t.category,
+            iconKey: t.iconKey,
+            fields: [
+              CardioField.duration,
+              ...t.fields.where((f) => f != CardioField.duration),
+            ],
+            roundSeconds: t.roundSeconds,
+            restSeconds: t.restSeconds,
+            rounds: t.rounds,
+          ),
+        ),
+        what: 'save the activity',
+        key: 'custom-activity',
+      );
+      if (!saved) return;
     }
     if (!nav.mounted) return;
     await AppNav.cardioPrepare(nav, CardioKind.custom, customActivityId: id);
@@ -254,7 +344,9 @@ class _SelectCardioActivityPageState extends State<SelectCardioActivityPage> {
 
   String? _lastLabel(CardioSession? s, bool miles) {
     if (s == null) return null;
-    final d = s.distanceKm != null ? '${Fmt.km(s.distanceKm, miles: miles)} ${miles ? 'mi' : 'km'}' : Fmt.durationShort(s.durationSeconds);
+    final d = s.distanceKm != null
+        ? '${Fmt.km(s.distanceKm, miles: miles)} ${miles ? 'mi' : 'km'}'
+        : Fmt.durationShort(s.durationSeconds);
     return 'LAST: $d';
   }
 }
@@ -267,20 +359,26 @@ class _Section extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.sx;
-    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      if (title != null)
-        Semantics(
-          header: true,
-          child: Padding(
-            padding: const EdgeInsets.only(left: 4, bottom: 8),
-            child: Text(title!.toUpperCase(), style: SxText.labelCaps.copyWith(color: c.textBody)),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (title != null)
+          Semantics(
+            header: true,
+            child: Padding(
+              padding: const EdgeInsets.only(left: 4, bottom: 8),
+              child: Text(
+                title!.toUpperCase(),
+                style: SxText.labelCaps.copyWith(color: c.textBody),
+              ),
+            ),
           ),
-        ),
-      for (var i = 0; i < children.length; i++) ...[
-        if (i > 0) const SizedBox(height: 8),
-        children[i],
+        for (var i = 0; i < children.length; i++) ...[
+          if (i > 0) const SizedBox(height: 8),
+          children[i],
+        ],
       ],
-    ]);
+    );
   }
 }
 
@@ -300,7 +398,10 @@ class _RecentStrip extends StatelessWidget {
           header: true,
           child: Padding(
             padding: const EdgeInsets.only(left: 4, bottom: 4),
-            child: Text('RECENT', style: SxText.labelCaps.copyWith(color: c.textBody)),
+            child: Text(
+              'RECENT',
+              style: SxText.labelCaps.copyWith(color: c.textBody),
+            ),
           ),
         ),
         SizedBox(
@@ -309,7 +410,11 @@ class _RecentStrip extends StatelessWidget {
             scrollDirection: Axis.horizontal,
             itemCount: entries.length,
             separatorBuilder: (_, _) => const SizedBox(width: 8),
-            itemBuilder: (_, i) => SxChip(label: entries[i].name, icon: entries[i].icon, onTap: () => onTap(entries[i])),
+            itemBuilder: (_, i) => SxChip(
+              label: entries[i].name,
+              icon: entries[i].icon,
+              onTap: () => onTap(entries[i]),
+            ),
           ),
         ),
       ],
@@ -319,7 +424,14 @@ class _RecentStrip extends StatelessWidget {
 
 /// Browse row: 64 px minimum, icon, name, one-line metrics, LAST at the trailing edge.
 class _CompactRow extends StatelessWidget {
-  const _CompactRow({required this.icon, required this.name, required this.metrics, required this.onTap, this.last, this.accent = false});
+  const _CompactRow({
+    required this.icon,
+    required this.name,
+    required this.metrics,
+    required this.onTap,
+    this.last,
+    this.accent = false,
+  });
   final IconData icon;
   final String name;
   final String metrics;
@@ -342,29 +454,61 @@ class _CompactRow extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         child: ConstrainedBox(
           constraints: const BoxConstraints(minHeight: 48),
-          child: Row(children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(color: accent ? c.primary : c.surface3, borderRadius: BorderRadius.circular(SxRadius.base)),
-              child: Icon(icon, size: 22, color: accent ? c.onAccent : c.textHigh),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: SxText.headlineSm.copyWith(color: c.textHigh, fontSize: 16)),
-                Text(metrics, maxLines: 1, overflow: TextOverflow.ellipsis, style: SxText.labelXs.copyWith(color: c.textMuted)),
-              ]),
-            ),
-            if (last != null) ...[
-              const SizedBox(width: 8),
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 92),
-                child: Text(last!, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.end, style: SxText.labelXs.copyWith(color: c.primary)),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: accent ? c.primary : c.surface3,
+                  borderRadius: BorderRadius.circular(SxRadius.base),
+                ),
+                child: Icon(
+                  icon,
+                  size: 22,
+                  color: accent ? c.onAccent : c.textHigh,
+                ),
               ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: SxText.headlineSm.copyWith(
+                        color: c.textHigh,
+                        fontSize: 16,
+                      ),
+                    ),
+                    Text(
+                      metrics,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: SxText.labelXs.copyWith(color: c.textMuted),
+                    ),
+                  ],
+                ),
+              ),
+              if (last != null) ...[
+                const SizedBox(width: 8),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 92),
+                  child: Text(
+                    last!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.end,
+                    style: SxText.labelXs.copyWith(color: c.primary),
+                  ),
+                ),
+              ],
+              Icon(Icons.chevron_right, color: c.textBody),
             ],
-            Icon(Icons.chevron_right, color: c.textBody),
-          ]),
+          ),
         ),
       ),
     );
@@ -395,35 +539,68 @@ class _ActivityTile extends StatelessWidget {
     final c = context.sx;
     return SxCard(
       onTap: onTap,
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(color: c.surface3, borderRadius: BorderRadius.circular(SxRadius.md)),
-            child: Icon(icon, color: c.textHigh),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: c.surface3,
+                  borderRadius: BorderRadius.circular(SxRadius.md),
+                ),
+                child: Icon(icon, color: c.textHigh),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      style: SxText.headlineSm.copyWith(color: c.textHigh),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      blurb,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: SxText.bodySm.copyWith(color: c.textBody),
+                    ),
+                    if (matched != null)
+                      Text(
+                        'matches: $matched',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: SxText.labelXs.copyWith(color: c.primary),
+                      ),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right, color: c.textBody),
+            ],
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(name, style: SxText.headlineSm.copyWith(color: c.textHigh)),
-              const SizedBox(height: 2),
-              Text(blurb, maxLines: 2, overflow: TextOverflow.ellipsis, style: SxText.bodySm.copyWith(color: c.textBody)),
-              if (matched != null)
-                Text('matches: $matched', maxLines: 1, overflow: TextOverflow.ellipsis, style: SxText.labelXs.copyWith(color: c.primary)),
-            ]),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  metrics,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: SxText.labelXs.copyWith(color: c.textMuted),
+                ),
+              ),
+              if (last != null) ...[
+                const SizedBox(width: 8),
+                Text(last!, style: SxText.labelXs.copyWith(color: c.primary)),
+              ],
+            ],
           ),
-          Icon(Icons.chevron_right, color: c.textBody),
-        ]),
-        const SizedBox(height: 10),
-        Row(children: [
-          Expanded(child: Text(metrics, maxLines: 2, overflow: TextOverflow.ellipsis, style: SxText.labelXs.copyWith(color: c.textMuted))),
-          if (last != null) ...[
-            const SizedBox(width: 8),
-            Text(last!, style: SxText.labelXs.copyWith(color: c.primary)),
-          ],
-        ]),
-      ]),
+        ],
+      ),
     );
   }
 }
@@ -468,13 +645,19 @@ class _SensorLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.sx;
-    return Row(children: [
-      Icon(Icons.sensors_off, size: 14, color: c.textMuted),
-      const SizedBox(width: 6),
-      Expanded(
-        child: Text('NO SENSORS • ENTER DISTANCE MANUALLY',
-            style: SxText.labelXs.copyWith(color: c.textMuted), maxLines: 1, overflow: TextOverflow.ellipsis),
-      ),
-    ]);
+    return Row(
+      children: [
+        Icon(Icons.sensors_off, size: 14, color: c.textMuted),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            'NO SENSORS • ENTER DISTANCE MANUALLY',
+            style: SxText.labelXs.copyWith(color: c.textMuted),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
   }
 }

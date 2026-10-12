@@ -1,3 +1,4 @@
+import '../../core/utils/remote_ops.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/utils/equipment_icons.dart';
@@ -26,45 +27,92 @@ class ExerciseDetailsPage extends StatelessWidget {
     final picked = await showSxSheet<Workout>(
       context,
       builder: (ctx) => Padding(
-        padding: const EdgeInsets.fromLTRB(SxSpace.md, 8, SxSpace.md, SxSpace.md),
-        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('ADD TO ROUTINE', style: SxText.headlineMd.copyWith(color: ctx.sx.textHigh)),
-          const SizedBox(height: 4),
-          Text('Choose the workout day that should include ${e.name}.', style: SxText.bodyMd.copyWith(color: ctx.sx.textBody)),
-          const SizedBox(height: SxSpace.md),
-          Flexible(
-            child: ListView.separated(
-              shrinkWrap: true,
-              itemCount: workouts.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 8),
-              itemBuilder: (_, i) {
-                final w = workouts[i];
-                final has = w.exercises.any((x) => x.exerciseId == e.id);
-                return SxCard(
-                  padding: const EdgeInsets.all(14),
-                  onTap: has ? null : () => Navigator.pop(ctx, w),
-                  child: Row(children: [
-                    Expanded(
-                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Text(w.name, style: SxText.headlineSm.copyWith(color: ctx.sx.textHigh)),
-                        Text('${w.exercises.length} exercises · ${w.totalSets} sets', style: SxText.bodySm.copyWith(color: ctx.sx.textBody)),
-                      ]),
-                    ),
-                    Icon(has ? Icons.check_circle : Icons.add_circle_outline, color: has ? ctx.sx.textMuted : ctx.sx.primary),
-                  ]),
-                );
-              },
+        padding: const EdgeInsets.fromLTRB(
+          SxSpace.md,
+          8,
+          SxSpace.md,
+          SxSpace.md,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'ADD TO ROUTINE',
+              style: SxText.headlineMd.copyWith(color: ctx.sx.textHigh),
             ),
-          ),
-        ]),
+            const SizedBox(height: 4),
+            Text(
+              'Choose the workout day that should include ${e.name}.',
+              style: SxText.bodyMd.copyWith(color: ctx.sx.textBody),
+            ),
+            const SizedBox(height: SxSpace.md),
+            Flexible(
+              child: ListView.separated(
+                shrinkWrap: true,
+                itemCount: workouts.length,
+                separatorBuilder: (_, _) => const SizedBox(height: 8),
+                itemBuilder: (_, i) {
+                  final w = workouts[i];
+                  final has = w.exercises.any((x) => x.exerciseId == e.id);
+                  return SxCard(
+                    padding: const EdgeInsets.all(14),
+                    onTap: has ? null : () => Navigator.pop(ctx, w),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                w.name,
+                                style: SxText.headlineSm.copyWith(
+                                  color: ctx.sx.textHigh,
+                                ),
+                              ),
+                              Text(
+                                '${w.exercises.length} exercises · ${w.totalSets} sets',
+                                style: SxText.bodySm.copyWith(
+                                  color: ctx.sx.textBody,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(
+                          has ? Icons.check_circle : Icons.add_circle_outline,
+                          color: has ? ctx.sx.textMuted : ctx.sx.primary,
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
     if (picked == null || !context.mounted) return;
-    await app.workouts.saveWorkout(picked.copyWith(exercises: [
-      ...picked.exercises,
-      RoutineExercise(exerciseId: e.id, sets: profile.defaultSets, repMin: profile.defaultRepMin, repMax: profile.defaultRepMax),
-    ]));
-    if (context.mounted) showSxSnack(context, 'Added to ${picked.name}');
+    await runRemote(
+      context,
+      () => app.workouts.saveWorkout(
+        picked.copyWith(
+          exercises: [
+            ...picked.exercises,
+            RoutineExercise(
+              exerciseId: e.id,
+              sets: profile.defaultSets,
+              repMin: profile.defaultRepMin,
+              repMax: profile.defaultRepMax,
+            ),
+          ],
+        ),
+      ),
+      what: 'add the exercise',
+      success: 'Added to ${picked.name}',
+      key: 'workout-${picked.id}',
+    );
   }
 
   @override
@@ -72,7 +120,12 @@ class ExerciseDetailsPage extends StatelessWidget {
     final c = context.sx;
     final app = context.app;
     return ListenableBuilder(
-      listenable: Listenable.merge([app.exercises, app.sessions, app.profile, app.workouts]),
+      listenable: Listenable.merge([
+        app.exercises,
+        app.sessions,
+        app.profile,
+        app.workouts,
+      ]),
       builder: (context, _) {
         final ex = app.exercises.byId(exerciseId);
         if (ex == null) {
@@ -90,80 +143,141 @@ class ExerciseDetailsPage extends StatelessWidget {
         final e1rmPr = prs[PrType.estimated1Rm];
         // value 0 = no reliable estimate: treated as missing, never shown or compared.
         final e1rm = e1rmPr != null && e1rmPr.value > 0 ? e1rmPr : null;
-        final totalVolume = stats.fold(0.0, (a, s) => a + s.volume);
-        final totalReps = stats.fold(0, (a, s) => a + s.sets.fold(0, (b, x) => b + x.reps));
+        final totalVolume = ExerciseHistoryService.totalVolume(stats);
+        final totalReps = ExerciseHistoryService.totalReps(stats);
 
         return SxScaffold(
           animateIn: true,
-          topBar: SxTopBar(title: 'Exercise Details', subtitle: ex.isCustom ? 'CUSTOM EXERCISE' : 'LIBRARY'),
-          bottom: Row(children: [
-            Expanded(flex: 2, child: SxButton(label: 'History', icon: Icons.insights, variant: SxButtonVariant.secondary, onPressed: () => AppNav.exerciseHistory(context, ex.id))),
-            const SizedBox(width: 12),
-            Expanded(flex: 3, child: SxButton(label: 'Add to routine', icon: Icons.add_circle_outline, onPressed: () => _addToRoutine(context, ex))),
-          ]),
+          topBar: SxTopBar(
+            title: 'Exercise Details',
+            subtitle: ex.isCustom ? 'CUSTOM EXERCISE' : 'LIBRARY',
+          ),
+          bottom: Row(
+            children: [
+              Expanded(
+                flex: 2,
+                child: SxButton(
+                  label: 'History',
+                  icon: Icons.insights,
+                  variant: SxButtonVariant.secondary,
+                  onPressed: () => AppNav.exerciseHistory(context, ex.id),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                flex: 3,
+                child: SxButton(
+                  label: 'Add to routine',
+                  icon: Icons.add_circle_outline,
+                  onPressed: () => _addToRoutine(context, ex),
+                ),
+              ),
+            ],
+          ),
           children: [
             _Hero(exercise: ex),
-            Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(ex.name, style: SxText.headlineLg.copyWith(color: c.textHigh)),
-              if (ex.movementPattern.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(top: 4),
-                  child: Text(muscleLine(ex), style: SxText.bodyMd.copyWith(color: c.textBody)),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  ex.name,
+                  style: SxText.headlineLg.copyWith(color: c.textHigh),
                 ),
-              const SizedBox(height: 12),
-              Wrap(spacing: 8, runSpacing: 8, children: [
-                _Tag(icon: equipmentIcon(ex.equipment), label: ex.equipment.label),
-                if (ex.movementPattern.isNotEmpty) _Tag(icon: Icons.sync_alt, label: ex.movementPattern),
-                if (ex.tempo != null) _Tag(icon: Icons.speed, label: 'Tempo ${ex.tempo}'),
-              ]),
-            ]),
-            StretchRow(children: [
-              Expanded(
-                child: StatTile(
-                  label: 'PR',
-                  icon: Icons.emoji_events_outlined,
-                  value: heaviest == null ? '—' : Fmt.weight(heaviest.value, unit),
-                  unit: heaviest == null ? null : u,
-                  caption: heaviest == null ? 'Not logged' : '${heaviest.reps} reps',
-                  height: 104,
+                if (ex.movementPattern.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      muscleLine(ex),
+                      style: SxText.bodyMd.copyWith(color: c.textBody),
+                    ),
+                  ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    _Tag(
+                      icon: equipmentIcon(ex.equipment),
+                      label: ex.equipment.label,
+                    ),
+                    if (ex.movementPattern.isNotEmpty)
+                      _Tag(icon: Icons.sync_alt, label: ex.movementPattern),
+                    if (ex.tempo != null)
+                      _Tag(icon: Icons.speed, label: 'Tempo ${ex.tempo}'),
+                  ],
                 ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: StatTile(
-                  label: 'Est. 1RM',
-                  icon: Icons.calculate_outlined,
-                  value: e1rm == null ? '—' : Fmt.weight(e1rm.value, unit),
-                  unit: e1rm == null ? null : u,
-                  caption: (e1rm?.delta ?? 0) <= 0 ? 'Epley estimate' : '+${Fmt.weight(e1rm!.delta!, unit)} vs prev PR',
-                  accent: e1rm != null,
-                  height: 104,
+              ],
+            ),
+            StretchRow(
+              children: [
+                Expanded(
+                  child: StatTile(
+                    label: 'PR',
+                    icon: Icons.emoji_events_outlined,
+                    value: heaviest == null
+                        ? '—'
+                        : Fmt.weight(heaviest.value, unit),
+                    unit: heaviest == null ? null : u,
+                    caption: heaviest == null
+                        ? 'Not logged'
+                        : '${heaviest.reps} reps',
+                    height: 104,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: StatTile(
-                  label: 'Volume',
-                  icon: Icons.equalizer,
-                  value: stats.isEmpty ? '—' : Fmt.number(Fmt.toDisplayWeight(totalVolume, unit) / 1000),
-                  unit: stats.isEmpty ? null : 't',
-                  caption: stats.isEmpty ? 'No sets yet' : '$totalReps total reps',
-                  height: 104,
+                const SizedBox(width: 8),
+                Expanded(
+                  child: StatTile(
+                    label: 'Est. 1RM',
+                    icon: Icons.calculate_outlined,
+                    value: e1rm == null ? '—' : Fmt.weight(e1rm.value, unit),
+                    unit: e1rm == null ? null : u,
+                    caption: (e1rm?.delta ?? 0) <= 0
+                        ? 'Epley estimate'
+                        : '+${Fmt.weight(e1rm!.delta!, unit)} vs prev PR',
+                    accent: e1rm != null,
+                    height: 104,
+                  ),
                 ),
-              ),
-            ]),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: StatTile(
+                    label: 'Volume',
+                    icon: Icons.equalizer,
+                    value: stats.isEmpty
+                        ? '—'
+                        : Fmt.number(
+                            Fmt.toDisplayWeight(totalVolume, unit) / 1000,
+                          ),
+                    unit: stats.isEmpty ? null : 't',
+                    caption: stats.isEmpty
+                        ? 'No sets yet'
+                        : '$totalReps total reps',
+                    height: 104,
+                  ),
+                ),
+              ],
+            ),
             if (stats.isEmpty)
               SxCard(
-                child: Row(children: [
-                  Icon(Icons.info_outline, color: c.textBody),
-                  const SizedBox(width: 12),
-                  Expanded(child: Text('No sets logged for this exercise yet. Records appear after your first completed workout.', style: SxText.bodyMd.copyWith(color: c.textBody))),
-                ]),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline, color: c.textBody),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'No sets logged for this exercise yet. Records appear after your first completed workout.',
+                        style: SxText.bodyMd.copyWith(color: c.textBody),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             _MuscleProfile(exercise: ex),
             if (ex.instructions.isNotEmpty) _Protocol(steps: ex.instructions),
-            Text('1RM is estimated with the Epley formula (W × (1 + R/30)) — an estimate, not a tested max.',
-                style: SxText.bodySm.copyWith(color: c.textMuted)),
+            Text(
+              '1RM is estimated with the Epley formula (W × (1 + R/30)) — an estimate, not a tested max.',
+              style: SxText.bodySm.copyWith(color: c.textMuted),
+            ),
           ],
         );
       },
@@ -180,27 +294,48 @@ class _Hero extends StatelessWidget {
     final c = context.sx;
     return SxCard(
       padding: const EdgeInsets.all(SxSpace.md),
-      child: Column(children: [
-        Container(
-          height: 132,
-          width: double.infinity,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(SxRadius.md),
-            gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [c.primary.withValues(alpha: 0.10), c.surface2]),
-            border: Border.all(color: c.hairline),
+      child: Column(
+        children: [
+          Container(
+            height: 132,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(SxRadius.md),
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [c.primary.withValues(alpha: 0.10), c.surface2],
+              ),
+              border: Border.all(color: c.hairline),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                MuscleMap.exercise(exercise, height: 84, view: MuscleView.both),
+                const SizedBox(height: 6),
+                Text(
+                  exercise.primaryMuscle.label.toUpperCase(),
+                  style: SxText.labelCaps.copyWith(
+                    color: c.primary,
+                    letterSpacing: 2,
+                  ),
+                ),
+              ],
+            ),
           ),
-          child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-            MuscleMap.exercise(exercise, height: 84, view: MuscleView.both),
-            const SizedBox(height: 6),
-            Text(exercise.primaryMuscle.label.toUpperCase(), style: SxText.labelCaps.copyWith(color: c.primary, letterSpacing: 2)),
-          ]),
-        ),
-        const SizedBox(height: 12),
-        Wrap(spacing: 8, runSpacing: 8, alignment: WrapAlignment.center, children: [
-          StatusPill('Primary ${exercise.primaryMuscle.label}', dot: true),
-          for (final m in exercise.secondaryMuscles) StatusPill('${m.label} assist', color: c.textBody),
-        ]),
-      ]),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            alignment: WrapAlignment.center,
+            children: [
+              StatusPill('Primary ${exercise.primaryMuscle.label}', dot: true),
+              for (final m in exercise.secondaryMuscles)
+                StatusPill('${m.label} assist', color: c.textBody),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
@@ -214,12 +349,25 @@ class _Tag extends StatelessWidget {
     final c = context.sx;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(color: c.surface2, borderRadius: BorderRadius.circular(SxRadius.base), border: Border.all(color: c.hairline)),
-      child: Row(mainAxisSize: MainAxisSize.min, children: [
-        Icon(icon, size: 14, color: c.primary),
-        const SizedBox(width: 6),
-        Flexible(child: Text(label, overflow: TextOverflow.ellipsis, style: SxText.metricSm.copyWith(color: c.textBody, fontSize: 12))),
-      ]),
+      decoration: BoxDecoration(
+        color: c.surface2,
+        borderRadius: BorderRadius.circular(SxRadius.base),
+        border: Border.all(color: c.hairline),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: c.primary),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              label,
+              overflow: TextOverflow.ellipsis,
+              style: SxText.metricSm.copyWith(color: c.textBody, fontSize: 12),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -239,63 +387,122 @@ class _MuscleProfile extends StatelessWidget {
     for (final t in profile.primary) {
       primary.putIfAbsent(_label(t), () => t.emphasis);
     }
-    final secondary = <String>{for (final t in profile.secondary) _label(t)}..removeAll(primary.keys);
+    final secondary = <String>{for (final t in profile.secondary) _label(t)}
+      ..removeAll(primary.keys);
     return SxCard(
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: [
-          Icon(Icons.accessibility_new, color: c.primary),
-          const SizedBox(width: 10),
-          Expanded(child: Text('Musculoskeletal Profile', style: SxText.headlineSm.copyWith(color: c.textHigh))),
-        ]),
-        const SizedBox(height: 14),
-        Semantics(
-          container: true,
-          label: 'Primary muscles: ${primary.keys.join(', ')}',
-          excludeSemantics: true,
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            for (final entry in primary.entries)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 6),
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Row(children: [
-                    Container(width: 8, height: 8, decoration: BoxDecoration(color: c.primary, shape: BoxShape.circle)),
-                    const SizedBox(width: 8),
-                    Expanded(child: Text(entry.key, style: SxText.bodyMd.copyWith(color: c.textHigh))),
-                    Text('PRIMARY', style: SxText.labelCaps.copyWith(color: c.primary)),
-                  ]),
-                  if (entry.value != null)
-                    Padding(
-                      padding: const EdgeInsets.only(left: 16, top: 2),
-                      child: Text(entry.value!, style: SxText.bodySm.copyWith(color: c.textMuted)),
-                    ),
-                ]),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.accessibility_new, color: c.primary),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Musculoskeletal Profile',
+                  style: SxText.headlineSm.copyWith(color: c.textHigh),
+                ),
               ),
-          ]),
-        ),
-        const SizedBox(height: 2),
-        const SxLinearMeter(value: 1, height: 8),
-        if (secondary.isNotEmpty) ...[
-          const SizedBox(height: 16),
-          Text('SECONDARY', style: SxText.labelCaps.copyWith(color: c.textBody)),
-          const SizedBox(height: 8),
+            ],
+          ),
+          const SizedBox(height: 14),
           Semantics(
             container: true,
-            label: 'Secondary muscles: ${secondary.join(', ')}',
+            label: 'Primary muscles: ${primary.keys.join(', ')}',
             excludeSemantics: true,
-            child: Wrap(spacing: 6, runSpacing: 6, children: [
-              for (final m in secondary)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(color: c.surface2, borderRadius: BorderRadius.circular(SxRadius.base)),
-                  child: Text(m, style: SxText.bodySm.copyWith(color: c.textBody)),
-                ),
-            ]),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (final entry in primary.entries)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              width: 8,
+                              height: 8,
+                              decoration: BoxDecoration(
+                                color: c.primary,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                entry.key,
+                                style: SxText.bodyMd.copyWith(
+                                  color: c.textHigh,
+                                ),
+                              ),
+                            ),
+                            Text(
+                              'PRIMARY',
+                              style: SxText.labelCaps.copyWith(
+                                color: c.primary,
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (entry.value != null)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 16, top: 2),
+                            child: Text(
+                              entry.value!,
+                              style: SxText.bodySm.copyWith(color: c.textMuted),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 2),
+          const SxLinearMeter(value: 1, height: 8),
+          if (secondary.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Text(
+              'SECONDARY',
+              style: SxText.labelCaps.copyWith(color: c.textBody),
+            ),
+            const SizedBox(height: 8),
+            Semantics(
+              container: true,
+              label: 'Secondary muscles: ${secondary.join(', ')}',
+              excludeSemantics: true,
+              child: Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  for (final m in secondary)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: c.surface2,
+                        borderRadius: BorderRadius.circular(SxRadius.base),
+                      ),
+                      child: Text(
+                        m,
+                        style: SxText.bodySm.copyWith(color: c.textBody),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(height: 10),
+          Text(
+            'Muscles share the work in every lift — this shows where the emphasis tends to fall.',
+            style: SxText.bodySm.copyWith(color: c.textMuted),
           ),
         ],
-        const SizedBox(height: 10),
-        Text('Muscles share the work in every lift — this shows where the emphasis tends to fall.',
-            style: SxText.bodySm.copyWith(color: c.textMuted)),
-      ]),
+      ),
     );
   }
 }
@@ -308,33 +515,64 @@ class _Protocol extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.sx;
     return SxCard(
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: [
-          Icon(Icons.format_list_bulleted, color: c.primary),
-          const SizedBox(width: 10),
-          Expanded(child: Text('Execution Protocol', style: SxText.headlineSm.copyWith(color: c.textHigh))),
-          Text('${steps.length} PHASES', style: SxText.labelCaps.copyWith(color: c.textBody)),
-        ]),
-        const SizedBox(height: 12),
-        for (var i = 0; i < steps.length; i++)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: SxInset(
-              padding: const EdgeInsets.all(14),
-              child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text((i + 1).toString().padLeft(2, '0'), style: SxText.metricMd.copyWith(color: c.primary)),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text(steps[i].title, style: SxText.headlineSm.copyWith(color: c.textHigh, fontSize: 16)),
-                    const SizedBox(height: 4),
-                    Text(steps[i].text, style: SxText.bodyMd.copyWith(color: c.textBody)),
-                  ]),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.format_list_bulleted, color: c.primary),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Execution Protocol',
+                  style: SxText.headlineSm.copyWith(color: c.textHigh),
                 ),
-              ]),
-            ),
+              ),
+              Text(
+                '${steps.length} PHASES',
+                style: SxText.labelCaps.copyWith(color: c.textBody),
+              ),
+            ],
           ),
-      ]),
+          const SizedBox(height: 12),
+          for (var i = 0; i < steps.length; i++)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: SxInset(
+                padding: const EdgeInsets.all(14),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      (i + 1).toString().padLeft(2, '0'),
+                      style: SxText.metricMd.copyWith(color: c.primary),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            steps[i].title,
+                            style: SxText.headlineSm.copyWith(
+                              color: c.textHigh,
+                              fontSize: 16,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            steps[i].text,
+                            style: SxText.bodyMd.copyWith(color: c.textBody),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }

@@ -14,13 +14,11 @@ import '../data/health/health_gateway.dart';
 import '../data/health/health_sync_service.dart';
 import '../data/health/health_sync_store.dart';
 import '../data/health/plugin_health_gateway.dart';
-import '../data/isar/isar_store.dart';
-import '../data/isar/isar_sync_store.dart';
-import '../data/sync/cloud_auth.dart';
-import '../data/sync/cloud_sync_controller.dart';
-import '../data/sync/supabase_config.dart';
-import '../data/sync/supabase_sync_gateway.dart';
-import '../data/sync/sync_engine.dart';
+import '../data/isar/isar_device_store.dart';
+import '../data/remote/auth_service.dart';
+import '../data/remote/online_store.dart';
+import '../data/remote/supabase_config.dart';
+import '../data/remote/supabase_remote.dart';
 import '../domain/domain.dart';
 import 'app_controller.dart';
 import 'startup_error_app.dart';
@@ -28,8 +26,8 @@ import 'stationx_app.dart';
 
 const _dbName = 'stationx';
 
-/// App entry used by main(): global error handling, then open the database and
-/// start the UI. A database failure shows a recovery screen instead of crashing.
+/// App entry used by main(): global error handling, then open the device store, initialise Supabase
+/// and start the UI. A failure shows a recovery screen instead of crashing.
 Future<void> bootstrap() async {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setSystemUIOverlayStyle(SxColors.obsidian.systemOverlay);
@@ -52,7 +50,9 @@ void _installErrorHandling() {
   final previous = FlutterError.onError;
   FlutterError.onError = (details) {
     if (kReleaseMode) {
-      debugPrint('FlutterError: ${details.exception.runtimeType}'); // type only, no data
+      debugPrint(
+        'FlutterError: ${details.exception.runtimeType}',
+      ); // type only, no data
     } else {
       previous?.call(details);
     }
@@ -64,35 +64,70 @@ void _installErrorHandling() {
 }
 
 Future<void> _start() async {
-  final String dir;
-  final IsarStore store;
-  try {
-    dir = (await getApplicationDocumentsDirectory()).path;
-    store = await IsarStore.open(directory: dir, name: _dbName);
-  } catch (e) {
-    debugPrint('Database open failed: ${e.runtimeType}');
-    runApp(StartupErrorApp(
-      onRetry: _start,
-      onReset: () async {
-        await resetDatabaseFiles((await getApplicationDocumentsDirectory()).path);
-        await _start();
-      },
-    ));
+  final problem = SupabaseConfig.validate(
+    SupabaseConfig.url,
+    SupabaseConfig.anonKey,
+  );
+  if (problem != null) {
+    // Online-first: without a server there is no app. Say so instead of showing a broken UI.
+    debugPrint('Supabase config invalid: $problem');
+    runApp(const StartupErrorApp.notConfigured());
     return;
   }
+  final String dir;
+  final IsarDeviceStore device;
+  try {
+    dir = (await getApplicationDocumentsDirectory()).path;
+    device = await IsarDeviceStore.open(directory: dir, name: _dbName);
+  } catch (e) {
+    debugPrint('Database open failed: ${e.runtimeType}');
+    runApp(
+      StartupErrorApp(
+        onRetry: _start,
+        onReset: () async {
+          await resetDatabaseFiles(
+            (await getApplicationDocumentsDirectory()).path,
+          );
+          await _start();
+        },
+      ),
+    );
+    return;
+  }
+  try {
+    await Supabase.initialize(
+      url: SupabaseConfig.url,
+      publishableKey: SupabaseConfig.anonKey,
+    );
+  } catch (e) {
+    debugPrint('Supabase init failed: ${e.runtimeType}');
+    runApp(StartupErrorApp(onRetry: _start));
+    return;
+  }
+  final client = Supabase.instance.client;
 
   // Health Connect (Android) / Apple Health (iOS); inert on other platforms.
   final HealthRepository health = (Platform.isAndroid || Platform.isIOS)
-      ? HealthConnectRepository(PluginHealthGateway(), consent: store.healthConsent)
+      ? HealthConnectRepository(
+          PluginHealthGateway(),
+          consent: device.healthConsent,
+        )
       : NoopHealthRepository();
   unawaited(health.init()); // never blocks startup; UI reacts when it completes
 
   final healthSync = HealthSyncService(
-    (Platform.isAndroid || Platform.isIOS) ? PluginHealthGateway() : HealthGateway.inert,
+    (Platform.isAndroid || Platform.isIOS)
+        ? PluginHealthGateway()
+        : HealthGateway.inert,
     await FileHealthSyncStore.open(dir),
   );
-  final cloud = await _buildCloud(store);
-  final controller = AppController(store: store, health: health, healthSync: healthSync, cloud: cloud);
+  final store = OnlineStore(SupabaseRemote(client), device);
+  final controller = AppController(
+    store: store,
+    health: health,
+    healthSync: healthSync,
+    auth: SupabaseCloudAuth(client),
+  );
   applySystemOverlayFor(controller.profile.profile.themeMode);
   // Keep the system navigation bar in step with the active theme (Obsidian / OLED).
   var lastMode = controller.profile.profile.themeMode;
@@ -103,40 +138,9 @@ Future<void> _start() async {
     applySystemOverlayFor(mode);
   });
   runApp(StationXApp(controller: controller));
-  unawaited(cloud.init()); // loads status; if signed in, syncs in the background
-}
-
-/// Optional cloud sync. Absent unless the build was given a Supabase URL + publishable key;
-/// any failure here must never prevent the (offline-first) app from starting.
-Future<CloudSyncController> _buildCloud(IsarStore store) async {
-  final problem = SupabaseConfig.validate(SupabaseConfig.url, SupabaseConfig.anonKey);
-  if (problem != null) {
-    if (SupabaseConfig.url.isNotEmpty || SupabaseConfig.anonKey.isNotEmpty) debugPrint('Cloud sync disabled: $problem');
-    return CloudSyncController.unavailable();
-  }
-  try {
-    await Supabase.initialize(url: SupabaseConfig.url, publishableKey: SupabaseConfig.anonKey);
-    final client = Supabase.instance.client;
-    final local = IsarSyncLocalStore(store);
-    return CloudSyncController(
-      auth: SupabaseCloudAuth(client),
-      engine: SyncEngine(local, SupabaseSyncGateway(client)),
-      local: local,
-      preferCloudProfile: () => store.profile.profile.isGuest,
-    );
-  } catch (e) {
-    debugPrint('Cloud sync unavailable: ${e.runtimeType}');
-    return CloudSyncController.unavailable();
-  }
-}
-
-/// Deletes the Isar database files for [dbName] in [directory]. Destructive —
-/// only called after an explicit user confirmation.
-Future<void> resetDatabaseFiles(String directory, {String dbName = _dbName}) async {
-  for (final suffix in ['.isar', '.isar-lck']) {
-    final f = File('$directory/$dbName$suffix');
-    if (await f.exists()) await f.delete();
-  }
+  unawaited(
+    controller.init(),
+  ); // restores the saved session and loads the user's data
 }
 
 class _FriendlyError extends StatelessWidget {
@@ -144,12 +148,14 @@ class _FriendlyError extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        alignment: Alignment.center,
-        padding: const EdgeInsets.all(16),
-        color: SxColors.obsidian.surface1,
-        child: Text('Something went wrong here.\nPlease go back and try again.',
-            textAlign: TextAlign.center,
-            textDirection: TextDirection.ltr,
-            style: SxText.bodyMd.copyWith(color: SxColors.obsidian.textBody)),
-      );
+    alignment: Alignment.center,
+    padding: const EdgeInsets.all(16),
+    color: SxColors.obsidian.surface1,
+    child: Text(
+      'Something went wrong here.\nPlease go back and try again.',
+      textAlign: TextAlign.center,
+      textDirection: TextDirection.ltr,
+      style: SxText.bodyMd.copyWith(color: SxColors.obsidian.textBody),
+    ),
+  );
 }

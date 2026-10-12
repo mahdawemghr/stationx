@@ -37,6 +37,16 @@ class WorkoutSection {
   MuscleRegion get region => muscle.regions.first;
 }
 
+/// How [WorkoutSections.arrange] / [WorkoutSections.group] order a workout.
+enum ArrangeMode {
+  /// Canonical: one block per muscle, MAIN first, then sub-areas in catalog order.
+  full,
+
+  /// One block per muscle (section order = first appearance), but the stored order inside each muscle
+  /// block is kept, so a manual sub-area order survives reopening.
+  musclesOnly,
+}
+
 /// Header label shared by every screen (thin wrapper kept for compatibility).
 String sectionLabel(MuscleRegion r) => SectionMuscle.of(r).label;
 
@@ -133,10 +143,10 @@ abstract final class WorkoutSections {
     'legs_glutes_hinge': (SectionMuscle.legs, 9, 'Glutes'),
     'legs_glutes_kick': (SectionMuscle.legs, 10, 'Glutes'),
     'legs_glutes_abduct': (SectionMuscle.legs, 11, 'Glutes'),
-    'legs_glutes_adduct': (SectionMuscle.legs, 12, 'Glutes'),
+    'legs_glutes_adduct': (SectionMuscle.legs, 12, 'Adductors'),
     'legs_calves': (SectionMuscle.legs, 13, 'Calves'),
     'legs_calves_seated': (SectionMuscle.legs, 14, 'Calves'),
-    'legs_calves_tibialis': (SectionMuscle.legs, 15, 'Calves'),
+    'legs_calves_tibialis': (SectionMuscle.legs, 15, 'Tibialis'),
     'core_abs': (SectionMuscle.core, 0, 'Abs'),
     'core_abs_legs': (SectionMuscle.core, 0, 'Abs'),
     'core_stability': (SectionMuscle.core, 1, 'Stability & obliques'),
@@ -172,6 +182,8 @@ abstract final class WorkoutSections {
     Muscle.gluteusMaximus: 'legs_glutes',
     Muscle.gluteusMedius: 'legs_glutes',
     Muscle.gluteusMinimus: 'legs_glutes',
+    Muscle.adductors: 'legs_glutes_adduct',
+    Muscle.tibialisAnterior: 'legs_calves_tibialis',
     Muscle.gastrocnemius: 'legs_calves',
     Muscle.soleus: 'legs_calves',
     Muscle.rectusAbdominis: 'core_abs',
@@ -235,8 +247,9 @@ abstract final class WorkoutSections {
   /// Permutation of input indices in canonical order (unknown ids last, in input order).
   static List<_Info> _order(
     List<_Info> infos,
-    List<SectionMuscle>? muscleOrder,
-  ) {
+    List<SectionMuscle>? muscleOrder, [
+    ArrangeMode mode = ArrangeMode.full,
+  ]) {
     final order = <SectionMuscle>[...?muscleOrder];
     final seen = <SectionMuscle>{};
     order.removeWhere((m) => !seen.add(m));
@@ -247,6 +260,9 @@ abstract final class WorkoutSections {
     for (final m in order) {
       final mine = infos.where((i) => i.muscle == m).toList()
         ..sort((a, b) {
+          if (mode == ArrangeMode.musclesOnly) {
+            return a.index.compareTo(b.index);
+          }
           final r = a.rank.compareTo(b.rank);
           if (r != 0) return r;
           final c = (a.custom ? 1 : 0).compareTo(b.custom ? 1 : 0);
@@ -260,14 +276,18 @@ abstract final class WorkoutSections {
 
   /// Canonical flat order: one block per [SectionMuscle] (ordered by [muscleOrder], then by first
   /// appearance), MAIN exercises first, then sub-areas. Stable, idempotent, never drops or duplicates;
-  /// unknown ids go last.
+  /// unknown ids go last. With [ArrangeMode.musclesOnly] only the muscle blocks are gathered; the order
+  /// inside each block is kept as stored.
   static List<RoutineExercise> arrange(
     List<RoutineExercise> exercises,
     List<Exercise> catalog, {
     List<SectionMuscle>? muscleOrder,
+    ArrangeMode mode = ArrangeMode.full,
   }) {
     final infos = _classify(exercises, catalog);
-    return [for (final i in _order(infos, muscleOrder)) exercises[i.index]];
+    return [
+      for (final i in _order(infos, muscleOrder, mode)) exercises[i.index],
+    ];
   }
 
   /// True when [arrange] would not change the list.
@@ -286,12 +306,16 @@ abstract final class WorkoutSections {
   /// Sections of the ARRANGED order: exactly one per [SectionMuscle]. For finished/saved workouts (the
   /// input is arranged first, so [WorkoutSection.startIndex] indexes the arranged list). Unknown ids are skipped.
   /// Use [groupContiguous] for drafts that must not be reordered.
+  ///
+  /// Sub-groups are contiguous runs of the same sub-area, so with [ArrangeMode.musclesOnly] a manual
+  /// order shows one sub-header per run.
   static List<WorkoutSection> group(
     List<RoutineExercise> exercises,
-    List<Exercise> catalog,
-  ) {
+    List<Exercise> catalog, {
+    ArrangeMode mode = ArrangeMode.full,
+  }) {
     final infos = _classify(exercises, catalog);
-    return _build(_order(infos, null), exercises);
+    return _build(_order(infos, null, mode), exercises);
   }
 
   /// Old behaviour for IN-PROGRESS drafts: never reorders; a new section starts whenever the muscle
@@ -364,24 +388,44 @@ abstract final class WorkoutSections {
     return out;
   }
 
-  /// Where to insert [newExercise] into [current] so it lands in its canonical place (end of its
-  /// sub-area; a new muscle goes after the existing sections). [current] need not be arranged: it is
-  /// never reordered, the index is just after the last existing exercise that canonically precedes it.
+  /// Where to insert [newExercise] into [current]. [current] is never reordered. If an exercise of the
+  /// same main/sub-area group exists the new one goes right after the last of them; else it lands at its
+  /// canonical place inside its muscle section (after the last exercise of an earlier group, or at the
+  /// section start); a new muscle goes after the existing exercises.
   static int insertionIndex(
     List<RoutineExercise> current,
     RoutineExercise newExercise,
     List<Exercise> catalog,
   ) {
     final all = [...current, newExercise];
-    final order = _order(_classify(all, catalog), null);
+    final infos = _classify(all, catalog);
     final n = current.length;
-    if (all.isEmpty || _classify(all, catalog)[n].muscle == null) return n;
-    var best = -1;
-    for (final i in order) {
-      if (i.index == n) break;
-      if (i.index > best) best = i.index;
+    final me = infos[n];
+    if (me.muscle == null) return n;
+    final mine = [
+      for (final i in infos.take(n))
+        if (i.muscle == me.muscle) i,
+    ];
+    if (mine.isEmpty) {
+      var best = -1;
+      for (final i in infos.take(n)) {
+        if (i.muscle != null && i.index > best) best = i.index;
+      }
+      return best + 1;
     }
-    return best + 1;
+    bool sameGroup(_Info i) => i.rank == me.rank && i.custom == me.custom;
+    var best = -1;
+    for (final i in mine) {
+      if (sameGroup(i) && i.index > best) best = i.index;
+    }
+    if (best >= 0) return best + 1;
+    bool precedes(_Info i) =>
+        i.rank < me.rank || (i.rank == me.rank && !i.custom && me.custom);
+    for (final i in mine) {
+      if (precedes(i) && i.index > best) best = i.index;
+    }
+    if (best >= 0) return best + 1;
+    return mine.map((i) => i.index).reduce((a, b) => a < b ? a : b);
   }
 
   /// Number of sections (= distinct muscles with known exercises) the arranged workout shows.

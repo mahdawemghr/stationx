@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar_community/isar.dart';
 import 'package:stationx/core/utils/formatters.dart';
-import 'package:stationx/data/isar/isar_store.dart';
-import 'package:stationx/data/sync/sync_rows.dart';
+import 'package:stationx/data/remote/row_mappers.dart';
+import '../helpers/online_fakes.dart';
 import 'package:stationx/domain/domain.dart';
 import 'package:stationx/features/cardio/cardio_home_support.dart';
 import 'package:stationx/features/cardio/cardio_manage_helpers.dart' as manage;
@@ -261,23 +261,21 @@ void main() {
     );
   });
 
-  test('Isar persists every kind by name across reopen', () async {
-    final dir = Directory.systemTemp.createTempSync('stationx_kinds');
-    try {
-      var s = await IsarStore.open(directory: dir.path, name: 'k');
+  test(
+    'the server stores every kind by name and a restart reads them back',
+    () async {
+      final r = await OnlineRig.signedIn();
       for (final k in CardioKind.values) {
-        await s.cardio.add(_s('c-${k.name}', k, 600, k.hasDistance ? 1 : null));
+        await r.app.cardio.add(
+          _s('c-${k.name}', k, 600, k.hasDistance ? 1 : null),
+        );
       }
-      await s.close();
-      s = await IsarStore.open(directory: dir.path, name: 'k');
+      final app = await r.restart();
       for (final k in CardioKind.values) {
-        expect(s.cardio.byId('c-${k.name}')!.kind, k);
+        expect(app.cardio.byId('c-${k.name}')!.kind, k);
       }
-      await s.close();
-    } finally {
-      dir.deleteSync(recursive: true);
-    }
-  });
+    },
+  );
 
   testWidgets('select activity lists every kind at 320x568@2x without overflow', (
     t,

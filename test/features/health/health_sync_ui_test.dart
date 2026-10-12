@@ -18,15 +18,16 @@ class _Gw extends FakeHc {
 }
 
 CardioSession _run(String id, {int? hr, int? cal}) => CardioSession(
-      id: id,
-      kind: CardioKind.outdoorRun,
-      workoutDate: DateTime.now().subtract(const Duration(hours: 1)),
-      durationSeconds: 1800,
-      avgHeartRate: hr,
-      calories: cal,
-    );
+  id: id,
+  kind: CardioKind.outdoorRun,
+  workoutDate: DateTime.now().subtract(const Duration(hours: 1)),
+  durationSeconds: 1800,
+  avgHeartRate: hr,
+  calories: cal,
+);
 
-HealthWorkout _ext(String id, {String act = 'RUNNING', int hoursAgo = 5}) => HealthWorkout(
+HealthWorkout _ext(String id, {String act = 'RUNNING', int hoursAgo = 5}) =>
+    HealthWorkout(
       id: id,
       activityName: act,
       start: DateTime.now().subtract(Duration(hours: hoursAgo)),
@@ -36,7 +37,9 @@ HealthWorkout _ext(String id, {String act = 'RUNNING', int hoursAgo = 5}) => Hea
     );
 
 Future<void> _settle(WidgetTester t) async {
-  await t.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 30)));
+  await t.runAsync(
+    () => Future<void>.delayed(const Duration(milliseconds: 30)),
+  );
   await t.pump(const Duration(milliseconds: 400));
 }
 
@@ -51,8 +54,12 @@ void main() {
     app = AppController(healthSync: svc)..startDemo();
   });
 
-  Switch sw(WidgetTester t, HealthFeature f) =>
-      t.widget<Switch>(find.descendant(of: find.byKey(ValueKey('health-switch-${f.name}')), matching: find.byType(Switch)));
+  Switch sw(WidgetTester t, HealthFeature f) => t.widget<Switch>(
+    find.descendant(
+      of: find.byKey(ValueKey('health-switch-${f.name}')),
+      matching: find.byType(Switch),
+    ),
+  );
 
   group('settings page', () {
     testWidgets('switches default off; mentions Samsung Health', (t) async {
@@ -61,24 +68,34 @@ void main() {
       for (final f in HealthFeature.values) {
         expect(sw(t, f).value, isFalse);
       }
-      expect(find.textContaining('Samsung Health shares data through Health Connect'), findsOneWidget);
+      expect(
+        find.textContaining(
+          'Samsung Health shares data through Health Connect',
+        ),
+        findsOneWidget,
+      );
       expect(gw.calls, 0);
     });
 
-    testWidgets('enable shows explanation first, calls enable only after accept', (t) async {
-      await pumpPage(t, const HealthSyncSettingsPage(), controller: app);
-      await _settle(t);
-      await t.tap(find.text('Save my workouts to Health Connect'));
-      await t.pump(const Duration(milliseconds: 400));
-      expect(find.textContaining('NOT sent'), findsOneWidget);
-      expect(svc.isEnabled(HealthFeature.writeWorkouts), isFalse);
-      await t.tap(find.text('CONTINUE'));
-      await _settle(t);
-      expect(svc.isEnabled(HealthFeature.writeWorkouts), isTrue);
-      expect(sw(t, HealthFeature.writeWorkouts).value, isTrue);
-    });
+    testWidgets(
+      'enable shows explanation first, calls enable only after accept',
+      (t) async {
+        await pumpPage(t, const HealthSyncSettingsPage(), controller: app);
+        await _settle(t);
+        await t.tap(find.text('Save my workouts to Health Connect'));
+        await t.pump(const Duration(milliseconds: 400));
+        expect(find.textContaining('NOT sent'), findsOneWidget);
+        expect(svc.isEnabled(HealthFeature.writeWorkouts), isFalse);
+        await t.tap(find.text('CONTINUE'));
+        await _settle(t);
+        expect(svc.isEnabled(HealthFeature.writeWorkouts), isTrue);
+        expect(sw(t, HealthFeature.writeWorkouts).value, isTrue);
+      },
+    );
 
-    testWidgets('cancel keeps it off and asks nothing from the system', (t) async {
+    testWidgets('cancel keeps it off and asks nothing from the system', (
+      t,
+    ) async {
       await pumpPage(t, const HealthSyncSettingsPage(), controller: app);
       await _settle(t);
       await t.tap(find.text('Import workouts from other apps').first);
@@ -89,7 +106,9 @@ void main() {
       expect(gw.granted, isEmpty);
     });
 
-    testWidgets('denied permission: calm next step, switch stays off', (t) async {
+    testWidgets('denied permission: calm next step, switch stays off', (
+      t,
+    ) async {
       gw.grant = false;
       await pumpPage(t, const HealthSyncSettingsPage(), controller: app);
       await _settle(t);
@@ -97,7 +116,10 @@ void main() {
       await t.pump(const Duration(milliseconds: 400));
       await t.tap(find.text('CONTINUE'));
       await _settle(t);
-      expect(find.textContaining('Health Connect › App permissions'), findsOneWidget);
+      expect(
+        find.textContaining('Health Connect › App permissions'),
+        findsOneWidget,
+      );
       expect(sw(t, HealthFeature.enrichCardio).value, isFalse);
     });
 
@@ -109,14 +131,23 @@ void main() {
       expect(svc.pendingCount, 1);
       await pumpPage(t, const HealthSyncSettingsPage(), controller: app);
       await _settle(t);
-      expect(find.textContaining('1 workout is waiting to sync'), findsOneWidget);
-      expect(find.text('Could not sync yet. StationX will try again.'), findsOneWidget);
+      expect(
+        find.textContaining('1 workout is waiting to sync'),
+        findsOneWidget,
+      );
+      expect(
+        find.text('Could not sync yet. StationX will try again.'),
+        findsOneWidget,
+      );
       gw.failWrites = false;
       await t.tap(find.text('RETRY NOW'));
       await _settle(t);
       expect(svc.pendingCount, 0);
       expect(find.text('RETRY NOW'), findsNothing);
-      expect(find.textContaining('Removing a workout in StationX'), findsOneWidget);
+      expect(
+        find.textContaining('Removing a workout in StationX'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('unsupported device hides switches', (t) async {
@@ -137,7 +168,13 @@ void main() {
 
     testWidgets('no overflow at 320x568 with large text', (t) async {
       await svc.enable(HealthFeature.writeWorkouts);
-      await pumpPage(t, const HealthSyncSettingsPage(), controller: app, size: const Size(320, 568), textScale: 1.5);
+      await pumpPage(
+        t,
+        const HealthSyncSettingsPage(),
+        controller: app,
+        size: const Size(320, 568),
+        textScale: 1.5,
+      );
       await _settle(t);
       expect(t.takeException(), isNull);
     });
@@ -160,9 +197,15 @@ void main() {
       gw.metrics = const HealthMetrics(heartRates: [140, 150], activeKcal: 300);
       await app.cardio.add(_run('e1', cal: 250));
       await pumpComplete(t, 'e1');
-      expect(find.text('Add heart rate & calories from your watch?'), findsOneWidget);
+      expect(
+        find.text('Add heart rate & calories from your watch?'),
+        findsOneWidget,
+      );
       expect(find.text('145 bpm'), findsOneWidget);
-      expect(find.text('300 kcal'), findsNothing); // typed calories never suggested
+      expect(
+        find.text('300 kcal'),
+        findsNothing,
+      ); // typed calories never suggested
       await t.tap(find.text('APPLY'));
       await _settle(t);
       final s = app.cardio.byId('e1')!;
@@ -182,7 +225,9 @@ void main() {
       expect(find.byKey(const Key('health-enrichment-card')), findsNothing);
     });
 
-    testWidgets('nothing available: calm hint, check again finds data', (t) async {
+    testWidgets('nothing available: calm hint, check again finds data', (
+      t,
+    ) async {
       await svc.enable(HealthFeature.enrichCardio);
       await app.cardio.add(_run('e3'));
       await pumpComplete(t, 'e3');
@@ -195,7 +240,10 @@ void main() {
   });
 
   group('import page', () {
-    Future<void> pumpImport(WidgetTester t, {Size size = const Size(390, 844)}) async {
+    Future<void> pumpImport(
+      WidgetTester t, {
+      Size size = const Size(390, 844),
+    }) async {
       await pumpPage(t, const HealthImportPage(), controller: app, size: size);
       await _settle(t);
     }
@@ -205,7 +253,9 @@ void main() {
       gw.external
         ..add(_ext('a'))
         ..add(_ext('b', act: 'BIKING', hoursAgo: 30))
-        ..add(_ext('c', act: 'GOLF')); // no cardio kind -> never imported (DANCING now maps to Dance)
+        ..add(
+          _ext('c', act: 'GOLF'),
+        ); // no cardio kind -> never imported (DANCING now maps to Dance)
       final before = app.cardio.sessions.length;
       await pumpImport(t);
       expect(find.text('IMPORT 2 WORKOUTS'), findsOneWidget);

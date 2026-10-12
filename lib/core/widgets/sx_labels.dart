@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../theme/sx_spacing.dart';
 import '../theme/sx_theme.dart';
 import '../theme/sx_typography.dart';
+import 'sx_motion_widgets.dart';
 
 /// Mono caps section label with optional icon + trailing action/text.
 class SectionHeader extends StatelessWidget {
@@ -49,18 +50,27 @@ class SectionHeader extends StatelessWidget {
             InkWell(
               onTap: onTrailingTap,
               borderRadius: BorderRadius.circular(SxRadius.base),
-              child: Padding(
-                padding: EdgeInsets.symmetric(
-                  vertical: onTrailingTap == null ? 8 : 14,
-                  horizontal: 4,
+              child: ConstrainedBox(
+                // A tappable trailing link is always a 48dp target, whatever the font metrics are.
+                constraints: BoxConstraints(
+                  minHeight: onTrailingTap == null ? 0 : 48,
                 ),
-                child: Text(
-                  trailingText!,
-                  style: SxText.bodySm.copyWith(
-                    color: onTrailingTap == null ? c.textBody : c.primary,
-                    fontWeight: onTrailingTap == null
-                        ? FontWeight.w400
-                        : FontWeight.w600,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    vertical: onTrailingTap == null ? 8 : 14,
+                    horizontal: 4,
+                  ),
+                  child: Center(
+                    widthFactor: 1,
+                    child: Text(
+                      trailingText!,
+                      style: SxText.bodySm.copyWith(
+                        color: onTrailingTap == null ? c.textBody : c.primary,
+                        fontWeight: onTrailingTap == null
+                            ? FontWeight.w400
+                            : FontWeight.w600,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -82,9 +92,41 @@ class StatTile extends StatelessWidget {
     this.accent = false,
     this.height = 96,
     this.caption,
-  });
+  }) : number = null,
+       formatter = null,
+       delay = Duration.zero;
+
+  /// Numeric tile: the headline counts up from 0 on first build (and animates on change). The
+  /// settled text is `formatter(value)` (default: rounded integer), so it never differs from a
+  /// static tile; reduced motion shows it at once.
+  const StatTile.number({
+    super.key,
+    required this.label,
+    required double value,
+    this.formatter,
+    this.unit,
+    this.icon,
+    this.accent = false,
+    this.height = 96,
+    this.caption,
+    this.delay = Duration.zero,
+  }) : number = value,
+       value = '';
+
   final String label;
   final String value;
+
+  /// Set by [StatTile.number].
+  final double? number;
+  final String Function(double)? formatter;
+  final Duration delay;
+
+  String get _text {
+    final n = number;
+    if (n == null) return value;
+    return formatter != null ? formatter!(n) : n.round().toString();
+  }
+
   final String? unit;
   final IconData? icon;
   final bool accent;
@@ -98,7 +140,7 @@ class StatTile extends StatelessWidget {
     return Semantics(
       container: true,
       label:
-          '$label: $value${unit == null ? '' : ' $unit'}${caption == null ? '' : '. $caption'}',
+          '$label: $_text${unit == null ? '' : ' $unit'}${caption == null ? '' : '. $caption'}',
       excludeSemantics: true,
       child: Container(
         constraints: BoxConstraints(minHeight: height ?? 0),
@@ -134,18 +176,29 @@ class StatTile extends StatelessWidget {
                   child: FittedBox(
                     fit: BoxFit.scaleDown,
                     alignment: Alignment.centerLeft,
-                    child: Text(
-                      value,
-                      style: SxText.metricLg.copyWith(color: valueColor),
-                    ),
+                    child: number == null
+                        ? Text(
+                            value,
+                            style: SxText.metricLg.copyWith(color: valueColor),
+                          )
+                        : SxCountUp(
+                            value: number!,
+                            formatter: formatter,
+                            delay: delay,
+                            style: SxText.metricLg.copyWith(color: valueColor),
+                          ),
                   ),
                 ),
                 if (unit != null) ...[
                   const SizedBox(width: 4),
-                  Text(
-                    unit!,
-                    style: SxText.bodySm.copyWith(
-                      color: accent ? c.primary : c.textBody,
+                  Flexible(
+                    child: Text(
+                      unit!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: SxText.bodySm.copyWith(
+                        color: accent ? c.primary : c.textBody,
+                      ),
                     ),
                   ),
                 ],

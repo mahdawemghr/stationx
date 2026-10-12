@@ -7,21 +7,42 @@ import 'package:stationx/features/onboarding/setup_review_step.dart';
 
 import '../../helpers/pump.dart';
 
-RoutineExercise re(String id, [int sets = 4]) => RoutineExercise(exerciseId: id, sets: sets, repMin: 6, repMax: 10);
+RoutineExercise re(String id, [int sets = 4]) =>
+    RoutineExercise(exerciseId: id, sets: sets, repMin: 6, repMax: 10);
 
 void main() {
   setUpAll(loadAppFonts);
 
   final days = [
-    SplitDayPlan(name: 'Push', muscles: const [MuscleGroup.chest], exercises: [re('bench_press'), re('bench_press', 4)]),
-    SplitDayPlan(name: 'Pull', muscles: const [MuscleGroup.back], exercises: [re('lat_pulldown')]),
+    SplitDayPlan(
+      name: 'Push',
+      muscles: const [MuscleGroup.chest],
+      exercises: [re('bench_press'), re('bench_press', 4)],
+    ),
+    SplitDayPlan(
+      name: 'Pull',
+      muscles: const [MuscleGroup.back],
+      exercises: [re('lat_pulldown')],
+    ),
   ];
 
-  Future<void> mount(WidgetTester t, {Size size = const Size(390, 844), double scale = 1}) async {
+  Future<void> mount(
+    WidgetTester t, {
+    Size size = const Size(390, 844),
+    double scale = 1,
+  }) async {
     final all = AppController().exercises.all;
     await pumpPage(
       t,
-      Scaffold(body: SetupReviewStep(days: days, all: all, error: null, onEdit: (_) {}, perWeek: 4)),
+      Scaffold(
+        body: SetupReviewStep(
+          days: days,
+          all: all,
+          error: null,
+          onEdit: (_) {},
+          perWeek: 4,
+        ),
+      ),
       size: size,
       textScale: scale,
     );
@@ -34,7 +55,10 @@ void main() {
     await t.tap(find.text('Muscle coverage'));
     await t.pump();
     expect(find.text('Chest'), findsOneWidget);
-    expect(find.bySemanticsLabel(RegExp('^Chest coverage (high|moderate|low)')), findsOneWidget);
+    expect(
+      find.bySemanticsLabel(RegExp('^Chest coverage (high|moderate|low)')),
+      findsOneWidget,
+    );
     // Regions with no work are hidden.
     expect(find.text('Calves'), findsNothing);
     expect(find.textContaining('Optional:'), findsWidgets);
@@ -52,7 +76,10 @@ void main() {
 
   test('dayCoverageHint is calm and null when empty', () {
     final all = AppController().exercises.all;
-    expect(dayCoverageHint(const SplitDayPlan(name: 'x', muscles: []), all), isNull);
+    expect(
+      dayCoverageHint(const SplitDayPlan(name: 'x', muscles: []), all),
+      isNull,
+    );
     expect(dayCoverageHint(days.first, all), contains('Chest:'));
   });
 }

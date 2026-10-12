@@ -1,3 +1,4 @@
+import '../../core/utils/remote_ops.dart';
 import 'package:flutter/material.dart';
 
 import '../../app/app_controller.dart';
@@ -31,25 +32,48 @@ class _WorkoutsHubPageState extends State<WorkoutsHubPage> {
   @override
   Widget build(BuildContext context) {
     final app = context.app;
-    final wide = MediaQuery.sizeOf(context).width >= 400 && MediaQuery.textScalerOf(context).scale(1) <= 1.15;
+    final wide =
+        MediaQuery.sizeOf(context).width >= 400 &&
+        MediaQuery.textScalerOf(context).scale(1) <= 1.15;
     return ListenableBuilder(
-      listenable: Listenable.merge([app.profile, app.workouts, app.sessions, app.exercises]),
+      listenable: Listenable.merge([
+        app.profile,
+        app.workouts,
+        app.sessions,
+        app.exercises,
+      ]),
       builder: (context, _) {
         return SxScaffold(
-          topBar: SxBrandBar(name: app.profile.profile.name, onAvatarTap: () => AppNav.switchTab(context, 3)),
+          topBar: SxBrandBar(
+            name: app.profile.profile.name,
+            onAvatarTap: () => AppNav.switchTab(context, 3),
+          ),
           body: Column(
             children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(SxSpace.screenMargin, SxSpace.md, SxSpace.screenMargin, SxSpace.sm),
+                padding: const EdgeInsets.fromLTRB(
+                  SxSpace.screenMargin,
+                  SxSpace.md,
+                  SxSpace.screenMargin,
+                  SxSpace.sm,
+                ),
                 child: Column(
                   children: [
                     _Header(
                       onSetup: () => startScheduleSetup(context),
-                      onNew: () => AppNav.workoutEditor(context, 'new_${DateTime.now().microsecondsSinceEpoch}'),
+                      onNew: () => AppNav.workoutEditor(
+                        context,
+                        'new_${DateTime.now().microsecondsSinceEpoch}',
+                      ),
                     ),
                     const SizedBox(height: SxSpace.md),
                     SxSegmented(
-                      labels: const ['Routines', 'Templates', 'Saved', 'Cardio'],
+                      labels: const [
+                        'Routines',
+                        'Templates',
+                        'Saved',
+                        'Cardio',
+                      ],
                       icons: wide
                           ? const [
                               Icons.format_list_bulleted,
@@ -71,7 +95,10 @@ class _WorkoutsHubPageState extends State<WorkoutsHubPage> {
                   child: KeyedSubtree(
                     key: ValueKey<int>(_tab),
                     child: switch (_tab) {
-                      0 => _RoutinesTab(app: app, onBrowseTemplates: () => setState(() => _tab = 1)),
+                      0 => _RoutinesTab(
+                        app: app,
+                        onBrowseTemplates: () => setState(() => _tab = 1),
+                      ),
                       1 => _TemplatesTab(app: app),
                       _cardioTab => const CardioHomeView(),
                       _ => const _SavedTab(),
@@ -99,10 +126,18 @@ class _Header extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('Workouts', style: SxText.headlineLg.copyWith(color: c.textHigh)),
-        Text('Rotation, routines & cardio', style: SxText.bodySm.copyWith(color: c.textBody)),
+        Text(
+          'Rotation, routines & cardio',
+          style: SxText.bodySm.copyWith(color: c.textBody),
+        ),
       ],
     );
-    final setup = SxIconButton(icon: Icons.tune, tooltip: 'Set up my schedule', size: 48, onPressed: onSetup);
+    final setup = SxIconButton(
+      icon: Icons.tune,
+      tooltip: 'Set up my schedule',
+      size: 48,
+      onPressed: onSetup,
+    );
     final calendar = SxIconButton(
       icon: Icons.calendar_month_outlined,
       tooltip: 'History calendar',
@@ -129,7 +164,12 @@ class _Header extends StatelessWidget {
                 children: [
                   setup,
                   calendar,
-                  SxIconButton(icon: Icons.add, tooltip: 'New routine', size: 48, onPressed: onNew),
+                  SxIconButton(
+                    icon: Icons.add,
+                    tooltip: 'New routine',
+                    size: 48,
+                    onPressed: onNew,
+                  ),
                 ],
               ),
             ],
@@ -143,7 +183,12 @@ class _Header extends StatelessWidget {
               const SizedBox(width: 8),
               calendar,
               const SizedBox(width: 8),
-              SxIconButton(icon: Icons.add, tooltip: 'New routine', size: 48, onPressed: onNew),
+              SxIconButton(
+                icon: Icons.add,
+                tooltip: 'New routine',
+                size: 48,
+                onPressed: onNew,
+              ),
             ],
           );
         }
@@ -193,7 +238,10 @@ class _RoutinesTab extends StatelessWidget {
             message:
                 'Create a routine or start from a built-in template. Your rotation follows the order of your workouts.',
             actionLabel: 'New routine',
-            onAction: () => AppNav.workoutEditor(context, 'new_${DateTime.now().microsecondsSinceEpoch}'),
+            onAction: () => AppNav.workoutEditor(
+              context,
+              'new_${DateTime.now().microsecondsSinceEpoch}',
+            ),
             secondaryLabel: 'Browse templates',
             onSecondary: onBrowseTemplates,
           ),
@@ -214,16 +262,32 @@ class _RoutinesTab extends StatelessWidget {
     final dur = SxMotion.of(context, SxMotion.short);
     var n = 0;
     return ListView(
-      padding: const EdgeInsets.fromLTRB(SxSpace.screenMargin, SxSpace.sm, SxSpace.screenMargin, SxSpace.lg),
+      padding: const EdgeInsets.fromLTRB(
+        SxSpace.screenMargin,
+        SxSpace.sm,
+        SxSpace.screenMargin,
+        SxSpace.lg,
+      ),
       children: [
-        SectionHeader('Active rotation', trailingText: total == 0 ? null : 'Day $day / $total'),
+        SectionHeader(
+          'Active rotation',
+          trailingText: total == 0 ? null : 'Day $day / $total',
+        ),
         const SizedBox(height: SxSpace.sm),
         SxStagger(
           index: n++,
-          child: _RotationCard(workouts: workouts, sessions: sessions, exercises: exercises, unit: unit),
+          child: _RotationCard(
+            workouts: workouts,
+            sessions: sessions,
+            exercises: exercises,
+            unit: unit,
+          ),
         ),
         const SizedBox(height: SxSpace.md),
-        SectionHeader('My routines', trailingText: '${list.length} in rotation'),
+        SectionHeader(
+          'My routines',
+          trailingText: '${list.length} in rotation',
+        ),
         const SizedBox(height: SxSpace.md),
         AnimatedSize(
           duration: dur,
@@ -237,7 +301,13 @@ class _RoutinesTab extends StatelessWidget {
                   padding: const EdgeInsets.only(bottom: SxSpace.md),
                   child: SxStagger(
                     index: n++,
-                    child: _RoutineCard(workout: w, workouts: workouts, sessions: sessions, exercises: exercises, unit: unit),
+                    child: _RoutineCard(
+                      workout: w,
+                      workouts: workouts,
+                      sessions: sessions,
+                      exercises: exercises,
+                      unit: unit,
+                    ),
                   ),
                 ),
             ],
@@ -252,7 +322,10 @@ class _RoutinesTab extends StatelessWidget {
               : Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SectionHeader('Archived', trailingText: '${archived.length} not in rotation'),
+                    SectionHeader(
+                      'Archived',
+                      trailingText: '${archived.length} not in rotation',
+                    ),
                     const SizedBox(height: SxSpace.sm),
                     Text(
                       'Replaced or removed from your rotation. Nothing is deleted and your history is kept. Add one back whenever you like.',
@@ -281,7 +354,12 @@ class _RoutinesTab extends StatelessWidget {
 }
 
 class _RotationCard extends StatelessWidget {
-  const _RotationCard({required this.workouts, required this.sessions, required this.exercises, required this.unit});
+  const _RotationCard({
+    required this.workouts,
+    required this.sessions,
+    required this.exercises,
+    required this.unit,
+  });
   final WorkoutRepository workouts;
   final SessionRepository sessions;
   final ExerciseRepository exercises;
@@ -291,7 +369,9 @@ class _RotationCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.sx;
     final rot = workouts.rotation;
-    final days = [for (final id in rot.workoutIds) workouts.byId(id)].whereType<Workout>().toList();
+    final days = [
+      for (final id in rot.workoutIds) workouts.byId(id),
+    ].whereType<Workout>().toList();
     final (day, total) = RotationService.dayOf(rot);
     final cur = rot.currentIndex % (rot.length == 0 ? 1 : rot.length);
     final current = workouts.currentWorkout;
@@ -308,7 +388,10 @@ class _RotationCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('$total-Day Rotation', style: SxText.headlineMd.copyWith(color: c.textHigh)),
+                    Text(
+                      '$total-Day Rotation',
+                      style: SxText.headlineMd.copyWith(color: c.textHigh),
+                    ),
                     const SizedBox(height: 4),
                     Text(
                       'Sequential: your next workout follows the last one you finished, not the calendar.',
@@ -321,7 +404,10 @@ class _RotationCard extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text('POSITION', style: SxText.labelXs.copyWith(color: c.textBody)),
+                  Text(
+                    'POSITION',
+                    style: SxText.labelXs.copyWith(color: c.textBody),
+                  ),
                   if (total == 0)
                     Text('—', style: SxText.metricLg.copyWith(color: c.primary))
                   else
@@ -335,14 +421,20 @@ class _RotationCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: SxSpace.md),
-          SxLinearMeter(value: total == 0 ? 0 : day / total, height: 6, semanticLabel: 'Rotation progress'),
+          SxLinearMeter(
+            value: total == 0 ? 0 : day / total,
+            height: 6,
+            semanticLabel: 'Rotation progress',
+          ),
           const SizedBox(height: SxSpace.md),
           for (var i = 0; i < days.length; i++) ...[
             if (i > 0) const SizedBox(height: SxSpace.sm),
             _DayRow(
               index: i,
               workout: days[i],
-              state: i < cur ? _DayState.done : (i == cur ? _DayState.next : _DayState.later),
+              state: i < cur
+                  ? _DayState.done
+                  : (i == cur ? _DayState.next : _DayState.later),
               last: WorkoutStats.lastSessionOf(days[i].id, sessions.sessions),
               unit: unit,
             ),
@@ -356,7 +448,9 @@ class _RotationCard extends StatelessWidget {
                   icon: Icons.edit_outlined,
                   variant: SxButtonVariant.secondary,
                   height: 48,
-                  onPressed: current == null ? null : () => AppNav.workoutEditor(context, current.id),
+                  onPressed: current == null
+                      ? null
+                      : () => AppNav.workoutEditor(context, current.id),
                 ),
               ),
               const SizedBox(width: 8),
@@ -367,7 +461,9 @@ class _RotationCard extends StatelessWidget {
                   icon: Icons.swap_horiz,
                   variant: SxButtonVariant.secondary,
                   height: 48,
-                  onPressed: days.length < 2 ? null : () => _showChangeNext(context, days, cur),
+                  onPressed: days.length < 2
+                      ? null
+                      : () => _showChangeNext(context, days, cur),
                 ),
               ),
             ],
@@ -385,8 +481,13 @@ class _RotationCard extends StatelessWidget {
         current: cur,
         onPick: (w) async {
           Navigator.pop(ctx);
-          await workouts.setCurrentWorkout(w.id);
-          if (context.mounted) showSxSnack(context, '${w.name} is now next in your rotation');
+          await runRemote(
+            context,
+            () => workouts.setCurrentWorkout(w.id),
+            what: 'change the next workout',
+            success: '${w.name} is now next in your rotation',
+            key: 'rotation',
+          );
         },
       ),
     );
@@ -415,7 +516,8 @@ class _DayRow extends StatelessWidget {
     final isNext = state == _DayState.next;
     final num2 = (index + 1).toString().padLeft(2, '0');
     final subtitle = switch (state) {
-      _DayState.later => '${workout.exercises.length} exercises • ${workout.totalSets} sets',
+      _DayState.later =>
+        '${workout.exercises.length} exercises • ${workout.totalSets} sets',
       _DayState.next =>
         '${workout.exercises.length} exercises • ${workout.totalSets} sets • ~${workout.estimatedMinutes} min',
       _DayState.done =>
@@ -423,6 +525,19 @@ class _DayRow extends StatelessWidget {
             ? 'Not logged yet'
             : 'Done ${WorkoutStats.ago(last!.workoutDate)}${last!.durationSeconds > 0 ? ' • ${last!.durationSeconds ~/ 60}m' : ''} • ${Fmt.volume(last!.volume, u: unit)}',
     };
+
+    // Very narrow screens with large text (e.g. a 280dp cover display at 2x): the Launch button moves
+    // under the text instead of squeezing it to nothing.
+    final stackLaunch =
+        MediaQuery.sizeOf(context).width /
+            MediaQuery.textScalerOf(context).scale(1) <
+        150;
+    final launch = SxButton(
+      label: 'Launch',
+      expanded: stackLaunch,
+      radius: SxRadius.base,
+      onPressed: () => AppNav.activeWorkout(context, workout.id),
+    );
 
     return Semantics(
       button: true,
@@ -470,9 +585,15 @@ class _DayRow extends StatelessWidget {
                         runSpacing: 4,
                         crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
-                          Text(workout.name, style: SxText.headlineSm.copyWith(color: c.textHigh)),
+                          Text(
+                            workout.name,
+                            style: SxText.headlineSm.copyWith(
+                              color: c.textHigh,
+                            ),
+                          ),
                           if (isNext) const StatusPill('Up next'),
-                          if (state == _DayState.done && last != null) StatusPill('Logged', color: c.textBody),
+                          if (state == _DayState.done && last != null)
+                            StatusPill('Logged', color: c.textBody),
                         ],
                       ),
                       const SizedBox(height: 2),
@@ -482,18 +603,17 @@ class _DayRow extends StatelessWidget {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
+                      if (isNext && stackLaunch) ...[
+                        const SizedBox(height: 8),
+                        launch,
+                      ],
                     ],
                   ),
                 ),
-                if (isNext) ...[
+                if (isNext && !stackLaunch) ...[
                   const SizedBox(width: 8),
-                  SxButton(
-                    label: 'Launch',
-                    expanded: false,
-                    radius: SxRadius.base,
-                    onPressed: () => AppNav.activeWorkout(context, workout.id),
-                  ),
-                ] else
+                  launch,
+                ] else if (!isNext)
                   Icon(Icons.chevron_right, color: c.textMuted),
               ],
             ),
@@ -505,7 +625,11 @@ class _DayRow extends StatelessWidget {
 }
 
 class _ChangeNextSheet extends StatelessWidget {
-  const _ChangeNextSheet({required this.days, required this.current, required this.onPick});
+  const _ChangeNextSheet({
+    required this.days,
+    required this.current,
+    required this.onPick,
+  });
   final List<Workout> days;
   final int current;
   final ValueChanged<Workout> onPick;
@@ -518,7 +642,10 @@ class _ChangeNextSheet extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Change next workout', style: SxText.headlineMd.copyWith(color: c.textHigh)),
+          Text(
+            'Change next workout',
+            style: SxText.headlineMd.copyWith(color: c.textHigh),
+          ),
           const SizedBox(height: 4),
           Text(
             'Pick which day comes up next. The rotation continues in order from there.',
@@ -531,16 +658,24 @@ class _ChangeNextSheet extends StatelessWidget {
               child: SxInset(
                 onTap: () => onPick(days[i]),
                 borderColor: i == current ? c.primaryBorder : null,
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 14,
+                ),
                 child: Row(
                   children: [
                     Text(
                       (i + 1).toString().padLeft(2, '0'),
-                      style: SxText.metricMd.copyWith(color: i == current ? c.primary : c.textBody),
+                      style: SxText.metricMd.copyWith(
+                        color: i == current ? c.primary : c.textBody,
+                      ),
                     ),
                     const SizedBox(width: 14),
                     Expanded(
-                      child: Text(days[i].name, style: SxText.headlineSm.copyWith(color: c.textHigh)),
+                      child: Text(
+                        days[i].name,
+                        style: SxText.headlineSm.copyWith(color: c.textHigh),
+                      ),
                     ),
                     if (i == current) const StatusPill('Next'),
                   ],
@@ -580,7 +715,11 @@ class _RoutineCard extends StatelessWidget {
     final inRotation = workouts.rotation.workoutIds.contains(workout.id);
     // "Legs · Shoulders": the workout's muscle sections in order (grouping comes from the domain).
     final sectionLabels = <String>[];
-    for (final s in WorkoutSections.group(workout.exercises, exercises.all)) {
+    for (final s in WorkoutSections.group(
+      workout.exercises,
+      exercises.all,
+      mode: ArrangeMode.musclesOnly,
+    )) {
       if (!sectionLabels.contains(s.label)) sectionLabels.add(s.label);
     }
 
@@ -593,7 +732,10 @@ class _RoutineCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: Text(workout.name, style: SxText.headlineMd.copyWith(color: c.textHigh)),
+                child: Text(
+                  workout.name,
+                  style: SxText.headlineMd.copyWith(color: c.textHigh),
+                ),
               ),
               SxIconButton(
                 icon: Icons.more_vert,
@@ -617,10 +759,19 @@ class _RoutineCard extends StatelessWidget {
             spacing: 12,
             runSpacing: 4,
             children: [
-              _Meta(Icons.fitness_center, '${workout.exercises.length} exercises'),
+              _Meta(
+                Icons.fitness_center,
+                '${workout.exercises.length} exercises',
+              ),
               _Meta(Icons.layers_outlined, '${workout.totalSets} sets'),
-              _Meta(Icons.history, last == null ? 'Not done yet' : 'Done ${WorkoutStats.ago(last.workoutDate)}'),
-              if (workout.cardioFinisher != null) const _Meta(Icons.directions_run, 'Cardio finisher'),
+              _Meta(
+                Icons.history,
+                last == null
+                    ? 'Not done yet'
+                    : 'Done ${WorkoutStats.ago(last.workoutDate)}',
+              ),
+              if (workout.cardioFinisher != null)
+                const _Meta(Icons.directions_run, 'Cardio finisher'),
             ],
           ),
           const SizedBox(height: SxSpace.md),
@@ -634,7 +785,10 @@ class _RoutineCard extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: _Stat(label: 'Avg session', value: avg == null ? '—' : '$avg min'),
+                child: _Stat(
+                  label: 'Avg session',
+                  value: avg == null ? '—' : '$avg min',
+                ),
               ),
               const SizedBox(width: 8),
               Expanded(
@@ -659,7 +813,12 @@ class _RoutineCard extends StatelessWidget {
 
   Future<void> _restore(BuildContext context) async {
     await ScheduleBuilder.restore(workout.id, workouts);
-    if (context.mounted) showSxSnack(context, '${workout.name} is back at the end of your rotation');
+    if (context.mounted) {
+      showSxSnack(
+        context,
+        '${workout.name} is back at the end of your rotation',
+      );
+    }
   }
 
   void _options(BuildContext context, bool inRotation) {
@@ -667,7 +826,12 @@ class _RoutineCard extends StatelessWidget {
       context,
       builder: (ctx) => SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(SxSpace.md, 8, SxSpace.md, SxSpace.md),
+          padding: const EdgeInsets.fromLTRB(
+            SxSpace.md,
+            8,
+            SxSpace.md,
+            SxSpace.md,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -702,8 +866,13 @@ class _RoutineCard extends StatelessWidget {
                   label: 'Make next in rotation',
                   onTap: () async {
                     Navigator.pop(ctx);
-                    await workouts.setCurrentWorkout(workout.id);
-                    if (context.mounted) showSxSnack(context, '${workout.name} is now next');
+                    await runRemote(
+                      context,
+                      () => workouts.setCurrentWorkout(workout.id),
+                      what: 'change the next workout',
+                      success: '${workout.name} is now next',
+                      key: 'rotation',
+                    );
                   },
                 ),
               _SheetAction(
@@ -722,9 +891,14 @@ class _RoutineCard extends StatelessWidget {
                     destructive: true,
                     icon: Icons.delete_forever,
                   );
-                  if (ok) {
-                    await workouts.deleteWorkout(workout.id);
-                    if (context.mounted) showSxSnack(context, 'Routine deleted');
+                  if (ok && context.mounted) {
+                    await runRemote(
+                      context,
+                      () => workouts.deleteWorkout(workout.id),
+                      what: 'delete the routine',
+                      success: 'Routine deleted',
+                      key: 'delete-${workout.id}',
+                    );
                   }
                 },
               ),
@@ -737,7 +911,12 @@ class _RoutineCard extends StatelessWidget {
 }
 
 class _SheetAction extends StatelessWidget {
-  const _SheetAction({required this.icon, required this.label, required this.onTap, this.destructive = false});
+  const _SheetAction({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.destructive = false,
+  });
   final IconData icon;
   final String label;
   final VoidCallback onTap;
@@ -807,11 +986,17 @@ class _Stat extends StatelessWidget {
             child: count == null
                 ? Text(
                     value,
-                    style: SxText.metricSm.copyWith(color: c.textHigh, fontWeight: FontWeight.w700),
+                    style: SxText.metricSm.copyWith(
+                      color: c.textHigh,
+                      fontWeight: FontWeight.w700,
+                    ),
                   )
                 : SxCountUp(
                     value: count!.toDouble(),
-                    style: SxText.metricSm.copyWith(color: c.textHigh, fontWeight: FontWeight.w700),
+                    style: SxText.metricSm.copyWith(
+                      color: c.textHigh,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
           ),
         ],
@@ -831,22 +1016,38 @@ class _TemplatesTab extends StatelessWidget {
     final WorkoutRepository workouts = app.workouts;
     final ExerciseRepository exercises = app.exercises;
     return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(SxSpace.screenMargin, SxSpace.sm, SxSpace.screenMargin, SxSpace.lg),
+      padding: const EdgeInsets.fromLTRB(
+        SxSpace.screenMargin,
+        SxSpace.sm,
+        SxSpace.screenMargin,
+        SxSpace.lg,
+      ),
       itemCount: builtInTemplates.length + 1,
       separatorBuilder: (_, _) => const SizedBox(height: SxSpace.md),
       itemBuilder: (context, i) {
         if (i == 0) {
-          return const SectionHeader('Built-in templates', trailingText: 'Local presets');
+          return const SectionHeader(
+            'Built-in templates',
+            trailingText: 'Local presets',
+          );
         }
         final t = builtInTemplates[i - 1];
-        return _TemplateCard(template: t, workouts: workouts, exercises: exercises);
+        return _TemplateCard(
+          template: t,
+          workouts: workouts,
+          exercises: exercises,
+        );
       },
     );
   }
 }
 
 class _TemplateCard extends StatelessWidget {
-  const _TemplateCard({required this.template, required this.workouts, required this.exercises});
+  const _TemplateCard({
+    required this.template,
+    required this.workouts,
+    required this.exercises,
+  });
   final WorkoutTemplate template;
   final WorkoutRepository workouts;
   final ExerciseRepository exercises;
@@ -860,9 +1061,15 @@ class _TemplateCard extends StatelessWidget {
         children: [
           StatusPill('${template.days.length}-day rotation', dot: true),
           const SizedBox(height: 10),
-          Text(template.name, style: SxText.headlineMd.copyWith(color: c.textHigh)),
+          Text(
+            template.name,
+            style: SxText.headlineMd.copyWith(color: c.textHigh),
+          ),
           const SizedBox(height: 4),
-          Text(template.blurb, style: SxText.bodyMd.copyWith(color: c.textBody)),
+          Text(
+            template.blurb,
+            style: SxText.bodyMd.copyWith(color: c.textBody),
+          ),
           const SizedBox(height: 6),
           Text(
             '${template.exerciseCount} exercises • ${template.days.map((d) => d.name).join(' / ')}',
@@ -880,7 +1087,11 @@ class _TemplateCard extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: SxButton(label: 'Add', icon: Icons.add, onPressed: () => _add(context)),
+                child: SxButton(
+                  label: 'Add',
+                  icon: Icons.add,
+                  onPressed: () => _add(context),
+                ),
               ),
             ],
           ),
@@ -894,14 +1105,25 @@ class _TemplateCard extends StatelessWidget {
     showSxSheet<void>(
       context,
       builder: (_) => SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(SxSpace.md, 8, SxSpace.md, SxSpace.lg),
+        padding: const EdgeInsets.fromLTRB(
+          SxSpace.md,
+          8,
+          SxSpace.md,
+          SxSpace.lg,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(template.name, style: SxText.headlineMd.copyWith(color: c.textHigh)),
+            Text(
+              template.name,
+              style: SxText.headlineMd.copyWith(color: c.textHigh),
+            ),
             const SizedBox(height: SxSpace.md),
             for (final d in template.days) ...[
-              Text(d.name.toUpperCase(), style: SxText.labelCaps.copyWith(color: c.primary)),
+              Text(
+                d.name.toUpperCase(),
+                style: SxText.labelCaps.copyWith(color: c.primary),
+              ),
               const SizedBox(height: 6),
               for (final re in d.exercises)
                 Padding(
@@ -914,7 +1136,10 @@ class _TemplateCard extends StatelessWidget {
                           style: SxText.bodyMd.copyWith(color: c.textHigh),
                         ),
                       ),
-                      Text(WorkoutStats.setsReps(re), style: SxText.metricSm.copyWith(color: c.textBody)),
+                      Text(
+                        WorkoutStats.setsReps(re),
+                        style: SxText.metricSm.copyWith(color: c.textBody),
+                      ),
                     ],
                   ),
                 ),
@@ -928,15 +1153,38 @@ class _TemplateCard extends StatelessWidget {
 
   Future<void> _add(BuildContext context) async {
     final stamp = DateTime.now().microsecondsSinceEpoch;
-    var added = 0;
+    final built = <Workout>[];
     for (var i = 0; i < template.days.length; i++) {
       final d = template.days[i];
-      final valid = d.exercises.where((e) => exercises.byId(e.exerciseId) != null).toList();
+      final valid = d.exercises
+          .where((e) => exercises.byId(e.exerciseId) != null)
+          .toList();
       if (valid.isEmpty) continue;
-      await workouts.saveWorkout(
-        Workout(id: 'w_${stamp}_$i', name: d.name, description: '${template.name} template', exercises: valid),
+      built.add(
+        Workout(
+          id: 'w_${stamp}_$i',
+          name: d.name,
+          description: '${template.name} template',
+          exercises: valid,
+        ),
       );
-      added++;
+    }
+    final added = built.length;
+    if (added > 0) {
+      // All the template's days and their place in the rotation are saved together, or not at all.
+      final rot = workouts.rotation;
+      final ok = await runRemote(
+        context,
+        () => workouts.saveSchedule(
+          built,
+          rot.copyWith(
+            workoutIds: [...rot.workoutIds, for (final w in built) w.id],
+          ),
+        ),
+        what: 'add the workouts',
+        key: 'template',
+      );
+      if (!ok) return;
     }
     if (context.mounted) {
       showSxSnack(
@@ -959,7 +1207,8 @@ class _SavedTab extends StatelessWidget {
         child: EmptyState(
           icon: Icons.bookmark_border,
           title: 'Nothing saved yet',
-          message: 'Bookmarking routines is not available yet. Everything you create appears under Routines.',
+          message:
+              'Bookmarking routines is not available yet. Everything you create appears under Routines.',
         ),
       ),
     );

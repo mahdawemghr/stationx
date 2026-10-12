@@ -1,107 +1,57 @@
-# StationX — Supabase database
+# StationX — Supabase backend
 
-Cloud **backup / sync target**, used by the app's **optional** cloud sync. The app is local-first (Isar) and works
-fully offline; it only talks to this database when the user signs in under *Profile › Cloud backup & sync*.
+Supabase is the **only** source of truth for user data (online-first). The app keeps no copy of it on the device
+except a session-scoped in-memory read model and, in Isar, a temporary in-progress-workout draft + the Health Connect opt-in.
 
-- Project: **StationX** — ref `fyigpfuddgegvkibnvgd`, region `ap-northeast-1`
-  URL: `https://fyigpfuddgegvkibnvgd.supabase.co` (public)
-- Schema: `migrations/20261008000000_initial_schema.sql` (applied 2026-10-08) `migrations/20261009000000_exercise_muscle_targets.sql` (**NOT YET APPLIED to the live project - MUST be applied, see below**) and `migrations/20261010000000_hardening.sql` (**NOT YET APPLIED; apply after the muscle-targets one**; jsonb byte-size CHECKs + tombstones blank their content) and `migrations/20261011000000_cardio_kinds.sql` (**NOT YET APPLIED**; widens the `cardio_sessions.kind` check with trailRun, hiking, spinBike, airBike, skiErg, arcTrainer, verticalClimber, swimming, handCycle, hiit, boxing; apply BEFORE shipping a client that can log them, or those rows fail to sync) and `migrations/20261012000000_cardio_kinds_2.sql` (**NOT YET APPLIED; apply after 20261011**; re-creates `cardio_sessions_kind_check` with all 34 kinds, adding indoorWalk, nordicWalk, rucking, recumbentBike, indoorTrainer, crossCountrySki, openWaterSwim, outdoorRowing, paddling, danceCardio, skating, climbing, martialArts; apply BEFORE shipping a client that can log them)
-- Equipment: `migrations/20261012010000_equipment_values.sql` (**NOT YET APPLIED; apply BEFORE shipping the app update**; re-creates `exercises_equipment_check` with all 9 values, adding kettlebell, band, smithMachine, other; until applied, exercises using them fail to sync. Old clients downgrade unknown equipment to bodyweight on pull.)
-- Tests: `tests/rls_and_sync_test.sql` (SQL, rolls itself back; 24 checks, the last 3 need the hardening migration; written but NOT yet run - there was no database access when it was added) and the Flutter end-to-end test `test/e2e/supabase_e2e_test.dart` (real sign-in, two phones, RLS, account deletion)
+* Project ref `fyigpfuddgegvkibnvgd`, URL `https://fyigpfuddgegvkibnvgd.supabase.co` (public).
+* **Never** put a `service_role` key, `sb_secret_` key or `sbp_` access token in the app or repo. `SupabaseConfig` refuses them.
+  The app has the project URL + publishable key built in, so a plain `flutter run` works. To point a build at another project,
+  override them: `flutter run --dart-define-from-file=env/supabase.json` (copy `env/supabase.example.json`; the real file is git-ignored).
 
-## Tables ⇄ app models
-Every table is per-user: composite primary key `(user_id, id)` where `id` is the **client-generated id**
-(so offline-created rows upsert idempotently). Enum-like columns store the Dart enum `name` — the same
-strings as the local Isar database.
+## Schema (see `migrations/`, apply in order)
+`20261008…initial_schema` … `20261013…sync_gaps` are the earlier migrations; **`20261014000000_online_first.sql`** is the online-first change:
+drops tombstones/`deleted_at`/`server_updated_at`/last-write-wins, makes `updated_at` server-owned, makes `user_id`/`created_at` immutable,
+adds `profiles.initialized_at`, restricts profile policies (no delete), adds history indexes and the atomic functions below.
+**`20261015000000_profile_training_prefs.sql`** adds `profiles.equipment` (nullable `text[]`; NULL = never chosen, empty = bodyweight only).
+**`20261016000000_profile_experience_level.sql`** adds `profiles.experience_level` (nullable text, CHECK beginner/intermediate/advanced; NULL = never chosen = treated as intermediate). Additive, metadata-only, no policy change. The client sends the key only after the user picked a level, so it works before or after the migration; apply it before relying on the Profile › Experience level setting. Already present on the live project.
+**Back up first and apply together with the online-first client** (old sync clients stop working by design):
+`supabase db dump -f backup.sql && supabase db push`.
 
-| Postgres table | Isar entity / domain model | Notes |
-|---|---|---|
-| `profiles` | `ProfileEntity` / `UserProfile` | one row per user, created by a signup trigger. No password, no `isGuest` |
-| `exercises` | `ExerciseEntity` / `Exercise` | **custom exercises only** (the built-in catalogue ships in the app). `muscle_targets` jsonb (nullable): `[{region, muscle?, role: primary\|secondary, emphasis?, weight?}]`, same structure as built-in profiles |
-| `workouts` | `WorkoutEntity` / `Workout` | `exercises` + `cardio_finisher` as jsonb, `position` keeps list order |
-| `rotations` | `RotationEntity` / `Rotation` | one row per user; the **index**, not the calendar, picks the next workout |
-| `workout_sessions` | `SessionEntity` / `WorkoutSession` | `exercises` (logs/sets) and `cardio` as jsonb |
-| `cardio_sessions` | `CardioSessionEntity` / `CardioSession` | typed columns (distance, speed, incline, resistance, calories, HR, RPE…) |
-| `cardio_goals` | `CardioGoalEntity` / `CardioGoal` | |
-| `custom_cardio_activities` | `CustomActivityEntity` / `CustomCardioActivity` | |
+**Applied state (verified 2026-10-11 against the live project, read-only queries):** 20261008…20261013 present (inferred from the
+schema; the project has no `supabase_migrations` history table), and 20261014 + 20261015 were applied on 2026-10-11 after a dry run
+inside a rolled-back transaction. Re-check with `select proname from pg_proc where proname like 'sx\_%'` and
+`select column_name from information_schema.columns where table_name='profiles' and column_name in ('initialized_at','equipment')`.
 
-Sync columns on every table: `created_at` (when entered), `updated_at` (client edit time),
-`server_updated_at` (server-set pull cursor), `deleted_at` (tombstone).
-**`workout_date` ≠ `created_at`**: sessions keep *when you trained* (backdatable) separate from *when it was entered*.
+| Table | Notes |
+|---|---|
+| `profiles` | one row per user, created by the signup trigger; no DELETE for clients. Legacy column `auto_rest_seconds` is unused (the rest timer was removed) and kept so no data is dropped |
+| `exercises` | custom exercises only (built-in catalogue ships in the app) |
+| `workouts`, `rotations` | routines (`position` = order) and the single rotation row. Legacy column `workouts.rest_seconds` is unused and kept |
+| `workout_sessions`, `cardio_sessions` | history; `workout_date` (when trained) ≠ `created_at` |
+| `cardio_goals`, `custom_cardio_activities` | |
+
+Logical references without FK (intentional, so history survives deleting a routine/activity): `workout_sessions.workout_id`,
+`cardio_sessions.custom_activity_id`, `rotations.workout_ids[]`.
+
+## Functions (SECURITY INVOKER, no user-id parameter, `authenticated` only)
+`sx_save_workouts(workouts, delete_ids, rotation)` · `sx_finish_workout(session, rotation)` · `sx_init_account(workouts, rotation)` (idempotent, row-locked; the client passes NO routines, so a new account starts empty and the program is generated only in onboarding)
+· `sx_reset_account_data()` · `delete_account()` (security definer, deletes only `auth.uid()`).
 
 ## Security model
-- **Row Level Security on every table**; one policy each: `user_id = auth.uid()` (read/write own rows only).
-- `anon` has **no** privileges. Only signed-in (`authenticated`) users touch data, and only their own.
-- `user_id` defaults to `auth.uid()` and the policy's `WITH CHECK` blocks writing rows for someone else.
-- **Last-write-wins** trigger: an update whose `updated_at` is older than the stored row is ignored.
-- Check constraints validate enums, ranges and jsonb shape (cheap abuse/garbage protection). `20261010000000_hardening.sql` adds
-  `pg_column_size` caps on the big jsonb columns (sessions' `exercises` 2 MB, `cardio` 16 KB, workouts' `exercises` 256 KB, exercise
-  `instructions` 128 KB / `muscle_targets` 32 KB, rotation `workout_ids` 64 KB). The app clamps every value to these limits before
-  upload (`lib/data/sync/sync_rows.dart`, `text_limits.dart`), so local data can never wedge sync.
-- **Tombstones blank their content**: the `*_blank_tombstone` triggers overwrite names, notes, exercise logs etc. as soon as `deleted_at`
-  is set, so a deleted workout no longer lingers in the cloud until account deletion. Only ids, timestamps and `deleted_at` remain.
-  A stale (older `updated_at`) tombstone is discarded by `sx_touch` together with its blanking.
-- `public.delete_account()` (security definer, authenticated only) deletes the caller's auth user; everything
-  cascades. Stores require in-app account deletion. Supabase's advisor flags it as a *warning*
-  (`authenticated_security_definer_function_executable`) — **intentional**: it is the delete-account endpoint and can
-  only ever delete `auth.uid()`.
-- Triggers/helper functions are not executable through the API.
+RLS on every table, `user_id = auth.uid()` for read/write; `anon` has no privileges (verified against the live API on 2026-10-10: every table → 401/42501).
+Check constraints validate enums, ranges and jsonb size. No Storage buckets are used.
 
-**Secrets:** never put a Supabase *access token* (`sbp_…`) or the *service_role* key in the app or this repo.
-The app may only ever hold the project URL + the **publishable/anon** key (public by design — RLS protects the data).
-Pass them at build time (`--dart-define=SUPABASE_URL=… --dart-define=SUPABASE_ANON_KEY=…`), not in source.
+## Auth
+Username + password through Supabase Auth; the username maps to a private `<username>@stationx.local` identifier. Confirm-e-mail is OFF (auto-confirm),
+min password length 8, **no password reset** (no e-mail is stored). Because anyone can sign up, keep Supabase rate limits on and consider CAPTCHA.
 
-## Applying / re-applying
-```bash
-# with the Supabase CLI (recommended)
-supabase link --project-ref fyigpfuddgegvkibnvgd
-supabase db push                       # applies migrations/
-supabase db query -f supabase/tests/rls_and_sync_test.sql   # expect "TEST REPORT" with only PASS lines
-```
-Or paste a migration into the dashboard SQL editor. Add future changes as **new** migration files — never edit an applied one.
+## Tests
+* Dart (no credentials): `flutter test` — an in-memory Supabase (`test/helpers/online_fakes.dart`) covers registration, login, logout/account switch, reads, writes, failures, expired sessions, stale responses.
+* SQL (manual, after applying the migration): `supabase db query -f supabase/tests/rls_and_rpc_test.sql` → expect only `PASS` lines.
 
-## REQUIRED before shipping the muscle-targets build
-`migrations/20261009000000_exercise_muscle_targets.sql` adds `exercises.muscle_targets`. It **must be applied to the live
-project before a client build that includes custom-exercise muscle targets is released** (`supabase db push`).
-The client always sends `muscle_targets` in `exercises` upserts; against a server without the column PostgREST rejects the
-exercises batch, which surfaces as the normal sync error state (rows stay dirty and are retried; nothing is lost, the field is
-never silently dropped). Older clients keep working after the migration (the column is nullable); rows without it pull as "no targets".
-
-## REQUIRED / recommended before release (apply in order)
-1. `20261009000000_exercise_muscle_targets.sql` - required (see above).
-2. `20261010000000_hardening.sql` - recommended; additive. Existing tombstones are blanked once (this bumps their `server_updated_at`, so
-   devices re-pull them; applying tombstones is idempotent). Then re-run `tests/rls_and_sync_test.sql` (expect only PASS lines).
-
-## How the app uses it (implemented)
-- **Build config:** `flutter run --dart-define-from-file=env/supabase.json` (copy `env/supabase.example.json`; the real file is gitignored).
-  Only the project URL + **publishable** key. `SupabaseConfig` *refuses* an `sbp_` token, an `sb_secret_` key or a `service_role` JWT.
-  No config ⇒ the feature is absent and the app makes no network requests.
-- **Auth:** e-mail + password via Supabase Auth (`SupabaseCloudAuth`). The app never stores the password.
-- **Engine** (`lib/data/sync/sync_engine.dart`): PUSH dirty rows (batched upsert) → push tombstones → PULL per table since a stored
-  `server_updated_at` cursor. Last-write-wins on `updated_at`, enforced by both the server trigger and the local store.
-  Idempotent; a failure keeps progress and retries (1 min); at most one sync runs at a time. If the failure is a lost/expired session (`SyncAuthLostException`), the app signs out locally (data stays), stops retrying and asks the user to sign in again.
-- **Triggers:** sign-in, debounced (8 s) after local changes, app resume (throttled 2 min), manual *Sync now*.
-- **Clean defaults:** built-in workouts/rotation/demo rows have an epoch `updatedAt` and are never uploaded; they always lose to real cloud data,
-  so a fresh install cannot overwrite a user's edited routines. A guest profile defers to the cloud profile on first link.
-- **Account switch:** signing in as a *different* account on a device with data asks: keep & add to the new account, or replace with its cloud data.
-- **Deletion:** local deletes queue tombstones (`deleted_at`) so other devices delete too. *Delete cloud account & data* calls `delete_account()`.
-- **Wiping the device** while signed in also signs out and unlinks sync (otherwise the next sync would pull everything back); the cloud backup is kept.
-- **Never synced:** passwords, Health Connect / Apple Health values, the built-in exercise catalogue.
-
-## Verifying (end-to-end, against the real project)
-```bash
-SUPABASE_E2E=1 SBP=<access token> SUPABASE_URL=https://fyigpfuddgegvkibnvgd.supabase.co \
-SUPABASE_ANON_KEY=<publishable key> flutter test test/e2e
-```
-The access token is used **only** by the test to create/delete two throwaway confirmed users (Management API); the app code under test uses the
-publishable key like a phone. The test removes its users (and, by cascade, all their rows) and fails if any remain. Never run it with credentials in a shared CI log.
-
-## Known limits / owner checklist
-1. **Password reset** is not implemented in the app (needs a hosted web page to receive the link). Set the Supabase **Site URL** too — confirmation e-mails link to it
-   (currently `http://localhost:3000`).
-2. Auth settings left at defaults (min password length 6, default SMTP). Harden before release (see `docs/RELEASE.md` §5b).
-3. Sync is **last-write-wins per row**: simultaneous offline edits of the *same* row on two devices keep the newer one and drop the older one (no field-level merge).
-4. Clock skew: `updated_at` comes from the device clock; a phone with a badly wrong clock can win or lose conflicts unfairly. (`server_updated_at` is server-set and used only as the pull cursor.)
-5. Data is not end-to-end encrypted: it is encrypted in transit and protected by RLS; Supabase can technically access it. Reflect that in the privacy policy (done).
-6. Large histories sync in pages of 100 (push) / 500 (pull); very large first syncs take several round trips.
-7. **Secrets hygiene:** the Supabase access token used to set this up was pasted into a chat — revoke it. The app and repo contain only the public publishable key.
+## Manual dashboard checklist
+1. Apply the migration (above) and run the SQL test.
+2. Authentication → confirm "Confirm e-mail" is off, min password 8, rate limits on.
+3. Revoke any access token that was ever pasted into chat (a personal access token `sbp_…` was pasted into the Claude Code session that applied 2026-10-11's migrations: revoke it in Dashboard › Account › Access tokens).
+4. Authentication › Attack protection: turn on CAPTCHA and check the rate limits; Authentication › Providers › Email: turn on leaked-password protection if the plan allows it (advisor warning `auth_leaked_password_protection`).
+5. The advisor warning `authenticated_security_definer_function_executable` for `delete_account()` is intentional: it is how a user deletes their own account; the function deletes only `auth.uid()`.

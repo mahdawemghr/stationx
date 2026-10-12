@@ -39,6 +39,7 @@ abstract final class ExerciseRecommender {
     MuscleRegion.hamstrings: 8,
     MuscleRegion.glutes: 8,
     MuscleRegion.calves: 8,
+    MuscleRegion.adductors: 4,
     MuscleRegion.core: 6,
   };
 
@@ -113,12 +114,14 @@ abstract final class ExerciseRecommender {
   ///  * 10 same training purpose (compound/isolation; 3 when different)
   ///  * 5 same equipment · 5 the user has logged this exercise before ("history", minor)
   /// [allowedEquipment] null = all. [excludeIds] (e.g. exercises already in the workout) are skipped.
+  /// [excludeAdvanced] is used only by automatic generation for beginners; the swap sheet never sets it.
   static List<SwapCandidate> replacements({
     required Exercise current,
     required List<Exercise> catalog,
     Iterable<WorkoutSession> history = const [],
     Set<Equipment>? allowedEquipment,
     Set<String> excludeIds = const {},
+    bool excludeAdvanced = false,
   }) {
     final cur = MuscleProfiles.of(current);
     final curCompound = isCompound(current, cur);
@@ -127,6 +130,7 @@ abstract final class ExerciseRecommender {
     for (var i = 0; i < catalog.length; i++) {
       final e = catalog[i];
       if (e.id == current.id || excludeIds.contains(e.id)) continue;
+      if (excludeAdvanced && e.difficulty == Difficulty.advanced) continue;
       if (allowedEquipment != null && !allowedEquipment.contains(e.equipment)) {
         continue;
       }
@@ -265,9 +269,41 @@ abstract final class ExerciseRecommender {
 
   /// Heavy multi-region hinges (deadlift-type): primary work in 2+ regions with a hinge pattern. They are
   /// not used as a leaf filler (e.g. for lower back) while a simpler exercise can fill that leaf.
+  /// Optional accessory leaves: never prescribed to fill a calves/glutes/legs day on their own (a legs day
+  /// should not be built from tibialis raises or hip adduction); adductors are only picked when the caller
+  /// asks for [MuscleRegion.adductors] explicitly. Tibialis is never auto-picked. Informational gaps skip them.
+  static bool _isAccessory(
+    ExerciseMuscleProfile p,
+    List<MuscleRegion> regions,
+  ) {
+    bool acc(MuscleTarget t) =>
+        t.muscle == Muscle.tibialisAnterior ||
+        (t.region == MuscleRegion.adductors &&
+            !regions.contains(MuscleRegion.adductors));
+    final prim = p.primary.toList();
+    return prim.isNotEmpty && prim.every(acc);
+  }
+
   static bool _isHeavyHinge(Exercise e, ExerciseMuscleProfile p) =>
       e.movementPattern.toLowerCase() == 'hinge' &&
       {for (final t in p.primary) t.region}.length >= 2;
+
+  /// Score nudge from experience [level] vs an exercise's [difficulty] (null/unspecified = neutral).
+  /// Advanced exercises are penalised for intermediates (picked only when nothing else fills a required
+  /// leaf, which carries +3); beginners get a small preference for beginner-level exercises.
+  static double _difficultyAdjust(Difficulty? level, Difficulty? difficulty) {
+    if (level == null || difficulty == null) return 0;
+    if (level == Difficulty.intermediate && difficulty == Difficulty.advanced) {
+      return -2.5;
+    }
+    if (level == Difficulty.beginner && difficulty == Difficulty.beginner) {
+      return 0.3;
+    }
+    return 0;
+  }
+
+  /// Score taken off a candidate for each exercise of the same movement pattern already in the day.
+  static const double patternRepeatPenalty = 1.5;
 
   // ── Day building ──────────────────────────────────────────────────────────────────────────────────────
 
@@ -281,6 +317,15 @@ abstract final class ExerciseRecommender {
   ///  * [minExercises] forces at least that many picks (when candidates exist) even if adequate.
   /// Compounds come first in the result; sets/reps: compound 3–4 × 6–10, isolation 3 × 10–15, time-based
   /// holds 3 × 30–60 s. Fewer [daysPerWeek] ⇒ higher per-day targets (see [frequencyPerWeek]).
+  ///
+  /// [level] is the user's experience (null = ignore difficulty entirely, the legacy behaviour):
+  ///  * beginner: advanced built-in exercises are excluded; only when a requested region would otherwise get
+  ///    NO direct work does a controlled fallback add ONE advanced exercise for it (reported by
+  ///    [forDayDetailed]);
+  ///  * intermediate: advanced exercises are allowed but penalised, so they are chosen only when nothing else
+  ///    can fill a required leaf; beginner-level exercises are neutral;
+  ///  * advanced: every level is allowed.
+  /// Exercises with unspecified difficulty (custom) are never filtered or penalised.
   static List<RoutineExercise> forDay({
     required List<MuscleRegion> regions,
     required List<Exercise> catalog,
@@ -291,6 +336,109 @@ abstract final class ExerciseRecommender {
     int maxExercises = 6,
     int minExercises = 0,
     List<String> preferIds = const [],
+    Difficulty? level,
+  }) => forDayDetailed(
+    regions: regions,
+    catalog: catalog,
+    existing: existing,
+    history: history,
+    allowedEquipment: allowedEquipment,
+    daysPerWeek: daysPerWeek,
+    maxExercises: maxExercises,
+    minExercises: minExercises,
+    preferIds: preferIds,
+    level: level,
+  ).picks;
+
+  /// Same as [forDay] but also reports which picks are ADVANCED exercises chosen as a controlled fallback
+  /// for a beginner (so the UI can say so).
+  static ({List<RoutineExercise> picks, Set<String> advancedFallback})
+  forDayDetailed({
+    required List<MuscleRegion> regions,
+    required List<Exercise> catalog,
+    List<RoutineExercise> existing = const [],
+    Iterable<WorkoutSession> history = const [],
+    Set<Equipment>? allowedEquipment,
+    int daysPerWeek = 4,
+    int maxExercises = 6,
+    int minExercises = 0,
+    List<String> preferIds = const [],
+    Difficulty? level,
+  }) {
+    List<RoutineExercise> build(
+      List<MuscleRegion> rs,
+      List<RoutineExercise> have,
+      int max,
+      int min,
+      Set<String> exclude,
+    ) => _forDay(
+      regions: rs,
+      catalog: catalog,
+      existing: have,
+      history: history,
+      allowedEquipment: allowedEquipment,
+      daysPerWeek: daysPerWeek,
+      maxExercises: max,
+      minExercises: min,
+      preferIds: preferIds,
+      level: level,
+      poolExclude: exclude,
+    );
+    if (level != Difficulty.beginner) {
+      return (
+        picks: build(regions, existing, maxExercises, minExercises, const {}),
+        advancedFallback: const <String>{},
+      );
+    }
+    final advanced = {
+      for (final e in catalog)
+        if (e.difficulty == Difficulty.advanced) e.id,
+    };
+    final main = build(regions, existing, maxExercises, minExercises, advanced);
+    // Controlled fallback: a requested region with no direct work at all gets ONE exercise from the full
+    // pool. Only an advanced pick is reported as a fallback.
+    final byId = {for (final e in catalog) e.id: e};
+    final covered = <MuscleRegion>{};
+    for (final r in [...existing, ...main]) {
+      final e = byId[r.exerciseId];
+      if (e == null) continue;
+      for (final t in MuscleProfiles.of(e).primary) {
+        covered.add(t.region);
+      }
+    }
+    final missing = [
+      for (final r in regions)
+        if (!covered.contains(r)) r,
+    ];
+    if (missing.isEmpty) {
+      return (picks: main, advancedFallback: const <String>{});
+    }
+    final extra = build(
+      missing,
+      [...existing, ...main],
+      missing.length,
+      missing.length,
+      const {},
+    );
+    final fallback = {
+      for (final r in extra)
+        if (advanced.contains(r.exerciseId)) r.exerciseId,
+    };
+    return (picks: [...main, ...extra], advancedFallback: fallback);
+  }
+
+  static List<RoutineExercise> _forDay({
+    required List<MuscleRegion> regions,
+    required List<Exercise> catalog,
+    List<RoutineExercise> existing = const [],
+    Iterable<WorkoutSession> history = const [],
+    Set<Equipment>? allowedEquipment,
+    int daysPerWeek = 4,
+    int maxExercises = 6,
+    int minExercises = 0,
+    List<String> preferIds = const [],
+    Difficulty? level,
+    Set<String> poolExclude = const {},
   }) {
     if (regions.isEmpty || maxExercises <= 0) return const [];
     final byId = {for (final e in catalog) e.id: e};
@@ -305,12 +453,19 @@ abstract final class ExerciseRecommender {
     final acc = _Tally();
     final usedIds = <String>{};
     final usedEquipment = <Equipment>{};
+    final patternCount = <String, int>{};
+    void countPattern(Exercise e) {
+      final k = e.movementPattern.toLowerCase();
+      if (k.isNotEmpty) patternCount[k] = (patternCount[k] ?? 0) + 1;
+    }
+
     for (final r in existing) {
       usedIds.add(r.exerciseId);
       final e = byId[r.exerciseId];
       if (e == null) continue;
       acc.add(MuscleProfiles.of(e), r.sets);
       usedEquipment.add(e.equipment);
+      countPattern(e);
     }
     final done = _doneIds(history);
     final prefer = {for (var i = 0; i < preferIds.length; i++) preferIds[i]: i};
@@ -318,12 +473,13 @@ abstract final class ExerciseRecommender {
     final pool = <_Cand>[];
     for (var i = 0; i < catalog.length; i++) {
       final e = catalog[i];
-      if (usedIds.contains(e.id)) continue;
+      if (usedIds.contains(e.id) || poolExclude.contains(e.id)) continue;
       if (allowedEquipment != null && !allowedEquipment.contains(e.equipment)) {
         continue;
       }
       final p = MuscleProfiles.of(e);
       if (!p.primary.any((t) => regions.contains(t.region))) continue;
+      if (_isAccessory(p, regions)) continue;
       pool.add(_Cand(e, p, i, isCompound(e, p), _isHeavyHinge(e, p)));
     }
 
@@ -381,10 +537,19 @@ abstract final class ExerciseRecommender {
         }
         s += novel > 2.0 ? 2.0 : novel;
         if (c.compound) s += 1.0;
+        // Repeating a movement pattern already in the day adds little: prefer a different one.
+        s -=
+            patternRepeatPenalty *
+            (patternCount[c.exercise.movementPattern.toLowerCase()] ?? 0);
         if (done.contains(c.exercise.id)) s += 0.4;
         if (!usedEquipment.contains(c.exercise.equipment)) s += 0.2;
         final pi = prefer[c.exercise.id];
         if (pi != null) s += 0.8 - 0.05 * pi.clamp(0, 10);
+        // Difficulty only RE-ORDERS candidates: a penalty may push an advanced exercise behind the
+        // others but never below "useful", so a muscle that nothing easier covers is still covered.
+        final preDifficulty = s;
+        s += _difficultyAdjust(level, c.exercise.difficulty);
+        if (preDifficulty > 0 && s <= 0) s = 0.05;
         if (best == null || s > bestScore + 1e-9) {
           best = c;
           bestScore = s;
@@ -401,6 +566,7 @@ abstract final class ExerciseRecommender {
       final sets = leadOpen <= 0 ? 3 : leadOpen.ceil().clamp(2, base);
       acc.add(best.profile, sets);
       usedEquipment.add(e.equipment);
+      countPattern(e);
       picked.add((
         RoutineExercise(
           exerciseId: e.id,
@@ -448,7 +614,7 @@ abstract final class ExerciseRecommender {
     final out = <CoverageGap>[];
     final flagged = <MuscleRegion>{};
     for (final r in MuscleRegion.values) {
-      if (r == MuscleRegion.forearms) continue;
+      if (r == MuscleRegion.forearms || r == MuscleRegion.adductors) continue;
       final weekly = (weeklyTargetSets[r] ?? 8) * scale;
       final direct = (report.directByRegion[r] ?? 0) / w;
       final weighted = (report.weightedByRegion[r] ?? 0) / w;

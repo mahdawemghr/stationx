@@ -14,6 +14,10 @@ enum MuscleRegion {
   quadriceps('Quadriceps', MuscleGroup.legs),
   hamstrings('Hamstrings', MuscleGroup.legs),
   glutes('Glutes', MuscleGroup.legs),
+  adductors(
+    'Adductors',
+    MuscleGroup.legs,
+  ), // inner thigh; own region so adduction never credits the glutes
   calves('Calves', MuscleGroup.legs),
   core('Core', MuscleGroup.core);
 
@@ -67,8 +71,13 @@ enum Muscle {
   gluteusMedius('Gluteus medius', MuscleRegion.glutes),
   gluteusMinimus('Gluteus minimus', MuscleRegion.glutes),
 
+  adductors('Adductors (inner thigh)', MuscleRegion.adductors),
+
   gastrocnemius('Gastrocnemius', MuscleRegion.calves),
   soleus('Soleus', MuscleRegion.calves),
+
+  /// Front of the lower leg (shin). Lives in the lower-leg [MuscleRegion.calves] region.
+  tibialisAnterior('Tibialis (shin)', MuscleRegion.calves),
 
   rectusAbdominis('Abs', MuscleRegion.core),
   obliques('Obliques', MuscleRegion.core),

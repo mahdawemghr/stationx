@@ -59,12 +59,24 @@ void main() {
 
   testWidgets('small screen / text scale: no overflow', (t) async {
     for (final demo in [true, false]) {
-      await pumpPage(t, const ProgressPage(), size: const Size(320, 568), textScale: 1.3, demo: demo);
+      await pumpPage(
+        t,
+        const ProgressPage(),
+        size: const Size(320, 568),
+        textScale: 1.3,
+        demo: demo,
+      );
       expect(t.takeException(), isNull);
       await t.tap(find.text('CARDIO'));
       await t.pumpAndSettle();
       expect(t.takeException(), isNull);
-      await pumpPage(t, const PersonalRecordsPage(), size: const Size(320, 568), textScale: 1.3, demo: demo);
+      await pumpPage(
+        t,
+        const PersonalRecordsPage(),
+        size: const Size(320, 568),
+        textScale: 1.3,
+        demo: demo,
+      );
       expect(t.takeException(), isNull);
     }
   });

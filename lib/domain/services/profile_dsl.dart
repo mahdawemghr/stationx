@@ -19,7 +19,7 @@ part 'profiles/profiles_other.dart';
 const _bi = MuscleRegion.biceps, _tri = MuscleRegion.triceps;
 const _quad = MuscleRegion.quadriceps, _ham = MuscleRegion.hamstrings;
 const _core = MuscleRegion.core;
-const _glu = MuscleRegion.glutes, _calf = MuscleRegion.calves;
+const _glu = MuscleRegion.glutes;
 
 /// Primary leaf target.
 MuscleTarget _p(Muscle m, [String? emphasis]) =>

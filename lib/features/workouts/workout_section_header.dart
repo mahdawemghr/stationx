@@ -10,7 +10,12 @@ import '../../domain/domain.dart';
 /// domain ([WorkoutSections.group]); this widget only renders it. With [onToggle] the header becomes a
 /// collapse toggle (chevron + button semantics).
 class WorkoutSectionHeader extends StatelessWidget {
-  const WorkoutSectionHeader({super.key, required this.section, this.collapsed = false, this.onToggle});
+  const WorkoutSectionHeader({
+    super.key,
+    required this.section,
+    this.collapsed = false,
+    this.onToggle,
+  });
   final WorkoutSection section;
   final bool collapsed;
   final VoidCallback? onToggle;
@@ -30,14 +35,31 @@ class WorkoutSectionHeader extends StatelessWidget {
         constraints: const BoxConstraints(minHeight: 32),
         child: Row(
           children: [
-            Container(width: 3, height: 14, decoration: BoxDecoration(color: c.primary, borderRadius: BorderRadius.circular(SxRadius.full))),
+            Container(
+              width: 3,
+              height: 14,
+              decoration: BoxDecoration(
+                color: c.primary,
+                borderRadius: BorderRadius.circular(SxRadius.full),
+              ),
+            ),
             const SizedBox(width: 8),
             Flexible(
-              child: Text(section.label.toUpperCase(), maxLines: 1, overflow: TextOverflow.ellipsis, style: SxText.labelCaps.copyWith(color: c.primary)),
+              child: Text(
+                section.label.toUpperCase(),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: SxText.labelCaps.copyWith(color: c.primary),
+              ),
             ),
             const SizedBox(width: 8),
             Expanded(
-              child: Text(summary(section), maxLines: 1, overflow: TextOverflow.ellipsis, style: SxText.bodySm.copyWith(color: c.textBody)),
+              child: Text(
+                summary(section),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: SxText.bodySm.copyWith(color: c.textBody),
+              ),
             ),
             if (onToggle != null)
               AnimatedRotation(
@@ -50,7 +72,12 @@ class WorkoutSectionHeader extends StatelessWidget {
       ),
     );
     if (onToggle == null) {
-      return Semantics(header: true, label: label, excludeSemantics: true, child: content);
+      return Semantics(
+        header: true,
+        label: label,
+        excludeSemantics: true,
+        child: content,
+      );
     }
     return Semantics(
       header: true,
@@ -59,7 +86,10 @@ class WorkoutSectionHeader extends StatelessWidget {
         semanticLabel: '$label, ${collapsed ? 'collapsed' : 'expanded'}',
         excludeChildSemantics: true,
         scale: 0.99,
-        child: ConstrainedBox(constraints: const BoxConstraints(minHeight: 48), child: Align(alignment: Alignment.centerLeft, child: content)),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 48),
+          child: Align(alignment: Alignment.centerLeft, child: content),
+        ),
       ),
     );
   }
@@ -72,8 +102,11 @@ class WorkoutSubHeader extends StatelessWidget {
 
   /// Sub-headers show for labelled (non-main) groups; a lone sub-area in a single-muscle workout has
   /// nothing to be told apart from, so it stays hidden.
-  static bool visible(WorkoutSection s, WorkoutSubSection g, {required bool multiSection}) =>
-      g.label != null && (multiSection || s.groups.length > 1);
+  static bool visible(
+    WorkoutSection s,
+    WorkoutSubSection g, {
+    required bool multiSection,
+  }) => g.label != null && (multiSection || s.groups.length > 1);
 
   @override
   Widget build(BuildContext context) {
@@ -83,8 +116,20 @@ class WorkoutSubHeader extends StatelessWidget {
       label: label,
       excludeSemantics: true,
       child: Padding(
-        padding: const EdgeInsets.only(top: SxSpace.xs, bottom: SxSpace.xs, left: 2),
-        child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: SxText.labelXs.copyWith(color: c.textMuted, letterSpacing: 0.8)),
+        padding: const EdgeInsets.only(
+          top: SxSpace.xs,
+          bottom: SxSpace.xs,
+          left: 2,
+        ),
+        child: Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: SxText.labelXs.copyWith(
+            color: c.textMuted,
+            letterSpacing: 0.8,
+          ),
+        ),
       ),
     );
   }

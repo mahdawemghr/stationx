@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:stationx/app/app_controller.dart';
 import 'package:stationx/core/widgets/widgets.dart';
+import 'package:stationx/data/remote/remote_exception.dart';
+import 'package:stationx/features/auth/about_you_page.dart';
 import 'package:stationx/features/auth/login_page.dart';
 import 'package:stationx/features/auth/register_page.dart';
 import 'package:stationx/features/landing/landing_page.dart';
@@ -8,87 +11,174 @@ import 'package:stationx/features/profile/profile_page.dart';
 import 'package:stationx/features/shell/main_shell.dart';
 import 'package:stationx/features/today/today_page.dart';
 import 'package:stationx/domain/domain.dart';
+import '../../helpers/online_fakes.dart';
 import '../../helpers/pump.dart';
+
+const _pw = 'Passw0rdX';
 
 void main() {
   setUpAll(loadAppFonts);
 
   group('Landing', () {
-    testWidgets('guest enters the app with an empty local profile', (t) async {
-      final app = await pumpPage(t, const LandingPage(), demo: false);
-      expect(app.signedIn, isFalse);
-      await t.scrollUntilVisible(find.text('Continue as Guest (Offline Mode)'), 200, scrollable: find.byType(Scrollable).first);
-      await t.tap(find.text('Continue as Guest (Offline Mode)'));
-      await t.pumpAndSettle();
-      expect(app.signedIn, isTrue);
-      expect(find.byType(MainShell), findsOneWidget);
-      expect(app.sessions.sessions, isEmpty);
-      expect(app.profile.profile.isGuest, isTrue);
-    });
+    testWidgets(
+      'online-first: no guest/offline entry, only create account and log in',
+      (t) async {
+        await pumpPage(t, const LandingPage(), demo: false);
+        await t.scrollUntilVisible(
+          find.text('LOG IN'),
+          200,
+          scrollable: find.byType(Scrollable).first,
+        );
+        expect(find.textContaining('Guest', skipOffstage: false), findsNothing);
+        expect(
+          find.textContaining('Offline', skipOffstage: false),
+          findsNothing,
+        );
+        expect(
+          find.textContaining('Local-first', skipOffstage: false),
+          findsNothing,
+        );
+      },
+    );
 
     testWidgets('create account and log in open their forms', (t) async {
       await pumpPage(t, const LandingPage(), demo: false);
-      await t.scrollUntilVisible(find.text('LOG IN'), 200, scrollable: find.byType(Scrollable).first);
+      await t.scrollUntilVisible(
+        find.text('LOG IN'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
       await t.tap(find.text('LOG IN'));
       await t.pumpAndSettle();
       expect(find.byType(LoginPage), findsOneWidget);
     });
-  });
 
-  group('Login', () {
-    testWidgets('validates; rejects unknown email; restores the local account; no password field', (t) async {
-      final app = await pumpPage(t, const LoginPage(), demo: false);
-      // A local profile has no password: say so plainly and offer only an email field.
-      expect(find.byType(TextField), findsOneWidget);
-      expect(find.textContaining('not password protected'), findsOneWidget);
-      expect(find.textContaining('Forgot password'), findsNothing);
-      await t.tap(find.text('LOG IN').first);
+    testWidgets('says why the user is back when the session expired', (
+      t,
+    ) async {
+      final rig = await OnlineRig.signedIn();
+      rig.auth.expireSession();
       await t.pump();
-      expect(find.text('Required field'), findsOneWidget);
-      await t.enterText(find.byType(TextField).first, 'nope');
-      await t.pump();
-      expect(find.text('Invalid format'), findsOneWidget);
-      // No local account exists yet: there is no server, so sign-in is refused.
-      await t.enterText(find.byType(TextField).first, 'sam@mail.com');
-      await t.tap(find.text('LOG IN').first);
-      await t.pump();
-      await t.pump(const Duration(milliseconds: 300));
-      expect(app.signedIn, isFalse);
-      expect(find.textContaining('No local account'), findsOneWidget);
-      // After an account exists locally (and the user signed out), sign-in restores it.
-      await app.register(name: 'Sam', email: 'sam@mail.com');
-      await app.signOut();
-      await t.tap(find.text('LOG IN').first);
-      await t.pumpAndSettle();
-      expect(app.signedIn, isTrue);
-      expect(app.profile.profile.email, 'sam@mail.com');
+      await pumpPage(t, const LandingPage(), controller: rig.app);
+      expect(find.textContaining('session expired'), findsOneWidget);
     });
   });
 
+  group('Login', () {
+    Finder logIn() => find.widgetWithText(SxButton, 'LOG IN');
+
+    testWidgets(
+      'asks for username and password, validates, reports a wrong password, then enters the app',
+      (t) async {
+        final rig = OnlineRig()..auth.seedUser('sam', _pw);
+        final app = await pumpPage(t, const LoginPage(), controller: rig.app);
+        await app.init(); // start-up: no saved session -> signed out
+        expect(find.byType(TextField), findsNWidgets(2));
+        expect(find.text('PASSWORD'), findsOneWidget);
+        await t.tap(logIn());
+        await t.pump();
+        expect(find.text('Choose a username'), findsOneWidget);
+        await t.enterText(find.byType(TextField).first, 'a b');
+        await t.pump();
+        await t.tap(logIn());
+        await t.pump();
+        expect(find.textContaining('no spaces'), findsOneWidget);
+
+        await t.enterText(find.byType(TextField).first, 'sam');
+        await t.enterText(find.byType(TextField).last, 'WrongPass1');
+        await t.tap(logIn());
+        await t.pumpAndSettle();
+        expect(find.text('Wrong username or password'), findsOneWidget);
+        expect(app.phase, SessionPhase.signedOut);
+
+        await t.enterText(find.byType(TextField).last, _pw);
+        await t.tap(logIn());
+        await t.pumpAndSettle();
+        expect(app.phase, SessionPhase.ready);
+        expect(find.byType(MainShell), findsOneWidget);
+        expect(app.profile.profile.email, 'sam');
+      },
+    );
+
+    testWidgets(
+      'a connection problem keeps the typed password and says nothing was done',
+      (t) async {
+        final rig = OnlineRig()..auth.seedUser('sam', _pw);
+        final app = await pumpPage(t, const LoginPage(), controller: rig.app);
+        await app.init();
+        rig.remote.failAll = const RemoteException(RemoteFailure.offline);
+        await t.enterText(find.byType(TextField).first, 'sam');
+        await t.enterText(find.byType(TextField).last, _pw);
+        await t.tap(logIn());
+        await t.pumpAndSettle();
+        expect(find.textContaining("Can't reach the server"), findsOneWidget);
+        expect(app.phase, SessionPhase.signedOut);
+        expect(app.sessions.sessions, isEmpty);
+        rig.remote.failAll = null;
+        await t.tap(logIn()); // same form, same password: just try again
+        await t.pumpAndSettle();
+        expect(app.phase, SessionPhase.ready);
+      },
+    );
+  });
+
   group('Register', () {
-    testWidgets('local profile: name + email only, honest copy, creates the profile', (t) async {
-      final app = await pumpPage(t, const RegisterPage(), demo: false, size: const Size(390, 1700));
-      final fields = find.byType(TextField);
-      expect(fields, findsNWidgets(2)); // name + email: no password to pretend-protect anything
-      expect(find.textContaining('not password protected'), findsOneWidget);
-      expect(find.textContaining('PASSWORD', skipOffstage: false), findsNothing);
-      await t.tap(find.byType(SxButton).last);
-      await t.pump();
-      expect(app.signedIn, isFalse);
-      expect(find.text('Required field'), findsNWidgets(2));
-      await t.enterText(fields.at(0), 'Sam');
-      await t.enterText(fields.at(1), 'sam@mail.com');
-      await t.pump();
-      await t.tap(find.byType(SxButton).last);
+    testWidgets(
+      'asks for username and password with the rules; creates the account and goes to "About you"',
+      (t) async {
+        final rig = OnlineRig();
+        final app = await pumpPage(
+          t,
+          const RegisterPage(),
+          controller: rig.app,
+          size: const Size(390, 2000),
+        );
+        await app.init();
+        expect(find.byType(TextField), findsNWidgets(2));
+        expect(find.text('At least 8 characters'), findsOneWidget);
+        await t.tap(find.widgetWithText(SxButton, 'CREATE ACCOUNT'));
+        await t.pump();
+        expect(app.phase, SessionPhase.signedOut);
+        expect(find.text('Choose a username'), findsOneWidget);
+        await t.enterText(find.byType(TextField).first, '  Sam_Lifts ');
+        await t.enterText(find.byType(TextField).last, 'weak');
+        await t.tap(find.widgetWithText(SxButton, 'CREATE ACCOUNT'));
+        await t.pump();
+        expect(
+          rig.remote.calls,
+          isEmpty,
+          reason: 'a weak password never reaches the server',
+        );
+        await t.enterText(find.byType(TextField).last, _pw);
+        await t.tap(find.widgetWithText(SxButton, 'CREATE ACCOUNT'));
+        await t.pumpAndSettle();
+        expect(app.phase, SessionPhase.ready);
+        expect(app.profile.profile.email, 'sam_lifts');
+        expect(app.workouts.rotation.currentIndex, 0);
+        expect(find.byType(AboutYouPage), findsOneWidget);
+      },
+    );
+
+    testWidgets('a taken username is reported', (t) async {
+      final rig = OnlineRig()..auth.seedUser('sam', _pw);
+      await pumpPage(
+        t,
+        const RegisterPage(),
+        controller: rig.app,
+        size: const Size(390, 2000),
+      );
+      await t.enterText(find.byType(TextField).first, 'sam');
+      await t.enterText(find.byType(TextField).last, _pw);
+      await t.tap(find.widgetWithText(SxButton, 'CREATE ACCOUNT'));
       await t.pumpAndSettle();
-      expect(app.signedIn, isTrue);
-      expect(app.profile.profile.name, 'Sam');
-      expect(app.workouts.rotation.currentIndex, 0);
+      expect(find.textContaining('taken'), findsOneWidget);
     });
   });
 
   group('Today', () {
-    testWidgets('shows the rotation workout (not date based) and starts it', (t) async {
+    testWidgets('shows the rotation workout (not date based) and starts it', (
+      t,
+    ) async {
       final app = await pumpPage(t, const TodayPage());
       expect(find.text('Back + Triceps'), findsOneWidget);
       expect(find.text('DAY 2 / 3'), findsOneWidget);
@@ -97,21 +187,40 @@ void main() {
       await t.tap(find.text('START WORKOUT'));
       await t.pump(const Duration(milliseconds: 500));
       t.takeException(); // destination page is owned by another feature
-      expect(Navigator.of(t.element(find.byType(TodayPage, skipOffstage: false))).canPop(), isTrue);
+      expect(
+        Navigator.of(
+          t.element(find.byType(TodayPage, skipOffstage: false)),
+        ).canPop(),
+        isTrue,
+      );
     });
 
-    testWidgets('empty account has hero + empty progress hint, no fake recovery data', (t) async {
-      await pumpPage(t, const TodayPage(), demo: false);
-      expect(find.text('Chest + Biceps'), findsOneWidget);
-      expect(find.textContaining("Complete a workout", skipOffstage: false), findsOneWidget);
-      // Default test platform has no Health Connect: no recovery card, and never any made-up score.
-      expect(find.text('Recovery', skipOffstage: false), findsNothing);
-      expect(find.textContaining('88%'), findsNothing);
-    });
+    testWidgets(
+      'empty account has hero + empty progress hint, no fake recovery data',
+      (t) async {
+        await pumpPage(t, const TodayPage(), demo: false);
+        expect(find.text('Chest + Biceps'), findsOneWidget);
+        expect(
+          find.textContaining("Complete a workout", skipOffstage: false),
+          findsOneWidget,
+        );
+        // Default test platform has no Health Connect: no recovery card, and never any made-up score.
+        expect(find.text('Recovery', skipOffstage: false), findsNothing);
+        expect(find.textContaining('88%'), findsNothing);
+      },
+    );
 
     testWidgets('completing a workout advances the hero', (t) async {
       final app = await pumpPage(t, const TodayPage());
-      await app.completion.complete(WorkoutSession(id: 'n', workoutId: 'w2', name: 'Back + Triceps', workoutDate: DateTime.now(), exercises: []));
+      await app.completion.complete(
+        WorkoutSession(
+          id: 'n',
+          workoutId: 'w2',
+          name: 'Back + Triceps',
+          workoutDate: DateTime.now(),
+          exercises: [],
+        ),
+      );
       await t.pump();
       expect(find.text('Legs + Shoulders'), findsWidgets);
       expect(find.text('DAY 3 / 3'), findsOneWidget);
@@ -120,7 +229,11 @@ void main() {
 
   group('Profile', () {
     testWidgets('unit + theme persist through the repository', (t) async {
-      final app = await pumpPage(t, const ProfilePage(), size: const Size(390, 2600));
+      final app = await pumpPage(
+        t,
+        const ProfilePage(),
+        size: const Size(390, 2600),
+      );
       await t.tap(find.text('LB (POUNDS)'));
       await t.pump();
       expect(app.profile.profile.unit, WeightUnit.lb);
@@ -130,7 +243,11 @@ void main() {
     });
 
     testWidgets('default sets stepper and progression switch', (t) async {
-      final app = await pumpPage(t, const ProfilePage(), size: const Size(390, 2600));
+      final app = await pumpPage(
+        t,
+        const ProfilePage(),
+        size: const Size(390, 2600),
+      );
       await t.tap(find.bySemanticsLabel('Increase sets'));
       await t.pump();
       expect(app.profile.profile.defaultSets, 4);
@@ -140,31 +257,84 @@ void main() {
     });
 
     testWidgets('delete all data asks first, then wipes', (t) async {
-      final app = await pumpPage(t, const ProfilePage(), size: const Size(390, 2600));
+      final app = await pumpPage(
+        t,
+        const ProfilePage(),
+        size: const Size(390, 2600),
+      );
       expect(app.sessions.sessions, isNotEmpty);
-      await t.tap(find.text('Delete all local data'));
+      await t.tap(find.text('Delete all my data'));
       await t.pumpAndSettle();
       await t.tap(find.text("CANCEL"));
       await t.pumpAndSettle();
       expect(app.sessions.sessions, isNotEmpty);
-      await t.tap(find.text('Delete all local data'));
+      await t.tap(find.text('Delete all my data'));
       await t.pumpAndSettle();
       await t.tap(find.text('DELETE EVERYTHING'));
       await t.pumpAndSettle();
       expect(app.sessions.sessions, isEmpty);
     });
 
-    testWidgets('maximum workout length selector persists', (t) async {
-      final app = await pumpPage(t, const ProfilePage(), size: const Size(390, 2400));
-      expect(app.maxWorkoutMinutes, 180);
-      await t.tap(find.text('2 H'));
-      await t.pumpAndSettle();
-      expect(app.maxWorkoutMinutes, 120);
-      await t.tap(find.text('OFF'));
-      await t.pumpAndSettle();
-      expect(app.maxWorkoutMinutes, isNull);
-      expect(find.textContaining('Sets you logged are kept'), findsOneWidget);
-    });
+    testWidgets(
+      'a profile change that the server rejects is not shown as saved and says so',
+      (t) async {
+        final rig = await OnlineRig.signedIn();
+        final app = await pumpPage(
+          t,
+          const ProfilePage(),
+          controller: rig.app,
+          size: const Size(390, 2600),
+        );
+        rig.remote.failNext(const RemoteException(RemoteFailure.offline));
+        await t.tap(find.text('LB (POUNDS)'));
+        await t.pumpAndSettle();
+        expect(
+          app.profile.profile.unit,
+          WeightUnit.kg,
+          reason: 'unchanged: the server never confirmed',
+        );
+        expect(
+          find.textContaining("Couldn't save your profile"),
+          findsOneWidget,
+        );
+        expect(
+          rig.remote.rowOf('profiles', rig.auth.user!.id, '_')!['unit'],
+          isNot('lb'),
+        );
+        await t.tap(find.text('Retry'));
+        await t.pumpAndSettle();
+        expect(app.profile.profile.unit, WeightUnit.lb);
+      },
+    );
+
+    testWidgets(
+      'logging out asks first and leaves nothing of the user behind',
+      (t) async {
+        final rig = await OnlineRig.signedIn();
+        await rig.app.sessions.add(
+          WorkoutSession(
+            id: 's1',
+            workoutId: 'w1',
+            name: 'x',
+            workoutDate: DateTime.now(),
+            exercises: const [],
+          ),
+        );
+        final app = await pumpPage(
+          t,
+          const ProfilePage(),
+          controller: rig.app,
+          size: const Size(390, 2600),
+        );
+        await t.tap(find.text('Log out'));
+        await t.pumpAndSettle();
+        await t.tap(find.text('LOG OUT'));
+        await t.pumpAndSettle();
+        expect(app.phase, SessionPhase.signedOut);
+        expect(app.sessions.sessions, isEmpty);
+        expect(rig.auth.user, isNull);
+      },
+    );
 
     testWidgets('export sheet renders JSON for real data', (t) async {
       await pumpPage(t, const ProfilePage(), size: const Size(390, 2600));
@@ -188,7 +358,13 @@ void main() {
     for (final e in pages.entries) {
       for (final demo in [true, false]) {
         testWidgets('${e.key} demo=$demo at 320x568 scale 1.3', (t) async {
-          await pumpPage(t, e.value, size: const Size(320, 568), textScale: 1.3, demo: demo);
+          await pumpPage(
+            t,
+            e.value,
+            size: const Size(320, 568),
+            textScale: 1.3,
+            demo: demo,
+          );
           expect(t.takeException(), isNull);
         });
       }

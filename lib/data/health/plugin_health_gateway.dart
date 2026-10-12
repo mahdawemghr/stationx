@@ -7,23 +7,19 @@ import '../../domain/domain.dart';
 import 'health_gateway.dart';
 
 /// Health Connect (Android) and Apple Health / HealthKit (iOS) via the `health`
-/// plugin. Read-only access to sleep and resting heart rate; all on-device.
+/// plugin. Read-only access to exercise sessions, plus the opt-in feature permissions; all on-device.
 ///
 /// NOT covered by automated tests (needs a real device). The iOS path has not
 /// even been compiled on a Mac/Xcode yet. Keep this class thin — all logic
-/// lives in HealthConnectRepository / HealthSummary.
+/// lives in HealthConnectRepository / HealthSyncService.
 class PluginHealthGateway implements HealthGateway {
   final Health _health = Health();
   bool _configured = false;
 
-  // iOS has no "sleep session" type; "in bed" is its closest equivalent and is
-  // only used as a fallback when no asleep stages exist.
   static final _ios = Platform.isIOS;
-  static final _types = [
-    HealthDataType.SLEEP_ASLEEP,
-    if (_ios) HealthDataType.SLEEP_IN_BED else HealthDataType.SLEEP_SESSION,
-    HealthDataType.RESTING_HEART_RATE,
-  ];
+
+  // The base "connect" permission: read exercise sessions made by a watch or another app.
+  static final _types = [HealthDataType.WORKOUT];
   static final _access = List.filled(_types.length, HealthDataAccess.READ);
 
   @override
@@ -99,34 +95,6 @@ class PluginHealthGateway implements HealthGateway {
       debugPrint('HealthGateway read ${t.name} failed: ${e.runtimeType}');
       return const [];
     }
-  }
-
-  @override
-  Future<List<TimeSpan>> sleepAsleep(DateTime from, DateTime to) async => [
-    for (final p in await _read(HealthDataType.SLEEP_ASLEEP, from, to))
-      (from: p.dateFrom, to: p.dateTo),
-  ];
-
-  @override
-  Future<List<TimeSpan>> sleepSessions(DateTime from, DateTime to) async => [
-    for (final p in await _read(
-      _ios ? HealthDataType.SLEEP_IN_BED : HealthDataType.SLEEP_SESSION,
-      from,
-      to,
-    ))
-      (from: p.dateFrom, to: p.dateTo),
-  ];
-
-  @override
-  Future<List<BpmPoint>> restingHeartRate(DateTime from, DateTime to) async {
-    final out = <BpmPoint>[];
-    for (final p in await _read(HealthDataType.RESTING_HEART_RATE, from, to)) {
-      final v = p.value;
-      if (v is NumericHealthValue) {
-        out.add((at: p.dateTo, bpm: v.numericValue.toDouble()));
-      }
-    }
-    return out;
   }
 
   // ───────────────────────── workouts: write / read ─────────────────────────
@@ -422,6 +390,52 @@ class PluginHealthGateway implements HealthGateway {
     } catch (e) {
       debugPrint('HealthGateway.readMetrics failed: ${e.runtimeType}');
       return null;
+    }
+  }
+
+  @override
+  Future<List<BpmPoint>> heartRateSamples(DateTime from, DateTime to) async {
+    final out = <BpmPoint>[];
+    for (final p in await _read(HealthDataType.HEART_RATE, from, to)) {
+      if (ownSourceIds.contains(p.sourceName) ||
+          ownSourceIds.contains(p.sourceId)) {
+        continue;
+      }
+      final v = p.value;
+      if (v is NumericHealthValue) {
+        out.add((at: p.dateTo, bpm: v.numericValue.toDouble()));
+      }
+    }
+    return out;
+  }
+
+  @override
+  Future<HealthHistoryAccess> historyAccess() async {
+    if (_ios) {
+      return HealthHistoryAccess.granted; // HealthKit has no look-back limit
+    }
+    if (!Platform.isAndroid) return HealthHistoryAccess.notSupported;
+    try {
+      await _ensureConfigured();
+      if (!await _health.isHealthDataHistoryAvailable()) {
+        return HealthHistoryAccess.notSupported;
+      }
+      return await _health.isHealthDataHistoryAuthorized()
+          ? HealthHistoryAccess.granted
+          : HealthHistoryAccess.needsGrant;
+    } catch (_) {
+      return HealthHistoryAccess.notSupported;
+    }
+  }
+
+  @override
+  Future<bool> requestHistoryAccess() async {
+    if (!Platform.isAndroid) return false;
+    try {
+      await _ensureConfigured();
+      return await _health.requestHealthDataHistoryAuthorization();
+    } catch (_) {
+      return false;
     }
   }
 

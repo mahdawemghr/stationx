@@ -4,13 +4,24 @@ import 'muscle_profiles.dart';
 enum CoverageLevel { none, low, moderate, high }
 
 /// Weekly weighted-set thresholds for [CoverageLevel]. PRACTICAL GUIDELINES for a UI hint, not scientific
-/// claims. A value `v` (weighted sets per week) is: none when `v <= 0`, low when `v < moderate`, moderate when
+/// claims. Leaves (incl. Tibialis and Adductors) share the leaf numbers. A value `v` (weighted sets per week) is: none when `v <= 0`, low when `v < moderate`, moderate when
 /// `v < high`, otherwise high. Leaves use lower numbers because a region's volume is split over its leaves.
 abstract final class CoverageThresholds {
   static const double regionModerate = 4;
   static const double regionHigh = 10;
   static const double muscleModerate = 2;
   static const double muscleHigh = 5;
+
+  /// Adductors are a small accessory region (most lower-body lifts only assist them), so a lower bar than
+  /// the default region numbers: 2 weighted sets/week is moderate, 6 is high.
+  static const double adductorsModerate = 2;
+  static const double adductorsHigh = 6;
+
+  /// (moderate, high) weekly weighted sets for a whole [MuscleRegion].
+  static (double, double) forRegion(MuscleRegion r) =>
+      r == MuscleRegion.adductors
+      ? (adductorsModerate, adductorsHigh)
+      : (regionModerate, regionHigh);
 
   static CoverageLevel level(
     double perWeek, {
@@ -48,11 +59,14 @@ class CoverageReport {
 
   double get _w => weeks <= 0 ? 1 : weeks;
 
-  CoverageLevel levelOfRegion(MuscleRegion r) => CoverageThresholds.level(
-    (weightedByRegion[r] ?? 0) / _w,
-    moderate: CoverageThresholds.regionModerate,
-    high: CoverageThresholds.regionHigh,
-  );
+  CoverageLevel levelOfRegion(MuscleRegion r) {
+    final (moderate, high) = CoverageThresholds.forRegion(r);
+    return CoverageThresholds.level(
+      (weightedByRegion[r] ?? 0) / _w,
+      moderate: moderate,
+      high: high,
+    );
+  }
 
   CoverageLevel levelOfMuscle(Muscle m) => CoverageThresholds.level(
     (weightedByMuscle[m] ?? 0) / _w,

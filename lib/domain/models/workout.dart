@@ -35,7 +35,6 @@ class Workout {
     required this.name,
     this.description = '',
     this.exercises = const [],
-    this.restSeconds = 90,
     this.cardioFinisher,
     SyncMeta? meta,
   }) : meta = meta ?? SyncMeta();
@@ -44,7 +43,6 @@ class Workout {
   final String name;
   final String description;
   final List<RoutineExercise> exercises;
-  final int restSeconds;
 
   /// Optional cardio block that follows the strength work (mixed workout).
   final CardioTarget? cardioFinisher;
@@ -59,7 +57,6 @@ class Workout {
     String? name,
     String? description,
     List<RoutineExercise>? exercises,
-    int? restSeconds,
     CardioTarget? cardioFinisher,
     bool clearCardio = false,
   }) => Workout(
@@ -67,7 +64,6 @@ class Workout {
     name: name ?? this.name,
     description: description ?? this.description,
     exercises: exercises ?? this.exercises,
-    restSeconds: restSeconds ?? this.restSeconds,
     cardioFinisher: clearCardio
         ? null
         : (cardioFinisher ?? this.cardioFinisher),

@@ -21,7 +21,15 @@ void main() {
     final all = [for (final m in SectionMuscle.values) ...m.regions];
     expect(all.toSet().length, MuscleRegion.values.length);
     expect(all.length, MuscleRegion.values.length);
-    expect(SectionMuscle.legs.regions.length, 4);
+    expect(SectionMuscle.legs.regions, [
+      MuscleRegion.quadriceps,
+      MuscleRegion.hamstrings,
+      MuscleRegion.glutes,
+      MuscleRegion.adductors,
+      MuscleRegion.calves,
+    ]);
+    expect(SectionMuscle.of(MuscleRegion.adductors), SectionMuscle.legs);
+    expect(MuscleRegion.adductors.legacy, MuscleGroup.legs);
   });
   test('legacy storage mapping', () {
     expect(SectionMuscle.forearms.legacy, MuscleGroup.biceps);

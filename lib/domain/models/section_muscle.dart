@@ -15,6 +15,7 @@ enum SectionMuscle {
     MuscleRegion.quadriceps,
     MuscleRegion.hamstrings,
     MuscleRegion.glutes,
+    MuscleRegion.adductors,
     MuscleRegion.calves,
   ], MuscleGroup.legs),
   core('Core', [MuscleRegion.core], MuscleGroup.core);
@@ -37,7 +38,8 @@ enum SectionMuscle {
     MuscleRegion.quadriceps ||
     MuscleRegion.hamstrings ||
     MuscleRegion.glutes ||
-    MuscleRegion.calves => legs,
+    MuscleRegion.calves ||
+    MuscleRegion.adductors => legs,
     MuscleRegion.core => core,
   };
 

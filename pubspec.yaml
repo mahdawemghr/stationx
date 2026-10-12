@@ -1,5 +1,5 @@
 name: stationx
-description: "StationX — local-first strength and cardio tracker."
+description: "StationX — online strength and cardio tracker."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -31,21 +31,17 @@ dependencies:
   flutter:
     sdk: flutter
 
-  # The following adds the Cupertino Icons font to your application.
-  # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^1.0.8
-
-  # Local-first database. `isar_community` is the maintained fork of Isar 3
+  # Device-local state only (workout draft, preferences). `isar_community` is the maintained fork of Isar 3
   # (original `isar` 3.1.0 is unmaintained and incompatible with current analyzer).
   isar_community: ^3.3.2
   isar_community_flutter_libs: ^3.3.2
   path_provider: ^2.1.5
   package_info_plus: ^10.2.2
 
-  # Optional cloud backup/sync (off unless configured + user signs in). See supabase/README.md.
+  # Supabase: the only source of truth for user data. See supabase/README.md.
   supabase_flutter: ^2.18.0
 
-  # Health Connect (Android) read access: sleep + resting heart rate. Optional, opt-in.
+  # Health Connect (Android) / HealthKit (iOS): workout import, heart rate, write-back. Optional, opt-in.
   health: ^13.3.2
 
   # Pick a Gym Tracker export file to import. Read-only; nothing is uploaded.

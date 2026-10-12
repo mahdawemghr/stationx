@@ -13,7 +13,13 @@ import 'cardio_manage_helpers.dart';
 /// Editable cardio session state shared by Edit and Backdate. Fields shown are
 /// driven by [CardioKind.fields]; pace/speed are always derived, never typed.
 class CardioFormState extends ChangeNotifier {
-  CardioFormState({required this.kind, required this.date, required this.kmUnit, CardioSession? from, this.custom}) {
+  CardioFormState({
+    required this.kind,
+    required this.date,
+    required this.kmUnit,
+    CardioSession? from,
+    this.custom,
+  }) {
     final s = from;
     _existingDistanceKm = s?.distanceKm;
     if (s != null) {
@@ -21,9 +27,16 @@ class CardioFormState extends ChangeNotifier {
       hours.text = d ~/ 3600 == 0 ? '' : '${d ~/ 3600}';
       minutes.text = d == 0 ? '' : '${(d % 3600) ~/ 60}';
       seconds.text = d == 0 ? '' : '${d % 60}';
-      if (s.distanceKm != null) distance.text = Fmt.number(kmUnit ? s.distanceKm! : s.distanceKm! / 1.609344, decimals: 2);
+      if (s.distanceKm != null) {
+        distance.text = Fmt.number(
+          kmUnit ? s.distanceKm! : s.distanceKm! / 1.609344,
+          decimals: 2,
+        );
+      }
       if (s.speedKmh != null) speed.text = Fmt.number(s.speedKmh!, decimals: 1);
-      if (s.inclinePct != null) incline.text = Fmt.number(s.inclinePct!, decimals: 1);
+      if (s.inclinePct != null) {
+        incline.text = Fmt.number(s.inclinePct!, decimals: 1);
+      }
       if (s.resistance != null) resistance.text = '${s.resistance}';
       if (s.calories != null) calories.text = '${s.calories}';
       if (s.avgHeartRate != null) heartRate.text = '${s.avgHeartRate}';
@@ -44,8 +57,11 @@ class CardioFormState extends ChangeNotifier {
 
   /// Input fields this session exposes; a custom session that already has a
   /// distance keeps the field so editing never hides and erases it.
-  List<CardioField> get fields =>
-      CardioFieldResolver.fieldsFor(kind, custom: custom, existingDistanceKm: _existingDistanceKm);
+  List<CardioField> get fields => CardioFieldResolver.fieldsFor(
+    kind,
+    custom: custom,
+    existingDistanceKm: _existingDistanceKm,
+  );
   bool get hasDistance => fields.contains(CardioField.distance);
   DateTime date;
   bool kmUnit;
@@ -64,13 +80,28 @@ class CardioFormState extends ChangeNotifier {
   final route = TextEditingController();
   final notes = TextEditingController();
 
-  List<TextEditingController> get _all =>
-      [hours, minutes, seconds, distance, speed, incline, resistance, calories, heartRate, route, notes];
+  List<TextEditingController> get _all => [
+    hours,
+    minutes,
+    seconds,
+    distance,
+    speed,
+    incline,
+    resistance,
+    calories,
+    heartRate,
+    route,
+    notes,
+  ];
 
-  static double? _d(String t) => t.trim().isEmpty ? null : double.tryParse(t.trim().replaceAll(',', '.'));
+  static double? _d(String t) =>
+      t.trim().isEmpty ? null : double.tryParse(t.trim().replaceAll(',', '.'));
   static int? _i(String t) => t.trim().isEmpty ? null : int.tryParse(t.trim());
 
-  int get durationSeconds => (_i(hours.text) ?? 0) * 3600 + (_i(minutes.text) ?? 0) * 60 + (_i(seconds.text) ?? 0);
+  int get durationSeconds =>
+      (_i(hours.text) ?? 0) * 3600 +
+      (_i(minutes.text) ?? 0) * 60 +
+      (_i(seconds.text) ?? 0);
 
   /// Distance entered, converted to km.
   double? get distanceKm {
@@ -79,8 +110,10 @@ class CardioFormState extends ChangeNotifier {
     return kmUnit ? v : v * 1.609344;
   }
 
-  double? get paceSecPerKm => CardioMetrics.paceSecPerKm(durationSeconds, distanceKm);
-  double? get derivedSpeedKmh => CardioMetrics.speedKmh(durationSeconds, distanceKm);
+  double? get paceSecPerKm =>
+      CardioMetrics.paceSecPerKm(durationSeconds, distanceKm);
+  double? get derivedSpeedKmh =>
+      CardioMetrics.speedKmh(durationSeconds, distanceKm);
 
   void setKind(CardioKind k) {
     kind = k;
@@ -95,7 +128,9 @@ class CardioFormState extends ChangeNotifier {
   void setUnit(bool km) {
     if (km == kmUnit) return;
     final v = _d(distance.text);
-    if (v != null) distance.text = Fmt.number(km ? v * 1.609344 : v / 1.609344, decimals: 2);
+    if (v != null) {
+      distance.text = Fmt.number(km ? v * 1.609344 : v / 1.609344, decimals: 2);
+    }
     kmUnit = km;
     notifyListeners();
   }
@@ -105,9 +140,11 @@ class CardioFormState extends ChangeNotifier {
     notifyListeners();
   }
 
-  String? get durationError => showErrors && durationSeconds <= 0 ? 'Duration required' : null;
+  String? get durationError =>
+      showErrors && durationSeconds <= 0 ? 'Duration required' : null;
 
-  String? get dateError => date.isAfter(DateTime.now()) ? 'Cannot be in the future' : null;
+  String? get dateError =>
+      date.isAfter(DateTime.now()) ? 'Cannot be in the future' : null;
 
   bool validate() {
     showErrors = true;
@@ -116,10 +153,16 @@ class CardioFormState extends ChangeNotifier {
   }
 
   /// Builds the session. Optional fields not shown for [kind] are dropped.
-  CardioSession build({required String id, SyncMeta? meta, String? customActivityId}) {
+  CardioSession build({
+    required String id,
+    SyncMeta? meta,
+    String? customActivityId,
+  }) {
     final f = fields;
     final dist = distanceKm;
-    final spd = f.contains(CardioField.speed) && kind == CardioKind.treadmill ? _d(speed.text) : null;
+    final spd = f.contains(CardioField.speed) && kind == CardioKind.treadmill
+        ? _d(speed.text)
+        : null;
     return CardioSession(
       id: id,
       kind: kind,
@@ -128,7 +171,9 @@ class CardioFormState extends ChangeNotifier {
       distanceKm: dist,
       speedKmh: spd,
       inclinePct: f.contains(CardioField.incline) ? _d(incline.text) : null,
-      resistance: f.contains(CardioField.resistance) ? _i(resistance.text) : null,
+      resistance: f.contains(CardioField.resistance)
+          ? _i(resistance.text)
+          : null,
       calories: _i(calories.text),
       avgHeartRate: _i(heartRate.text),
       rpe: rpe,
@@ -165,14 +210,23 @@ Future<DateTime?> pickCardioDate(BuildContext context, DateTime initial) async {
 }
 
 Future<DateTime?> pickCardioTime(BuildContext context, DateTime initial) async {
-  final t = await showTimePicker(context: context, initialTime: TimeOfDay(hour: initial.hour, minute: initial.minute));
+  final t = await showTimePicker(
+    context: context,
+    initialTime: TimeOfDay(hour: initial.hour, minute: initial.minute),
+  );
   if (t == null) return null;
   return DateTime(initial.year, initial.month, initial.day, t.hour, t.minute);
 }
 
 /// Small caps card title used by the form sections.
 class CardioFormCard extends StatelessWidget {
-  const CardioFormCard({super.key, required this.title, this.icon, this.trailing, required this.children});
+  const CardioFormCard({
+    super.key,
+    required this.title,
+    this.icon,
+    this.trailing,
+    required this.children,
+  });
   final String title;
   final IconData? icon;
   final Widget? trailing;
@@ -182,21 +236,39 @@ class CardioFormCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.sx;
     return SxCard(
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: [
-          if (icon != null) ...[Icon(icon, size: 20, color: c.primary), const SizedBox(width: 8)],
-          Expanded(child: Text(title, style: SxText.headlineSm.copyWith(color: c.textHigh), overflow: TextOverflow.ellipsis)),
-          ?trailing,
-        ]),
-        const SizedBox(height: SxSpace.md),
-        ...children,
-      ]),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              if (icon != null) ...[
+                Icon(icon, size: 20, color: c.primary),
+                const SizedBox(width: 8),
+              ],
+              Expanded(
+                child: Text(
+                  title,
+                  style: SxText.headlineSm.copyWith(color: c.textHigh),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              ?trailing,
+            ],
+          ),
+          const SizedBox(height: SxSpace.md),
+          ...children,
+        ],
+      ),
     );
   }
 }
 
 class CardioUnitToggle extends StatelessWidget {
-  const CardioUnitToggle({super.key, required this.km, required this.onChanged});
+  const CardioUnitToggle({
+    super.key,
+    required this.km,
+    required this.onChanged,
+  });
   final bool km;
   final ValueChanged<bool> onChanged;
 
@@ -204,31 +276,51 @@ class CardioUnitToggle extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.sx;
     Widget seg(String label, bool value) => SxPressable(
-          onTap: () => onChanged(value),
-          selected: km == value,
-          semanticLabel: value ? 'Kilometers' : 'Miles',
-          excludeChildSemantics: true,
-          focusRadius: SxRadius.sm,
-          child: AnimatedContainer(
-            duration: SxMotion.of(context, SxMotion.micro),
-            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-            alignment: Alignment.center,
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            decoration: BoxDecoration(color: km == value ? c.primary : Colors.transparent, borderRadius: BorderRadius.circular(SxRadius.sm)),
-            child: Text(label, style: SxText.labelCaps.copyWith(color: km == value ? c.onAccent : c.textBody, fontWeight: FontWeight.w700)),
+      onTap: () => onChanged(value),
+      selected: km == value,
+      semanticLabel: value ? 'Kilometers' : 'Miles',
+      excludeChildSemantics: true,
+      focusRadius: SxRadius.sm,
+      child: AnimatedContainer(
+        duration: SxMotion.of(context, SxMotion.micro),
+        constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+        alignment: Alignment.center,
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        decoration: BoxDecoration(
+          color: km == value ? c.primary : Colors.transparent,
+          borderRadius: BorderRadius.circular(SxRadius.sm),
+        ),
+        child: Text(
+          label,
+          style: SxText.labelCaps.copyWith(
+            color: km == value ? c.onAccent : c.textBody,
+            fontWeight: FontWeight.w700,
           ),
-        );
+        ),
+      ),
+    );
     return Container(
       clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(color: c.surface2, borderRadius: BorderRadius.circular(SxRadius.base), border: Border.all(color: c.hairline)),
-      child: Row(mainAxisSize: MainAxisSize.min, children: [seg('KM', true), seg('MI', false)]),
+      decoration: BoxDecoration(
+        color: c.surface2,
+        borderRadius: BorderRadius.circular(SxRadius.base),
+        border: Border.all(color: c.hairline),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [seg('KM', true), seg('MI', false)],
+      ),
     );
   }
 }
 
 /// Duration / distance / speed / incline / resistance + derived pace tile.
 class CardioMetricsSection extends StatelessWidget {
-  const CardioMetricsSection({super.key, required this.form, this.title = 'Core Metrics'});
+  const CardioMetricsSection({
+    super.key,
+    required this.form,
+    this.title = 'Core Metrics',
+  });
   final CardioFormState form;
   final String title;
 
@@ -241,17 +333,24 @@ class CardioMetricsSection extends StatelessWidget {
     return CardioFormCard(
       title: title,
       icon: Icons.speed,
-      trailing: form.hasDistance ? CardioUnitToggle(km: form.kmUnit, onChanged: form.setUnit) : null,
+      trailing: form.hasDistance
+          ? CardioUnitToggle(km: form.kmUnit, onChanged: form.setUnit)
+          : null,
       children: [
-        Text('DURATION (HH : MM : SS)', style: SxText.labelCaps.copyWith(color: c.textBody)),
+        Text(
+          'DURATION (HH : MM : SS)',
+          style: SxText.labelCaps.copyWith(color: c.textBody),
+        ),
         const SizedBox(height: 6),
-        Row(children: [
-          Expanded(child: _numBox('Hours', form.hours, _digits, maxLen: 2)),
-          const SizedBox(width: 8),
-          Expanded(child: _numBox('Min', form.minutes, _digits, maxLen: 2)),
-          const SizedBox(width: 8),
-          Expanded(child: _numBox('Sec', form.seconds, _digits, maxLen: 2)),
-        ]),
+        Row(
+          children: [
+            Expanded(child: _numBox('Hours', form.hours, _digits, maxLen: 2)),
+            const SizedBox(width: 8),
+            Expanded(child: _numBox('Min', form.minutes, _digits, maxLen: 2)),
+            const SizedBox(width: 8),
+            Expanded(child: _numBox('Sec', form.seconds, _digits, maxLen: 2)),
+          ],
+        ),
         AnimatedSize(
           duration: SxMotion.of(context, SxMotion.short),
           alignment: Alignment.topLeft,
@@ -259,7 +358,10 @@ class CardioMetricsSection extends StatelessWidget {
               ? const SizedBox(width: double.infinity)
               : Padding(
                   padding: const EdgeInsets.only(top: 6),
-                  child: Text(err.toUpperCase(), style: SxText.labelXs.copyWith(color: c.danger)),
+                  child: Text(
+                    err.toUpperCase(),
+                    style: SxText.labelXs.copyWith(color: c.danger),
+                  ),
                 ),
         ),
         if (form.hasDistance) ...[
@@ -274,7 +376,8 @@ class CardioMetricsSection extends StatelessWidget {
             hint: '0.00',
           ),
         ],
-        if (form.kind == CardioKind.treadmill && f.contains(CardioField.speed)) ...[
+        if (form.kind == CardioKind.treadmill &&
+            f.contains(CardioField.speed)) ...[
           const SizedBox(height: SxSpace.md),
           SxTextField(
             label: 'Belt speed',
@@ -283,7 +386,9 @@ class CardioMetricsSection extends StatelessWidget {
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             inputFormatters: [_decimal],
             suffixText: 'KM/H',
-            hint: form.derivedSpeedKmh == null ? '0.0' : Fmt.number(form.derivedSpeedKmh!, decimals: 1),
+            hint: form.derivedSpeedKmh == null
+                ? '0.0'
+                : Fmt.number(form.derivedSpeedKmh!, decimals: 1),
           ),
         ],
         if (f.contains(CardioField.incline)) ...[
@@ -315,8 +420,20 @@ class CardioMetricsSection extends StatelessWidget {
     );
   }
 
-  Widget _numBox(String label, TextEditingController ctl, TextInputFormatter fmt, {int maxLen = 2}) =>
-      SxTextField(label: label, controller: ctl, mono: true, textAlign: TextAlign.center, keyboardType: TextInputType.number, inputFormatters: [fmt, LengthLimitingTextInputFormatter(maxLen)], hint: '0');
+  Widget _numBox(
+    String label,
+    TextEditingController ctl,
+    TextInputFormatter fmt, {
+    int maxLen = 2,
+  }) => SxTextField(
+    label: label,
+    controller: ctl,
+    mono: true,
+    textAlign: TextAlign.center,
+    keyboardType: TextInputType.number,
+    inputFormatters: [fmt, LengthLimitingTextInputFormatter(maxLen)],
+    hint: '0',
+  );
 }
 
 class _DerivedTile extends StatelessWidget {
@@ -331,17 +448,35 @@ class _DerivedTile extends StatelessWidget {
     final showsSpeed = !showsPace && form.hasDistance;
     if (!showsPace && !showsSpeed) return const SizedBox.shrink();
     final label = showsPace ? 'Calculated avg pace' : 'Calculated avg speed';
-    final value = showsPace ? CardioPace.text(form.kind, form.paceSecPerKm, miles: !units.km) : units.speedText(form.derivedSpeedKmh);
-    final unit = showsPace ? CardioPace.unit(form.kind, miles: !units.km) : units.speedUnit;
+    final value = showsPace
+        ? CardioPace.text(form.kind, form.paceSecPerKm, miles: !units.km)
+        : units.speedText(form.derivedSpeedKmh);
+    final unit = showsPace
+        ? CardioPace.unit(form.kind, miles: !units.km)
+        : units.speedUnit;
     return SxInset(
       color: c.canvas,
-      child: Row(children: [
-        Icon(Icons.speed, color: c.primary, size: 22),
-        const SizedBox(width: 12),
-        Expanded(child: Text(label.toUpperCase(), style: SxText.labelCaps.copyWith(color: c.textBody), maxLines: 2, overflow: TextOverflow.ellipsis)),
-        const SizedBox(width: 8),
-        MetricValue(value, unit: unit, style: SxText.metricLg, color: c.primary),
-      ]),
+      child: Row(
+        children: [
+          Icon(Icons.speed, color: c.primary, size: 22),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              label.toUpperCase(),
+              style: SxText.labelCaps.copyWith(color: c.textBody),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          const SizedBox(width: 8),
+          MetricValue(
+            value,
+            unit: unit,
+            style: SxText.metricLg,
+            color: c.primary,
+          ),
+        ],
+      ),
     );
   }
 }
@@ -360,23 +495,61 @@ class CardioBiometricsSection extends StatelessWidget {
       icon: Icons.monitor_heart_outlined,
       trailing: StatusPill('Optional', color: context.sx.textBody),
       children: [
-        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Expanded(
-            child: SxTextField(label: 'Energy burn', controller: form.calories, mono: true, keyboardType: TextInputType.number, inputFormatters: [_digits], suffixText: 'KCAL', hint: '—'),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: SxTextField(label: 'Avg heart rate', controller: form.heartRate, mono: true, keyboardType: TextInputType.number, inputFormatters: [_digits], suffixText: 'BPM', hint: '—'),
-          ),
-        ]),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: SxTextField(
+                label: 'Energy burn',
+                controller: form.calories,
+                mono: true,
+                keyboardType: TextInputType.number,
+                inputFormatters: [_digits],
+                suffixText: 'KCAL',
+                hint: '—',
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: SxTextField(
+                label: 'Avg heart rate',
+                controller: form.heartRate,
+                mono: true,
+                keyboardType: TextInputType.number,
+                inputFormatters: [_digits],
+                suffixText: 'BPM',
+                hint: '—',
+              ),
+            ),
+          ],
+        ),
         const SizedBox(height: SxSpace.md),
-        Row(children: [
-          Expanded(child: Text('PERCEIVED EFFORT (RPE)', style: SxText.labelCaps.copyWith(color: c.textBody))),
-          Text(rpe == null ? 'Not set' : Fmt.number(rpe), style: SxText.metricMd.copyWith(color: rpe == null ? c.textMuted : c.primary)),
-          if (rpe != null) Text(' / 10', style: SxText.bodySm.copyWith(color: c.textBody)),
-          if (rpe != null)
-            SxIconButton(icon: Icons.close, tooltip: 'Clear effort', filled: false, iconColor: c.textMuted, onPressed: () => form.setRpe(null)),
-        ]),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                'PERCEIVED EFFORT (RPE)',
+                style: SxText.labelCaps.copyWith(color: c.textBody),
+              ),
+            ),
+            Text(
+              rpe == null ? 'Not set' : Fmt.number(rpe),
+              style: SxText.metricMd.copyWith(
+                color: rpe == null ? c.textMuted : c.primary,
+              ),
+            ),
+            if (rpe != null)
+              Text(' / 10', style: SxText.bodySm.copyWith(color: c.textBody)),
+            if (rpe != null)
+              SxIconButton(
+                icon: Icons.close,
+                tooltip: 'Clear effort',
+                filled: false,
+                iconColor: c.textMuted,
+                onPressed: () => form.setRpe(null),
+              ),
+          ],
+        ),
         SliderTheme(
           data: SliderTheme.of(context).copyWith(
             activeTrackColor: c.primary,
@@ -385,12 +558,28 @@ class CardioBiometricsSection extends StatelessWidget {
             overlayColor: c.primary.withValues(alpha: 0.12),
             trackHeight: 4,
           ),
-          child: Slider(value: rpe ?? 1, min: 1, max: 10, divisions: 18, label: rpe == null ? null : Fmt.number(rpe), onChanged: form.setRpe),
+          child: Slider(
+            value: rpe ?? 1,
+            min: 1,
+            max: 10,
+            divisions: 18,
+            label: rpe == null ? null : Fmt.number(rpe),
+            onChanged: form.setRpe,
+          ),
         ),
-        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-          Text('1 Recovery', style: SxText.bodySm.copyWith(color: c.textMuted)),
-          Text('10 Maximal', style: SxText.bodySm.copyWith(color: c.textMuted)),
-        ]),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              '1 Recovery',
+              style: SxText.bodySm.copyWith(color: c.textMuted),
+            ),
+            Text(
+              '10 Maximal',
+              style: SxText.bodySm.copyWith(color: c.textMuted),
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -403,16 +592,28 @@ class CardioContextSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final showRoute = form.fields.contains(CardioField.pace) || form.kind == CardioKind.cycling;
+    final showRoute =
+        form.fields.contains(CardioField.pace) ||
+        form.kind == CardioKind.cycling;
     return CardioFormCard(
       title: 'Context & Notes',
       icon: Icons.explore_outlined,
       children: [
         if (showRoute) ...[
-          SxTextField(label: 'Route / waypoint name', controller: form.route, icon: Icons.place_outlined, hint: 'e.g. Riverside loop'),
+          SxTextField(
+            label: 'Route / waypoint name',
+            controller: form.route,
+            icon: Icons.place_outlined,
+            hint: 'e.g. Riverside loop',
+          ),
           const SizedBox(height: SxSpace.md),
         ],
-        SxTextField(label: 'Session notes', controller: form.notes, maxLines: 3, hint: 'How did it feel?'),
+        SxTextField(
+          label: 'Session notes',
+          controller: form.notes,
+          maxLines: 3,
+          hint: 'How did it feel?',
+        ),
       ],
     );
   }
@@ -420,7 +621,12 @@ class CardioContextSection extends StatelessWidget {
 
 /// Tappable date / time cards.
 class CardioDateTimeRow extends StatelessWidget {
-  const CardioDateTimeRow({super.key, required this.form, this.dateLabel = 'Workout date', this.footer});
+  const CardioDateTimeRow({
+    super.key,
+    required this.form,
+    this.dateLabel = 'Workout date',
+    this.footer,
+  });
   final CardioFormState form;
   final String dateLabel;
   final Widget? footer;
@@ -430,43 +636,98 @@ class CardioDateTimeRow extends StatelessWidget {
     final c = context.sx;
     final d = form.date;
     final err = form.dateError;
-    Widget tile(String label, String value, String sub, IconData icon, VoidCallback onTap) => SxCard(
-          onTap: onTap,
-          padding: const EdgeInsets.all(14),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Row(children: [
-              Expanded(child: Text(label.toUpperCase(), style: SxText.labelCaps.copyWith(color: c.textBody))),
+    Widget tile(
+      String label,
+      String value,
+      String sub,
+      IconData icon,
+      VoidCallback onTap,
+    ) => SxCard(
+      onTap: onTap,
+      padding: const EdgeInsets.all(14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  label.toUpperCase(),
+                  style: SxText.labelCaps.copyWith(color: c.textBody),
+                ),
+              ),
               Icon(icon, size: 18, color: c.primary),
-            ]),
-            const SizedBox(height: 8),
-            Text(value, style: SxText.headlineMd.copyWith(color: c.textHigh), maxLines: 1, overflow: TextOverflow.ellipsis),
-            const SizedBox(height: 2),
-            Text(sub, style: SxText.bodySm.copyWith(color: c.textBody), maxLines: 1, overflow: TextOverflow.ellipsis),
-          ]),
-        );
-    final dateTile = tile(dateLabel, Fmt.dateMedium(d), Fmt.dayName(d.weekday), Icons.calendar_today_outlined, () async {
-      final p = await pickCardioDate(context, form.date);
-      if (p != null) form.setDate(p);
-    });
-    final timeTile = tile('Start time', Fmt.time(d), err ?? 'Tap to change', Icons.schedule, () async {
-      final p = await pickCardioTime(context, form.date);
-      if (p != null) form.setDate(p);
-    });
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      LayoutBuilder(
-        builder: (context, cons) => cons.maxWidth >= 340 && MediaQuery.textScalerOf(context).scale(1) <= 1.15
-            ? IntrinsicHeight(
-                child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                  Expanded(child: dateTile),
-                  const SizedBox(width: 12),
-                  Expanded(child: timeTile),
-                ]),
-              )
-            : Column(children: [dateTile, const SizedBox(height: 12), timeTile]),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: SxText.headlineMd.copyWith(color: c.textHigh),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 2),
+          Text(
+            sub,
+            style: SxText.bodySm.copyWith(color: c.textBody),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
       ),
-      if (err != null)
-        Padding(padding: const EdgeInsets.only(top: 6), child: Text(err.toUpperCase(), style: SxText.labelXs.copyWith(color: c.danger))),
-      if (footer != null) Padding(padding: const EdgeInsets.only(top: 8), child: footer),
-    ]);
+    );
+    final dateTile = tile(
+      dateLabel,
+      Fmt.dateMedium(d),
+      Fmt.dayName(d.weekday),
+      Icons.calendar_today_outlined,
+      () async {
+        final p = await pickCardioDate(context, form.date);
+        if (p != null) form.setDate(p);
+      },
+    );
+    final timeTile = tile(
+      'Start time',
+      Fmt.time(d),
+      err ?? 'Tap to change',
+      Icons.schedule,
+      () async {
+        final p = await pickCardioTime(context, form.date);
+        if (p != null) form.setDate(p);
+      },
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        LayoutBuilder(
+          builder: (context, cons) =>
+              cons.maxWidth >= 340 &&
+                  MediaQuery.textScalerOf(context).scale(1) <= 1.15
+              ? IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(child: dateTile),
+                      const SizedBox(width: 12),
+                      Expanded(child: timeTile),
+                    ],
+                  ),
+                )
+              : Column(
+                  children: [dateTile, const SizedBox(height: 12), timeTile],
+                ),
+        ),
+        if (err != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Text(
+              err.toUpperCase(),
+              style: SxText.labelXs.copyWith(color: c.danger),
+            ),
+          ),
+        if (footer != null)
+          Padding(padding: const EdgeInsets.only(top: 8), child: footer),
+      ],
+    );
   }
 }

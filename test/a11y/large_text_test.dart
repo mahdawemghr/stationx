@@ -10,7 +10,12 @@ void main() {
   setUpAll(loadAppFonts);
   for (final entry in screens.entries) {
     testWidgets('no overflow at 2.0x text: ${entry.key}', (t) async {
-      await pumpPage(t, entry.value(), size: const Size(360, 640), textScale: 2.0);
+      await pumpPage(
+        t,
+        entry.value(),
+        size: const Size(360, 640),
+        textScale: 2.0,
+      );
       await t.pump(const Duration(milliseconds: 400));
       final e = t.takeException();
       expect(e, isNull, reason: e is FlutterError ? e.toStringDeep() : '$e');

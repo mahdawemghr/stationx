@@ -30,6 +30,7 @@ class SxTextField extends StatelessWidget {
     this.focusNode,
     this.textAlign = TextAlign.start,
     this.enabled = true,
+    this.autocorrect = true,
   });
 
   final String label;
@@ -52,6 +53,9 @@ class SxTextField extends StatelessWidget {
   final FocusNode? focusNode;
   final TextAlign textAlign;
   final bool enabled;
+
+  /// False for usernames / codes: no auto-correct or suggestions.
+  final bool autocorrect;
 
   @override
   Widget build(BuildContext context) {
@@ -80,6 +84,8 @@ class SxTextField extends StatelessWidget {
             controller: controller,
             focusNode: focusNode,
             enabled: enabled,
+            autocorrect: autocorrect,
+            enableSuggestions: autocorrect,
             obscureText: obscureText,
             keyboardType: keyboardType,
             textInputAction: textInputAction,

@@ -11,24 +11,33 @@ import 'rotation_service.dart';
 /// `workoutDate` is taken from the session as supplied (backdatable);
 /// `createdAt` is stamped at construction time of the session meta.
 class WorkoutCompletion {
-  WorkoutCompletion(this.sessions, this.workouts);
+  WorkoutCompletion(this.sessions, this.workouts, {this.finisher});
   final SessionRepository sessions;
   final WorkoutRepository workouts;
+
+  /// When set, the session and the rotation move are saved as one atomic operation.
+  final AtomicWorkoutFinisher? finisher;
 
   /// [advanceRotation] is false for backdated entries of past workouts.
   Future<void> complete(
     WorkoutSession session, {
     bool advanceRotation = true,
   }) async {
-    await sessions.add(session);
-    if (!advanceRotation) return;
     final rot = workouts.rotation;
-    if (rot.length == 0) return;
-    if (rot.currentWorkoutId == session.workoutId) {
-      await workouts.advanceRotation(); // exactly today's behaviour
+    final Rotation? next = !advanceRotation || rot.length == 0
+        ? null
+        : rot.currentWorkoutId == session.workoutId
+        ? RotationService.advance(rot) // exactly today's behaviour
+        : RotationService.afterCompleting(rot, session.workoutId);
+    final move = next != null && next.currentIndex != rot.currentIndex
+        ? next
+        : null;
+    final f = finisher;
+    if (f != null) {
+      await f.finishWorkout(session, move);
       return;
     }
-    final next = RotationService.afterCompleting(rot, session.workoutId);
-    if (next.currentIndex != rot.currentIndex) await workouts.setRotation(next);
+    await sessions.add(session);
+    if (move != null) await workouts.setRotation(move);
   }
 }

@@ -25,7 +25,11 @@ void main() {
 
   group('home view', () {
     testWidgets('demo data: quick start, week, goal, recent', (t) async {
-      await pumpPage(t, const Scaffold(body: CardioHomeView()), size: const Size(390, 2600));
+      await pumpPage(
+        t,
+        const Scaffold(body: CardioHomeView()),
+        size: const Size(390, 2600),
+      );
       expect(find.text('Quick Start'), findsOneWidget);
       expect(find.text('THIS WEEK'), findsOneWidget);
       expect(find.text('WEEKLY AEROBIC GOAL'), findsOneWidget);
@@ -34,14 +38,18 @@ void main() {
       await shot(t, 'cardio_home');
     });
 
-    testWidgets('empty account shows the zero state, no fake numbers', (t) async {
+    testWidgets('empty account shows the zero state, no fake numbers', (
+      t,
+    ) async {
       await pumpPage(t, const Scaffold(body: CardioHomeView()), demo: false);
       expect(find.text('NO CARDIO RECORDED YET'), findsOneWidget);
       expect(find.text('THIS WEEK'), findsNothing);
       await shot(t, 'cardio_home_empty');
     });
 
-    testWidgets('long-press a recent card → delete dialog → deletes', (t) async {
+    testWidgets('long-press a recent card → delete dialog → deletes', (
+      t,
+    ) async {
       final app = await pumpPage(t, const Scaffold(body: CardioHomeView()));
       final before = app.cardio.sessions.length;
       await t.longPress(find.text('Outdoor Run').last);
@@ -55,9 +63,16 @@ void main() {
 
   group('select activity', () {
     testWidgets('lists activities and filters by search', (t) async {
-      await pumpPage(t, const SelectCardioActivityPage(), size: const Size(390, 2600));
+      await pumpPage(
+        t,
+        const SelectCardioActivityPage(),
+        size: const Size(390, 2600),
+      );
       expect(find.byKey(const Key('recent-strip')), findsOneWidget);
-      expect(find.text('Outdoor Run'), findsNWidgets(2)); // recent chip + its section row
+      expect(
+        find.text('Outdoor Run'),
+        findsNWidgets(2),
+      ); // recent chip + its section row
       expect(find.text('Treadmill Run'), findsWidgets);
       expect(find.text('Rowing Machine'), findsWidgets);
       await shot(t, 'cardio_select');
@@ -72,26 +87,35 @@ void main() {
   });
 
   group('prepare', () {
-    testWidgets('outdoor run: time objective shows target + estimate from history', (t) async {
-      await pumpPage(t, const CardioPreparePage(kind: CardioKind.outdoorRun));
-      expect(find.text('DISTANCE'), findsNothing);
-      await t.tap(find.text('TIME'));
-      await t.pump(const Duration(milliseconds: 300));
-      expect(find.text('TARGET DURATION'), findsOneWidget);
-      expect(find.textContaining('Estimated'), findsOneWidget);
-      await t.tap(find.text('+ 15 min'));
-      await t.pump();
-      await shot(t, 'cardio_prepare');
-    });
+    testWidgets(
+      'outdoor run: time objective shows target + estimate from history',
+      (t) async {
+        await pumpPage(t, const CardioPreparePage(kind: CardioKind.outdoorRun));
+        expect(find.text('DISTANCE'), findsNothing);
+        await t.tap(find.text('TIME'));
+        await t.pump(const Duration(milliseconds: 300));
+        expect(find.text('TARGET DURATION'), findsOneWidget);
+        expect(find.textContaining('Estimated'), findsOneWidget);
+        await t.tap(find.text('+ 15 min'));
+        await t.pump();
+        await shot(t, 'cardio_prepare');
+      },
+    );
 
-    testWidgets('no distance objective for duration-only activities', (t) async {
+    testWidgets('no distance objective for duration-only activities', (
+      t,
+    ) async {
       await pumpPage(t, const CardioPreparePage(kind: CardioKind.jumpRope));
       expect(find.text('DIST'), findsNothing);
       expect(find.text('TIME'), findsOneWidget);
     });
 
     testWidgets('empty history hides estimate and hint', (t) async {
-      await pumpPage(t, const CardioPreparePage(kind: CardioKind.outdoorRun), demo: false);
+      await pumpPage(
+        t,
+        const CardioPreparePage(kind: CardioKind.outdoorRun),
+        demo: false,
+      );
       await t.tap(find.text('TIME'));
       await t.pump(const Duration(milliseconds: 300));
       expect(find.textContaining('Estimated'), findsNothing);
@@ -108,7 +132,10 @@ void main() {
       expect(find.text('RESISTANCE'), findsNothing);
       await _unmount(t);
 
-      await pumpPage(t, const ActiveCardioPage(kind: CardioKind.stationaryBike));
+      await pumpPage(
+        t,
+        const ActiveCardioPage(kind: CardioKind.stationaryBike),
+      );
       expect(find.text('RESISTANCE'), findsOneWidget);
       expect(find.text('INCLINE'), findsNothing);
       await _unmount(t);
@@ -123,10 +150,15 @@ void main() {
       await _unmount(t);
     });
 
-    testWidgets('start → pause → resume → finish saves the right session', (t) async {
+    testWidgets('start → pause → resume → finish saves the right session', (
+      t,
+    ) async {
       var now = DateTime(2026, 5, 4, 7, 15);
       cardioNow = () => now;
-      final app = await pumpPage(t, const ActiveCardioPage(kind: CardioKind.outdoorRun, targetMinutes: 30));
+      final app = await pumpPage(
+        t,
+        const ActiveCardioPage(kind: CardioKind.outdoorRun, targetMinutes: 30),
+      );
       final before = app.cardio.sessions.length;
       expect(find.text('GOAL: 30 MIN'), findsOneWidget);
 
@@ -164,12 +196,21 @@ void main() {
       await t.tap(find.byKey(const Key('cardio-finish')));
       await t.pumpAndSettle();
       expect(app.cardio.sessions.length, before + 1);
-      final s = app.cardio.sessions.firstWhere((x) => x.id.startsWith('cardio_'));
+      final s = app.cardio.sessions.firstWhere(
+        (x) => x.id.startsWith('cardio_'),
+      );
       expect(s.kind, CardioKind.outdoorRun);
       expect(s.durationSeconds, 125);
       expect(s.distanceKm, closeTo(5.2, 1e-9));
-      expect(s.workoutDate, DateTime(2026, 5, 4, 7, 15)); // start time, not entry time
-      expect(s.meta.createdAt.isAfter(DateTime(2026, 5, 4, 7, 15)) || s.meta.createdAt.year >= 2026, isTrue);
+      expect(
+        s.workoutDate,
+        DateTime(2026, 5, 4, 7, 15),
+      ); // start time, not entry time
+      expect(
+        s.meta.createdAt.isAfter(DateTime(2026, 5, 4, 7, 15)) ||
+            s.meta.createdAt.year >= 2026,
+        isTrue,
+      );
       // replaced by the complete page
       expect(find.text('CARDIO COMPLETE'), findsOneWidget);
       await shot(t, 'cardio_complete_after_save');
@@ -177,7 +218,10 @@ void main() {
     });
 
     testWidgets('finish with zero time is refused', (t) async {
-      final app = await pumpPage(t, const ActiveCardioPage(kind: CardioKind.outdoorRun));
+      final app = await pumpPage(
+        t,
+        const ActiveCardioPage(kind: CardioKind.outdoorRun),
+      );
       final before = app.cardio.sessions.length;
       await t.tap(find.byKey(const Key('cardio-finish')));
       await t.pump();
@@ -189,7 +233,10 @@ void main() {
     testWidgets('back asks before discarding a dirty session', (t) async {
       var now = DateTime(2026, 5, 4, 7, 15);
       cardioNow = () => now;
-      final app = await pumpPage(t, const ActiveCardioPage(kind: CardioKind.outdoorRun));
+      final app = await pumpPage(
+        t,
+        const ActiveCardioPage(kind: CardioKind.outdoorRun),
+      );
       final before = app.cardio.sessions.length;
       now = now.add(const Duration(seconds: 30));
       await t.pump(const Duration(seconds: 1));
@@ -204,7 +251,10 @@ void main() {
     });
 
     testWidgets('lock disables controls', (t) async {
-      final app = await pumpPage(t, const ActiveCardioPage(kind: CardioKind.outdoorRun));
+      final app = await pumpPage(
+        t,
+        const ActiveCardioPage(kind: CardioKind.outdoorRun),
+      );
       await t.tap(find.byKey(const Key('cardio-lock')));
       await t.pump();
       await t.tap(find.byKey(const Key('cardio-pause')), warnIfMissed: false);
@@ -219,7 +269,9 @@ void main() {
   group('complete page', () {
     testWidgets('renders a saved session (run)', (t) async {
       final app = await pumpPage(t, const SizedBox());
-      final s = app.cardio.sessions.firstWhere((x) => x.kind == CardioKind.outdoorRun);
+      final s = app.cardio.sessions.firstWhere(
+        (x) => x.kind == CardioKind.outdoorRun,
+      );
       await pumpPage(t, CardioCompletePage(sessionId: s.id));
       expect(find.text('CARDIO COMPLETE'), findsOneWidget);
       expect(find.text('TOTAL DISTANCE'), findsOneWidget);
@@ -233,16 +285,25 @@ void main() {
       expect(find.text('Unable to load'), findsOneWidget);
     });
 
-    testWidgets('no goal → no weekly target card; cycling shows avg speed', (t) async {
+    testWidgets('no goal → no weekly target card; cycling shows avg speed', (
+      t,
+    ) async {
       final app = AppController()..startDemo();
       for (final g in [...app.cardio.goals]) {
         await app.cardio.deleteGoal(g.id);
       }
-      final s = app.cardio.sessions.firstWhere((x) => x.kind == CardioKind.cycling);
-      await t.pumpWidget(AppScope(
-        controller: app,
-        child: MaterialApp(theme: buildStationXTheme(SxColors.obsidian), home: CardioCompletePage(sessionId: s.id)),
-      ));
+      final s = app.cardio.sessions.firstWhere(
+        (x) => x.kind == CardioKind.cycling,
+      );
+      await t.pumpWidget(
+        AppScope(
+          controller: app,
+          child: MaterialApp(
+            theme: buildStationXTheme(SxColors.obsidian),
+            home: CardioCompletePage(sessionId: s.id),
+          ),
+        ),
+      );
       await t.pump(const Duration(milliseconds: 300));
       expect(find.text('Weekly cardio target'), findsNothing);
       expect(find.text('AVG SPEED'), findsOneWidget);
@@ -255,7 +316,17 @@ void main() {
       final app = await pumpPage(t, const SizedBox());
       final s = app.cardio.sessions.first;
       bool? result;
-      await pumpPage(t, Builder(builder: (c) => Center(child: TextButton(onPressed: () async => result = await confirmDeleteCardio(c, s), child: const Text('go')))));
+      await pumpPage(
+        t,
+        Builder(
+          builder: (c) => Center(
+            child: TextButton(
+              onPressed: () async => result = await confirmDeleteCardio(c, s),
+              child: const Text('go'),
+            ),
+          ),
+        ),
+      );
       await t.tap(find.text('go'));
       await t.pumpAndSettle();
       expect(find.text('DELETE CARDIO SESSION?'), findsOneWidget);
@@ -279,19 +350,45 @@ void main() {
       await _unmount(t);
     }
 
-    testWidgets('home', (t) async => check(t, const Scaffold(body: CardioHomeView())));
-    testWidgets('home empty', (t) async => check(t, const Scaffold(body: CardioHomeView()), demo: false));
-    testWidgets('select', (t) async => check(t, const SelectCardioActivityPage()));
+    testWidgets(
+      'home',
+      (t) async => check(t, const Scaffold(body: CardioHomeView())),
+    );
+    testWidgets(
+      'home empty',
+      (t) async =>
+          check(t, const Scaffold(body: CardioHomeView()), demo: false),
+    );
+    testWidgets(
+      'select',
+      (t) async => check(t, const SelectCardioActivityPage()),
+    );
     testWidgets('prepare time', (t) async {
-      await pumpPage(t, const CardioPreparePage(kind: CardioKind.treadmill), size: small, textScale: 1.3);
+      await pumpPage(
+        t,
+        const CardioPreparePage(kind: CardioKind.treadmill),
+        size: small,
+        textScale: 1.3,
+      );
       await t.tap(find.text('DIST'));
       await t.pump(const Duration(milliseconds: 300));
       expect(t.takeException(), isNull);
       await _unmount(t);
     });
-    testWidgets('active running', (t) async => check(t, const ActiveCardioPage(kind: CardioKind.treadmill, targetKm: 5)));
+    testWidgets(
+      'active running',
+      (t) async => check(
+        t,
+        const ActiveCardioPage(kind: CardioKind.treadmill, targetKm: 5),
+      ),
+    );
     testWidgets('active paused', (t) async {
-      await pumpPage(t, const ActiveCardioPage(kind: CardioKind.outdoorRun), size: small, textScale: 1.3);
+      await pumpPage(
+        t,
+        const ActiveCardioPage(kind: CardioKind.outdoorRun),
+        size: small,
+        textScale: 1.3,
+      );
       await t.tap(find.byKey(const Key('cardio-pause')));
       await t.pump();
       expect(t.takeException(), isNull);
@@ -299,7 +396,12 @@ void main() {
     });
     testWidgets('complete', (t) async {
       final app = await pumpPage(t, const SizedBox());
-      await pumpPage(t, CardioCompletePage(sessionId: app.cardio.sessions.first.id), size: small, textScale: 1.3);
+      await pumpPage(
+        t,
+        CardioCompletePage(sessionId: app.cardio.sessions.first.id),
+        size: small,
+        textScale: 1.3,
+      );
       expect(t.takeException(), isNull);
     });
   });

@@ -35,6 +35,7 @@ Exercise _e(
   equipment: eq,
   movementPattern: pattern,
   instructions: _steps,
+  difficulty: BuiltInDifficulty.of(id),
 );
 
 const _steps = [

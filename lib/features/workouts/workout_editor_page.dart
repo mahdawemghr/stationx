@@ -1,3 +1,4 @@
+import '../../core/utils/remote_ops.dart';
 import 'package:flutter/material.dart';
 
 import '../../app/app_controller.dart';
@@ -33,7 +34,6 @@ class _WorkoutEditorPageState extends State<WorkoutEditorPage> {
   late List<int> _ids;
   int _nextId = 0;
   late final int _initialCount;
-  late int _rest;
   bool _dirty = false;
   bool _reorderMode = false;
   bool _saving = false;
@@ -46,11 +46,14 @@ class _WorkoutEditorPageState extends State<WorkoutEditorPage> {
     final w = _app.workouts.byId(widget.workoutId);
     _original = w;
     _name = w?.name ?? 'New Routine';
-    // Arrange on read: one block per muscle, main exercises first (see WorkoutSections). Saved as shown.
-    _items = WorkoutSections.arrange([...?w?.exercises], _app.exercises.all);
+    // Arrange on read: one block per muscle; the stored order inside a muscle (manual sub-area order) is kept.
+    _items = WorkoutSections.arrange(
+      [...?w?.exercises],
+      _app.exercises.all,
+      mode: ArrangeMode.musclesOnly,
+    );
     _ids = [for (var i = 0; i < _items.length; i++) _nextId++];
     _initialCount = _nextId;
-    _rest = w?.restSeconds ?? _app.profile.profile.autoRestSeconds;
   }
 
   void _mutate(VoidCallback f) => setState(() {
@@ -63,21 +66,34 @@ class _WorkoutEditorPageState extends State<WorkoutEditorPage> {
   Future<bool> _save({required bool pop}) async {
     if (_saving) return false;
     if (_name.trim().isEmpty) {
-      showSxSnack(context, 'Give the workout a name', icon: Icons.error_outline);
+      showSxSnack(
+        context,
+        'Give the workout a name',
+        icon: Icons.error_outline,
+      );
       return false;
     }
     if (_items.isEmpty) {
-      showSxSnack(context, 'Add at least one exercise', icon: Icons.error_outline);
+      showSxSnack(
+        context,
+        'Add at least one exercise',
+        icon: Icons.error_outline,
+      );
       return false;
     }
     _saving = true;
     final base = _original;
     final w = base == null
-        ? Workout(id: widget.workoutId, name: _name.trim(), exercises: _items, restSeconds: _rest)
-        : base.copyWith(name: _name.trim(), exercises: _items, restSeconds: _rest);
-    await _app.workouts.saveWorkout(w);
+        ? Workout(id: widget.workoutId, name: _name.trim(), exercises: _items)
+        : base.copyWith(name: _name.trim(), exercises: _items);
+    // Confirmed by the server or not at all: on failure the edits stay on screen and the page stays dirty.
+    final ok = await runRemote(
+      context,
+      () => _app.workouts.saveWorkout(w),
+      what: 'save the workout',
+    );
     _saving = false;
-    if (!mounted) return true;
+    if (!ok || !mounted) return false;
     _original = _app.workouts.byId(w.id);
     setState(() => _dirty = false);
     showSxSnack(context, 'Workout structure saved', icon: Icons.task_alt);
@@ -102,15 +118,25 @@ class _WorkoutEditorPageState extends State<WorkoutEditorPage> {
   }
 
   Future<void> _rename() async {
-    final res = await showSxSheet<String>(context, builder: (ctx) => _RenameSheet(initial: _name));
-    if (res != null && res.trim().isNotEmpty && res.trim() != _name) _mutate(() => _name = res.trim());
+    final res = await showSxSheet<String>(
+      context,
+      builder: (ctx) => _RenameSheet(initial: _name),
+    );
+    if (res != null && res.trim().isNotEmpty && res.trim() != _name) {
+      _mutate(() => _name = res.trim());
+    }
   }
 
   Future<void> _addExercise() async {
     final ex = await AppNav.exercisePicker(context);
     if (ex == null || !mounted) return;
     final p = _app.profile.profile;
-    final re = RoutineExercise(exerciseId: ex.id, sets: p.defaultSets, repMin: p.defaultRepMin, repMax: p.defaultRepMax);
+    final re = RoutineExercise(
+      exerciseId: ex.id,
+      sets: p.defaultSets,
+      repMin: p.defaultRepMin,
+      repMax: p.defaultRepMax,
+    );
     _mutate(() {
       // Lands in its muscle section (no second header); a new muscle goes after the existing sections.
       final at = WorkoutSections.insertionIndex(_items, re, _app.exercises.all);
@@ -123,8 +149,15 @@ class _WorkoutEditorPageState extends State<WorkoutEditorPage> {
   /// and the current section order.
   void _rearrange() {
     final cat = _app.exercises.all;
-    final order = [for (final s in WorkoutSections.groupContiguous(_items, cat)) s.muscle];
-    final arranged = WorkoutSections.arrange(_items, cat, muscleOrder: order);
+    final order = [
+      for (final s in WorkoutSections.groupContiguous(_items, cat)) s.muscle,
+    ];
+    final arranged = WorkoutSections.arrange(
+      _items,
+      cat,
+      muscleOrder: order,
+      mode: ArrangeMode.musclesOnly,
+    );
     final used = <int>{};
     final newItems = <RoutineExercise>[];
     final newIds = <int>[];
@@ -144,7 +177,8 @@ class _WorkoutEditorPageState extends State<WorkoutEditorPage> {
   }
 
   Future<void> _delete(int i) async {
-    final name = _app.exercises.byId(_items[i].exerciseId)?.name ?? 'this exercise';
+    final name =
+        _app.exercises.byId(_items[i].exerciseId)?.name ?? 'this exercise';
     final ok = await showSxConfirm(
       context,
       title: 'Remove exercise?',
@@ -169,20 +203,6 @@ class _WorkoutEditorPageState extends State<WorkoutEditorPage> {
       _items.insert(j, _items.removeAt(i));
       _ids.insert(j, _ids.removeAt(i));
     });
-  }
-
-  Future<void> _editRest() async {
-    final v = await showNumericKeypad(
-      context,
-      title: 'Rest between sets',
-      initial: _rest.toDouble(),
-      allowDecimal: false,
-      step: 15,
-      unit: 's',
-      min: 0,
-      max: 600,
-    );
-    if (v != null && v.round() != _rest) _mutate(() => _rest = v.round());
   }
 
   void _editExercise(int i) {
@@ -226,7 +246,9 @@ class _WorkoutEditorPageState extends State<WorkoutEditorPage> {
       final range = _Range(idx, idx + s.items.length - 1);
       if (multi) out.add(_Entry.header(s, range));
       for (final g in s.groups) {
-        if (WorkoutSubHeader.visible(s, g, multiSection: multi)) out.add(_Entry.sub(g.label!, range));
+        if (WorkoutSubHeader.visible(s, g, multiSection: multi)) {
+          out.add(_Entry.sub(g.label!, range));
+        }
         for (var j = 0; j < g.items.length; j++) {
           out.add(_Entry.item(idx++, range));
         }
@@ -255,14 +277,23 @@ class _WorkoutEditorPageState extends State<WorkoutEditorPage> {
     if (first < 0) first = 0;
     if (last < 0) last = rest.length - 1;
     // Include a sub-header that directly precedes the first row as part of the section.
-    while (first > 0 && !rest[first - 1].isItem && rest[first - 1].range == range && rest[first - 1].section == null) {
+    while (first > 0 &&
+        !rest[first - 1].isItem &&
+        rest[first - 1].range == range &&
+        rest[first - 1].section == null) {
       first--;
     }
     final outside = n < first || n > last + 1;
     final nn = n.clamp(first, last + 1);
     var target = rest.take(nn).where((e) => e.isItem).length;
     target = target.clamp(range.start, range.end);
-    if (outside) showSxSnack(context, 'Exercises stay inside their muscle section', icon: Icons.info_outline);
+    if (outside) {
+      showSxSnack(
+        context,
+        'Exercises stay inside their muscle section',
+        icon: Icons.info_outline,
+      );
+    }
     if (target == src.item) return;
     _mutate(() {
       _items.insert(target, _items.removeAt(src.item));
@@ -277,7 +308,9 @@ class _WorkoutEditorPageState extends State<WorkoutEditorPage> {
     final idx = _isNew ? -1 : rot.workoutIds.indexOf(widget.workoutId);
     final minutes = (_totalSets * 3).clamp(0, 600);
     // Live draft: never reordered here (groupContiguous); the list is arranged on open / add / swap.
-    final entries = _entries(WorkoutSections.groupContiguous(_items, _app.exercises.all));
+    final entries = _entries(
+      WorkoutSections.groupContiguous(_items, _app.exercises.all),
+    );
 
     return PopScope(
       canPop: !_dirty,
@@ -322,7 +355,12 @@ class _WorkoutEditorPageState extends State<WorkoutEditorPage> {
           ],
         ),
         body: ListView(
-          padding: const EdgeInsets.fromLTRB(SxSpace.screenMargin, SxSpace.md, SxSpace.screenMargin, SxSpace.lg),
+          padding: const EdgeInsets.fromLTRB(
+            SxSpace.screenMargin,
+            SxSpace.md,
+            SxSpace.screenMargin,
+            SxSpace.lg,
+          ),
           children: [
             SxCard(
               child: Column(
@@ -331,7 +369,10 @@ class _WorkoutEditorPageState extends State<WorkoutEditorPage> {
                   Row(
                     children: [
                       Expanded(
-                        child: Text(_name, style: SxText.headlineLg.copyWith(color: c.textHigh)),
+                        child: Text(
+                          _name,
+                          style: SxText.headlineLg.copyWith(color: c.textHigh),
+                        ),
                       ),
                       SxIconButton(
                         icon: Icons.edit_outlined,
@@ -347,8 +388,16 @@ class _WorkoutEditorPageState extends State<WorkoutEditorPage> {
                     runSpacing: 8,
                     children: [
                       if (idx >= 0)
-                        StatusPill('${rot.length}-day rotation • day ${idx + 1}', dot: true, color: c.textBody),
-                      StatusPill('Est. $minutes min • $_totalSets sets', icon: Icons.timer_outlined, color: c.textBody),
+                        StatusPill(
+                          '${rot.length}-day rotation • day ${idx + 1}',
+                          dot: true,
+                          color: c.textBody,
+                        ),
+                      StatusPill(
+                        'Est. $minutes min • $_totalSets sets',
+                        icon: Icons.timer_outlined,
+                        color: c.textBody,
+                      ),
                     ],
                   ),
                 ],
@@ -357,7 +406,8 @@ class _WorkoutEditorPageState extends State<WorkoutEditorPage> {
             const SizedBox(height: SxSpace.lg),
             SectionHeader(
               'Movement sequence',
-              trailingText: '${_items.length} ${_items.length == 1 ? 'movement' : 'movements'}',
+              trailingText:
+                  '${_items.length} ${_items.length == 1 ? 'movement' : 'movements'}',
             ),
             const SizedBox(height: SxSpace.sm),
             if (_items.isEmpty)
@@ -388,10 +438,17 @@ class _WorkoutEditorPageState extends State<WorkoutEditorPage> {
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(SxRadius.lg),
                             boxShadow: [
-                              BoxShadow(color: context.sx.scrim, blurRadius: 16 * t, offset: Offset(0, 4 * t)),
+                              BoxShadow(
+                                color: context.sx.scrim,
+                                blurRadius: 16 * t,
+                                offset: Offset(0, 4 * t),
+                              ),
                             ],
                           ),
-                          child: Material(color: Colors.transparent, child: child),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: child,
+                          ),
                         ),
                       );
                     },
@@ -399,10 +456,18 @@ class _WorkoutEditorPageState extends State<WorkoutEditorPage> {
                   itemBuilder: (context, k) {
                     final e = entries[k];
                     if (e.section != null) {
-                      return Padding(key: ValueKey('hdr_${e.section!.muscle.name}'), padding: const EdgeInsets.only(bottom: SxSpace.xs), child: WorkoutSectionHeader(section: e.section!));
+                      return Padding(
+                        key: ValueKey('hdr_${e.section!.muscle.name}'),
+                        padding: const EdgeInsets.only(bottom: SxSpace.xs),
+                        child: WorkoutSectionHeader(section: e.section!),
+                      );
                     }
                     if (e.subLabel != null) {
-                      return Padding(key: ValueKey('sub_$k'), padding: EdgeInsets.zero, child: WorkoutSubHeader(label: e.subLabel!));
+                      return Padding(
+                        key: ValueKey('sub_$k'),
+                        padding: EdgeInsets.zero,
+                        child: WorkoutSubHeader(label: e.subLabel!),
+                      );
                     }
                     final i = e.item;
                     final re = _items[i];
@@ -421,14 +486,20 @@ class _WorkoutEditorPageState extends State<WorkoutEditorPage> {
                       onDown: () => _move(i, 1, range),
                       handle: ReorderableDragStartListener(
                         index: k,
-                        child: SizedBox(width: 40, height: 48, child: Icon(Icons.drag_handle, color: c.textMuted)),
+                        child: SizedBox(
+                          width: 40,
+                          height: 48,
+                          child: Icon(Icons.drag_handle, color: c.textMuted),
+                        ),
                       ),
                     );
                     return Padding(
                       key: ValueKey('row_${_ids[i]}'),
                       padding: const EdgeInsets.only(bottom: SxSpace.sm),
                       // Rows added in this session slide in; existing ones never replay.
-                      child: _ids[i] >= _initialCount ? SxFadeSlideIn(dy: 8, child: row) : row,
+                      child: _ids[i] >= _initialCount
+                          ? SxFadeSlideIn(dy: 8, child: row)
+                          : row,
                     );
                   },
                 ),
@@ -449,17 +520,9 @@ class _WorkoutEditorPageState extends State<WorkoutEditorPage> {
                     icon: Icons.swap_vert,
                     variant: SxButtonVariant.secondary,
                     height: 48,
-                    onPressed: _items.length < 2 ? null : () => setState(() => _reorderMode = !_reorderMode),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: SxButton(
-                    label: 'Rest: ${_rest}s',
-                    icon: Icons.hourglass_top,
-                    variant: SxButtonVariant.secondary,
-                    height: 48,
-                    onPressed: _editRest,
+                    onPressed: _items.length < 2
+                        ? null
+                        : () => setState(() => _reorderMode = !_reorderMode),
                   ),
                 ),
               ],
@@ -485,14 +548,12 @@ class _Range {
 /// One row of the editor list: a section header, a sub-header or an exercise ([item] = index in the draft).
 class _Entry {
   const _Entry.header(WorkoutSection this.section, this.range)
-      : subLabel = null,
-        item = -1;
+    : subLabel = null,
+      item = -1;
   const _Entry.sub(String this.subLabel, this.range)
-      : section = null,
-        item = -1;
-  const _Entry.item(this.item, this.range)
-      : section = null,
-        subLabel = null;
+    : section = null,
+      item = -1;
+  const _Entry.item(this.item, this.range) : section = null, subLabel = null;
   final WorkoutSection? section;
   final String? subLabel;
   final int item;
@@ -529,13 +590,18 @@ class _EditorRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.sx;
-    final reps = re.repMin == re.repMax ? '${re.repMin}' : '${re.repMin}–${re.repMax}';
+    final reps = re.repMin == re.repMax
+        ? '${re.repMin}'
+        : '${re.repMin}–${re.repMax}';
     return SxCard(
       padding: const EdgeInsets.fromLTRB(4, 8, 4, 8),
       child: Row(
         children: [
           handle,
-          Text('${index + 1}'.padLeft(2, '0'), style: SxText.metricMd.copyWith(color: c.primary)),
+          Text(
+            '${index + 1}'.padLeft(2, '0'),
+            style: SxText.metricMd.copyWith(color: c.primary),
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
@@ -570,8 +636,18 @@ class _EditorRow extends StatelessWidget {
               onPressed: canDown ? onDown : null,
             ),
           ] else ...[
-            SxIconButton(icon: Icons.tune, tooltip: 'Edit sets and reps', filled: false, onPressed: onTune),
-            SxIconButton(icon: Icons.delete_outline, tooltip: 'Remove exercise', filled: false, onPressed: onDelete),
+            SxIconButton(
+              icon: Icons.tune,
+              tooltip: 'Edit sets and reps',
+              filled: false,
+              onPressed: onTune,
+            ),
+            SxIconButton(
+              icon: Icons.delete_outline,
+              tooltip: 'Remove exercise',
+              filled: false,
+              onPressed: onDelete,
+            ),
           ],
         ],
       ),
@@ -580,7 +656,12 @@ class _EditorRow extends StatelessWidget {
 }
 
 class _ExerciseSheet extends StatefulWidget {
-  const _ExerciseSheet({required this.name, required this.initial, required this.onChanged, this.onSwap});
+  const _ExerciseSheet({
+    required this.name,
+    required this.initial,
+    required this.onChanged,
+    this.onSwap,
+  });
   final String name;
   final RoutineExercise initial;
   final ValueChanged<RoutineExercise> onChanged;
@@ -606,8 +687,14 @@ class _ExerciseSheetState extends State<_ExerciseSheet> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(widget.name, style: SxText.headlineMd.copyWith(color: c.textHigh)),
-          Text('Targets for each session', style: SxText.bodySm.copyWith(color: c.textBody)),
+          Text(
+            widget.name,
+            style: SxText.headlineMd.copyWith(color: c.textHigh),
+          ),
+          Text(
+            'Targets for each session',
+            style: SxText.bodySm.copyWith(color: c.textBody),
+          ),
           const SizedBox(height: SxSpace.md),
           _StepRow(
             label: 'Sets',
@@ -622,7 +709,9 @@ class _ExerciseSheetState extends State<_ExerciseSheet> {
             value: _re.repMin,
             min: 1,
             max: 50,
-            onChanged: (v) => _set(_re.copyWith(repMin: v, repMax: v > _re.repMax ? v : _re.repMax)),
+            onChanged: (v) => _set(
+              _re.copyWith(repMin: v, repMax: v > _re.repMax ? v : _re.repMax),
+            ),
           ),
           const SizedBox(height: SxSpace.sm),
           _StepRow(
@@ -630,7 +719,9 @@ class _ExerciseSheetState extends State<_ExerciseSheet> {
             value: _re.repMax,
             min: 1,
             max: 50,
-            onChanged: (v) => _set(_re.copyWith(repMax: v, repMin: v < _re.repMin ? v : _re.repMin)),
+            onChanged: (v) => _set(
+              _re.copyWith(repMax: v, repMin: v < _re.repMin ? v : _re.repMin),
+            ),
           ),
           if (widget.onSwap != null) ...[
             const SizedBox(height: SxSpace.md),
@@ -673,9 +764,19 @@ class _StepRow extends StatelessWidget {
         children: [
           const SizedBox(width: 8),
           Expanded(
-            child: Text(label.toUpperCase(), style: SxText.labelCaps.copyWith(color: c.textBody)),
+            child: Text(
+              label.toUpperCase(),
+              style: SxText.labelCaps.copyWith(color: c.textBody),
+            ),
           ),
-          SxStepper.int(label: label, value: value, min: min, max: max, longPressRepeat: false, onChanged: onChanged),
+          SxStepper.int(
+            label: label,
+            value: value,
+            min: min,
+            max: max,
+            longPressRepeat: false,
+            onChanged: onChanged,
+          ),
         ],
       ),
     );
@@ -693,7 +794,9 @@ class _RenameSheet extends StatefulWidget {
 }
 
 class _RenameSheetState extends State<_RenameSheet> {
-  late final TextEditingController _ctl = TextEditingController(text: widget.initial);
+  late final TextEditingController _ctl = TextEditingController(
+    text: widget.initial,
+  );
 
   @override
   void dispose() {
@@ -715,7 +818,10 @@ class _RenameSheetState extends State<_RenameSheet> {
             onSubmitted: (v) => Navigator.pop(context, v),
           ),
           const SizedBox(height: SxSpace.md),
-          SxButton(label: 'Done', onPressed: () => Navigator.pop(context, _ctl.text)),
+          SxButton(
+            label: 'Done',
+            onPressed: () => Navigator.pop(context, _ctl.text),
+          ),
         ],
       ),
     );
@@ -730,6 +836,11 @@ class _MaybeAnimatedSize extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (SxMotion.reduced(context)) return child;
-    return AnimatedSize(duration: SxMotion.of(context, SxMotion.short), curve: SxMotion.enter, alignment: Alignment.topCenter, child: child);
+    return AnimatedSize(
+      duration: SxMotion.of(context, SxMotion.short),
+      curve: SxMotion.enter,
+      alignment: Alignment.topCenter,
+      child: child,
+    );
   }
 }

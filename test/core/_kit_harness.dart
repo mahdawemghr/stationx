@@ -18,16 +18,20 @@ Future<void> pumpKit(
   t.view.devicePixelRatio = dpr;
   addTearDown(t.view.resetPhysicalSize);
   addTearDown(t.view.resetDevicePixelRatio);
-  await t.pumpWidget(MaterialApp(
-    debugShowCheckedModeBanner: false,
-    theme: _theme,
-    builder: (ctx, c) => MediaQuery(
-      data: MediaQuery.of(ctx).copyWith(
-        disableAnimations: reduced,
-        textScaler: TextScaler.linear(textScale),
+  await t.pumpWidget(
+    MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: _theme,
+      builder: (ctx, c) => MediaQuery(
+        data: MediaQuery.of(ctx).copyWith(
+          disableAnimations: reduced,
+          textScaler: TextScaler.linear(textScale),
+        ),
+        child: c!,
       ),
-      child: c!,
+      home: Scaffold(
+        body: Align(alignment: Alignment.topLeft, child: child),
+      ),
     ),
-    home: Scaffold(body: Align(alignment: Alignment.topLeft, child: child)),
-  ));
+  );
 }

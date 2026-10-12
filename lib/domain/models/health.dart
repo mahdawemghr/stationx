@@ -22,32 +22,3 @@ enum HealthStatus {
   /// Read access granted.
   connected,
 }
-
-/// What the app reads from Health Connect. Read-only: sleep and resting heart
-/// rate. Nothing is written back and nothing leaves the device.
-class HealthSnapshot {
-  const HealthSnapshot({
-    required this.fetchedAt,
-    this.sleepMinutes,
-    this.restingHr,
-    this.restingHrAvg7d,
-  });
-
-  final DateTime fetchedAt;
-
-  /// Time asleep in the most recent night (minutes), if any sleep was recorded.
-  final int? sleepMinutes;
-
-  /// Latest resting heart rate (bpm) in the last 7 days.
-  final int? restingHr;
-
-  /// Average resting heart rate (bpm) over the last 7 days.
-  final int? restingHrAvg7d;
-
-  bool get hasData => sleepMinutes != null || restingHr != null;
-
-  /// Today's resting HR minus the 7-day average (negative = lower/better).
-  int? get restingHrDelta => (restingHr != null && restingHrAvg7d != null)
-      ? restingHr! - restingHrAvg7d!
-      : null;
-}

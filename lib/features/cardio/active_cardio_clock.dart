@@ -16,16 +16,18 @@ class CardioClock {
   DateTime? _runningSince = cardioNow();
   DateTime? _pausedSince;
 
-  bool get isRunning => _runningSince != null;
-
   int get activeSeconds {
-    final live = _runningSince == null ? 0 : cardioNow().difference(_runningSince!).inMilliseconds;
+    final live = _runningSince == null
+        ? 0
+        : cardioNow().difference(_runningSince!).inMilliseconds;
     return (_activeMs + live) ~/ 1000;
   }
 
   /// Total seconds spent paused.
   int get pausedSeconds {
-    final live = _pausedSince == null ? 0 : cardioNow().difference(_pausedSince!).inMilliseconds;
+    final live = _pausedSince == null
+        ? 0
+        : cardioNow().difference(_pausedSince!).inMilliseconds;
     return (_pausedMs + live) ~/ 1000;
   }
 
@@ -40,7 +42,9 @@ class CardioClock {
   void resume() {
     if (_runningSince != null) return;
     final n = cardioNow();
-    if (_pausedSince != null) _pausedMs += n.difference(_pausedSince!).inMilliseconds;
+    if (_pausedSince != null) {
+      _pausedMs += n.difference(_pausedSince!).inMilliseconds;
+    }
     _pausedSince = null;
     _runningSince = n;
   }

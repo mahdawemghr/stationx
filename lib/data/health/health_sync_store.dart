@@ -28,7 +28,9 @@ class PendingHealthOp {
         return PendingHealthOp._(true, null, (m['attempts'] as int?) ?? 0);
       }
       final r = HealthWriteRequest.tryParse(m['request']);
-      return r == null ? null : PendingHealthOp._(false, r, (m['attempts'] as int?) ?? 0);
+      return r == null
+          ? null
+          : PendingHealthOp._(false, r, (m['attempts'] as int?) ?? 0);
     } catch (_) {
       return null;
     }
@@ -49,12 +51,24 @@ class HealthSyncState {
   /// External record ids already imported (kept even if the imported session is deleted).
   final Set<String> importedIds = {};
 
+  /// Import new watch / app workouts by itself when the app opens (needs the import feature).
+  bool autoImport = false;
+
+  /// When the last automatic import ran (milliseconds since epoch), for throttling.
+  int? lastAutoImportMs;
+
+  /// StationX key (`c:<id>` / `s:<id>`) -> heart rate read for that session.
+  final Map<String, HrStats> heartRates = {};
+
   String toJsonString() => jsonEncode({
     'v': 1,
     'enabled': [for (final f in enabled) f.name],
     'receipts': {for (final e in receipts.entries) e.key: e.value.toJson()},
     'pending': {for (final e in pending.entries) e.key: e.value.toJson()},
     'imported': importedIds.toList(),
+    'autoImport': autoImport,
+    'lastAutoImport': lastAutoImportMs,
+    'hr': {for (final e in heartRates.entries) e.key: e.value.toJson()},
   });
 
   static HealthSyncState parse(String? text) {
@@ -78,6 +92,12 @@ class HealthSyncState {
       for (final i in (m['imported'] as List? ?? const [])) {
         if (i is String) s.importedIds.add(i);
       }
+      s.autoImport = m['autoImport'] == true;
+      s.lastAutoImportMs = m['lastAutoImport'] as int?;
+      (m['hr'] as Map? ?? const {}).forEach((k, v) {
+        final h = HrStats.tryParse(v);
+        if (k is String && h != null) s.heartRates[k] = h;
+      });
     } catch (_) {
       return HealthSyncState(); // corrupt file reads as "everything off"
     }
@@ -92,7 +112,8 @@ abstract class HealthSyncStore {
 }
 
 class MemoryHealthSyncStore implements HealthSyncStore {
-  MemoryHealthSyncStore([HealthSyncState? initial]) : _state = initial ?? HealthSyncState();
+  MemoryHealthSyncStore([HealthSyncState? initial])
+    : _state = initial ?? HealthSyncState();
   HealthSyncState _state;
   @override
   HealthSyncState load() => _state;

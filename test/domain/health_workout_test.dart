@@ -390,7 +390,8 @@ void main() {
     test('hostile source name never reaches notes; days clamp', () {
       final p = plan([hw('a', src: '<script>alert(1)</script>')]);
       expect(p.sessions.single.notes, 'Imported from Health Connect');
-      expect(HealthImport.clampDays(500), 90);
+      expect(HealthImport.clampDays(500), 500);
+      expect(HealthImport.clampDays(1000000), HealthImport.maxDays);
       expect(HealthImport.clampDays(null), 30);
       expect(HealthImport.clampDays(-3), 1);
       expect(

@@ -1,3 +1,4 @@
+import '../../core/utils/remote_ops.dart';
 import 'package:flutter/material.dart';
 
 import '../../app/app_scope.dart';
@@ -24,7 +25,9 @@ class EditCardioSessionPage extends StatelessWidget {
     if (s == null) {
       return const SxScaffold(
         topBar: SxTopBar(title: 'Edit session'),
-        body: Center(child: ErrorState(message: 'This session no longer exists.')),
+        body: Center(
+          child: ErrorState(message: 'This session no longer exists.'),
+        ),
       );
     }
     return _EditForm(session: s);
@@ -75,19 +78,39 @@ class _EditFormState extends State<_EditForm> {
     setState(() => _busy = true);
     final old = widget.session;
     // Build a fresh object (not copyWith) so cleared optional fields really clear.
-    final next = _form.build(id: old.id, meta: old.meta.touched(), customActivityId: old.customActivityId);
-    await context.app.cardio.update(next);
+    final next = _form.build(
+      id: old.id,
+      meta: old.meta.touched(),
+      customActivityId: old.customActivityId,
+    );
+    final ok = await runRemote(
+      context,
+      () => context.app.cardio.update(next),
+      what: 'update the session',
+      success: 'Session updated',
+      key: 'cardio-${old.id}',
+    );
     if (!mounted) return;
-    showSxSnack(context, 'Session updated');
+    if (!ok) {
+      setState(
+        () => _busy = false,
+      ); // keep the edits so they can be saved again
+      return;
+    }
     Navigator.of(context).pop();
   }
 
   Future<void> _delete() async {
     if (!await confirmDeleteCardio(context, widget.session) || !mounted) return;
     final nav = Navigator.of(context);
-    await context.app.cardio.delete(widget.session.id);
-    if (!mounted) return;
-    showSxSnack(context, 'Session deleted');
+    final ok = await runRemote(
+      context,
+      () => context.app.cardio.delete(widget.session.id),
+      what: 'delete the session',
+      success: 'Session deleted',
+      key: 'cardio-${widget.session.id}',
+    );
+    if (!ok || !mounted) return;
     // The details page underneath pops itself when its session disappears.
     nav.pop();
   }
@@ -103,44 +126,84 @@ class _EditFormState extends State<_EditForm> {
         topBar: SxTopBar(
           title: 'Edit session',
           subtitle: 'SESSION #$n',
-          actions: [TextButton(onPressed: _save, child: Text('Save', style: SxText.headlineSm.copyWith(color: c.primary)))],
+          actions: [
+            TextButton(
+              onPressed: _save,
+              child: Text(
+                'Save',
+                style: SxText.headlineSm.copyWith(color: c.primary),
+              ),
+            ),
+          ],
         ),
-        bottom: Row(children: [
-          Expanded(child: SxButton(label: 'Save changes', icon: Icons.save_outlined, onPressed: _busy ? null : _save)),
-          const SizedBox(width: 8),
-          SxIconButton(icon: Icons.delete_outline, tooltip: 'Delete cardio session', iconColor: c.danger, size: 52, onPressed: _delete),
-        ]),
+        bottom: Row(
+          children: [
+            Expanded(
+              child: SxButton(
+                label: 'Save changes',
+                icon: Icons.save_outlined,
+                onPressed: _busy ? null : _save,
+              ),
+            ),
+            const SizedBox(width: 8),
+            SxIconButton(
+              icon: Icons.delete_outline,
+              tooltip: 'Delete cardio session',
+              iconColor: c.danger,
+              size: 52,
+              onPressed: _delete,
+            ),
+          ],
+        ),
         children: [
           SxCard(
             color: c.surface2,
-            child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Icon(Icons.edit_note, color: c.primary),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'Changing distance or duration recalculates pace here, and your cardio records and goal progress update from history automatically.',
-                  style: SxText.bodySm.copyWith(color: c.textBody),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.edit_note, color: c.primary),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Changing distance or duration recalculates pace here, and your cardio records and goal progress update from history automatically.',
+                    style: SxText.bodySm.copyWith(color: c.textBody),
+                  ),
                 ),
-              ),
-            ]),
+              ],
+            ),
           ),
           SxCard(
-            child: Row(children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(color: c.surface3, borderRadius: BorderRadius.circular(SxRadius.md)),
-                child: Icon(cardioKindIcon(s.kind), color: c.primary),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(s.kind.label, style: SxText.headlineMd.copyWith(color: c.textHigh), overflow: TextOverflow.ellipsis),
-                  Text('Logged ${Fmt.dateMedium(s.meta.createdAt)} • activity type fixed',
-                      style: SxText.bodySm.copyWith(color: c.textBody), overflow: TextOverflow.ellipsis),
-                ]),
-              ),
-            ]),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: c.surface3,
+                    borderRadius: BorderRadius.circular(SxRadius.md),
+                  ),
+                  child: Icon(cardioKindIcon(s.kind), color: c.primary),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        s.kind.label,
+                        style: SxText.headlineMd.copyWith(color: c.textHigh),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        'Logged ${Fmt.dateMedium(s.meta.createdAt)} • activity type fixed',
+                        style: SxText.bodySm.copyWith(color: c.textBody),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
           CardioDateTimeRow(form: _form, dateLabel: 'Date'),
           CardioMetricsSection(form: _form),

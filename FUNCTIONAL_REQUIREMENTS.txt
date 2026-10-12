@@ -11,18 +11,19 @@ Status legend used in this document:
 1. PURPOSE AND SCOPE
 --------------------
 1.1 Purpose
-    StationX is a local-first strength and cardio training log. The user follows a program of workouts that
+    StationX is an online-first strength and cardio training log (username + password account, data on Supabase). The user follows a program of workouts that
     repeat in a fixed SEQUENCE, logs every set (weight, reps) and every cardio session, and the app calculates
     volume, estimated 1-rep max (1RM), personal records (PRs), progression suggestions and muscle coverage.
 1.2 In scope
     Account/profile, schedule (program) setup, workout rotation, strength logging, cardio logging, exercise and
     cardio-activity libraries, history/calendar, progress analytics, import (Gym Tracker, Health Connect),
-    export, optional cloud backup/sync, optional health-app integration, settings, privacy controls.
+    export, account and data deletion, optional health-app integration, settings, privacy controls.
 1.3 Out of scope (this version)
     Social features, coaching by a human, nutrition tracking, wearable sensors/GPS live tracking, payments,
     web/desktop release, push notifications, in-app video of exercises.
 1.4 Product principles (must always hold)
-    P1  LOCAL-FIRST: everything works offline. The network is optional.
+    P1  ONLINE-FIRST: the server is the only source of truth. Logging in and saving need the network; a change is
+        shown as saved only after the server confirmed it. Only the running-workout draft lives on the device.
     P2  SEQUENCE, NOT CALENDAR: the next workout is the next one in the program, regardless of dates. If the
         user misses a day, they simply continue with the next workout.
     P3  The rotation advances ONLY when a workout is completed. Backdated entries never move the rotation.
@@ -30,18 +31,21 @@ Status legend used in this document:
         record was entered).
     P5  History is never silently deleted. Changing a program archives old workouts; it never deletes history.
     P6  Calculations (1RM, volume, PR, progression, muscle coverage) live in the domain layer, never in screens.
-    P7  No fake data presented as real. Demo data is explicit, removable and never uploaded.
-    P8  Cloud and health-app features are OFF by default and require explicit, explained consent.
+    P7  No fake data presented as real.
+    P8  Health-app features are OFF by default and require explicit, explained consent.
+    P10 PROGRAM STABILITY: the program is generated ONCE (onboarding) or on an explicit, confirmed regeneration. It
+        never changes on login, restart, refresh, workout completion or rotation advance. Generation, the weekly
+        goal (training days + rest days = 7) and the rotation are three separate concepts.
     P9  Only publishable client keys are bundled; no secret keys, ever.
 
 
 2. ACTORS
 ---------
 A1  Athlete (primary user)  - logs workouts, follows a program, reviews progress.
-A2  Guest                   - an Athlete who has not created a profile; same features, local only.
-A3  Cloud account holder    - an Athlete who optionally signs in to back up/sync across devices.
+A2  (removed)               - there is no guest mode.
+A3  Account holder          - every Athlete has a username + password account.
 A4  Health app (external)   - Health Connect (Android, includes Samsung Health data) / Apple Health (iOS).
-A5  Supabase (external)     - optional cloud backend (authentication + database).
+A5  Supabase (external)     - backend (authentication + database); the only source of truth.
 A6  Gym Tracker (external)  - the older companion app; exports a JSON file that StationX can import.
 A7  Owner/Developer         - configures cloud project, store listing, migrations (outside the app).
 
@@ -51,7 +55,7 @@ A7  Owner/Developer         - configures cloud project, store listing, migration
 Program / Schedule  : an ordered list of workout days (e.g. Push, Pull, Legs).
 Rotation            : the program plus a pointer to the current day; advances by index.
 Workout (routine)   : one program day: a name and an ordered list of exercises with target sets/reps.
-Session             : a completed (or auto-ended) execution of a workout, with logged sets.
+Session             : a completed execution of a workout, with logged sets (new strength sessions store no duration).
 Archived workout    : a workout no longer in the rotation; kept, openable, restorable.
 Exercise            : a movement with equipment, movement pattern and structured muscle targets.
 Muscle target       : (region, optional sub-area, role primary|assisting, optional emphasis note).
@@ -65,7 +69,10 @@ Cardio kind         : an activity type (treadmill run, indoor walk, rowing machi
 PR                  : personal record (heaviest weight, best estimated 1RM, most reps, highest volume; for cardio:
                       longest distance, fastest pace per kind, longest duration).
 1RM                 : estimated one-rep max (Epley formula, valid up to 12 reps).
-Draft               : an in-progress workout that is saved locally so it survives app termination.
+Draft               : an in-progress workout that is saved on the device so it survives app termination.
+Weekly goal         : training days per week; rest days = 7 - training days. Never pins workouts to weekdays.
+Equipment           : what the user can train with; bodyweight is always available. Used only when exercises
+                      are generated.
 
 
 4. FUNCTIONAL REQUIREMENTS
@@ -73,11 +80,19 @@ Draft               : an in-progress workout that is saved locally so it survive
 (Each requirement has an ID. "Shall" = mandatory.)
 
 4.1 ONBOARDING, PROFILE AND ACCOUNT
-FR-ACC-01 [IMPL]  The app shall offer: Create local profile, Open existing local profile, Continue as Guest.
-FR-ACC-02 [IMPL]  A guest shall start with an EMPTY history (no demo data).
-FR-ACC-03 [IMPL]  The local profile shall store name, optional e-mail, unit (kg/lb), theme (including OLED),
-                  body metrics, weekly session target. It shall be clearly described as "stored on this device,
-                  not password protected"; no password shall be requested or stored for the local profile.
+FR-ACC-01 [IMPL]  The app shall offer: Create account and Log in (no guest mode). An account is a USERNAME and a
+                  PASSWORD only: no e-mail, phone, name or confirm-password field is ever asked.
+FR-ACC-01a [IMPL] Right after Create account (never after Log in) one short "About you" page asks
+                  age (13-100 whole years), height (100-250 cm, or feet + inches) and weight (30-300 kg, or lb)
+                  with a Metric / Imperial switch that also sets the profile unit. Continue is enabled only when all
+                  three are valid; "Skip for now" (and Back) keep the profile unchanged and go on. Values are stored
+                  in the profile as cm / kg and replace the placeholder defaults; they sync only with cloud backup.
+FR-ACC-02 [IMPL]  A new account shall start with NO routines and an empty history (no demo data, no default program).
+FR-ACC-03 [IMPL]  The profile shall store the username (display name defaults to it), unit (kg/lb), theme (including
+                  OLED), body metrics, weekly session target. Usernames: 3-24 characters, a-z 0-9 _ . -, start and
+                  end with a letter or digit, no "..", case-insensitive, a few reserved words refused. In a build
+                  WITHOUT cloud, only a username is asked, labelled "Stored on this device" and not password
+                  protected; no password field appears. Passwords are never stored or logged.
 FR-ACC-04 [IMPL]  The user shall be able to edit the profile (name, metrics, unit, theme, weekly target).
 FR-ACC-05 [IMPL]  "Switch profile" (sign out of the local profile) shall return to the entry screen and keep data
                   on the device; the text shall explain this.
@@ -89,8 +104,8 @@ FR-ACC-07 [IMPL]  Demo data: Profile > "Load demo data" shall be an explicit, co
                   removable ("Remove demo data" deletes only demo rows).
 
 4.2 SCHEDULE (PROGRAM) SETUP
-FR-SET-01 [IMPL]  After creating a profile the app shall offer schedule setup; guests shall see a dismissible
-                  prompt; setup shall also be reachable from the Workouts tab and Profile at any time.
+FR-SET-01 [IMPL]  After creating an account the app shall offer schedule setup (Skip leaves the account without a
+                  program and Today shows a dismissible prompt); setup shall also be reachable from the Workouts tab and Profile at any time.
 FR-SET-02 [IMPL]  The user shall choose a preset - Full Body, Upper/Lower, Push/Pull/Legs, Bro Split - or Custom.
 FR-SET-03 [IMPL]  "Quick start" shall take a preset as is; "Customize exercises" shall allow editing per day.
 FR-SET-04 [IMPL]  Custom: the user names days, picks muscles per day from the 8 section muscles (including
@@ -99,8 +114,26 @@ FR-SET-05 [IMPL]  Per day and per muscle the app shall list exercises grouped as
                   preset picks shall be pre-selected with a one-line reason; the user can change sets and reps.
 FR-SET-06 [IMPL]  The user shall be able to create their own exercise inside the flow ("+ Add exercise"); it is
                   selected immediately and placed in its muscle section.
-FR-SET-07 [IMPL]  The flow shall ask "How many days a week?" and store it as the weekly session target. Copy shall
-                  state that missing a day only continues the sequence.
+FR-SET-07 [IMPL]  The flow shall ask for training days and rest days of the week with two linked steppers (they always
+                  add up to 7; 1-7 training days), store training days as the weekly goal and never pin workouts to
+                  weekdays. Copy shall state that missing a day only continues the sequence.
+FR-SET-12 [IMPL]  The flow shall ask which equipment the user has (all types ticked by default; shortcuts Full gym /
+                  Bodyweight only; bodyweight always allowed). Presets are fitted to it (exercises the user cannot do
+                  are swapped for the closest same-muscle exercise, or left out with a note on Review); the custom path's
+                  suggestions respect it; manual picks are never restricted. The choice is saved on the profile and
+                  editable in Profile; changing it never rewrites a saved program.
+FR-SET-14 [IMPL]  The flow shall ask for the experience level (Beginner / Intermediate / Advanced, default Intermediate; the
+                  profile stores it only once chosen; editable in Profile). It only shapes AUTOMATIC suggestions:
+                  beginners are not auto-assigned advanced exercises unless nothing easier covers a muscle (the
+                  fallback is named on Review); intermediates get advanced ones only when needed; advanced users get
+                  every level. Manual selection and custom exercises are never restricted. Muscle coverage is not
+                  sacrificed for the filter. Changing it never regenerates or edits a saved program.
+FR-RPE-01 [IMPL]  RPE is optional everywhere (cardio sessions, history/import/export). The strength logger has no RPE
+                  input. It never blocks logging a set, finishing a workout or cardio session, editing, or onboarding;
+                  stored RPE is preserved by edits.
+FR-SET-13 [IMPL]  The program is created only by saving the setup flow (or an explicit regeneration through it).
+                  Nothing else creates, swaps or reorders exercises: not login, restart, refresh, completing a
+                  workout or advancing the rotation.
 FR-SET-08 [IMPL]  The review step shall show each day (arranged order, sets, estimated minutes), a collapsible muscle
                   coverage summary with optional, non-prescriptive hints, and block saving on validation errors
                   (no days, empty name, duplicate day name, day without exercises).
@@ -127,13 +160,13 @@ FR-WRK-08 [IMPL]  Deleting a workout shall keep the pointer on the same current 
 
 4.4 WORKOUT SECTIONS AND SORTING
 FR-SEC-01 [IMPL]  A workout's exercises shall be shown in one section per muscle: Chest, Back, Shoulders, Biceps,
-                  Triceps, Forearms, Legs (quads, hamstrings, glutes, calves together), Core.
+                  Triceps, Forearms, Legs (quads, hamstrings, glutes, adductors, calves + tibialis together), Core.
 FR-SEC-02 [IMPL]  Section order = the order in which the user chose the muscles (first appearance). Examples:
                   Legs + Shoulders -> 2 sections; Push day -> 3; a five-muscle day -> 5. There is no cap.
 FR-SEC-03 [IMPL]  Inside a section the MAIN group (general/compound exercises) comes first with no sub-header,
                   then sub-areas in a fixed order with small sub-headers (Chest: Upper, Lower, Flyes; Back: Traps,
                   Lower back after Lats/Upper back; Shoulders: Side, Rear; Biceps: Peak, Brachialis; Triceps:
-                  Overhead, Pushdowns; Legs: Lunges, Quad isolation, Hamstrings, Glutes, Calves; Core: Stability).
+                  Overhead, Pushdowns; Legs: Lunges, Quad isolation, Hamstrings, Glutes, Adductors, Calves, Tibialis; Core: Stability).
 FR-SEC-04 [IMPL]  Section headers are shown only when a workout has two or more muscles; sub-headers are shown when
                   a section has more than one sub-area.
 FR-SEC-05 [IMPL]  Saved workouts are stored in this canonical order. A new exercise is inserted into its own
@@ -144,13 +177,12 @@ FR-SEC-07 [PART]  Inside the editor the sub-area order is re-applied when the ed
 
 4.5 STRENGTH LOGGING (ACTIVE WORKOUT)
 FR-LOG-01 [IMPL]  Starting a workout shall show exercises (collapsed/expanded), set rows (KG, REPS, DONE), previous
-                  performance, an elapsed timer, rest timer, and progress.
+                  performance, and progress. There is no elapsed timer and no rest timer.
 FR-LOG-02 [IMPL]  Weight/reps shall be editable by keypad and by inline +/- steppers; editing an undone set copies
                   forward to later undone sets with the old value; "Same as last set" shall be available.
 FR-LOG-03 [IMPL]  Marking a weighted set done with 0 kg shall open the weight keypad instead of logging it.
-FR-LOG-04 [IMPL]  Completing a set gives immediate feedback (animation, haptic); finishing the rest period vibrates.
-FR-LOG-05 [IMPL]  A pinned rest chip (countdown, +30 s, Skip) shall be available; rest continues between exercises
-                  except after the final set.
+FR-LOG-04 [IMPL]  Completing a set gives immediate feedback (animation, haptic).
+FR-LOG-05 [REMOVED] Rest timer / rest chip: removed on 2026-10-11 (product decision).
 FR-LOG-06 [IMPL]  Removing a done set shall offer undo.
 FR-LOG-07 [IMPL]  Progression suggestion: the app shall show a suggestion ONLY with enough history (at least 2 done
                   sets and 2 prior sessions, last session within 21 days for an increase). It is never applied
@@ -163,10 +195,8 @@ FR-LOG-09 [IMPL]  Completing a workout advances the rotation: current workout ->
 FR-LOG-10 [IMPL]  Draft persistence: the in-progress workout is saved locally on every change (debounced) and
                   restored after app termination via a "Resume workout" card on Today; discarding requires
                   confirmation; the screen stays awake while logging.
-FR-LOG-11 [IMPL]  Maximum workout length: a device setting (2 h / 3 h / 4 h / Off, default 3 h). When reached the
-                  workout ends and saves automatically (only done sets; duration capped; rotation advances once),
-                  also when the app was closed meanwhile; a heads-up appears 15 minutes before; a dismissible
-                  note explains what happened. A workout with no done sets is discarded without saving.
+FR-LOG-11 [REMOVED] Maximum workout length / automatic ending: removed on 2026-10-11. A workout stays open until the user
+                  finishes or discards it; an old draft is offered as "Resume workout" and never saved on its own.
 FR-LOG-12 [IMPL]  Back with nothing logged exits silently; otherwise it asks before discarding.
 FR-LOG-13 [IMPL]  Backdating: a workout can be logged for a past date; it never changes the rotation.
 FR-LOG-14 [IMPL]  The complete page shows summary (volume, sets, duration), new PRs, next workout, and details
@@ -234,8 +264,9 @@ FR-IMP-05 [IMPL]  The companion Gym Tracker app has an "Export Data" button prod
                   "gym_tracker_export" v1 (separate repository).
 
 4.10 HEALTH-APP INTEGRATION (opt-in, default OFF)
-FR-HLT-01 [IMPL*] Read-only recovery card: sleep and resting heart rate (Health Connect / Apple Health), after an
-                  explanation screen and system permission; disconnect at any time.
+FR-HLT-01 [REMOVED] Recovery card / sleep / resting heart rate: removed on 2026-10-11. Connecting Health Connect /
+                  Apple Health (after an explanation screen and system permission; disconnect at any time) only reads
+                  exercise sessions; sleep and resting heart rate are never read.
 FR-HLT-02 [IMPL*] "Save my workouts" : each completed cardio/strength session is written ONCE to the health app
                   (type, start/end, distance and calories only if the user logged them; never heart rate);
                   edit updates, delete removes only what StationX wrote; failures never block local saving and
@@ -245,21 +276,27 @@ FR-HLT-03 [IMPL*] "Fill from my watch": after a cardio session the app may sugge
 FR-HLT-04 [IMPL*] Each of the three switches is independent, explained before any permission request, and shows
                   status (pending count, last sync, issue, retry) and next steps when permission is denied.
 
-4.11 CLOUD BACKUP AND SYNC (optional)
-FR-CLD-01 [IMPL]  Available only when the build is configured; otherwise hidden. Sign up / sign in / sign out;
-                  clear explanation of what happens to local and cloud data.
-FR-CLD-02 [IMPL]  Sync is push -> deletions -> pull, idempotent, last-write-wins per record, deletion by tombstone;
-                  works offline (changes queue and retry); stops retrying when the session is lost.
-FR-CLD-03 [IMPL]  Account switching: if a different account signs in on a device with data, the user chooses merge
-                  or replace; previous account's profile is not carried over.
-FR-CLD-04 [IMPL]  Restore on a new device: sign in and download everything; if the first download fails the user is
+4.11 ACCOUNT AND SERVER (online-first)
+FR-CLD-01 [IMPL]  Create account / log in / log out with username + password (the backend identifier
+                  <username>@stationx.local is private and never shown). Sign-up is auto-confirmed: it signs in at once,
+                  no e-mail step. Errors are friendly (username taken, wrong username or password, offline, too many
+                  attempts, password rules). The build needs the Supabase URL + publishable key, otherwise a "not
+                  configured" screen is shown.
+FR-CLD-02 [IMPL]  Writes are server-first and single-flight: the screen changes only after the server confirmed; on
+                  failure the typed values are kept and Retry is offered; multi-row changes (program + rotation,
+                  finish workout + rotation) are ONE server call. No offline queue, no sync engine, no tombstones.
+FR-CLD-03 [IMPL]  Account switching: a different account never sees the previous account's data or draft; stale
+                  responses from a previous user are discarded.
+FR-CLD-04 [IMPL]  Restore on a new device: Log in with username + password and download everything; if the first download fails the user is
                   told and can retry (the app does not silently open empty).
 FR-CLD-05 [IMPL]  Delete cloud account and all cloud data (confirmation); local data is kept.
-FR-CLD-06 [PART]  Password reset / resend confirmation e-mail are not implemented.
+FR-CLD-06 [N/A ]  Password reset / e-mail confirmation do not exist BY DESIGN: no e-mail is collected. The Create
+                  account screen says a forgotten password cannot be reset.
 FR-CLD-07 [IMPL]  Status pill shows Local / Synced / Syncing / Offline / Needs attention.
 
 4.12 SETTINGS AND PRIVACY
-FR-SPR-01 [IMPL]  Unit kg/lb, km/mi, theme (dark/OLED), weekly target, maximum workout length, rest defaults.
+FR-SPR-01 [IMPL]  Unit kg/lb, km/mi, theme (dark/OLED), training days + rest days per week (linked, sum 7), equipment,
+                  default sets and rep window.
 FR-SPR-02 [IMPL]  Privacy page and policy are available in-app; export and delete controls are in Profile.
 FR-SPR-03 [IMPL]  Android backup of app data is disabled (database and session are not copied to cloud backups).
 
@@ -276,27 +313,32 @@ FR-QLT-04 [PART]  Tablet layouts are width-constrained; no dedicated tablet desi
 ------------
 UC-01  First launch and create a profile
   Actor: Athlete.  Trigger: opens the app for the first time.
-  Pre: none.  Main flow: 1) Landing screen. 2) Chooses "Create local profile". 3) Enters name (+ optional e-mail).
-  4) Schedule setup is offered (UC-03). 5) Lands on Today.
-  Alternate: A1 chooses "Continue as Guest" -> empty app, optional setup prompt on Today.
-  Post: profile exists on the device; no network used.
+  Pre: none.  Main flow: 1) Landing screen. 2) Chooses "Create account". 3) Enters a username and a password.
+  4) Signed in at once. 5) "About you": enters age, height and weight (or skips). 6) Schedule setup (UC-03): split ->
+  equipment -> [exercises per day] -> training/rest days -> review -> save. 7) Lands on Today.
+  Alternate: A1 skips setup -> an empty account (no routines), a dismissible setup prompt on Today.
+  Alt: A2 username taken / password too weak -> friendly message, typed username kept. A3 offline -> a clear message;
+  nothing is created.
+  Post: the profile and (unless skipped) the program exist on the server.
 
 UC-02  Restore on a new phone
-  Actor: Cloud account holder.  Pre: cloud configured, account exists.
-  Flow: Landing > "Restore from cloud backup" > sign in > data downloads > Today.
+  Actor: Account holder.  Pre: account exists.
+  Flow: Landing > "Log in" > username + password > data downloads > Today (the same program, unchanged).
   Alt: download fails -> message + Retry; app does not open empty.
 
 UC-03  Set up a schedule (program)
   Actor: Athlete.  Pre: none (or existing schedule -> replace confirmation).
-  Flow: 1) Choose Push/Pull/Legs (or another preset / Custom). 2) Choose Quick start or Customize.
-  3) (Customize) per day, tick exercises in muscle sections; optionally "+ Add exercise". 4) Answer days per week.
-  5) Review; read coverage hints. 6) Save. 7) Rotation starts at day 1; old workouts are archived.
+  Flow: 1) Choose Push/Pull/Legs (or another preset / Custom). 2) Choose Quick start or Customize. 3) Say which
+  equipment you have. 4) (Customize) per day, tick exercises in muscle sections; optionally "+ Add exercise".
+  5) Set training days and rest days (they add up to 7). 6) Review the complete program; read coverage hints and any
+  "left out for your equipment" note. 7) Save. 8) Rotation starts at day 1; old workouts are archived.
+  Regenerating later repeats this flow after a confirmation that explains archiving.
   Alt: Skip; discard confirmation; validation error blocks Save.
   Post: workouts saved in canonical section order; weekly target stored.
 
 UC-04  Start and log a workout
   Actor: Athlete.  Pre: a workout is next in the rotation (or chosen from Workouts).
-  Flow: 1) Today > Start workout. 2) For each exercise: adjust weight/reps, tick sets done; rest chip runs.
+  Flow: 1) Today > Start workout. 2) For each exercise: adjust weight/reps, tick sets done (no timers run).
   3) Optionally tap the suggestion "Use 47.5 x 10". 4) Finish workout > confirm. 5) Complete page shows summary,
   PRs and next workout. 6) Rotation advances.
   Alt: phone locks/app killed -> Resume workout card restores the draft (UC-10). Replace exercise (UC-06).
@@ -319,10 +361,7 @@ UC-08  Change or archive the program
   Later: Workouts > Archived > "Add back to rotation" or open/start an archived workout.
   Post: no history deleted.
 
-UC-09  Auto-end a long workout
-  Trigger: elapsed time reaches the maximum (default 3 h).  Flow: heads-up at -15 min; at the limit the workout is
-  saved (done sets only, duration capped) and a note is shown. If the app was closed, the next launch/resume ends it.
-  Alt: no done sets -> discarded, nothing saved.
+UC-09  (removed) Auto-end a long workout: there is no maximum workout length any more.
 
 UC-10  Resume an interrupted workout
   Trigger: app killed during a workout. Flow: Today shows "Resume workout" -> Resume restores sets; or Discard (confirm).
@@ -351,7 +390,8 @@ UC-15  Connect Samsung Health (via Health Connect)
   Post: completed sessions appear in the health app; turning the switch off stops writing.
 
 UC-16  Back up to the cloud
-  Flow: Profile > Cloud backup & sync > create account/sign in > data uploads; sign out keeps local data.
+  Flow: Profile > Cloud backup & sync > Create account / Sign in (username + password) > data uploads; sign out keeps
+  local data; "Signed in as <username>".
   Alt: different account on a device with data -> merge or replace choice.
 
 UC-17  Export data
@@ -385,7 +425,7 @@ BR-10  Seed/demo rows have an epoch timestamp and "synced" state: they never upl
 
 7. DATA REQUIREMENTS (logical)
 ------------------------------
-Profile            : name, email?, isGuest, unit, distance unit, theme, metrics, weeklySessionTarget.
+Profile            : name, username, unit, distance unit, theme, metrics, weeklySessionTarget (training days), equipment?.
 Exercise           : id, name, equipment, movementPattern, instructions, tempo?, isCustom, legacy muscle fields,
                      muscleTargets? (custom), SyncMeta.
 Workout            : id, name, description, exercises[{exerciseId, sets, repMin, repMax}], restSeconds, cardioFinisher?.
@@ -396,18 +436,18 @@ CardioSession      : id, kind, customActivityId?, workoutDate, duration, distanc
                      calories?, avgHeartRate?, rpe?, route?, notes, SyncMeta.
 CardioGoal / CustomCardioActivity : title/name, targets, fields, icon.
 WorkoutDraft       : workout snapshot, start time, per-exercise sets, current index (local only, never synced).
-Local settings     : maximum workout length, auto-end notice, health toggles and written-record map (local only).
-SyncMeta           : createdAt, updatedAt, syncStatus (pending/synced), deletedAt (cloud tombstone).
-Storage            : on-device Isar database; optional Supabase Postgres with row-level security (owner only).
+Local settings     : health toggles and written-record map (local only).
+Timestamps         : createdAt, updatedAt (server-owned). No sync flags or tombstones.
+Storage            : Supabase Postgres with row-level security (owner only); the device keeps only the workout draft.
 Weights are stored in kg and converted for display.
 
 
 8. EXTERNAL INTERFACES
 ----------------------
-IF-01  Isar (on-device database).
-IF-02  Supabase Auth + PostgREST (optional): tables per user, composite key (user_id, id), RLS owner-only,
+IF-01  Isar (on-device database): the workout draft and the Health Connect opt-in only.
+IF-02  Supabase Auth + PostgREST + sx_* functions: tables per user, composite key (user_id, id), RLS owner-only,
        delete_account RPC; client uses only the publishable key.
-IF-03  Health Connect (Android) / HealthKit (iOS) through the "health" plugin (read: sleep, resting HR, exercise,
+IF-03  Health Connect (Android) / HealthKit (iOS) through the "health" plugin (read: exercise,
        distance, calories, heart rate, steps; write: exercise sessions, distance, calories).
 IF-04  File picker / system save dialog (import and export).
 IF-05  Gym Tracker export file format "gym_tracker_export" v1 (JSON).
@@ -453,24 +493,30 @@ AC-02  Given chest exercises Bench, Incline, Decline, Cable fly, the chest secti
        then Upper chest (Incline), Lower chest (Decline), Flyes (Cable fly).
 AC-03  Given the schedule is replaced, all previous workouts appear under "Archived" and every past session is still
        openable.
-AC-04  Given a workout has run 3 h (limit 3 h) with 2 done sets, it ends automatically, saves one session of exactly
-       3 h, advances the rotation once and shows a note - also after the app was force-closed.
+AC-04  Given a workout has been open for 9 h with 2 done sets, it is still open: nothing is saved, the rotation
+       does not move and no notice appears until the user finishes or discards it.
 AC-05  Given the same Gym Tracker file is imported twice, the second import adds 0 workouts.
 AC-06  Given a new user with no history, no weight suggestion is shown; only "Last: -" or nothing.
 AC-07  Given "Indoor Walk" is searched as "walking pad" or "12-3-30", it appears in the results.
 AC-08  Given a forearm search ("wrist" or the Arabic word for forearms), forearm exercises are listed.
-AC-09  Given the device is offline, all strength and cardio logging works and syncs later when cloud is enabled.
-AC-10  Given an account is deleted in the cloud, local data remains and the app shows no leaked data from the other
-       account after switching.
+AC-09  Given the device is offline, saving fails with a clear message, nothing is shown as saved and the workout draft
+       is kept; when the network returns the same save can be retried without duplicates.
+AC-10  Given an account is deleted, the session ends, memory and the draft are cleared, and a later account on the
+       same phone sees none of its data.
+AC-11  Given a saved program, logging out/in, restarting, refreshing, finishing workouts, skipping days and changing
+       the weekly goal or equipment leave every exercise, set and rep range exactly as saved.
+AC-12  Given an equipment choice, suggested exercises use only that equipment (plus bodyweight); a preset exercise
+       the user cannot do is swapped for a close same-muscle one or left out with a note.
 
 
 12. TRACEABILITY AND STATUS SUMMARY
 -----------------------------------
-Implemented and tested: 4.1-4.9, 4.11, 4.12 (most), sections, schedule setup, auto-end, drafts, catalog, cardio.
+Implemented and tested: 4.1-4.9, 4.11, 4.12 (most), sections, schedule setup (with equipment and training/rest days),
+program stability, drafts, catalog, cardio.
 Implemented, verified only with fakes (needs a phone): Health-app sync (4.10) and Health import (FR-IMP-04).
-Partly implemented: FR-CLD-06 (password reset), FR-SEC-07, NFR-11, FR-QLT-04.
+Partly implemented: FR-SEC-07, NFR-11, FR-QLT-04.
 Not verified on a real device (no phone available while building): the full on-device checklist, Samsung Health
 round trip, minified (R8) release build, TalkBack/haptic feel, iOS build.
 
-Related documents: PROJECT_DETAILS.txt (overview), docs/STATIONX_UI_IMPLEMENTATION_ROADMAP.md (status per task),
-docs/PRIVACY_POLICY.md, docs/RELEASE.md (release blockers), supabase/README.md, docs/superpowers/plans/*.md.
+Related documents: PROJECT_DETAILS.txt (overview), 
+docs/PRIVACY_POLICY.md, docs/RELEASE.md (release blockers), supabase/README.md.

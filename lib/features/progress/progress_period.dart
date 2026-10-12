@@ -32,13 +32,25 @@ PeriodWindow windowFor(ProgressPeriod p, DateTime now) {
   switch (p) {
     case ProgressPeriod.week:
       final start = VolumeService.startOfWeek(now);
-      return PeriodWindow(start, DateTime(start.year, start.month, start.day + 7));
+      return PeriodWindow(
+        start,
+        DateTime(start.year, start.month, start.day + 7),
+      );
     case ProgressPeriod.month:
-      return PeriodWindow(DateTime(now.year, now.month), DateTime(now.year, now.month + 1));
+      return PeriodWindow(
+        DateTime(now.year, now.month),
+        DateTime(now.year, now.month + 1),
+      );
     case ProgressPeriod.threeMonths:
-      return PeriodWindow(DateTime(today.year, today.month, today.day - 89), tomorrow);
+      return PeriodWindow(
+        DateTime(today.year, today.month, today.day - 89),
+        tomorrow,
+      );
     case ProgressPeriod.year:
-      return PeriodWindow(DateTime(today.year, today.month, today.day - 364), tomorrow);
+      return PeriodWindow(
+        DateTime(today.year, today.month, today.day - 364),
+        tomorrow,
+      );
     case ProgressPeriod.all:
       return PeriodWindow(DateTime(1970), tomorrow);
   }
@@ -50,13 +62,20 @@ PeriodWindow? previousWindow(ProgressPeriod p, PeriodWindow w) {
   if (p == ProgressPeriod.month) {
     return PeriodWindow(DateTime(w.from.year, w.from.month - 1), w.from);
   }
-  return PeriodWindow(DateTime(w.from.year, w.from.month, w.from.day - w.days), w.from);
+  return PeriodWindow(
+    DateTime(w.from.year, w.from.month, w.from.day - w.days),
+    w.from,
+  );
 }
 
 /// Like [previousWindow], but when the current window is still running (e.g.
 /// mid-week) the previous window is cut to the same elapsed time, so deltas
 /// compare like with like instead of "3 days vs a full week".
-PeriodWindow? comparablePreviousWindow(ProgressPeriod p, PeriodWindow w, DateTime now) {
+PeriodWindow? comparablePreviousWindow(
+  ProgressPeriod p,
+  PeriodWindow w,
+  DateTime now,
+) {
   final prev = previousWindow(p, w);
   if (prev == null || !now.isBefore(w.to)) return prev;
   final elapsed = _day(now).add(const Duration(days: 1)).difference(w.from);

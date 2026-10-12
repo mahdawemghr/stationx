@@ -1,3 +1,4 @@
+import '../../core/utils/remote_ops.dart';
 import 'package:flutter/material.dart';
 import 'cardio_pace.dart';
 import 'package:flutter/semantics.dart' show CustomSemanticsAction;
@@ -88,7 +89,11 @@ class _CardioHomeViewState extends State<CardioHomeView> {
           ),
           itemCount: children.length,
           separatorBuilder: (_, _) => const SizedBox(height: SxSpace.md),
-          itemBuilder: (_, i) => SxStagger(index: i, enabled: i < SxMotion.staggerCap, child: children[i]),
+          itemBuilder: (_, i) => SxStagger(
+            index: i,
+            enabled: i < SxMotion.staggerCap,
+            child: children[i],
+          ),
         );
       },
     );
@@ -193,7 +198,13 @@ class _WeekCard extends StatelessWidget {
           : (minutes >= expected * 0.8 ? 'ON TRACK' : 'BEHIND');
     }
     final tiles = <Widget>[
-      _MiniStat('Sessions', '${week.length}', null, false, week.length.toDouble()),
+      _MiniStat(
+        'Sessions',
+        '${week.length}',
+        null,
+        false,
+        week.length.toDouble(),
+      ),
       _MiniStat('Time', Fmt.durationShort(minutes * 60)),
       _MiniStat('Dist', Fmt.km(km, miles: miles), miles ? 'mi' : 'km'),
       if (kcal > 0) _MiniStat('Energy', Fmt.thousands(kcal), 'kcal', true),
@@ -494,8 +505,13 @@ class _RecentCard extends StatelessWidget {
     Future<void> delete() async {
       final repo = context.app.cardio;
       if (await confirmDeleteCardio(context, session) && context.mounted) {
-        await repo.delete(session.id);
-        if (context.mounted) showSxSnack(context, 'Session deleted');
+        await runRemote(
+          context,
+          () => repo.delete(session.id),
+          what: 'delete the session',
+          success: 'Session deleted',
+          key: 'cardio-${session.id}',
+        );
       }
     }
 
@@ -544,9 +560,14 @@ class _RecentCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  if (session.paceSecPerKm != null && CardioPace.has(session.kind))
+                  if (session.paceSecPerKm != null &&
+                      CardioPace.has(session.kind))
                     StatusPill(
-                      CardioPace.withUnit(session.kind, session.paceSecPerKm, miles: miles),
+                      CardioPace.withUnit(
+                        session.kind,
+                        session.paceSecPerKm,
+                        miles: miles,
+                      ),
                       icon: Icons.speed,
                     ),
                   // Visible alternative to long-press (also reachable by keyboard / switch access).
@@ -576,9 +597,7 @@ class _RecentCard extends StatelessWidget {
                               metrics[i].label.toUpperCase(),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: SxText.labelXs.copyWith(
-                                color: c.textBody,
-                              ),
+                              style: SxText.labelXs.copyWith(color: c.textBody),
                             ),
                             const SizedBox(height: 4),
                             FittedBox(

@@ -48,9 +48,17 @@ class HealthSyncService extends ChangeNotifier {
   /// Call ONLY after the explanation screen was accepted.
   Future<bool> enable(HealthFeature f) async {
     try {
-      if (await _gateway.availability() != GatewayAvailability.available) return false;
+      if (await _gateway.availability() != GatewayAvailability.available) {
+        return false;
+      }
       final ok = await _gateway.requestFeaturePermissions(f);
       if (!ok) return false;
+      // Import also asks to read older data (otherwise Android only returns ~30 days). Optional:
+      // a "no" here never blocks the feature.
+      if (f == HealthFeature.importWorkouts &&
+          await _gateway.historyAccess() == HealthHistoryAccess.needsGrant) {
+        await _gateway.requestHistoryAccess();
+      }
     } catch (_) {
       return false;
     }
@@ -90,20 +98,29 @@ class HealthSyncService extends ChangeNotifier {
 
   void onCardioSaved(CardioSession s) {
     if (!isEnabled(HealthFeature.writeWorkouts)) return;
-    _queueFor(WorkoutMapping.cardioKey(s.id), WorkoutMapping.forCardio(s, now: _clock()));
+    _queueFor(
+      WorkoutMapping.cardioKey(s.id),
+      WorkoutMapping.forCardio(s, now: _clock()),
+    );
   }
 
   void onStrengthSaved(WorkoutSession s) {
     if (!isEnabled(HealthFeature.writeWorkouts)) return;
-    _queueFor(WorkoutMapping.strengthKey(s.id), WorkoutMapping.forStrength(s, now: _clock()));
+    _queueFor(
+      WorkoutMapping.strengthKey(s.id),
+      WorkoutMapping.forStrength(s, now: _clock()),
+    );
   }
 
   void onCardioDeleted(String id) => _queueDelete(WorkoutMapping.cardioKey(id));
-  void onStrengthDeleted(String id) => _queueDelete(WorkoutMapping.strengthKey(id));
+  void onStrengthDeleted(String id) =>
+      _queueDelete(WorkoutMapping.strengthKey(id));
 
   void _queueFor(String key, HealthWriteRequest? req) {
     if (req == null) {
-      _queueDelete(key); // no longer writable (e.g. duration removed): remove what we wrote
+      _queueDelete(
+        key,
+      ); // no longer writable (e.g. duration removed): remove what we wrote
       return;
     }
     _state.pending[key] = PendingHealthOp.upsert(req);
@@ -131,7 +148,8 @@ class HealthSyncService extends ChangeNotifier {
   Future<void> retryPending() {
     final running = _flushing;
     if (running != null) {
-      _rerun = true; // something was queued meanwhile: run once more after this pass
+      _rerun =
+          true; // something was queued meanwhile: run once more after this pass
       return running;
     }
     return _flushing = _loop();
@@ -236,7 +254,11 @@ class HealthSyncService extends ChangeNotifier {
 
   /// Preview of sessions other apps recorded in the last [days] (default 30, max 90). Null when
   /// import is off or not permitted. Changes nothing.
-  Future<HealthImportPlan?> planImport(CardioRepository cardio, {int? days}) async {
+  Future<HealthImportPlan?> planImport(
+    CardioRepository cardio, {
+    int? days,
+    SessionRepository? sessions,
+  }) async {
     if (!isEnabled(HealthFeature.importWorkouts)) return null;
     try {
       if (_gateway.canQueryPermissions &&
@@ -245,13 +267,21 @@ class HealthSyncService extends ChangeNotifier {
       }
       final now = _clock();
       final d = HealthImport.clampDays(days);
-      final found = await _gateway.readWorkouts(now.subtract(Duration(days: d)), now);
+      final found = await _readWorkoutsChunked(
+        now.subtract(Duration(days: d)),
+        now,
+      );
+      final sessionRepo = sessions ?? _sessions;
       return HealthImport.plan(
         found,
         ownSourceIds: _gateway.ownSourceIds,
         ownRecordIds: {for (final r in _state.receipts.values) r.workoutId},
         alreadyImported: _state.importedIds,
         existingSessionIds: {for (final s in cardio.sessions) s.id},
+        existingStrengthIds: {
+          if (sessionRepo != null)
+            for (final s in sessionRepo.sessions) s.id,
+        },
         sourceNote: 'Imported from ${provider.label}',
         now: now,
         days: d,
@@ -262,12 +292,299 @@ class HealthSyncService extends ChangeNotifier {
   }
 
   /// Adds the previewed sessions (after the user confirmed). Idempotent. Returns how many were added.
-  Future<int> applyImport(HealthImportPlan plan, CardioRepository cardio) async {
-    final added = await HealthImport.apply(plan, cardio);
-    _state.importedIds.addAll(plan.externalIds);
+  Future<int> applyImport(
+    HealthImportPlan plan,
+    CardioRepository cardio, {
+    SessionRepository? sessions,
+  }) async {
+    final repo = sessions ?? _sessions;
+    final added = await HealthImport.apply(plan, cardio, repo);
+    _state.importedIds.addAll(
+      repo == null ? plan.externalIds : plan.allExternalIds,
+    );
     await _persist();
     notifyListeners();
+    // Watch heart rate for what was just imported (best effort, only if that feature is on).
+    unawaited(_attachHeartRates(plan));
     return added;
+  }
+
+  Future<void> _attachHeartRates(HealthImportPlan plan) async {
+    for (final s in plan.sessions) {
+      await heartRateFor(
+        WorkoutMapping.cardioKey(s.id),
+        s.workoutDate,
+        s.workoutDate.add(Duration(seconds: s.durationSeconds)),
+      );
+    }
+    for (final s in plan.strengthSessions) {
+      await heartRateFor(
+        WorkoutMapping.strengthKey(s.id),
+        s.workoutDate,
+        s.workoutDate.add(Duration(seconds: s.durationSeconds)),
+      );
+    }
+  }
+
+  /// Reads long ranges in 60-day windows (the platform call is slow and can time out on a big
+  /// span) and drops records that overlap two windows.
+  Future<List<HealthWorkout>> _readWorkoutsChunked(
+    DateTime from,
+    DateTime to,
+  ) async {
+    const step = Duration(days: 60);
+    final seen = <String>{};
+    final out = <HealthWorkout>[];
+    var start = from;
+    while (start.isBefore(to)) {
+      var end = start.add(step);
+      if (end.isAfter(to)) end = to;
+      for (final w in await _gateway.readWorkouts(start, end)) {
+        if (seen.add(w.id)) out.add(w);
+      }
+      start = end;
+    }
+    return out;
+  }
+
+  // ───────────────────────── older data ─────────────────────────
+
+  Future<HealthHistoryAccess> historyAccess() async {
+    try {
+      return await _gateway.historyAccess();
+    } catch (_) {
+      return HealthHistoryAccess.notSupported;
+    }
+  }
+
+  Future<bool> requestHistoryAccess() async {
+    try {
+      return await _gateway.requestHistoryAccess();
+    } catch (_) {
+      return false;
+    }
+  }
+
+  // ───────────────────────── automatic import ─────────────────────────
+
+  static const autoImportEvery = Duration(hours: 6);
+  bool get autoImportEnabled =>
+      _state.autoImport && isEnabled(HealthFeature.importWorkouts);
+
+  /// Set by [autoImport] when new workouts arrived; the shell shows it once via [takeAutoImportNotice].
+  int _autoNotice = 0;
+  int takeAutoImportNotice() {
+    final n = _autoNotice;
+    _autoNotice = 0;
+    return n;
+  }
+
+  Future<void> setAutoImport(bool on) async {
+    _state.autoImport = on;
+    await _persist();
+    notifyListeners();
+    if (on) unawaited(autoImport(force: true));
+  }
+
+  bool _autoRunning = false;
+
+  /// Imports new workouts without a preview. Silent on any failure. At most every
+  /// [autoImportEvery] unless [force]. Returns how many were added.
+  Future<int> autoImport({bool force = false}) async {
+    if (!autoImportEnabled || _autoRunning) return 0;
+    final cardio = _cardio;
+    if (cardio == null) return 0;
+    final now = _clock();
+    final last = _state.lastAutoImportMs;
+    if (!force && last != null) {
+      final since = now.difference(DateTime.fromMillisecondsSinceEpoch(last));
+      if (!since.isNegative && since < autoImportEvery) return 0;
+    }
+    _autoRunning = true;
+    try {
+      // First run reaches back 90 days; later runs only the gap (at least a week of overlap).
+      final days = last == null
+          ? 90
+          : (now.difference(DateTime.fromMillisecondsSinceEpoch(last)).inDays +
+                7);
+      final plan = await planImport(cardio, days: days);
+      if (plan == null) return 0; // not permitted / failed: try again next time
+      _state.lastAutoImportMs = now.millisecondsSinceEpoch;
+      if (plan.isEmpty) {
+        await _persist();
+        return 0;
+      }
+      final added = await applyImport(plan, cardio);
+      _autoNotice += added;
+      notifyListeners();
+      return added;
+    } catch (_) {
+      return 0;
+    } finally {
+      _autoRunning = false;
+    }
+  }
+
+  // ───────────────────────── heart rate on workouts ─────────────────────────
+
+  /// Heart rate remembered for a session, or null.
+  HrStats? cachedHeartRate(String key) => _state.heartRates[key];
+
+  /// Average / max heart rate between [start] and [end] from the health store (cached once found).
+  /// Null when the feature is off, not permitted, or the watch recorded nothing (yet): not cached
+  /// then, so a later call can succeed after the watch syncs.
+  Future<HrStats?> heartRateFor(
+    String key,
+    DateTime start,
+    DateTime end,
+  ) async {
+    final cached = _state.heartRates[key];
+    if (cached != null) return cached;
+    if (!isEnabled(HealthFeature.enrichCardio) || !end.isAfter(start)) {
+      return null;
+    }
+    try {
+      if (_gateway.canQueryPermissions &&
+          !await _gateway.hasFeaturePermissions(HealthFeature.enrichCardio)) {
+        return null;
+      }
+      final samples = await _gateway.heartRateSamples(start, end);
+      final stats = HealthEnrichmentService.statsFor([
+        for (final p in samples) p.bpm,
+      ]);
+      if (stats == null) return null;
+      _state.heartRates[key] = stats;
+      await _persist();
+      notifyListeners();
+      return stats;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Drops a remembered value so the next [heartRateFor] re-reads (after the user edits times).
+  Future<void> forgetHeartRate(String key) async {
+    if (_state.heartRates.remove(key) != null) await _persist();
+  }
+
+  /// Most recent heart-rate sample from the last [within], or null. For the live chip.
+  Future<BpmPoint?> latestHeartRate({
+    Duration within = const Duration(minutes: 2),
+  }) async {
+    if (!isEnabled(HealthFeature.enrichCardio)) return null;
+    try {
+      final now = _clock();
+      if (_gateway.canQueryPermissions &&
+          !await _gateway.hasFeaturePermissions(HealthFeature.enrichCardio)) {
+        return null;
+      }
+      final samples = await _gateway.heartRateSamples(
+        now.subtract(within),
+        now.add(const Duration(minutes: 1)),
+      );
+      BpmPoint? best;
+      for (final p in samples) {
+        if (p.bpm < HealthEnrichmentService.minBpm ||
+            p.bpm > HealthEnrichmentService.maxBpm) {
+          continue;
+        }
+        if (best == null || p.at.isAfter(best.at)) best = p;
+      }
+      return best;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Average heart rate per day for the last [days] days (oldest first). Needs the heart-rate
+  /// permission ([HealthFeature.enrichCardio]).
+  Future<List<HeartRateDay>> heartRateTrend(int days) async {
+    final now = _clock();
+    final today = DateTime(now.year, now.month, now.day);
+    final first = today.subtract(Duration(days: days - 1));
+    try {
+      final sums = <DateTime, (double, int)>{};
+      if (isEnabled(HealthFeature.enrichCardio) &&
+          (!_gateway.canQueryPermissions ||
+              await _gateway.hasFeaturePermissions(
+                HealthFeature.enrichCardio,
+              ))) {
+        // One day at a time keeps each platform call small (a watch writes a sample per minute).
+        for (var i = 0; i < days; i++) {
+          final d0 = first.add(Duration(days: i));
+          final d1 = i == days - 1 ? now : first.add(Duration(days: i + 1));
+          final pts = await _gateway.heartRateSamples(d0, d1);
+          final ok = [
+            for (final p in pts)
+              if (p.bpm >= HealthEnrichmentService.minBpm &&
+                  p.bpm <= HealthEnrichmentService.maxBpm)
+                p.bpm,
+          ];
+          if (ok.isNotEmpty) sums[d0] = (ok.reduce((a, b) => a + b), ok.length);
+        }
+      }
+      return [
+        for (var i = 0; i < days; i++)
+          () {
+            final d = first.add(Duration(days: i));
+            final sm = sums[d];
+            return HeartRateDay(
+              day: d,
+              average: sm == null ? null : sm.$1 / sm.$2,
+            );
+          }(),
+      ];
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  // ───────────────────────── setup check ─────────────────────────
+
+  /// Finds the first reason watch data does not reach StationX. Reads only the last 7 days and
+  /// changes nothing.
+  Future<WatchDiagnosis> diagnose() async {
+    try {
+      final a = await _gateway.availability();
+      if (a != GatewayAvailability.available) {
+        return const WatchDiagnosis(step: WatchSetupStep.storeMissing);
+      }
+      var granted =
+          isEnabled(HealthFeature.importWorkouts) ||
+          isEnabled(HealthFeature.enrichCardio);
+      if (granted && _gateway.canQueryPermissions) {
+        granted =
+            (!isEnabled(HealthFeature.importWorkouts) ||
+                await _gateway.hasFeaturePermissions(
+                  HealthFeature.importWorkouts,
+                )) &&
+            (!isEnabled(HealthFeature.enrichCardio) ||
+                await _gateway.hasFeaturePermissions(
+                  HealthFeature.enrichCardio,
+                ));
+      }
+      if (!granted) {
+        return const WatchDiagnosis(step: WatchSetupStep.permissions);
+      }
+      final now = _clock();
+      final from = now.subtract(const Duration(days: 7));
+      final workouts = isEnabled(HealthFeature.importWorkouts)
+          ? await _gateway.readWorkouts(from, now)
+          : const <HealthWorkout>[];
+      final hr = isEnabled(HealthFeature.enrichCardio)
+          ? (await _gateway.heartRateSamples(from, now)).length
+          : 0;
+      return HealthEnrichmentService.diagnose(
+        storeAvailable: true,
+        permissionsGranted: true,
+        recentWorkouts: workouts,
+        recentHeartRateSamples: hr,
+        ownSourceIds: _gateway.ownSourceIds,
+        knownSources: HealthImport.knownSources,
+      );
+    } catch (_) {
+      return const WatchDiagnosis(step: WatchSetupStep.noRecentData);
+    }
   }
 
   // ───────────────────────── automatic hooks ─────────────────────────
@@ -280,7 +597,10 @@ class HealthSyncService extends ChangeNotifier {
   /// Observes the repositories so every save / edit / delete anywhere in the app is mirrored,
   /// without feature code calling the service. Sessions that already exist are NOT written (only
   /// new or edited ones); sessions arriving from cloud sync or imports are ignored.
-  void attach({required CardioRepository cardio, required SessionRepository sessions}) {
+  void attach({
+    required CardioRepository cardio,
+    required SessionRepository sessions,
+  }) {
     detach();
     _cardio = cardio;
     _sessions = sessions;
@@ -303,9 +623,11 @@ class HealthSyncService extends ChangeNotifier {
     super.dispose();
   }
 
-  static bool _foreignId(String id) => id.startsWith(HealthImport.idPrefix) || id.startsWith('gt_');
+  static bool _foreignId(String id) =>
+      id.startsWith(HealthImport.idPrefix) || id.startsWith('gt_');
 
-  bool _fresh(DateTime createdAt) => _clock().difference(createdAt).inHours < 24;
+  bool _fresh(DateTime createdAt) =>
+      _clock().difference(createdAt).inHours < 24;
 
   void _onCardio() {
     final repo = _cardio;
@@ -316,7 +638,9 @@ class HealthSyncService extends ChangeNotifier {
       if (before != null && before == s.meta.updatedAt) continue;
       if (_foreignId(s.id)) continue;
       final known = _state.receipts.containsKey(WorkoutMapping.cardioKey(s.id));
-      if (before == null ? _fresh(s.meta.createdAt) : (known || _fresh(s.meta.createdAt))) {
+      if (before == null
+          ? _fresh(s.meta.createdAt)
+          : (known || _fresh(s.meta.createdAt))) {
         onCardioSaved(s);
       }
     }
@@ -334,8 +658,12 @@ class HealthSyncService extends ChangeNotifier {
       final before = _sessionSeen[s.id];
       if (before != null && before == s.meta.updatedAt) continue;
       if (_foreignId(s.id)) continue;
-      final known = _state.receipts.containsKey(WorkoutMapping.strengthKey(s.id));
-      if (before == null ? _fresh(s.meta.createdAt) : (known || _fresh(s.meta.createdAt))) {
+      final known = _state.receipts.containsKey(
+        WorkoutMapping.strengthKey(s.id),
+      );
+      if (before == null
+          ? _fresh(s.meta.createdAt)
+          : (known || _fresh(s.meta.createdAt))) {
         onStrengthSaved(s);
       }
     }

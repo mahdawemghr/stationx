@@ -39,7 +39,9 @@ abstract final class Fmt {
 
   /// Pace [sec] in the [basis] convention → "2:05 /500m". Null/none → "—".
   static String paceWithUnit(double? sec, CardioPaceBasis basis) =>
-      (sec == null || basis == CardioPaceBasis.none) ? '—' : '${pace(sec)} ${basis.unitLabel}';
+      (sec == null || basis == CardioPaceBasis.none)
+      ? '—'
+      : '${pace(sec)} ${basis.unitLabel}';
 
   static String number(num v, {int decimals = 1}) {
     if (v == v.roundToDouble()) return v.toStringAsFixed(0);

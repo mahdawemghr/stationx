@@ -23,13 +23,23 @@ class WorkoutPreviewPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final app = context.app;
     return ListenableBuilder(
-      listenable: Listenable.merge([app.workouts, app.sessions, app.exercises, app.profile]),
+      listenable: Listenable.merge([
+        app.workouts,
+        app.sessions,
+        app.exercises,
+        app.profile,
+      ]),
       builder: (context, _) {
         final w = app.workouts.byId(workoutId);
         if (w == null) {
           return const SxScaffold(
             topBar: SxTopBar(title: 'Workout Preview'),
-            body: Center(child: ErrorState(message: 'This workout no longer exists. It may have been deleted.')),
+            body: Center(
+              child: ErrorState(
+                message:
+                    'This workout no longer exists. It may have been deleted.',
+              ),
+            ),
           );
         }
         return _Preview(workout: w, app: app);
@@ -60,7 +70,12 @@ class _Preview extends StatelessWidget {
       topBar: SxTopBar(
         title: 'Workout Preview',
         actions: [
-          SxIconButton(icon: Icons.tune, tooltip: 'Edit workout structure', filled: false, onPressed: () => AppNav.workoutEditor(context, workout.id)),
+          SxIconButton(
+            icon: Icons.tune,
+            tooltip: 'Edit workout structure',
+            filled: false,
+            onPressed: () => AppNav.workoutEditor(context, workout.id),
+          ),
         ],
       ),
       bottom: Column(
@@ -69,7 +84,9 @@ class _Preview extends StatelessWidget {
           SxButton(
             label: 'Start workout',
             icon: Icons.play_arrow,
-            onPressed: workout.exercises.isEmpty ? null : () => AppNav.activeWorkout(context, workout.id),
+            onPressed: workout.exercises.isEmpty
+                ? null
+                : () => AppNav.activeWorkout(context, workout.id),
           ),
           const SizedBox(height: 4),
           SxButton(
@@ -81,7 +98,12 @@ class _Preview extends StatelessWidget {
         ],
       ),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(SxSpace.screenMargin, SxSpace.md, SxSpace.screenMargin, SxSpace.lg),
+        padding: const EdgeInsets.fromLTRB(
+          SxSpace.screenMargin,
+          SxSpace.md,
+          SxSpace.screenMargin,
+          SxSpace.lg,
+        ),
         children: [
           SxCard(
             child: Column(
@@ -94,13 +116,28 @@ class _Preview extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(idx >= 0 ? 'ROTATION • DAY ${idx + 1}' : 'STANDALONE ROUTINE',
-                              style: SxText.labelCaps.copyWith(color: c.primary, letterSpacing: 1.2)),
+                          Text(
+                            idx >= 0
+                                ? 'ROTATION • DAY ${idx + 1}'
+                                : 'STANDALONE ROUTINE',
+                            style: SxText.labelCaps.copyWith(
+                              color: c.primary,
+                              letterSpacing: 1.2,
+                            ),
+                          ),
                           const SizedBox(height: 6),
-                          Text(workout.name.toUpperCase(), style: SxText.headlineLg.copyWith(color: c.textHigh, fontWeight: FontWeight.w700)),
+                          Text(
+                            workout.name.toUpperCase(),
+                            style: SxText.headlineLg.copyWith(
+                              color: c.textHigh,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
                           const SizedBox(height: 4),
                           Text(
-                            idx >= 0 ? 'Day ${idx + 1} of ${rot.length} • ${rot.length}-Day Rotation' : 'Not part of your rotation',
+                            idx >= 0
+                                ? 'Day ${idx + 1} of ${rot.length} • ${rot.length}-Day Rotation'
+                                : 'Not part of your rotation',
                             style: SxText.bodyMd.copyWith(color: c.textBody),
                           ),
                         ],
@@ -109,11 +146,22 @@ class _Preview extends StatelessWidget {
                     if (idx >= 0) ...[
                       const SizedBox(width: 12),
                       SxInset(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        child: Column(children: [
-                          Text('${idx + 1}'.padLeft(2, '0'), style: SxText.metricMd.copyWith(color: c.primary)),
-                          Text('DAY', style: SxText.labelXs.copyWith(color: c.textBody)),
-                        ]),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        child: Column(
+                          children: [
+                            Text(
+                              '${idx + 1}'.padLeft(2, '0'),
+                              style: SxText.metricMd.copyWith(color: c.primary),
+                            ),
+                            Text(
+                              'DAY',
+                              style: SxText.labelXs.copyWith(color: c.textBody),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ],
@@ -121,9 +169,23 @@ class _Preview extends StatelessWidget {
                 const SizedBox(height: SxSpace.md),
                 Row(
                   children: [
-                    Expanded(child: _Fact(icon: Icons.format_list_numbered, label: 'Volume', value: '${workout.exercises.length}', unit: 'Ex • ${workout.totalSets} Sets')),
+                    Expanded(
+                      child: _Fact(
+                        icon: Icons.format_list_numbered,
+                        label: 'Volume',
+                        value: '${workout.exercises.length}',
+                        unit: 'Ex • ${workout.totalSets} Sets',
+                      ),
+                    ),
                     const SizedBox(width: 8),
-                    Expanded(child: _Fact(icon: Icons.schedule, label: 'Duration', value: '~${workout.estimatedMinutes}', unit: 'min')),
+                    Expanded(
+                      child: _Fact(
+                        icon: Icons.schedule,
+                        label: 'Duration',
+                        value: '~${workout.estimatedMinutes}',
+                        unit: 'min',
+                      ),
+                    ),
                   ],
                 ),
                 if (muscles.isNotEmpty) ...[
@@ -140,7 +202,11 @@ class _Preview extends StatelessWidget {
                   padding: const EdgeInsets.all(12),
                   child: Row(
                     children: [
-                      Icon(Icons.published_with_changes, size: 20, color: c.primary),
+                      Icon(
+                        Icons.published_with_changes,
+                        size: 20,
+                        color: c.primary,
+                      ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
@@ -171,7 +237,11 @@ class _Preview extends StatelessWidget {
             )
           else
             _SectionedSequence(
-              sections: WorkoutSections.group(WorkoutSections.arrange(workout.exercises, exercises.all), exercises.all),
+              sections: WorkoutSections.group(
+                workout.exercises,
+                exercises.all,
+                mode: ArrangeMode.musclesOnly,
+              ),
               exercises: exercises,
               unit: unit,
               lastSet: (id) => _lastSet(sessions, id),
@@ -192,7 +262,12 @@ class _Preview extends StatelessWidget {
 /// Target sequence grouped into muscle sections (grouping comes from [WorkoutSections]; order is
 /// the workout's own). Sections can be collapsed; the height change is animated.
 class _SectionedSequence extends StatefulWidget {
-  const _SectionedSequence({required this.sections, required this.exercises, required this.unit, required this.lastSet});
+  const _SectionedSequence({
+    required this.sections,
+    required this.exercises,
+    required this.unit,
+    required this.lastSet,
+  });
   final List<WorkoutSection> sections;
   final ExerciseRepository exercises;
   final WeightUnit unit;
@@ -213,50 +288,65 @@ class _SectionedSequenceState extends State<_SectionedSequence> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         for (final s in widget.sections)
-          Builder(builder: (context) {
-            final collapsed = multi && _collapsed.contains(s.muscle);
-            var pos = n;
-            n += s.items.length;
-            return Column(
-              key: ValueKey('section_${s.muscle.name}'),
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (multi)
-                  WorkoutSectionHeader(
-                    section: s,
-                    collapsed: collapsed,
-                    onToggle: () => setState(() => collapsed ? _collapsed.remove(s.muscle) : _collapsed.add(s.muscle)),
-                  ),
-                _MaybeAnimatedSize(
-                  child: collapsed
-                      ? const SizedBox(width: double.infinity)
-                      : Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            for (final g in s.groups) ...[
-                              if (WorkoutSubHeader.visible(s, g, multiSection: multi)) WorkoutSubHeader(label: g.label!),
-                              for (final re in g.items)
-                                Padding(
-                                  padding: const EdgeInsets.only(bottom: SxSpace.sm),
-                                  child: SxStagger(
-                                    index: pos,
-                                    child: _SequenceRow(
-                                      index: pos++,
-                                      re: re,
-                                      exercise: widget.exercises.byId(re.exerciseId),
-                                      lastSet: widget.lastSet(re.exerciseId),
-                                      unit: widget.unit,
+          Builder(
+            builder: (context) {
+              final collapsed = multi && _collapsed.contains(s.muscle);
+              var pos = n;
+              n += s.items.length;
+              return Column(
+                key: ValueKey('section_${s.muscle.name}'),
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (multi)
+                    WorkoutSectionHeader(
+                      section: s,
+                      collapsed: collapsed,
+                      onToggle: () => setState(
+                        () => collapsed
+                            ? _collapsed.remove(s.muscle)
+                            : _collapsed.add(s.muscle),
+                      ),
+                    ),
+                  _MaybeAnimatedSize(
+                    child: collapsed
+                        ? const SizedBox(width: double.infinity)
+                        : Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              for (final g in s.groups) ...[
+                                if (WorkoutSubHeader.visible(
+                                  s,
+                                  g,
+                                  multiSection: multi,
+                                ))
+                                  WorkoutSubHeader(label: g.label!),
+                                for (final re in g.items)
+                                  Padding(
+                                    padding: const EdgeInsets.only(
+                                      bottom: SxSpace.sm,
+                                    ),
+                                    child: SxStagger(
+                                      index: pos,
+                                      child: _SequenceRow(
+                                        index: pos++,
+                                        re: re,
+                                        exercise: widget.exercises.byId(
+                                          re.exerciseId,
+                                        ),
+                                        lastSet: widget.lastSet(re.exerciseId),
+                                        unit: widget.unit,
+                                      ),
                                     ),
                                   ),
-                                ),
+                              ],
                             ],
-                          ],
-                        ),
-                ),
-                const SizedBox(height: SxSpace.xs),
-              ],
-            );
-          }),
+                          ),
+                  ),
+                  const SizedBox(height: SxSpace.xs),
+                ],
+              );
+            },
+          ),
       ],
     );
   }
@@ -271,12 +361,22 @@ class _MaybeAnimatedSize extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (SxMotion.reduced(context)) return child;
-    return AnimatedSize(duration: SxMotion.of(context, SxMotion.short), curve: SxMotion.enter, alignment: Alignment.topCenter, child: child);
+    return AnimatedSize(
+      duration: SxMotion.of(context, SxMotion.short),
+      curve: SxMotion.enter,
+      alignment: Alignment.topCenter,
+      child: child,
+    );
   }
 }
 
 class _Fact extends StatelessWidget {
-  const _Fact({required this.icon, required this.label, required this.value, required this.unit});
+  const _Fact({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.unit,
+  });
   final IconData icon;
   final String label;
   final String value;
@@ -295,13 +395,22 @@ class _Fact extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label.toUpperCase(), style: SxText.labelXs.copyWith(color: c.textMuted)),
+                Text(
+                  label.toUpperCase(),
+                  style: SxText.labelXs.copyWith(color: c.textMuted),
+                ),
                 Wrap(
                   spacing: 4,
                   crossAxisAlignment: WrapCrossAlignment.end,
                   children: [
-                    Text(value, style: SxText.metricMd.copyWith(color: c.textHigh)),
-                    Text(unit, style: SxText.bodySm.copyWith(color: c.textBody)),
+                    Text(
+                      value,
+                      style: SxText.metricMd.copyWith(color: c.textHigh),
+                    ),
+                    Text(
+                      unit,
+                      style: SxText.bodySm.copyWith(color: c.textBody),
+                    ),
                   ],
                 ),
               ],
@@ -322,14 +431,27 @@ class _Tag extends StatelessWidget {
     final c = context.sx;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(color: c.surface2, borderRadius: BorderRadius.circular(SxRadius.base), border: Border.all(color: c.hairline)),
-      child: Text(text, style: SxText.metricSm.copyWith(color: c.textBody, fontSize: 12)),
+      decoration: BoxDecoration(
+        color: c.surface2,
+        borderRadius: BorderRadius.circular(SxRadius.base),
+        border: Border.all(color: c.hairline),
+      ),
+      child: Text(
+        text,
+        style: SxText.metricSm.copyWith(color: c.textBody, fontSize: 12),
+      ),
     );
   }
 }
 
 class _SequenceRow extends StatelessWidget {
-  const _SequenceRow({required this.index, required this.re, required this.exercise, required this.lastSet, required this.unit});
+  const _SequenceRow({
+    required this.index,
+    required this.re,
+    required this.exercise,
+    required this.lastSet,
+    required this.unit,
+  });
   final int index;
   final RoutineExercise re;
   final Exercise? exercise;
@@ -341,7 +463,9 @@ class _SequenceRow extends StatelessWidget {
     final c = context.sx;
     final name = exercise?.name ?? 'Unknown exercise';
     return SxCard(
-      onTap: exercise == null ? null : () => AppNav.exerciseDetails(context, exercise!.id),
+      onTap: exercise == null
+          ? null
+          : () => AppNav.exerciseDetails(context, exercise!.id),
       padding: const EdgeInsets.all(12),
       child: Row(
         children: [
@@ -349,28 +473,54 @@ class _SequenceRow extends StatelessWidget {
             width: 36,
             height: 36,
             alignment: Alignment.center,
-            decoration: BoxDecoration(color: c.surface2, borderRadius: BorderRadius.circular(SxRadius.base)),
-            child: Text('${index + 1}'.padLeft(2, '0'), style: SxText.metricSm.copyWith(color: c.primary, fontWeight: FontWeight.w700)),
+            decoration: BoxDecoration(
+              color: c.surface2,
+              borderRadius: BorderRadius.circular(SxRadius.base),
+            ),
+            child: Text(
+              '${index + 1}'.padLeft(2, '0'),
+              style: SxText.metricSm.copyWith(
+                color: c.primary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name, style: SxText.headlineSm.copyWith(color: c.textHigh), maxLines: 2, overflow: TextOverflow.ellipsis),
+                Text(
+                  name,
+                  style: SxText.headlineSm.copyWith(color: c.textHigh),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
                 const SizedBox(height: 4),
                 Wrap(
                   spacing: 8,
                   runSpacing: 2,
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    Row(mainAxisSize: MainAxisSize.min, children: [
-                      Icon(Icons.repeat, size: 13, color: c.primary),
-                      const SizedBox(width: 4),
-                      Text(WorkoutStats.setsReps(re), style: SxText.metricSm.copyWith(color: c.primary, fontSize: 12)),
-                    ]),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.repeat, size: 13, color: c.primary),
+                        const SizedBox(width: 4),
+                        Text(
+                          WorkoutStats.setsReps(re),
+                          style: SxText.metricSm.copyWith(
+                            color: c.primary,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
                     if (exercise != null)
-                      Text('${exercise!.equipment.label} • ${exercise!.primaryMuscle.label}', style: SxText.bodySm.copyWith(color: c.textBody)),
+                      Text(
+                        '${exercise!.equipment.label} • ${exercise!.primaryMuscle.label}',
+                        style: SxText.bodySm.copyWith(color: c.textBody),
+                      ),
                   ],
                 ),
               ],
@@ -383,10 +533,20 @@ class _SequenceRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text('LAST SESSION', style: SxText.labelXs.copyWith(color: c.textMuted)),
+                Text(
+                  'LAST SESSION',
+                  style: SxText.labelXs.copyWith(color: c.textMuted),
+                ),
                 const SizedBox(height: 2),
-                Text(lastSet == null ? 'No history' : Fmt.setLabel(lastSet!.weightKg, lastSet!.reps, unit),
-                    style: SxText.metricSm.copyWith(color: lastSet == null ? c.textMuted : c.textHigh, fontSize: 12)),
+                Text(
+                  lastSet == null
+                      ? 'No history'
+                      : Fmt.setLabel(lastSet!.weightKg, lastSet!.reps, unit),
+                  style: SxText.metricSm.copyWith(
+                    color: lastSet == null ? c.textMuted : c.textHigh,
+                    fontSize: 12,
+                  ),
+                ),
               ],
             ),
           ),

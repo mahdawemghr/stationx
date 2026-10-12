@@ -15,13 +15,21 @@ void main() {
   });
 
   testWidgets('mixed logger renders', (t) async {
-    await pumpPage(t, const ActiveWorkoutPage(workoutId: 'w1'), size: const Size(390, 1100));
+    await pumpPage(
+      t,
+      const ActiveWorkoutPage(workoutId: 'w1'),
+      size: const Size(390, 1100),
+    );
     await shot(t, 'aw_mixed');
     expect(t.takeException(), isNull);
   });
 
   testWidgets('complete (strength) renders', (t) async {
-    final app = await pumpPage(t, WorkoutCompletePage(sessionId: 'seed_s2'), size: const Size(390, 1200));
+    final app = await pumpPage(
+      t,
+      WorkoutCompletePage(sessionId: 'seed_s2'),
+      size: const Size(390, 1200),
+    );
     expect(app.sessions.byId('seed_s2'), isNotNull);
     await shot(t, 'aw_complete');
     expect(t.takeException(), isNull);

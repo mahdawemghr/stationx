@@ -36,9 +36,8 @@ const List<SectionDef> sectionsCalvesAdductors = [
   ),
   SectionDef(
     'calves_tibialis',
-    'Calves · Tibialis (shins)',
+    'Tibialis (shins)',
     'Tibialis raises for the front of the lower leg.',
     ['tibialis_raise', 'band_tibialis_raise', 'weighted_tibialis_raise'],
-    family: 'calves',
   ),
 ];

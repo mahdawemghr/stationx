@@ -1,3 +1,4 @@
+import '../../core/utils/remote_ops.dart';
 import 'package:flutter/material.dart';
 
 import '../../app/app_scope.dart';
@@ -43,15 +44,27 @@ class _BackdateCardioPageState extends State<BackdateCardioPage> {
     super.dispose();
   }
 
+  String? _saveId;
+
   Future<void> _save() async {
     if (!_form.validate() || _saving) return;
     setState(() => _saving = true);
-    final id = 'c_${DateTime.now().microsecondsSinceEpoch}';
+    final id = _saveId ??=
+        'c_${DateTime.now().microsecondsSinceEpoch}'; // same id on retry: no duplicate
     // meta defaults to createdAt = now; workoutDate stays the chosen past date.
     final s = _form.build(id: id);
-    await context.app.cardio.add(s);
+    final ok = await runRemote(
+      context,
+      () => context.app.cardio.add(s),
+      what: 'log the cardio session',
+      success: 'Historical cardio logged for ${Fmt.dateMedium(s.workoutDate)}',
+      key: 'cardio-backdate',
+    );
     if (!mounted) return;
-    showSxSnack(context, 'Historical cardio logged for ${Fmt.dateMedium(s.workoutDate)}');
+    if (!ok) {
+      setState(() => _saving = false); // the form is untouched; tap save again
+      return;
+    }
     Navigator.of(context).pop();
   }
 
@@ -63,7 +76,15 @@ class _BackdateCardioPageState extends State<BackdateCardioPage> {
       builder: (context, _) => SxScaffold(
         topBar: SxTopBar(
           title: 'Backdate Cardio',
-          actions: [TextButton(onPressed: _save, child: Text('Save', style: SxText.headlineSm.copyWith(color: c.primary)))],
+          actions: [
+            TextButton(
+              onPressed: _save,
+              child: Text(
+                'Save',
+                style: SxText.headlineSm.copyWith(color: c.primary),
+              ),
+            ),
+          ],
         ),
         bottom: SxBottomCta(
           label: 'Log historical cardio',
@@ -74,16 +95,22 @@ class _BackdateCardioPageState extends State<BackdateCardioPage> {
         children: [
           SxCard(
             color: c.surface2,
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Wrap(spacing: 8, runSpacing: 6, crossAxisAlignment: WrapCrossAlignment.center, children: [
-                StatusPill('Historical entry', dot: true),
-              ]),
-              const SizedBox(height: 8),
-              Text(
-                'Backdated cardio is stored on the date you pick. It adds to cardio totals and goals for that date and never changes your workout rotation.',
-                style: SxText.bodySm.copyWith(color: c.textBody),
-              ),
-            ]),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Wrap(
+                  spacing: 8,
+                  runSpacing: 6,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [StatusPill('Historical entry', dot: true)],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Backdated cardio is stored on the date you pick. It adds to cardio totals and goals for that date and never changes your workout rotation.',
+                  style: SxText.bodySm.copyWith(color: c.textBody),
+                ),
+              ],
+            ),
           ),
           const SectionHeader('Activity modality'),
           SizedBox(
@@ -91,24 +118,36 @@ class _BackdateCardioPageState extends State<BackdateCardioPage> {
             child: ListView(
               scrollDirection: Axis.horizontal,
               children: [
-                for (final k in CardioKind.values.where((k) => k != CardioKind.custom))
+                for (final k in CardioKind.values.where(
+                  (k) => k != CardioKind.custom,
+                ))
                   Padding(
                     padding: const EdgeInsets.only(right: 8),
-                    child: SxChip(label: k.label, icon: cardioKindIcon(k), selected: _form.kind == k, onTap: () => _form.setKind(k)),
+                    child: SxChip(
+                      label: k.label,
+                      icon: cardioKindIcon(k),
+                      selected: _form.kind == k,
+                      onTap: () => _form.setKind(k),
+                    ),
                   ),
               ],
             ),
           ),
           CardioDateTimeRow(
             form: _form,
-            footer: Row(children: [
-              Icon(Icons.history, size: 14, color: c.primary),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text('LOGGED TODAY (${Fmt.dateMedium(DateTime.now()).toUpperCase()})',
-                    style: SxText.labelXs.copyWith(color: c.primary), overflow: TextOverflow.ellipsis),
-              ),
-            ]),
+            footer: Row(
+              children: [
+                Icon(Icons.history, size: 14, color: c.primary),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    'LOGGED TODAY (${Fmt.dateMedium(DateTime.now()).toUpperCase()})',
+                    style: SxText.labelXs.copyWith(color: c.primary),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
           ),
           CardioMetricsSection(form: _form, title: 'Telemetry Log'),
           CardioBiometricsSection(form: _form),

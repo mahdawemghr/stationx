@@ -36,7 +36,7 @@ final Map<String, ExerciseMuscleProfile> profilesQuads = {
   ),
   'sumo_deadlift': _x(
     [_pr(_quad), _p(Muscle.gluteusMaximus)],
-    [_sr(_ham), _s(Muscle.lowerBack), _s(Muscle.traps)],
+    [_sr(_ham), _s(Muscle.lowerBack), _s(Muscle.traps), _s(Muscle.adductors)],
   ),
   'reverse_lunge': _x(
     [_pr(_quad), _p(Muscle.gluteusMaximus)],
@@ -49,11 +49,11 @@ final Map<String, ExerciseMuscleProfile> profilesQuads = {
   'db_step_up': _x([_pr(_quad), _p(Muscle.gluteusMaximus)], [_sr(_ham), _stab]),
   'lateral_lunge': _x(
     [_pr(_quad)],
-    [_s(Muscle.gluteusMaximus), _s(Muscle.gluteusMedius)],
+    [_s(Muscle.gluteusMaximus), _s(Muscle.gluteusMedius), _s(Muscle.adductors)],
   ),
   'cossack_squat': _x(
     [_pr(_quad)],
-    [_s(Muscle.gluteusMaximus), _s(Muscle.gluteusMedius)],
+    [_s(Muscle.gluteusMaximus), _s(Muscle.gluteusMedius), _s(Muscle.adductors)],
   ),
   'smith_split_squat': _x([_pr(_quad), _p(Muscle.gluteusMaximus)], [_sr(_ham)]),
   'single_leg_extension': _x([_pr(_quad)]),

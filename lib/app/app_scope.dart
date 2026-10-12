@@ -6,8 +6,11 @@ import 'app_controller.dart';
 /// `AppScope.of(context)` listens (rebuilds when the store is swapped);
 /// `AppScope.read(context)` does not.
 class AppScope extends InheritedNotifier<AppController> {
-  const AppScope({super.key, required AppController controller, required super.child})
-      : super(notifier: controller);
+  const AppScope({
+    super.key,
+    required AppController controller,
+    required super.child,
+  }) : super(notifier: controller);
 
   static AppController of(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<AppScope>()!.notifier!;

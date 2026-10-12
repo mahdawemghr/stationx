@@ -14,6 +14,7 @@ class Exercise {
     this.isCustom = false,
     this.tempo,
     this.muscleTargets,
+    this.difficulty,
     SyncMeta? meta,
   }) : meta = meta ?? SyncMeta();
 
@@ -80,6 +81,10 @@ class Exercise {
   /// Structured muscle targets of a CUSTOM exercise (null = none stored; built-ins use
   /// `MuscleProfiles.builtIn`). When present, [primaryMuscle]/[secondaryMuscles] are derived from it.
   final List<MuscleTarget>? muscleTargets;
+
+  /// Reviewed difficulty of a built-in exercise (see `BuiltInDifficulty`); null = unspecified (custom).
+  /// Used ONLY by automatic generation; manual selection is never restricted by it.
+  final Difficulty? difficulty;
   final SyncMeta meta;
 }
 

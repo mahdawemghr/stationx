@@ -28,11 +28,13 @@ void main() {
   testWidgets('SxMotion.of / reduced honour disableAnimations', (t) async {
     late Duration d;
     late bool r;
-    Widget probe() => Builder(builder: (ctx) {
-          d = SxMotion.of(ctx, SxMotion.standard);
-          r = SxMotion.reduced(ctx);
-          return const SizedBox();
-        });
+    Widget probe() => Builder(
+      builder: (ctx) {
+        d = SxMotion.of(ctx, SxMotion.standard);
+        r = SxMotion.reduced(ctx);
+        return const SizedBox();
+      },
+    );
     await pumpKit(t, probe());
     expect(d, SxMotion.standard);
     expect(r, isFalse);
@@ -50,16 +52,25 @@ void main() {
     }
   });
 
-  test('lib/core never uses the deprecated SxMotion.fast/base/slow unguarded', () {
-    final bad = <String>[];
-    final re = RegExp(r'SxMotion\.(fast|base|slow)\b');
-    for (final f in Directory('lib/core').listSync(recursive: true).whereType<File>()) {
-      if (!f.path.endsWith('.dart') || f.path.endsWith('sx_motion.dart')) continue;
-      final lines = f.readAsLinesSync();
-      for (var i = 0; i < lines.length; i++) {
-        if (re.hasMatch(lines[i]) && !lines[i].contains('SxMotion.of(')) bad.add('${f.path}:${i + 1}');
+  test(
+    'lib/core never uses the deprecated SxMotion.fast/base/slow unguarded',
+    () {
+      final bad = <String>[];
+      final re = RegExp(r'SxMotion\.(fast|base|slow)\b');
+      for (final f in Directory(
+        'lib/core',
+      ).listSync(recursive: true).whereType<File>()) {
+        if (!f.path.endsWith('.dart') || f.path.endsWith('sx_motion.dart')) {
+          continue;
+        }
+        final lines = f.readAsLinesSync();
+        for (var i = 0; i < lines.length; i++) {
+          if (re.hasMatch(lines[i]) && !lines[i].contains('SxMotion.of(')) {
+            bad.add('${f.path}:${i + 1}');
+          }
+        }
       }
-    }
-    expect(bad, isEmpty);
-  });
+      expect(bad, isEmpty);
+    },
+  );
 }

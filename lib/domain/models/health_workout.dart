@@ -196,3 +196,47 @@ class HealthEnrichment {
   final int? calories;
   bool get isEmpty => avgHeartRate == null && calories == null;
 }
+
+/// Average / max heart rate (bpm) of one session, read from the health store. Kept in the local
+/// health state next to the session (never synced, never written back to the health store).
+class HrStats {
+  const HrStats({required this.avg, required this.max, this.samples = 0});
+  final int avg;
+  final int max;
+  final int samples;
+
+  Map<String, Object?> toJson() => {'avg': avg, 'max': max, 'n': samples};
+
+  static HrStats? tryParse(Object? raw) {
+    try {
+      final m = (raw as Map).cast<String, Object?>();
+      final a = m['avg'], x = m['max'];
+      if (a is! int || x is! int) return null;
+      return HrStats(avg: a, max: x, samples: (m['n'] as int?) ?? 0);
+    } catch (_) {
+      return null;
+    }
+  }
+}
+
+/// Whether the health store will return data older than ~30 days before the first permission grant
+/// (Android Health Connect needs the separate "read history" permission for that).
+enum HealthHistoryAccess { notSupported, needsGrant, granted }
+
+/// One day of average heart rate for the trend card.
+class HeartRateDay {
+  const HeartRateDay({required this.day, this.average});
+  final DateTime day;
+  final double? average;
+}
+
+/// The first thing that stops watch data from reaching StationX (drives the setup checklist).
+enum WatchSetupStep { storeMissing, permissions, noRecentData, ok }
+
+class WatchDiagnosis {
+  const WatchDiagnosis({required this.step, this.sources = const {}});
+  final WatchSetupStep step;
+
+  /// Friendly names of apps that wrote data in the checked window.
+  final Set<String> sources;
+}

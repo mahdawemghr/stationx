@@ -1,3 +1,4 @@
+import '../../core/utils/remote_ops.dart';
 import 'package:flutter/material.dart';
 
 import '../../app/app_scope.dart';
@@ -23,7 +24,9 @@ class EditSessionPage extends StatelessWidget {
     if (s == null) {
       return const SxScaffold(
         topBar: SxTopBar(title: 'Edit workout'),
-        body: Center(child: ErrorState(message: 'This session no longer exists.')),
+        body: Center(
+          child: ErrorState(message: 'This session no longer exists.'),
+        ),
       );
     }
     return _EditForm(session: s);
@@ -54,7 +57,9 @@ class _EditForm extends StatefulWidget {
 class _EditFormState extends State<_EditForm> {
   late final List<_EditExercise> _exercises;
   late DateTime _date = widget.session.workoutDate;
-  late final TextEditingController _notes = TextEditingController(text: widget.session.notes);
+  late final TextEditingController _notes = TextEditingController(
+    text: widget.session.notes,
+  );
   bool _dirty = false;
   bool _busy = false;
 
@@ -64,7 +69,8 @@ class _EditFormState extends State<_EditForm> {
     _exercises = [
       for (final l in widget.session.exercises)
         _EditExercise(l.exerciseId, [
-          for (final s in l.doneSets) _EditSet(weightKg: s.weightKg, reps: s.reps, rpe: s.rpe),
+          for (final s in l.doneSets)
+            _EditSet(weightKg: s.weightKg, reps: s.reps, rpe: s.rpe),
         ]),
     ];
   }
@@ -76,9 +82,9 @@ class _EditFormState extends State<_EditForm> {
   }
 
   void _change(VoidCallback fn) => setState(() {
-        fn();
-        _dirty = true;
-      });
+    fn();
+    _dirty = true;
+  });
 
   WeightUnit get _unit => context.app.profile.profile.unit;
 
@@ -87,7 +93,11 @@ class _EditFormState extends State<_EditForm> {
     final v = await showNumericKeypad(
       context,
       title: 'Weight (${Fmt.unit(unit)})',
-      initial: s.weightKg <= 0 ? null : double.parse(Fmt.toDisplayWeight(s.weightKg, unit).toStringAsFixed(2)),
+      initial: s.weightKg <= 0
+          ? null
+          : double.parse(
+              Fmt.toDisplayWeight(s.weightKg, unit).toStringAsFixed(2),
+            ),
       step: unit == WeightUnit.kg ? 2.5 : 5,
       unit: Fmt.unit(unit),
     );
@@ -95,19 +105,34 @@ class _EditFormState extends State<_EditForm> {
   }
 
   Future<void> _editReps(_EditSet s) async {
-    final v = await showNumericKeypad(context, title: 'Reps', initial: s.reps.toDouble(), allowDecimal: false, step: 1, max: 999);
+    final v = await showNumericKeypad(
+      context,
+      title: 'Reps',
+      initial: s.reps.toDouble(),
+      allowDecimal: false,
+      step: 1,
+      max: 999,
+    );
     if (v != null) _change(() => s.reps = v.round());
   }
 
   void _addSet(_EditExercise e) {
     final last = e.sets.isEmpty ? null : e.sets.last;
-    _change(() => e.sets.add(_EditSet(weightKg: last?.weightKg ?? 0, reps: last?.reps ?? 8)));
+    _change(
+      () => e.sets.add(
+        _EditSet(weightKg: last?.weightKg ?? 0, reps: last?.reps ?? 8),
+      ),
+    );
   }
 
   Future<void> _addExercise() async {
     final ex = await AppNav.exercisePicker(context);
     if (ex == null || !mounted) return;
-    _change(() => _exercises.add(_EditExercise(ex.id, [_EditSet(weightKg: 0, reps: 8)])));
+    _change(
+      () => _exercises.add(
+        _EditExercise(ex.id, [_EditSet(weightKg: 0, reps: 8)]),
+      ),
+    );
   }
 
   Future<void> _pickDate() async {
@@ -119,7 +144,9 @@ class _EditFormState extends State<_EditForm> {
       lastDate: DateTime(now.year, now.month, now.day),
     );
     if (d == null || !mounted) return;
-    _change(() => _date = DateTime(d.year, d.month, d.day, _date.hour, _date.minute));
+    _change(
+      () => _date = DateTime(d.year, d.month, d.day, _date.hour, _date.minute),
+    );
   }
 
   WorkoutSession _build() {
@@ -136,9 +163,13 @@ class _EditFormState extends State<_EditForm> {
       exercises: [
         for (final e in _exercises)
           if (e.sets.isNotEmpty)
-            ExerciseLog(exerciseId: e.exerciseId, sets: [
-              for (final s in e.sets) SetLog(weightKg: s.weightKg, reps: s.reps, rpe: s.rpe),
-            ]),
+            ExerciseLog(
+              exerciseId: e.exerciseId,
+              sets: [
+                for (final s in e.sets)
+                  SetLog(weightKg: s.weightKg, reps: s.reps, rpe: s.rpe),
+              ],
+            ),
       ],
     );
   }
@@ -147,17 +178,34 @@ class _EditFormState extends State<_EditForm> {
     if (_busy) return;
     final next = _build();
     if (next.exercises.isEmpty && next.cardio == null) {
-      showSxSnack(context, 'Add at least one set, or delete the workout', icon: Icons.info_outline);
+      showSxSnack(
+        context,
+        'Add at least one set, or delete the workout',
+        icon: Icons.info_outline,
+      );
       return;
     }
     if (_exercises.any((e) => e.sets.any((s) => s.reps <= 0))) {
-      showSxSnack(context, 'Every set needs at least 1 rep', icon: Icons.info_outline);
+      showSxSnack(
+        context,
+        'Every set needs at least 1 rep',
+        icon: Icons.info_outline,
+      );
       return;
     }
     setState(() => _busy = true);
-    await context.app.sessions.update(next);
+    final ok = await runRemote(
+      context,
+      () => context.app.sessions.update(next),
+      what: 'update the workout',
+      success: 'Workout updated',
+      key: 'session-${next.id}',
+    );
     if (!mounted) return;
-    showSxSnack(context, 'Workout updated');
+    if (!ok) {
+      setState(() => _busy = false); // edits stay on screen; save again
+      return;
+    }
     Navigator.of(context).pop();
   }
 
@@ -197,76 +245,158 @@ class _EditFormState extends State<_EditForm> {
         topBar: SxTopBar(
           title: 'Edit workout',
           subtitle: widget.session.name.toUpperCase(),
-          actions: [TextButton(onPressed: _save, child: Text('Save', style: SxText.headlineSm.copyWith(color: c.primary)))],
+          actions: [
+            TextButton(
+              onPressed: _save,
+              child: Text(
+                'Save',
+                style: SxText.headlineSm.copyWith(color: c.primary),
+              ),
+            ),
+          ],
         ),
-        bottom: Row(children: [
-          Expanded(child: SxButton(label: 'Save changes', icon: Icons.save_outlined, onPressed: _busy ? null : _save)),
-          const SizedBox(width: 8),
-          SxIconButton(icon: Icons.delete_outline, tooltip: 'Delete workout', iconColor: c.danger, size: 52, onPressed: _delete),
-        ]),
+        bottom: Row(
+          children: [
+            Expanded(
+              child: SxButton(
+                label: 'Save changes',
+                icon: Icons.save_outlined,
+                onPressed: _busy ? null : _save,
+              ),
+            ),
+            const SizedBox(width: 8),
+            SxIconButton(
+              icon: Icons.delete_outline,
+              tooltip: 'Delete workout',
+              iconColor: c.danger,
+              size: 52,
+              onPressed: _delete,
+            ),
+          ],
+        ),
         children: [
           SxCard(
             onTap: _pickDate,
-            child: Row(children: [
-              Icon(Icons.event, color: c.primary),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text('DATE', style: SxText.labelXs.copyWith(color: c.textBody)),
-                  Text(Fmt.dateLong(_date), style: SxText.headlineSm.copyWith(color: c.textHigh)),
-                ]),
-              ),
-              Icon(Icons.edit_calendar_outlined, color: c.textBody),
-            ]),
+            child: Row(
+              children: [
+                Icon(Icons.event, color: c.primary),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'DATE',
+                        style: SxText.labelXs.copyWith(color: c.textBody),
+                      ),
+                      Text(
+                        Fmt.dateLong(_date),
+                        style: SxText.headlineSm.copyWith(color: c.textHigh),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(Icons.edit_calendar_outlined, color: c.textBody),
+              ],
+            ),
           ),
           if (_exercises.isEmpty)
-            const SxCard(child: EmptyState(icon: Icons.fitness_center, title: 'No exercises', message: 'Add an exercise to this workout.')),
+            const SxCard(
+              child: EmptyState(
+                icon: Icons.fitness_center,
+                title: 'No exercises',
+                message: 'Add an exercise to this workout.',
+              ),
+            ),
           for (final (i, e) in _exercises.indexed)
             SxCard(
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Row(children: [
-                  Expanded(child: Text('${i + 1}. ${names[e.exerciseId] ?? e.exerciseId}', style: SxText.headlineSm.copyWith(color: c.textHigh))),
-                  SxIconButton(
-                    icon: Icons.close,
-                    tooltip: 'Remove ${names[e.exerciseId] ?? 'exercise'}',
-                    filled: false,
-                    iconColor: c.danger,
-                    onPressed: () => _change(() => _exercises.removeAt(i)),
-                  ),
-                ]),
-                const SizedBox(height: 4),
-                for (final (k, s) in e.sets.indexed)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 6),
-                    child: Row(children: [
-                      SizedBox(width: 28, child: Text('${k + 1}', style: SxText.metricSm.copyWith(color: c.textBody))),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
                       Expanded(
-                        flex: 3,
-                        child: _ValueButton(
-                          label: 'Set ${k + 1} weight',
-                          text: '${_weightText(s.weightKg, unit)} ${Fmt.unit(unit)}',
-                          onTap: () => _editWeight(s),
+                        child: Text(
+                          '${i + 1}. ${names[e.exerciseId] ?? e.exerciseId}',
+                          style: SxText.headlineSm.copyWith(color: c.textHigh),
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        flex: 2,
-                        child: _ValueButton(label: 'Set ${k + 1} reps', text: '${s.reps} reps', onTap: () => _editReps(s)),
-                      ),
                       SxIconButton(
-                        icon: Icons.remove_circle_outline,
-                        tooltip: 'Remove set ${k + 1}',
+                        icon: Icons.close,
+                        tooltip: 'Remove ${names[e.exerciseId] ?? 'exercise'}',
                         filled: false,
-                        iconColor: c.textBody,
-                        onPressed: () => _change(() => e.sets.removeAt(k)),
+                        iconColor: c.danger,
+                        onPressed: () => _change(() => _exercises.removeAt(i)),
                       ),
-                    ]),
+                    ],
                   ),
-                SxButton(label: 'Add set', icon: Icons.add, variant: SxButtonVariant.ghost, height: 44, onPressed: () => _addSet(e)),
-              ]),
+                  const SizedBox(height: 4),
+                  for (final (k, s) in e.sets.indexed)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: Row(
+                        children: [
+                          SizedBox(
+                            width: 28,
+                            child: Text(
+                              '${k + 1}',
+                              style: SxText.metricSm.copyWith(
+                                color: c.textBody,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            flex: 3,
+                            child: _ValueButton(
+                              label: 'Set ${k + 1} weight',
+                              text:
+                                  '${_weightText(s.weightKg, unit)} ${Fmt.unit(unit)}',
+                              onTap: () => _editWeight(s),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            flex: 2,
+                            child: _ValueButton(
+                              label: 'Set ${k + 1} reps',
+                              text: '${s.reps} reps',
+                              onTap: () => _editReps(s),
+                            ),
+                          ),
+                          SxIconButton(
+                            icon: Icons.remove_circle_outline,
+                            tooltip: 'Remove set ${k + 1}',
+                            filled: false,
+                            iconColor: c.textBody,
+                            onPressed: () => _change(() => e.sets.removeAt(k)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  SxButton(
+                    label: 'Add set',
+                    icon: Icons.add,
+                    variant: SxButtonVariant.ghost,
+                    height: 44,
+                    onPressed: () => _addSet(e),
+                  ),
+                ],
+              ),
             ),
-          SxButton(label: 'Add exercise', icon: Icons.add, variant: SxButtonVariant.secondary, height: 48, onPressed: _addExercise),
-          SxTextField(label: 'Notes', controller: _notes, maxLines: 3, hint: 'Optional', onChanged: (_) => _dirty = true),
+          SxButton(
+            label: 'Add exercise',
+            icon: Icons.add,
+            variant: SxButtonVariant.secondary,
+            height: 48,
+            onPressed: _addExercise,
+          ),
+          SxTextField(
+            label: 'Notes',
+            controller: _notes,
+            maxLines: 3,
+            hint: 'Optional',
+            onChanged: (_) => _dirty = true,
+          ),
         ],
       ),
     );
@@ -274,7 +404,11 @@ class _EditFormState extends State<_EditForm> {
 }
 
 class _ValueButton extends StatelessWidget {
-  const _ValueButton({required this.label, required this.text, required this.onTap});
+  const _ValueButton({
+    required this.label,
+    required this.text,
+    required this.onTap,
+  });
   final String label;
   final String text;
   final VoidCallback onTap;
@@ -294,7 +428,12 @@ class _ValueButton extends StatelessWidget {
           child: Container(
             constraints: const BoxConstraints(minHeight: 48),
             alignment: Alignment.center,
-            child: ExcludeSemantics(child: Text(text, style: SxText.metricSm.copyWith(color: c.textHigh))),
+            child: ExcludeSemantics(
+              child: Text(
+                text,
+                style: SxText.metricSm.copyWith(color: c.textHigh),
+              ),
+            ),
           ),
         ),
       ),

@@ -36,17 +36,19 @@ class _CalendarPageState extends State<CalendarPage> {
   int _filter = 0; // 0 all, 1 strength only, 2 cardio only, 3 mixed
 
   void _shiftMonth(int d) => setState(() {
-        _month = DateTime(_month.year, _month.month + d);
-        final today = _dateOnly(DateTime.now());
-        // Keep the selection inside the visible month.
-        _selected = (today.year == _month.year && today.month == _month.month) ? today : DateTime(_month.year, _month.month, 1);
-      });
+    _month = DateTime(_month.year, _month.month + d);
+    final today = _dateOnly(DateTime.now());
+    // Keep the selection inside the visible month.
+    _selected = (today.year == _month.year && today.month == _month.month)
+        ? today
+        : DateTime(_month.year, _month.month, 1);
+  });
 
   void _goToday() => setState(() {
-        final t = DateTime.now();
-        _month = DateTime(t.year, t.month);
-        _selected = _dateOnly(t);
-      });
+    final t = DateTime.now();
+    _month = DateTime(t.year, t.month);
+    _selected = _dateOnly(t);
+  });
 
   Map<DateTime, _DayData> _collect(AppController app) {
     final out = <DateTime, _DayData>{};
@@ -69,42 +71,76 @@ class _CalendarPageState extends State<CalendarPage> {
     }
     // Your schedule first (rotation order), then workouts that are not in the rotation.
     final byId = {for (final w in all) w.id: w};
-    final inRotation = [for (final id in app.workouts.rotation.workoutIds) if (byId[id] != null) byId[id]!];
+    final inRotation = [
+      for (final id in app.workouts.rotation.workoutIds)
+        if (byId[id] != null) byId[id]!,
+    ];
     final scheduled = inRotation.map((w) => w.id).toSet();
-    final workouts = [...inRotation, for (final w in all) if (!scheduled.contains(w.id)) w];
+    final workouts = [
+      ...inRotation,
+      for (final w in all)
+        if (!scheduled.contains(w.id)) w,
+    ];
     final picked = await showSxSheet<Workout>(
       context,
       builder: (ctx) => Padding(
-        padding: const EdgeInsets.fromLTRB(SxSpace.md, 8, SxSpace.md, SxSpace.md),
-        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('INSERT WORKOUT', style: SxText.headlineMd.copyWith(color: ctx.sx.textHigh)),
-          const SizedBox(height: 4),
-          Text('Which workout from your schedule did you do on ${Fmt.dateLong(_selected)}? You will fill in the sets next.', style: SxText.bodyMd.copyWith(color: ctx.sx.textBody)),
-          const SizedBox(height: SxSpace.md),
-          Flexible(
-            child: ListView.separated(
-              shrinkWrap: true,
-              itemCount: workouts.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 8),
-              itemBuilder: (_, i) => SxCard(
-                padding: const EdgeInsets.all(14),
-                onTap: () => Navigator.pop(ctx, workouts[i]),
-                child: Row(children: [
-                  Expanded(
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text(workouts[i].name, style: SxText.headlineSm.copyWith(color: ctx.sx.textHigh)),
-                      Text(
-                        '${scheduled.contains(workouts[i].id) ? 'Day ${i + 1} · ' : 'Not in schedule · '}${workouts[i].exercises.length} exercises · ${workouts[i].totalSets} sets',
-                        style: SxText.bodySm.copyWith(color: ctx.sx.textBody),
+        padding: const EdgeInsets.fromLTRB(
+          SxSpace.md,
+          8,
+          SxSpace.md,
+          SxSpace.md,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'INSERT WORKOUT',
+              style: SxText.headlineMd.copyWith(color: ctx.sx.textHigh),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Which workout from your schedule did you do on ${Fmt.dateLong(_selected)}? You will fill in the sets next.',
+              style: SxText.bodyMd.copyWith(color: ctx.sx.textBody),
+            ),
+            const SizedBox(height: SxSpace.md),
+            Flexible(
+              child: ListView.separated(
+                shrinkWrap: true,
+                itemCount: workouts.length,
+                separatorBuilder: (_, _) => const SizedBox(height: 8),
+                itemBuilder: (_, i) => SxCard(
+                  padding: const EdgeInsets.all(14),
+                  onTap: () => Navigator.pop(ctx, workouts[i]),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              workouts[i].name,
+                              style: SxText.headlineSm.copyWith(
+                                color: ctx.sx.textHigh,
+                              ),
+                            ),
+                            Text(
+                              '${scheduled.contains(workouts[i].id) ? 'Day ${i + 1} · ' : 'Not in schedule · '}${workouts[i].exercises.length} exercises · ${workouts[i].totalSets} sets',
+                              style: SxText.bodySm.copyWith(
+                                color: ctx.sx.textBody,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ]),
+                      Icon(Icons.chevron_right, color: ctx.sx.textBody),
+                    ],
                   ),
-                  Icon(Icons.chevron_right, color: ctx.sx.textBody),
-                ]),
+                ),
               ),
             ),
-          ),
-        ]),
+          ],
+        ),
       ),
     );
     if (picked != null && mounted) {
@@ -117,7 +153,13 @@ class _CalendarPageState extends State<CalendarPage> {
   Widget build(BuildContext context) {
     final app = context.app;
     return ListenableBuilder(
-      listenable: Listenable.merge([app.sessions, app.cardio, app.exercises, app.profile, app.workouts]),
+      listenable: Listenable.merge([
+        app.sessions,
+        app.cardio,
+        app.exercises,
+        app.profile,
+        app.workouts,
+      ]),
       builder: (context, _) {
         final c = context.sx;
         final data = _collect(app);
@@ -133,12 +175,21 @@ class _CalendarPageState extends State<CalendarPage> {
           nCardio += x.cardio.length;
           nMixed += x.mixed.length;
         }
-        final counts = [nStrength + nCardio + nMixed, nStrength, nCardio, nMixed];
+        final counts = [
+          nStrength + nCardio + nMixed,
+          nStrength,
+          nCardio,
+          nMixed,
+        ];
 
         final day = data[_selected] ?? _DayData();
-        final strengthList = [if (_filter == 0 || _filter == 1) ...day.strength, if (_filter == 0 || _filter == 3) ...day.mixed]
-          ..sort((a, b) => a.workoutDate.compareTo(b.workoutDate));
-        final cardioList = (_filter == 0 || _filter == 2) ? day.cardio : <CardioSession>[];
+        final strengthList = [
+          if (_filter == 0 || _filter == 1) ...day.strength,
+          if (_filter == 0 || _filter == 3) ...day.mixed,
+        ]..sort((a, b) => a.workoutDate.compareTo(b.workoutDate));
+        final cardioList = (_filter == 0 || _filter == 2)
+            ? day.cardio
+            : <CardioSession>[];
         final isFuture = _selected.isAfter(today);
 
         var totalSeconds = 0;
@@ -153,10 +204,13 @@ class _CalendarPageState extends State<CalendarPage> {
         // Weekly density (real): sessions this week vs target.
         final ws = VolumeService.startOfWeek(DateTime.now());
         final we = DateTime(ws.year, ws.month, ws.day + 7);
-        final weekCount = app.sessions.between(ws, we).length + app.cardio.between(ws, we).length;
+        final weekCount =
+            app.sessions.between(ws, we).length +
+            app.cardio.between(ws, we).length;
         final target = app.profile.profile.weeklySessionTarget;
 
-        final isCurrentMonth = _month.year == today.year && _month.month == today.month;
+        final isCurrentMonth =
+            _month.year == today.year && _month.month == today.month;
 
         return SxScaffold(
           topBar: const SxTopBar(title: 'Training Log', showLogo: true),
@@ -164,29 +218,65 @@ class _CalendarPageState extends State<CalendarPage> {
           // every other section is re-inset to the usual 16dp.
           padding: const EdgeInsets.fromLTRB(8, SxSpace.md, 8, SxSpace.lg),
           children: _insetExceptGrid([
-            _MonthHeader(month: _month, showToday: !isCurrentMonth || _selected != today, onPrev: () => _shiftMonth(-1), onNext: () => _shiftMonth(1), onToday: _goToday),
-            _FilterRow(index: _filter, counts: counts, onChanged: (i) => setState(() => _filter = i)),
+            _MonthHeader(
+              month: _month,
+              showToday: !isCurrentMonth || _selected != today,
+              onPrev: () => _shiftMonth(-1),
+              onNext: () => _shiftMonth(1),
+              onToday: _goToday,
+            ),
+            _FilterRow(
+              index: _filter,
+              counts: counts,
+              onChanged: (i) => setState(() => _filter = i),
+            ),
             SxSwap(
               alignment: Alignment.topCenter,
-              child: _MonthGrid(key: ValueKey(_month), month: _month, selected: _selected, today: today, data: data, filter: _filter, onSelect: (d) => setState(() => _selected = d)),
+              child: _MonthGrid(
+                key: ValueKey(_month),
+                month: _month,
+                selected: _selected,
+                today: today,
+                data: data,
+                filter: _filter,
+                onSelect: (d) => setState(() => _selected = d),
+              ),
             ),
             SxCard(
-              child: Row(children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(color: c.primarySoft, borderRadius: BorderRadius.circular(SxRadius.md)),
-                  child: Icon(Icons.local_fire_department_outlined, color: c.primary),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text('This week', style: SxText.headlineSm.copyWith(color: c.textHigh)),
-                    Text('$weekCount of $target sessions', style: SxText.bodySm.copyWith(color: c.textBody)),
-                  ]),
-                ),
-                if (weekCount >= target) const StatusPill('Goal met', icon: Icons.check),
-              ]),
+              child: Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: c.primarySoft,
+                      borderRadius: BorderRadius.circular(SxRadius.md),
+                    ),
+                    child: Icon(
+                      Icons.local_fire_department_outlined,
+                      color: c.primary,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'This week',
+                          style: SxText.headlineSm.copyWith(color: c.textHigh),
+                        ),
+                        Text(
+                          '$weekCount of $target sessions',
+                          style: SxText.bodySm.copyWith(color: c.textBody),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (weekCount >= target)
+                    const StatusPill('Goal met', icon: Icons.check),
+                ],
+              ),
             ),
             SxSwap(
               alignment: Alignment.topCenter,
@@ -194,39 +284,108 @@ class _CalendarPageState extends State<CalendarPage> {
                 key: ValueKey('$_selected-$_filter'),
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _DayHeader(date: _selected, isToday: _selected == today, sessionCount: sessionCount, seconds: totalSeconds),
+                  _DayHeader(
+                    date: _selected,
+                    isToday: _selected == today,
+                    sessionCount: sessionCount,
+                    seconds: totalSeconds,
+                  ),
                   const SizedBox(height: SxSpace.md),
                   if (sessionCount == 0)
                     SxCard(
-                      child: Column(children: [
-                        Icon(isFuture ? Icons.event_outlined : Icons.event_busy_outlined, size: 32, color: c.textMuted),
-                        const SizedBox(height: 8),
-                        Text(isFuture ? 'Upcoming day' : (day.isEmpty ? 'Rest day' : 'Nothing matches this filter'),
-                            style: SxText.headlineSm.copyWith(color: c.textHigh)),
-                        const SizedBox(height: 4),
-                        Text(
-                          isFuture ? 'Future dates can\'t be logged. Your rotation, not the calendar, decides the next workout.' : (day.isEmpty ? 'No sessions logged. Insert a workout if you trained.' : 'Change the filter to see this day\'s sessions.'),
-                          textAlign: TextAlign.center,
-                          style: SxText.bodySm.copyWith(color: c.textBody),
-                        ),
-                        if (!isFuture && day.isEmpty) ...[
-                          const SizedBox(height: 12),
-                          SxButton(label: 'Insert workout', icon: Icons.add, height: 48, onPressed: _logHistoricalLift),
+                      child: Column(
+                        children: [
+                          Icon(
+                            isFuture
+                                ? Icons.event_outlined
+                                : Icons.event_busy_outlined,
+                            size: 32,
+                            color: c.textMuted,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            isFuture
+                                ? 'Upcoming day'
+                                : (day.isEmpty
+                                      ? 'Rest day'
+                                      : 'Nothing matches this filter'),
+                            style: SxText.headlineSm.copyWith(
+                              color: c.textHigh,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            isFuture
+                                ? 'Future dates can\'t be logged. Your rotation, not the calendar, decides the next workout.'
+                                : (day.isEmpty
+                                      ? 'No sessions logged. Insert a workout if you trained.'
+                                      : 'Change the filter to see this day\'s sessions.'),
+                            textAlign: TextAlign.center,
+                            style: SxText.bodySm.copyWith(color: c.textBody),
+                          ),
+                          if (!isFuture && day.isEmpty) ...[
+                            const SizedBox(height: 12),
+                            SxButton(
+                              label: 'Insert workout',
+                              icon: Icons.add,
+                              height: 48,
+                              onPressed: _logHistoricalLift,
+                            ),
+                          ],
                         ],
-                      ]),
+                      ),
                     ),
-                  for (final (i, s) in strengthList.indexed) Padding(padding: const EdgeInsets.only(bottom: SxSpace.md), child: SxStagger(index: i, child: _StrengthCard(session: s))),
-                  for (final (i, x) in cardioList.indexed) Padding(padding: const EdgeInsets.only(bottom: SxSpace.md), child: SxStagger(index: strengthList.length + i, child: _CardioCard(session: x))),
+                  for (final (i, s) in strengthList.indexed)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: SxSpace.md),
+                      child: SxStagger(
+                        index: i,
+                        child: _StrengthCard(session: s),
+                      ),
+                    ),
+                  for (final (i, x) in cardioList.indexed)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: SxSpace.md),
+                      child: SxStagger(
+                        index: strengthList.length + i,
+                        child: _CardioCard(session: x),
+                      ),
+                    ),
                 ],
               ),
             ),
             const SectionHeader('Record retroactive data'),
-            Row(children: [
-              Expanded(child: SxButton(label: 'Insert workout', icon: Icons.add_circle_outline, variant: SxButtonVariant.secondary, height: 52, onPressed: isFuture ? null : _logHistoricalLift)),
-              const SizedBox(width: 8),
-              Expanded(child: SxButton(label: 'Backdate cardio', icon: Icons.directions_run, variant: SxButtonVariant.secondary, height: 52, onPressed: isFuture ? null : () => AppNav.backdateCardio(context, date: _selected))),
-            ]),
-            if (isFuture) Text('Pick today or an earlier date to log past activity.', textAlign: TextAlign.center, style: SxText.bodySm.copyWith(color: c.textMuted)),
+            Row(
+              children: [
+                Expanded(
+                  child: SxButton(
+                    label: 'Insert workout',
+                    icon: Icons.add_circle_outline,
+                    variant: SxButtonVariant.secondary,
+                    height: 52,
+                    onPressed: isFuture ? null : _logHistoricalLift,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: SxButton(
+                    label: 'Backdate cardio',
+                    icon: Icons.directions_run,
+                    variant: SxButtonVariant.secondary,
+                    height: 52,
+                    onPressed: isFuture
+                        ? null
+                        : () => AppNav.backdateCardio(context, date: _selected),
+                  ),
+                ),
+              ],
+            ),
+            if (isFuture)
+              Text(
+                'Pick today or an earlier date to log past activity.',
+                textAlign: TextAlign.center,
+                style: SxText.bodySm.copyWith(color: c.textMuted),
+              ),
           ]),
         );
       },
@@ -235,11 +394,20 @@ class _CalendarPageState extends State<CalendarPage> {
 }
 
 List<Widget> _insetExceptGrid(List<Widget> kids) => [
-      for (final w in kids) w is SxSwap ? w : Padding(padding: const EdgeInsets.symmetric(horizontal: 8), child: w),
-    ];
+  for (final w in kids)
+    w is SxSwap
+        ? w
+        : Padding(padding: const EdgeInsets.symmetric(horizontal: 8), child: w),
+];
 
 class _MonthHeader extends StatelessWidget {
-  const _MonthHeader({required this.month, required this.showToday, required this.onPrev, required this.onNext, required this.onToday});
+  const _MonthHeader({
+    required this.month,
+    required this.showToday,
+    required this.onPrev,
+    required this.onNext,
+    required this.onToday,
+  });
   final DateTime month;
   final bool showToday;
   final VoidCallback onPrev;
@@ -251,25 +419,60 @@ class _MonthHeader extends StatelessWidget {
     final c = context.sx;
     return SxCard(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-      child: Row(children: [
-        SxIconButton(icon: Icons.chevron_left, tooltip: 'Previous month', onPressed: onPrev),
-        Expanded(
-          child: Column(children: [
-            Text('HISTORICAL LOG', style: SxText.labelXs.copyWith(color: c.textBody)),
-            const SizedBox(height: 2),
-            FittedBox(fit: BoxFit.scaleDown, child: Text('${Fmt.monthName(month.month)} ${month.year}', style: SxText.headlineMd.copyWith(color: c.textHigh))),
-            if (showToday)
-              TextButton(onPressed: onToday, style: TextButton.styleFrom(minimumSize: const Size(48, 48), padding: const EdgeInsets.symmetric(horizontal: 12)), child: Text('TODAY', style: SxText.labelCaps.copyWith(color: c.primary))),
-          ]),
-        ),
-        SxIconButton(icon: Icons.chevron_right, tooltip: 'Next month', onPressed: onNext),
-      ]),
+      child: Row(
+        children: [
+          SxIconButton(
+            icon: Icons.chevron_left,
+            tooltip: 'Previous month',
+            onPressed: onPrev,
+          ),
+          Expanded(
+            child: Column(
+              children: [
+                Text(
+                  'HISTORICAL LOG',
+                  style: SxText.labelXs.copyWith(color: c.textBody),
+                ),
+                const SizedBox(height: 2),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    '${Fmt.monthName(month.month)} ${month.year}',
+                    style: SxText.headlineMd.copyWith(color: c.textHigh),
+                  ),
+                ),
+                if (showToday)
+                  TextButton(
+                    onPressed: onToday,
+                    style: TextButton.styleFrom(
+                      minimumSize: const Size(48, 48),
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                    ),
+                    child: Text(
+                      'TODAY',
+                      style: SxText.labelCaps.copyWith(color: c.primary),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          SxIconButton(
+            icon: Icons.chevron_right,
+            tooltip: 'Next month',
+            onPressed: onNext,
+          ),
+        ],
+      ),
     );
   }
 }
 
 class _FilterRow extends StatelessWidget {
-  const _FilterRow({required this.index, required this.counts, required this.onChanged});
+  const _FilterRow({
+    required this.index,
+    required this.counts,
+    required this.onChanged,
+  });
   final int index;
   final List<int> counts;
   final ValueChanged<int> onChanged;
@@ -288,17 +491,34 @@ class _FilterRow extends StatelessWidget {
           final sel = i == index;
           return Material(
             color: sel ? c.primary : c.surface2,
-            shape: StadiumBorder(side: BorderSide(color: sel ? c.primary : c.hairline)),
+            shape: StadiumBorder(
+              side: BorderSide(color: sel ? c.primary : c.hairline),
+            ),
             child: InkWell(
               customBorder: const StadiumBorder(),
               onTap: () => onChanged(i),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 14),
-                child: Row(mainAxisSize: MainAxisSize.min, children: [
-                  Text(labels[i], style: SxText.labelUi.copyWith(color: sel ? c.onAccent : c.textBody, fontWeight: FontWeight.w600)),
-                  const SizedBox(width: 8),
-                  Text('${counts[i]}', style: SxText.metricSm.copyWith(color: sel ? c.onAccent : c.textMuted, fontSize: 12)),
-                ]),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      labels[i],
+                      style: SxText.labelUi.copyWith(
+                        color: sel ? c.onAccent : c.textBody,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '${counts[i]}',
+                      style: SxText.metricSm.copyWith(
+                        color: sel ? c.onAccent : c.textMuted,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           );
@@ -309,7 +529,15 @@ class _FilterRow extends StatelessWidget {
 }
 
 class _MonthGrid extends StatelessWidget {
-  const _MonthGrid({super.key, required this.month, required this.selected, required this.today, required this.data, required this.filter, required this.onSelect});
+  const _MonthGrid({
+    super.key,
+    required this.month,
+    required this.selected,
+    required this.today,
+    required this.data,
+    required this.filter,
+    required this.onSelect,
+  });
   final DateTime month;
   final DateTime selected;
   final DateTime today;
@@ -326,34 +554,64 @@ class _MonthGrid extends StatelessWidget {
     final rows = ((offset + dim) / 7).ceil();
     return SxCard(
       padding: const EdgeInsets.fromLTRB(0, 12, 0, 12),
-      child: Column(children: [
-        Row(children: [
-          for (var i = 1; i <= 7; i++)
-            Expanded(child: Center(child: Text(Fmt.dayShort(i).substring(0, 1).toUpperCase(), style: SxText.labelCaps.copyWith(color: c.textBody)))),
-        ]),
-        const SizedBox(height: 8),
-        for (var r = 0; r < rows; r++)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 4),
-            child: Row(children: [
-              for (var col = 0; col < 7; col++)
+      child: Column(
+        children: [
+          Row(
+            children: [
+              for (var i = 1; i <= 7; i++)
                 Expanded(
-                  child: Builder(builder: (_) {
-                    final n = r * 7 + col - offset + 1;
-                    if (n < 1 || n > dim) return const SizedBox(height: 48);
-                    final d = DateTime(month.year, month.month, n);
-                    return _DayCell(day: d, selected: d == selected, isToday: d == today, future: d.isAfter(today), info: data[d], filter: filter, onTap: () => onSelect(d));
-                  }),
+                  child: Center(
+                    child: Text(
+                      Fmt.dayShort(i).substring(0, 1).toUpperCase(),
+                      style: SxText.labelCaps.copyWith(color: c.textBody),
+                    ),
+                  ),
                 ),
-            ]),
+            ],
           ),
-        const SizedBox(height: 8),
-        Wrap(spacing: 16, runSpacing: 6, alignment: WrapAlignment.center, children: [
-          _Legend(color: c.primary, label: 'Cardio'),
-          _Legend(color: c.textHigh, label: 'Strength'),
-          _Legend(color: c.primary, second: c.textHigh, label: 'Mixed'),
-        ]),
-      ]),
+          const SizedBox(height: 8),
+          for (var r = 0; r < rows; r++)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Row(
+                children: [
+                  for (var col = 0; col < 7; col++)
+                    Expanded(
+                      child: Builder(
+                        builder: (_) {
+                          final n = r * 7 + col - offset + 1;
+                          if (n < 1 || n > dim) {
+                            return const SizedBox(height: 48);
+                          }
+                          final d = DateTime(month.year, month.month, n);
+                          return _DayCell(
+                            day: d,
+                            selected: d == selected,
+                            isToday: d == today,
+                            future: d.isAfter(today),
+                            info: data[d],
+                            filter: filter,
+                            onTap: () => onSelect(d),
+                          );
+                        },
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 16,
+            runSpacing: 6,
+            alignment: WrapAlignment.center,
+            children: [
+              _Legend(color: c.primary, label: 'Cardio'),
+              _Legend(color: c.textHigh, label: 'Strength'),
+              _Legend(color: c.primary, second: c.textHigh, label: 'Mixed'),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
@@ -364,23 +622,38 @@ class _Legend extends StatelessWidget {
   final Color? second;
   final String label;
   @override
-  Widget build(BuildContext context) => Row(mainAxisSize: MainAxisSize.min, children: [
-        _Dot(color),
-        if (second != null) ...[const SizedBox(width: 2), _Dot(second!)],
-        const SizedBox(width: 6),
-        Text(label, style: SxText.labelXs.copyWith(color: context.sx.textBody)),
-      ]);
+  Widget build(BuildContext context) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      _Dot(color),
+      if (second != null) ...[const SizedBox(width: 2), _Dot(second!)],
+      const SizedBox(width: 6),
+      Text(label, style: SxText.labelXs.copyWith(color: context.sx.textBody)),
+    ],
+  );
 }
 
 class _Dot extends StatelessWidget {
   const _Dot(this.color);
   final Color color;
   @override
-  Widget build(BuildContext context) => Container(width: 6, height: 6, decoration: BoxDecoration(color: color, shape: BoxShape.circle));
+  Widget build(BuildContext context) => Container(
+    width: 6,
+    height: 6,
+    decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+  );
 }
 
 class _DayCell extends StatelessWidget {
-  const _DayCell({required this.day, required this.selected, required this.isToday, required this.future, required this.info, required this.filter, required this.onTap});
+  const _DayCell({
+    required this.day,
+    required this.selected,
+    required this.isToday,
+    required this.future,
+    required this.info,
+    required this.filter,
+    required this.onTap,
+  });
   final DateTime day;
   final bool selected;
   final bool isToday;
@@ -392,14 +665,20 @@ class _DayCell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.sx;
-    final showStrength = info != null && info!.strength.isNotEmpty && (filter == 0 || filter == 1);
-    final showCardio = info != null && info!.cardio.isNotEmpty && (filter == 0 || filter == 2);
-    final showMixed = info != null && info!.mixed.isNotEmpty && (filter == 0 || filter == 3);
+    final showStrength =
+        info != null &&
+        info!.strength.isNotEmpty &&
+        (filter == 0 || filter == 1);
+    final showCardio =
+        info != null && info!.cardio.isNotEmpty && (filter == 0 || filter == 2);
+    final showMixed =
+        info != null && info!.mixed.isNotEmpty && (filter == 0 || filter == 3);
     final dots = <Color>[
       if (showStrength || showMixed) c.textHigh,
       if (showCardio || showMixed) c.primary,
     ];
-    final label = '${Fmt.dateLong(day)}${dots.isEmpty ? '' : ', activity logged'}';
+    final label =
+        '${Fmt.dateLong(day)}${dots.isEmpty ? '' : ', activity logged'}';
     return Semantics(
       button: true,
       selected: selected,
@@ -408,25 +687,50 @@ class _DayCell extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 2),
         child: Material(
           color: selected ? c.surface3 : c.surface2.withValues(alpha: 0.5),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(SxRadius.md), side: BorderSide(color: selected ? c.primary : Colors.transparent)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(SxRadius.md),
+            side: BorderSide(color: selected ? c.primary : Colors.transparent),
+          ),
           child: InkWell(
-            customBorder: RoundedRectangleBorder(borderRadius: BorderRadius.circular(SxRadius.md)),
+            customBorder: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(SxRadius.md),
+            ),
             onTap: onTap,
-            child: SizedBox(
-              height: 48,
-              child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                Text('${day.day}',
-                    style: SxText.metricSm.copyWith(
-                        color: isToday ? c.primary : (future ? c.textMuted : c.textHigh),
-                        fontWeight: isToday || selected ? FontWeight.w700 : FontWeight.w500)),
-                const SizedBox(height: 3),
-                SizedBox(
-                  height: 6,
-                  child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                    for (var i = 0; i < dots.length; i++) ...[if (i > 0) const SizedBox(width: 3), _Dot(dots[i])],
-                  ]),
+            // Fixed 48dp cell: cap text scaling like other fixed-height bars (a 2x digit would not fit).
+            child: MediaQuery.withClampedTextScaling(
+              maxScaleFactor: 1.3,
+              child: SizedBox(
+                height: 48,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      '${day.day}',
+                      style: SxText.metricSm.copyWith(
+                        color: isToday
+                            ? c.primary
+                            : (future ? c.textMuted : c.textHigh),
+                        fontWeight: isToday || selected
+                            ? FontWeight.w700
+                            : FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    SizedBox(
+                      height: 6,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          for (var i = 0; i < dots.length; i++) ...[
+                            if (i > 0) const SizedBox(width: 3),
+                            _Dot(dots[i]),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ]),
+              ),
             ),
           ),
         ),
@@ -436,7 +740,12 @@ class _DayCell extends StatelessWidget {
 }
 
 class _DayHeader extends StatelessWidget {
-  const _DayHeader({required this.date, required this.isToday, required this.sessionCount, required this.seconds});
+  const _DayHeader({
+    required this.date,
+    required this.isToday,
+    required this.sessionCount,
+    required this.seconds,
+  });
   final DateTime date;
   final bool isToday;
   final int sessionCount;
@@ -445,16 +754,35 @@ class _DayHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.sx;
-    final sub = sessionCount == 0 ? 'No sessions' : '$sessionCount completed ${sessionCount == 1 ? 'session' : 'sessions'}${seconds > 0 ? ' • ${Fmt.durationShort(seconds)} total time' : ''}';
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Row(children: [
-        Container(width: 8, height: 8, decoration: BoxDecoration(color: isToday ? c.primary : c.textMuted, shape: BoxShape.circle)),
-        const SizedBox(width: 8),
-        Expanded(child: Text(Fmt.dateLong(date), style: SxText.headlineMd.copyWith(color: c.textHigh))),
-      ]),
-      const SizedBox(height: 4),
-      Text(sub, style: SxText.bodySm.copyWith(color: c.textBody)),
-    ]);
+    final sub = sessionCount == 0
+        ? 'No sessions'
+        : '$sessionCount completed ${sessionCount == 1 ? 'session' : 'sessions'}${seconds > 0 ? ' • ${Fmt.durationShort(seconds)} total time' : ''}';
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(
+                color: isToday ? c.primary : c.textMuted,
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                Fmt.dateLong(date),
+                style: SxText.headlineMd.copyWith(color: c.textHigh),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(sub, style: SxText.bodySm.copyWith(color: c.textBody)),
+      ],
+    );
   }
 }
 
@@ -472,81 +800,202 @@ class _StrengthCard extends StatelessWidget {
     final prIds = PrService.newPrExerciseIds(session, app.sessions.sessions);
     final logs = session.exercises.where((l) => l.doneSets.isNotEmpty).toList();
     final firstPr = prIds.isEmpty ? null : byId[prIds.first]?.name;
-    final hasTime = session.workoutDate.hour != 0 || session.workoutDate.minute != 0;
+    final hasTime =
+        session.workoutDate.hour != 0 || session.workoutDate.minute != 0;
     final cardio = session.cardio;
     final miles = !app.profile.profile.cardioDistanceUnitKm;
     return SxCard(
       onTap: () => AppNav.viewWorkoutSession(context, session.id),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: [
-          const StatusPill('Strength', icon: Icons.fitness_center),
-          if (hasTime) ...[const SizedBox(width: 8), Text(Fmt.time(session.workoutDate), style: SxText.metricSm.copyWith(color: c.textBody, fontSize: 12))],
-          const Spacer(),
-          if (firstPr != null)
-            Flexible(
-              child: FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerRight, child: SxPop(child: PrBadge(prIds.length > 1 ? '$firstPr +${prIds.length - 1}' : '$firstPr PR'))),
-            ),
-        ]),
-        const SizedBox(height: 10),
-        Row(children: [
-          Expanded(child: Text(session.name, style: SxText.headlineMd.copyWith(color: c.textHigh))),
-          Icon(Icons.arrow_forward, size: 20, color: c.textBody),
-        ]),
-        const SizedBox(height: 10),
-        Row(children: [
-          Expanded(child: _Mini(label: 'Volume', value: Fmt.thousands(Fmt.toDisplayWeight(session.volume, unit)), unit: u)),
-          const SizedBox(width: 8),
-          Expanded(child: _Mini(label: 'Sets', value: '${session.doneSets}', unit: '')),
-          const SizedBox(width: 8),
-          Expanded(child: _Mini(label: 'Duration', value: session.durationSeconds > 0 ? Fmt.durationShort(session.durationSeconds) : '—', unit: '')),
-        ]),
-        const SizedBox(height: 14),
-        Row(children: [
-          Expanded(child: Text('EXERCISE TELEMETRY (${logs.length})', style: SxText.labelXs.copyWith(color: c.textBody))),
-          Text('TOTAL LOAD', style: SxText.labelXs.copyWith(color: c.textBody)),
-        ]),
-        const SizedBox(height: 8),
-        for (var i = 0; i < logs.length; i++)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 6),
-            child: SxInset(
-              padding: const EdgeInsets.all(10),
-              child: Row(children: [
-                Expanded(
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Row(children: [
-                      Flexible(child: Text('${i + 1}. ${byId[logs[i].exerciseId]?.name ?? logs[i].exerciseId}', overflow: TextOverflow.ellipsis, style: SxText.bodyMd.copyWith(color: c.textHigh, fontWeight: FontWeight.w600))),
-                      if (prIds.contains(logs[i].exerciseId)) ...[const SizedBox(width: 6), const SxPop(child: PrBadge())],
-                    ]),
-                    Builder(builder: (_) {
-                      final top = logs[i].doneSets.reduce((a, b) => b.weightKg > a.weightKg ? b : a);
-                      return Text('${logs[i].doneSets.length} sets · ${Fmt.setLabel(top.weightKg, top.reps, unit)}', style: SxText.bodySm.copyWith(color: c.textBody));
-                    }),
-                  ]),
-                ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const StatusPill('Strength', icon: Icons.fitness_center),
+              if (hasTime) ...[
                 const SizedBox(width: 8),
-                Text('${Fmt.thousands(Fmt.toDisplayWeight(logs[i].volume, unit))} $u', style: SxText.metricSm.copyWith(color: c.textHigh)),
-              ]),
-            ),
+                Text(
+                  Fmt.time(session.workoutDate),
+                  style: SxText.metricSm.copyWith(
+                    color: c.textBody,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+              const Spacer(),
+              if (firstPr != null)
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerRight,
+                    child: SxPop(
+                      child: PrBadge(
+                        prIds.length > 1
+                            ? '$firstPr +${prIds.length - 1}'
+                            : '$firstPr PR',
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           ),
-        if (cardio != null)
-          SxInset(
-            color: c.primarySoft,
-            borderColor: c.primaryBorder,
-            padding: const EdgeInsets.all(10),
-            child: Row(children: [
-              Icon(Icons.directions_run, size: 18, color: c.primary),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  session.name,
+                  style: SxText.headlineMd.copyWith(color: c.textHigh),
+                ),
+              ),
+              Icon(Icons.arrow_forward, size: 20, color: c.textBody),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: _Mini(
+                  label: 'Volume',
+                  value: Fmt.thousands(
+                    Fmt.toDisplayWeight(session.volume, unit),
+                  ),
+                  unit: u,
+                ),
+              ),
               const SizedBox(width: 8),
-              Expanded(child: Text('${cardio.kind.label} finisher · ${Fmt.durationShort(cardio.durationSeconds)}${cardio.distanceKm != null ? ' · ${Fmt.km(cardio.distanceKm! * (miles ? 0.621371 : 1))} ${miles ? 'mi' : 'km'}' : ''}', style: SxText.bodySm.copyWith(color: c.textHigh))),
-            ]),
+              Expanded(
+                child: _Mini(
+                  label: 'Sets',
+                  value: '${session.doneSets}',
+                  unit: '',
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _Mini(
+                  label: 'Duration',
+                  value: session.durationSeconds > 0
+                      ? Fmt.durationShort(session.durationSeconds)
+                      : '—',
+                  unit: '',
+                ),
+              ),
+            ],
           ),
-        const SizedBox(height: 8),
-        Row(children: [
-          Expanded(child: SxButton(label: 'Edit', icon: Icons.edit_outlined, variant: SxButtonVariant.secondary, height: 44, onPressed: () => AppNav.editWorkoutSession(context, session.id))),
-          const SizedBox(width: 8),
-          SxIconButton(icon: Icons.delete_outline, tooltip: 'Delete ${session.name}', iconColor: c.danger, size: 44, onPressed: () => deleteSessionWithConfirm(context, session)),
-        ]),
-      ]),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'EXERCISE TELEMETRY (${logs.length})',
+                  style: SxText.labelXs.copyWith(color: c.textBody),
+                ),
+              ),
+              Text(
+                'TOTAL LOAD',
+                style: SxText.labelXs.copyWith(color: c.textBody),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          for (var i = 0; i < logs.length; i++)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: SxInset(
+                padding: const EdgeInsets.all(10),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  '${i + 1}. ${byId[logs[i].exerciseId]?.name ?? logs[i].exerciseId}',
+                                  overflow: TextOverflow.ellipsis,
+                                  style: SxText.bodyMd.copyWith(
+                                    color: c.textHigh,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                              if (prIds.contains(logs[i].exerciseId)) ...[
+                                const SizedBox(width: 6),
+                                const SxPop(child: PrBadge()),
+                              ],
+                            ],
+                          ),
+                          Builder(
+                            builder: (_) {
+                              final top = logs[i].doneSets.reduce(
+                                (a, b) => b.weightKg > a.weightKg ? b : a,
+                              );
+                              return Text(
+                                '${logs[i].doneSets.length} sets · ${Fmt.setLabel(top.weightKg, top.reps, unit)}',
+                                style: SxText.bodySm.copyWith(
+                                  color: c.textBody,
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '${Fmt.thousands(Fmt.toDisplayWeight(logs[i].volume, unit))} $u',
+                      style: SxText.metricSm.copyWith(color: c.textHigh),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          if (cardio != null)
+            SxInset(
+              color: c.primarySoft,
+              borderColor: c.primaryBorder,
+              padding: const EdgeInsets.all(10),
+              child: Row(
+                children: [
+                  Icon(Icons.directions_run, size: 18, color: c.primary),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      '${cardio.kind.label} finisher · ${Fmt.durationShort(cardio.durationSeconds)}${cardio.distanceKm != null ? ' · ${Fmt.km(cardio.distanceKm! * (miles ? 0.621371 : 1))} ${miles ? 'mi' : 'km'}' : ''}',
+                      style: SxText.bodySm.copyWith(color: c.textHigh),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: SxButton(
+                  label: 'Edit',
+                  icon: Icons.edit_outlined,
+                  variant: SxButtonVariant.secondary,
+                  height: 44,
+                  onPressed: () =>
+                      AppNav.editWorkoutSession(context, session.id),
+                ),
+              ),
+              const SizedBox(width: 8),
+              SxIconButton(
+                icon: Icons.delete_outline,
+                tooltip: 'Delete ${session.name}',
+                iconColor: c.danger,
+                size: 44,
+                onPressed: () => deleteSessionWithConfirm(context, session),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
@@ -561,11 +1010,21 @@ class _Mini extends StatelessWidget {
     final c = context.sx;
     return SxInset(
       padding: const EdgeInsets.all(10),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(label.toUpperCase(), style: SxText.labelXs.copyWith(color: c.textBody)),
-        const SizedBox(height: 4),
-        FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerLeft, child: MetricValue(value, unit: unit.isEmpty ? null : unit)),
-      ]),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label.toUpperCase(),
+            style: SxText.labelXs.copyWith(color: c.textBody),
+          ),
+          const SizedBox(height: 4),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: MetricValue(value, unit: unit.isEmpty ? null : unit),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -578,29 +1037,81 @@ class _CardioCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.sx;
     final miles = !context.app.profile.profile.cardioDistanceUnitKm;
-    final hasTime = session.workoutDate.hour != 0 || session.workoutDate.minute != 0;
+    final hasTime =
+        session.workoutDate.hour != 0 || session.workoutDate.minute != 0;
     final dist = session.distanceKm;
     final pace = session.paceSecPerKm;
     return SxCard(
       onTap: () => AppNav.cardioDetails(context, session.id),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: [
-          const StatusPill('Cardio', icon: Icons.directions_run),
-          if (hasTime) ...[const SizedBox(width: 8), Text(Fmt.time(session.workoutDate), style: SxText.metricSm.copyWith(color: c.textBody, fontSize: 12))],
-        ]),
-        const SizedBox(height: 10),
-        Row(children: [
-          Expanded(child: Text(session.kind.label, style: SxText.headlineMd.copyWith(color: c.textHigh))),
-          Icon(Icons.arrow_forward, size: 20, color: c.textBody),
-        ]),
-        if (session.routeName.isNotEmpty) Text(session.routeName, style: SxText.bodySm.copyWith(color: c.textBody)),
-        const SizedBox(height: 10),
-        Row(children: [
-          Expanded(child: _Mini(label: 'Time', value: Fmt.clock(session.durationSeconds), unit: 'min')),
-          if (dist != null) ...[const SizedBox(width: 8), Expanded(child: _Mini(label: 'Distance', value: Fmt.km(miles ? dist * 0.621371 : dist), unit: miles ? 'mi' : 'km'))],
-          if (pace != null && CardioPace.has(session.kind)) ...[const SizedBox(width: 8), Expanded(child: _Mini(label: 'Pace', value: CardioPace.text(session.kind, pace, miles: miles), unit: CardioPace.unit(session.kind, miles: miles)))],
-        ]),
-      ]),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const StatusPill('Cardio', icon: Icons.directions_run),
+              if (hasTime) ...[
+                const SizedBox(width: 8),
+                Text(
+                  Fmt.time(session.workoutDate),
+                  style: SxText.metricSm.copyWith(
+                    color: c.textBody,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  session.kind.label,
+                  style: SxText.headlineMd.copyWith(color: c.textHigh),
+                ),
+              ),
+              Icon(Icons.arrow_forward, size: 20, color: c.textBody),
+            ],
+          ),
+          if (session.routeName.isNotEmpty)
+            Text(
+              session.routeName,
+              style: SxText.bodySm.copyWith(color: c.textBody),
+            ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: _Mini(
+                  label: 'Time',
+                  value: Fmt.clock(session.durationSeconds),
+                  unit: 'min',
+                ),
+              ),
+              if (dist != null) ...[
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _Mini(
+                    label: 'Distance',
+                    value: Fmt.km(miles ? dist * 0.621371 : dist),
+                    unit: miles ? 'mi' : 'km',
+                  ),
+                ),
+              ],
+              if (pace != null && CardioPace.has(session.kind)) ...[
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _Mini(
+                    label: 'Pace',
+                    value: CardioPace.text(session.kind, pace, miles: miles),
+                    unit: CardioPace.unit(session.kind, miles: miles),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
