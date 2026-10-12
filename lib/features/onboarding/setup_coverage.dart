@@ -207,3 +207,101 @@ String? dayCoverageHint(SplitDayPlan day, List<Exercise> catalog) {
   }
   return parts.isEmpty ? null : parts.join(' · ');
 }
+
+/// Pinned strip on the day step: how much each muscle of THIS day is targeted by the exercises ticked so
+/// far, updating live. Muscles of the day always show (an empty bar means "not covered yet"); any other
+/// muscle an exercise happens to work shows too. Fill = weighted sets vs. the "well covered" threshold.
+class SetupDayCoverageBar extends StatelessWidget {
+  const SetupDayCoverageBar({
+    super.key,
+    required this.day,
+    required this.catalog,
+  });
+  final SplitDayPlan day;
+  final List<Exercise> catalog;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.sx;
+    final report = MuscleCoverage.ofWorkout(_asWorkout(day, 0), catalog);
+    final regions = <MuscleRegion>[
+      for (final m in day.sectionMuscles) ...m.regions,
+      for (final r in MuscleRegion.values)
+        if (report.levelOfRegion(r) != CoverageLevel.none) r,
+    ];
+    final seen = <MuscleRegion>{};
+    final shown = [
+      for (final r in regions)
+        if (seen.add(r)) r,
+    ];
+    if (shown.isEmpty) return const SizedBox.shrink();
+    return Container(
+      decoration: BoxDecoration(
+        color: c.canvas,
+        border: Border(bottom: BorderSide(color: c.hairline)),
+      ),
+      padding: const EdgeInsets.fromLTRB(0, 8, 0, 10),
+      child: SingleChildScrollView(
+        key: const ValueKey('dayCoverageBar'),
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: SxSpace.screenMargin),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (final (i, r) in shown.indexed) ...[
+              if (i > 0) const SizedBox(width: 12),
+              _DayCoverageCell(region: r, report: report),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DayCoverageCell extends StatelessWidget {
+  const _DayCoverageCell({required this.region, required this.report});
+  final MuscleRegion region;
+  final CoverageReport report;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.sx;
+    final level = report.levelOfRegion(region);
+    final (_, high) = CoverageThresholds.forRegion(region);
+    final sets = report.weightedByRegion[region] ?? 0;
+    final fill = high <= 0 ? 0.0 : (sets / high).clamp(0.0, 1.0);
+    return Semantics(
+      container: true,
+      excludeSemantics: true,
+      label: '${region.label} coverage ${_levelLabel(level).toLowerCase()}',
+      child: SizedBox(
+        width: 84,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              region.label.toUpperCase(),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: SxText.labelXs.copyWith(color: c.textBody),
+            ),
+            const SizedBox(height: 6),
+            SxLinearMeter(
+              value: fill,
+              height: 6,
+              color: level == CoverageLevel.low ? c.textMuted : c.primary,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              _levelLabel(level),
+              style: SxText.bodySm.copyWith(
+                color: level == CoverageLevel.none ? c.textMuted : c.textHigh,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

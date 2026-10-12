@@ -10,8 +10,10 @@ import 'setup_catalog.dart';
 import 'setup_coverage.dart';
 import 'setup_widgets.dart';
 
-/// Step 2 (one page per day): per muscle, sub-sections of exercises to tick.
-class SetupDayStep extends StatelessWidget {
+/// Step 2 (one page per day): per muscle, sub-sections of exercises to tick. A pinned bar shows how much
+/// each muscle of the day is targeted so far; search, equipment and "ticked only" filters narrow the lists,
+/// and a search also finds exercises of muscles that are not (yet) part of this day.
+class SetupDayStep extends StatefulWidget {
   const SetupDayStep({
     super.key,
     required this.day,
@@ -25,6 +27,44 @@ class SetupDayStep extends StatelessWidget {
   final SetupCatalog catalog;
   final UserProfile profile;
   final ValueChanged<SplitDayPlan> onChanged;
+
+  @override
+  State<SetupDayStep> createState() => _SetupDayStepState();
+}
+
+class _SetupDayStepState extends State<SetupDayStep> {
+  SplitDayPlan get day => widget.day;
+  List<Exercise> get all => widget.all;
+  SetupCatalog get catalog => widget.catalog;
+  UserProfile get profile => widget.profile;
+  ValueChanged<SplitDayPlan> get onChanged => widget.onChanged;
+
+  final _search = TextEditingController();
+  String _query = '';
+  Equipment? _equipment;
+  bool _tickedOnly = false;
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  bool _matches(Exercise e) {
+    if (_equipment != null && e.equipment != _equipment) return false;
+    if (_tickedOnly && _indexOf(e.id) < 0) return false;
+    final q = _query.trim().toLowerCase();
+    if (q.isEmpty) return true;
+    return e.name.toLowerCase().contains(q) ||
+        e.equipment.label.toLowerCase().contains(q) ||
+        e.primaryMuscle.label.toLowerCase().contains(q) ||
+        e.secondaryMuscles.any((m) => m.label.toLowerCase().contains(q));
+  }
+
+  int get _filters =>
+      (_equipment != null ? 1 : 0) +
+      (_tickedOnly ? 1 : 0) +
+      (_query.trim().isEmpty ? 0 : 1);
 
   int _indexOf(String id) =>
       day.exercises.indexWhere((e) => e.exerciseId == id);
@@ -57,7 +97,19 @@ class SetupDayStep extends StatelessWidget {
     if (i >= 0) {
       onChanged(day.copyWith(exercises: [...day.exercises]..removeAt(i)));
     } else {
-      onChanged(day.copyWith(exercises: _with(day.exercises, _fresh(e.id))));
+      final sm = sectionOf(e);
+      if (day.sectionMuscles.contains(sm)) {
+        onChanged(day.copyWith(exercises: _with(day.exercises, _fresh(e.id))));
+      } else {
+        // Picked through search from a muscle this day does not train yet: the day gains that muscle.
+        final muscles = [...day.sectionMuscles, sm];
+        onChanged(
+          day.copyWith(
+            sectionMuscles: muscles,
+            exercises: _with(day.exercises, _fresh(e.id), muscles),
+          ),
+        );
+      }
     }
   }
 
@@ -106,17 +158,7 @@ class SetupDayStep extends StatelessWidget {
         style: SxText.bodySm.copyWith(color: c.textMuted),
       ),
     ];
-    final hint = dayCoverageHint(day, all);
-    if (hint != null) {
-      children.add(
-        Semantics(
-          liveRegion: false,
-          label: 'Coverage of this day. $hint',
-          excludeSemantics: true,
-          child: Text(hint, style: SxText.bodySm.copyWith(color: c.textMuted)),
-        ),
-      );
-    }
+    children.add(_filterBar(context));
     if (day.sectionMuscles.isEmpty) {
       children.add(
         Text(
@@ -139,8 +181,18 @@ class SetupDayStep extends StatelessWidget {
           ),
         );
       }
-      final groups = catalog.groupedSection(m, all);
-      if (groups.isEmpty) {
+      final groups = [
+        for (final g in catalog.groupedSection(m, all))
+          (
+            label: g.label,
+            hint: g.hint,
+            exercises: [
+              for (final e in g.exercises)
+                if (_matches(e)) e,
+            ],
+          ),
+      ].where((g) => g.exercises.isNotEmpty).toList();
+      if (groups.isEmpty && _filters == 0) {
         children.add(
           Text(
             'No exercises listed yet. Add your own.',
@@ -168,7 +220,9 @@ class SetupDayStep extends StatelessWidget {
     }
     final extra = [
       for (final re in day.exercises)
-        if (!shown.contains(re.exerciseId) && byId[re.exerciseId] != null)
+        if (!shown.contains(re.exerciseId) &&
+            byId[re.exerciseId] != null &&
+            _matches(byId[re.exerciseId]!))
           byId[re.exerciseId]!,
     ];
     if (extra.isNotEmpty) {
@@ -177,7 +231,118 @@ class SetupDayStep extends StatelessWidget {
         children.add(_tile(context, e));
       }
     }
-    return SetupList(children: children);
+    // A search also reaches the rest of the library (muscles this day does not train yet).
+    if (_query.trim().isNotEmpty) {
+      final inDay = {for (final m in muscles) m};
+      final more = [
+        for (final e in all)
+          if (!shown.contains(e.id) &&
+              !extra.any((x) => x.id == e.id) &&
+              !inDay.contains(sectionOf(e)) &&
+              _matches(e))
+            e,
+      ].take(25).toList();
+      if (more.isNotEmpty) {
+        children.add(
+          const SetupSubHeader(
+            'More results',
+            hint: 'Other muscles. Ticking one adds that muscle to this day.',
+          ),
+        );
+        for (final e in more) {
+          children.add(_tile(context, e));
+        }
+      }
+    }
+    if (_filters > 0 && !children.any((w) => w is SxCard)) {
+      children.add(
+        Text(
+          'Nothing matches. Clear the search or filters.',
+          style: SxText.bodyMd.copyWith(color: c.textBody),
+        ),
+      );
+    }
+    return Column(
+      children: [
+        SetupDayCoverageBar(day: day, catalog: all),
+        Expanded(child: SetupList(children: children)),
+      ],
+    );
+  }
+
+  Widget _filterBar(BuildContext context) {
+    final c = context.sx;
+    final used = {for (final e in all) e.equipment}..removeWhere((e) => false);
+    final equipment = [
+      for (final e in Equipment.values)
+        if (used.contains(e)) e,
+    ];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        TextField(
+          controller: _search,
+          onChanged: (v) => setState(() => _query = v),
+          textInputAction: TextInputAction.search,
+          cursorColor: c.primary,
+          style: SxText.bodyLg.copyWith(color: c.textHigh),
+          decoration: InputDecoration(
+            isDense: true,
+            filled: true,
+            fillColor: c.surface1,
+            hintText: 'Search exercise, muscle or equipment…',
+            hintStyle: SxText.bodyMd.copyWith(color: c.textMuted),
+            prefixIcon: Icon(Icons.search, color: c.textBody),
+            suffixIcon: _query.isEmpty
+                ? null
+                : IconButton(
+                    tooltip: 'Clear search',
+                    icon: Icon(Icons.close, color: c.textBody),
+                    onPressed: () => setState(() {
+                      _search.clear();
+                      _query = '';
+                    }),
+                  ),
+            contentPadding: const EdgeInsets.symmetric(vertical: 14),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(SxRadius.md),
+              borderSide: BorderSide(color: c.hairline),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(SxRadius.md),
+              borderSide: BorderSide(color: c.hairline),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(SxRadius.md),
+              borderSide: BorderSide(color: c.primary),
+            ),
+          ),
+        ),
+        const SizedBox(height: 4),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              SxChip(
+                label: 'Ticked only',
+                selected: _tickedOnly,
+                icon: _tickedOnly ? Icons.check : null,
+                onTap: () => setState(() => _tickedOnly = !_tickedOnly),
+              ),
+              for (final e in equipment) ...[
+                const SizedBox(width: 8),
+                SxChip(
+                  label: e.label,
+                  selected: _equipment == e,
+                  onTap: () =>
+                      setState(() => _equipment = _equipment == e ? null : e),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _tile(BuildContext context, Exercise e) {

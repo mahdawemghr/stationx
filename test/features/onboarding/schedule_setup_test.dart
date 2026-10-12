@@ -112,6 +112,20 @@ Future<void> setTraining(WidgetTester t, int n, {required int from}) async {
   }
 }
 
+/// Scrolls the lazy step list down until [text] is built (the day step now starts with a search box).
+Future<void> revealText(WidgetTester t, String text) async {
+  for (
+    var i = 0;
+    i < 30 &&
+        tx(text).evaluate().isEmpty &&
+        find.byType(ListView).evaluate().isNotEmpty;
+    i++
+  ) {
+    await t.drag(find.byType(ListView).last, const Offset(0, -200));
+    await t.pump();
+  }
+}
+
 Future<void> tapText(WidgetTester t, String text, {bool last = false}) async {
   // The step bodies are lazy lists: scroll down until the label is built.
   for (
@@ -161,6 +175,7 @@ void main() {
     expect(tx('Fixture Split'), findsOneWidget);
     await customizeFixture(t);
     expect(tx('Day 1 of 2'), findsOneWidget);
+    await revealText(t, 'Fixture reason for bench.');
     expect(tx('Fixture reason for bench.'), findsOneWidget);
     // preset pick is pre-ticked with its sets
     expect(tx('4'), findsOneWidget);
@@ -206,6 +221,50 @@ void main() {
       'bench_press',
     ]);
   });
+
+  testWidgets(
+    'day step: pinned coverage bar, search, equipment and ticked-only filters',
+    (t) async {
+      final app = await open(t);
+      await customizeFixture(t);
+      // Pinned coverage bar for the day's muscle, already "covered" by the pre-ticked bench press.
+      expect(find.byKey(const ValueKey('dayCoverageBar')), findsOneWidget);
+      expect(find.bySemanticsLabel(RegExp(r'^Chest coverage')), findsOneWidget);
+
+      // Search narrows the list; nonsense shows the empty hint.
+      final search = find.byType(TextField).first;
+      await t.enterText(search, 'zzzzqqq');
+      await t.pump();
+      expect(
+        tx('Nothing matches. Clear the search or filters.'),
+        findsOneWidget,
+      );
+      await t.enterText(search, 'bench');
+      await t.pump();
+      expect(tx('Barbell Bench Press'), findsOneWidget);
+
+      // A search also reaches other muscles; ticking one adds that muscle to the day.
+      await t.enterText(search, 'lat pulldown');
+      await t.pump();
+      await revealText(t, 'More results');
+      expect(tx('More results'), findsOneWidget);
+      await tapText(t, 'Lat Pulldown');
+      expect(find.bySemanticsLabel(RegExp(r'^Back coverage')), findsOneWidget);
+
+      // Ticked-only hides everything not ticked (scroll back up: the search box lives in the lazy list).
+      for (var i = 0; i < 40; i++) {
+        await t.drag(find.byType(ListView).last, const Offset(0, 600));
+        await t.pump();
+      }
+      await t.enterText(find.byType(TextField).first, '');
+      await t.pump();
+      await t.tap(find.text('Ticked only'));
+      await t.pumpAndSettle();
+      expect(tx('Barbell Bench Press'), findsOneWidget);
+      expect(tx('Incline Barbell Bench Press'), findsNothing);
+      expect(app, isNotNull);
+    },
+  );
 
   testWidgets(
     'add exercise inside the flow ticks it immediately under Your exercises',
