@@ -485,9 +485,6 @@ class _Expanded extends StatelessWidget {
                         _editWeight(context, i);
                       }
                     },
-                    onWeightStep: (dir) =>
-                        controller.stepWeight(draft, i, dir, unit),
-                    onRepsStep: (dir) => controller.stepReps(draft, i, dir),
                   ),
                 ),
               ),
@@ -557,15 +554,10 @@ class _HeaderButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(SxRadius.md),
           child: Container(
             constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-            decoration: BoxDecoration(
-              color: c.surface2,
-              borderRadius: BorderRadius.circular(SxRadius.md),
-              border: Border.all(color: c.hairline),
-            ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
-              children: [Icon(icon, size: 20, color: c.textBody)],
+              children: [Icon(icon, size: 22, color: c.textBody)],
             ),
           ),
         ),

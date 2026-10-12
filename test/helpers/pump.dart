@@ -100,3 +100,9 @@ Future<void> shot(
     File('$out/$name.png').writeAsBytesSync(data!.buffer.asUint8List());
   });
 }
+
+/// Opens the collapsible muscle / equipment filter panel of the exercise library.
+Future<void> openLibraryFilters(WidgetTester t) async {
+  await t.tap(find.byKey(const ValueKey('filtersToggle')));
+  await t.pumpAndSettle();
+}

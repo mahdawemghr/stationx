@@ -242,7 +242,13 @@ class _PrimaryCard extends StatelessWidget {
                   ),
                 ],
               ),
-              DeltaBadge('${(frac * 100).round()}% completed', positive: true),
+              if (frac > 0)
+                DeltaBadge('${(frac * 100).round()}% completed', positive: true)
+              else
+                Text(
+                  'Not started',
+                  style: SxText.bodySm.copyWith(color: c.textMuted),
+                ),
             ],
           ),
           const SizedBox(height: 12),

@@ -18,6 +18,7 @@ import '../onboarding/setup_equipment_step.dart';
 import '../onboarding/setup_experience_step.dart';
 import 'export_saver.dart';
 import 'gym_tracker_import_flow.dart';
+import '../../data/import/stationx_backup.dart';
 import 'export_builder.dart';
 
 /// Profile & settings tab (Stitch: profile_app_settings). Every control is saved to the server through
@@ -961,7 +962,7 @@ class _Integrations extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           SxButton(
-            label: 'Import from Gym Tracker',
+            label: 'Import data',
             icon: Icons.file_upload_outlined,
             variant: SxButtonVariant.secondary,
             height: 48,
@@ -1196,15 +1197,29 @@ class _ExportSheet extends StatefulWidget {
 class _ExportSheetState extends State<_ExportSheet> {
   int _fmt = 0;
 
-  String get _ext => _fmt == 0 ? 'json' : 'csv';
+  String get _ext => _fmt == 1 ? 'csv' : 'json';
 
-  String get _text => _fmt == 0
-      ? ExportBuilder.json(
-          profile: widget.profile,
-          sessions: widget.sessions,
-          cardio: widget.cardio,
-        )
-      : ExportBuilder.csv(sessions: widget.sessions, cardio: widget.cardio);
+  String get _text {
+    if (_fmt == 2) {
+      final app = context.app;
+      return StationXBackup.build(
+        exercises: app.exercises.all,
+        workouts: app.workouts.workouts,
+        rotation: app.workouts.rotation,
+        sessions: widget.sessions,
+        cardio: widget.cardio,
+        goals: app.cardio.goals,
+        activities: app.cardio.customActivities,
+      );
+    }
+    return _fmt == 0
+        ? ExportBuilder.json(
+            profile: widget.profile,
+            sessions: widget.sessions,
+            cardio: widget.cardio,
+          )
+        : ExportBuilder.csv(sessions: widget.sessions, cardio: widget.cardio);
+  }
 
   Future<void> _copy(String text) async {
     await Clipboard.setData(ClipboardData(text: text));
@@ -1217,7 +1232,10 @@ class _ExportSheetState extends State<_ExportSheet> {
   Future<void> _save(String text) async {
     final stamp = DateTime.now().toIso8601String().substring(0, 10);
     try {
-      final saved = await widget.saver('stationx-export-$stamp.$_ext', text);
+      final saved = await widget.saver(
+        '${_fmt == 2 ? StationXBackup.fileName : 'stationx-export'}-$stamp.$_ext',
+        text,
+      );
       if (saved && mounted) {
         Navigator.pop(context);
         showSxSnack(context, 'Export saved');
@@ -1244,7 +1262,7 @@ class _ExportSheetState extends State<_ExportSheet> {
           ),
           const SizedBox(height: 10),
           SxSegmented(
-            labels: const ['JSON', 'CSV'],
+            labels: const ['JSON', 'CSV', 'Backup'],
             index: _fmt,
             onChanged: (i) => setState(() => _fmt = i),
           ),
@@ -1258,8 +1276,10 @@ class _ExportSheetState extends State<_ExportSheet> {
           else ...[
             SxInset(
               child: Text(
-                '${widget.sessions.length} workout${widget.sessions.length == 1 ? '' : 's'} and ${widget.cardio.length} cardio session${widget.cardio.length == 1 ? '' : 's'} '
-                'will be exported as ${_ext.toUpperCase()}. ${_fmt == 0 ? 'JSON keeps everything, including your profile.' : 'CSV opens in any spreadsheet app.'}',
+                _fmt == 2
+                    ? 'Backup saves everything (routines, exercises, workouts, cardio, goals) in a file you can restore into ANY StationX account with Profile › Import data.'
+                    : '${widget.sessions.length} workout${widget.sessions.length == 1 ? '' : 's'} and ${widget.cardio.length} cardio session${widget.cardio.length == 1 ? '' : 's'} '
+                          'will be exported as ${_ext.toUpperCase()}. ${_fmt == 0 ? 'JSON keeps everything, including your profile.' : 'CSV opens in any spreadsheet app.'}',
                 style: SxText.bodyMd.copyWith(color: c.textBody),
               ),
             ),

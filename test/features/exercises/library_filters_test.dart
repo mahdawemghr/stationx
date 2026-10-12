@@ -38,6 +38,7 @@ void main() {
     t,
   ) async {
     await pumpPage(t, const ExerciseLibraryPage());
+    await openLibraryFilters(t);
     final row = find.byKey(const ValueKey('muscleChips'));
     expect(row, findsOneWidget);
     for (final m in ['All', ...SectionMuscle.values.map((m) => m.label)]) {
@@ -55,6 +56,7 @@ void main() {
     'Forearms chip filters by primary region; sub chips are wrist/grip leaves',
     (t) async {
       final app = await pumpPage(t, const ExerciseLibraryPage());
+      await openLibraryFilters(t);
       final expected = app.exercises.all
           .where(
             (e) =>
@@ -88,6 +90,7 @@ void main() {
     'Legs offers the four leg regions as sub chips and filters by them',
     (t) async {
       await pumpPage(t, const ExerciseLibraryPage());
+      await openLibraryFilters(t);
       final row = find.byKey(const ValueKey('muscleChips'));
       await reveal(t, row, 'Legs');
       await t.tap(
@@ -119,6 +122,7 @@ void main() {
 
   testWidgets('result count, active filter count and Clear', (t) async {
     final app = await pumpPage(t, const ExerciseLibraryPage());
+    await openLibraryFilters(t);
     final total = app.exercises.all.length;
     expect(countText(t), '$total exercises');
     expect(find.byKey(const ValueKey('clearFilters')), findsNothing);
@@ -143,6 +147,7 @@ void main() {
         const ExerciseLibraryPage(),
         size: const Size(320, 568),
       );
+      await openLibraryFilters(t);
       final eq = find.byKey(const ValueKey('equipmentChips'));
       for (final e in Equipment.values) {
         await reveal(t, eq, e.label);
@@ -160,6 +165,7 @@ void main() {
     'search: debounced, synonym + Arabic, relevance order, empty-state CTA',
     (t) async {
       await pumpPage(t, const ExerciseLibraryPage());
+      await openLibraryFilters(t);
       await t.enterText(find.byType(TextField), 'rdl');
       await t.pump(const Duration(milliseconds: 50));
       expect(find.text('Romanian Deadlift'), findsNothing, reason: 'debounced');
@@ -204,6 +210,7 @@ void main() {
             if (l.doneSets.isNotEmpty) l.exerciseId,
     };
     await pumpPage(t, const ExerciseLibraryPage(), controller: app);
+    await openLibraryFilters(t);
     await t.tap(chip('Recent'));
     await settle(t);
     if (recent.isEmpty) {

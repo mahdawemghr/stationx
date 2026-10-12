@@ -47,6 +47,9 @@ class OnlineStore implements DataStore, AtomicWorkoutFinisher {
   @override
   WorkoutDraftStore get workoutDraft => device.workoutDraft;
 
+  @override
+  CardioDraftStore get cardioDraft => device.cardioDraft;
+
   HealthConsentStore get healthConsent => device.healthConsent;
 
   RemoteGateway get remote => _c.remote;
@@ -193,6 +196,7 @@ class OnlineStore implements DataStore, AtomicWorkoutFinisher {
     }
     await _c.write(() => _c.remote.rpc('sx_reset_account_data', const {}));
     await workoutDraft.clear();
+    await cardioDraft.clear();
     final username = profile.profile.email;
     final epoch = _c.epoch;
     final data = await _fetch(id);

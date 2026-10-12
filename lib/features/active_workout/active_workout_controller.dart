@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
-import '../../core/utils/formatters.dart';
 import '../../data/device/device_services.dart';
 import '../../domain/domain.dart';
 
@@ -166,6 +165,32 @@ class CardioDraft extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Persistable state (elapsed time keeps counting across the app being closed).
+  Map<String, Object?> toJson() => {
+    'k': kind.name,
+    'acc': _accumulated,
+    if (_since != null) 'since': _since!.toIso8601String(),
+    if (targetMinutes != null) 'tm': targetMinutes,
+    if (speedKmh != null) 'sp': speedKmh,
+    if (inclinePct != null) 'in': inclinePct,
+    if (resistance != null) 're': resistance,
+    if (manualDistanceKm != null) 'km': manualDistanceKm,
+  };
+
+  void restoreFrom(Map<String, Object?> j) {
+    kind = CardioKind.values.firstWhere(
+      (e) => e.name == j['k'],
+      orElse: () => kind,
+    );
+    _accumulated = (j['acc'] as num?)?.toInt() ?? 0;
+    _since = j['since'] == null ? null : DateTime.parse(j['since'] as String);
+    targetMinutes = (j['tm'] as num?)?.toInt();
+    speedKmh = (j['sp'] as num?)?.toDouble();
+    inclinePct = (j['in'] as num?)?.toDouble();
+    resistance = (j['re'] as num?)?.toInt();
+    manualDistanceKm = (j['km'] as num?)?.toDouble();
+  }
+
   CardioSession? toSession({
     required String id,
     required DateTime workoutDate,
@@ -216,7 +241,7 @@ class ActiveWorkoutController extends ChangeNotifier {
     WorkoutDraft? restoreFrom,
     this.backdate,
     this.draftDebounce = const Duration(milliseconds: 500),
-  }) : _catalog = catalog,
+  }) : _catalog = [...catalog],
        _clock = clock ?? DateTime.now,
        feedback = feedback ?? const HapticDeviceFeedback(),
        startedAt = restoreFrom?.startedAt ?? (clock ?? DateTime.now)() {
@@ -250,8 +275,14 @@ class ActiveWorkoutController extends ChangeNotifier {
       }
       drafts.add(d);
     }
+    _cardioRemoved = restoreFrom?.cardioRemoved ?? false;
     final t = workout.cardioFinisher;
-    if (t != null) {
+    final saved = restoreFrom?.cardio;
+    if (saved != null) {
+      cardio = CardioDraft(kind: t?.kind ?? CardioKind.treadmill, clock: _clock)
+        ..restoreFrom(saved);
+      cardio!.addListener(notifyListeners);
+    } else if (t != null && !(restoreFrom?.cardioRemoved ?? false)) {
       cardio = CardioDraft(
         kind: t.kind,
         targetMinutes: t.durationMinutes,
@@ -266,6 +297,7 @@ class ActiveWorkoutController extends ChangeNotifier {
     }
     notes = restoreFrom?.notes ?? '';
     persistEnabled = true;
+    _scheduleDraftSave(); // a started workout is resumable from its first second
   }
 
   final Workout workout;
@@ -283,6 +315,7 @@ class ActiveWorkoutController extends ChangeNotifier {
   /// not on every edit, so the page shell does not rebuild per set.
   final ValueNotifier<int> layout = ValueNotifier(0);
   CardioDraft? cardio;
+  bool _cardioRemoved = false;
   String notes = '';
 
   Timer? _draftTimer;
@@ -434,6 +467,8 @@ class ActiveWorkoutController extends ChangeNotifier {
     currentIndex: currentIndex,
     notes: notes,
     backdate: backdate,
+    cardio: cardio?.toJson(),
+    cardioRemoved: cardio == null && _cardioRemoved,
     exercises: [
       for (final d in drafts)
         DraftExercise(
@@ -474,12 +509,9 @@ class ActiveWorkoutController extends ChangeNotifier {
     final store = draftStore;
     if (store == null || _closed || !persistEnabled) return;
     try {
-      // A workout with nothing logged is not worth resuming.
-      if (hasLoggedAnything) {
-        await store.save(toDraft());
-      } else if (store.current != null) {
-        await store.clear();
-      }
+      // A started workout stays in progress (even with nothing logged yet) until it is finished or
+      // explicitly discarded. A workout without any exercise is never worth resuming.
+      if (drafts.isNotEmpty || cardio != null) await store.save(toDraft());
     } catch (_) {
       // Best effort: a failed draft write must never break logging.
     }
@@ -578,18 +610,6 @@ class ActiveWorkoutController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// ± stepper: moves the weight by one unit-appropriate step (2.5 kg / 5 lb).
-  void stepWeight(ExerciseDraft d, int i, int direction, WeightUnit unit) {
-    final step = unit == WeightUnit.kg ? 2.5 : 5.0;
-    final shown =
-        Fmt.toDisplayWeight(d.sets[i].weightKg, unit) + direction * step;
-    final rounded = (shown * 2).round() / 2;
-    setWeight(d, i, Fmt.fromDisplayWeight(rounded < 0 ? 0 : rounded, unit));
-  }
-
-  void stepReps(ExerciseDraft d, int i, int direction) =>
-      setReps(d, i, d.sets[i].reps + direction);
-
   /// "Same as last set": copies weight and reps of the previous set.
   void sameAsLast(ExerciseDraft d, int i) {
     if (i <= 0) return;
@@ -639,6 +659,46 @@ class ActiveWorkoutController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Adds [exercise] to the running workout (this session only). It lands in its muscle section, or
+  /// after the existing ones for a new muscle, and opens so the first set can be logged right away.
+  /// Returns false when it is already part of the workout.
+  bool addExercise(Exercise exercise, SessionRepository sessions) {
+    if (drafts.any((d) => d.exercise.id == exercise.id)) return false;
+    if (!_catalog.any((e) => e.id == exercise.id)) _catalog.add(exercise);
+    final re = RoutineExercise(
+      exerciseId: exercise.id,
+      sets: profile.defaultSets,
+      repMin: profile.defaultRepMin,
+      repMax: profile.defaultRepMax,
+    );
+    final routine = [
+      for (final d in drafts)
+        RoutineExercise(
+          exerciseId: d.exercise.id,
+          sets: d.sets.length,
+          repMin: d.repMin,
+          repMax: d.repMax,
+        ),
+    ];
+    final at = WorkoutSections.insertionIndex(
+      routine,
+      re,
+      _catalog,
+    ).clamp(0, drafts.length);
+    final d = _build(re, exercise, sessions)..expanded = true;
+    for (final x in drafts) {
+      if (x.expanded) {
+        x.expanded = false;
+        x.touch();
+      }
+    }
+    drafts.insert(at, d);
+    _sections = null;
+    layout.value++;
+    notifyListeners();
+    return true;
+  }
+
   /// Swap [d]'s exercise for [replacement] inside this session only.
   void replaceExercise(
     ExerciseDraft d,
@@ -685,6 +745,7 @@ class ActiveWorkoutController extends ChangeNotifier {
   }
 
   void addCardio(CardioKind kind) {
+    _cardioRemoved = false;
     cardio?.removeListener(notifyListeners);
     cardio = CardioDraft(kind: kind, clock: _clock)
       ..addListener(notifyListeners);
@@ -693,6 +754,7 @@ class ActiveWorkoutController extends ChangeNotifier {
   }
 
   void removeCardio() {
+    _cardioRemoved = true;
     cardio?.removeListener(notifyListeners);
     cardio?.dispose();
     cardio = null;

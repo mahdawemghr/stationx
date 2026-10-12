@@ -355,30 +355,22 @@ class _CalendarPageState extends State<CalendarPage> {
               ),
             ),
             const SectionHeader('Record retroactive data'),
-            Row(
-              children: [
-                Expanded(
-                  child: SxButton(
-                    label: 'Insert workout',
-                    icon: Icons.add_circle_outline,
-                    variant: SxButtonVariant.secondary,
-                    height: 52,
-                    onPressed: isFuture ? null : _logHistoricalLift,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: SxButton(
-                    label: 'Backdate cardio',
-                    icon: Icons.directions_run,
-                    variant: SxButtonVariant.secondary,
-                    height: 52,
-                    onPressed: isFuture
-                        ? null
-                        : () => AppNav.backdateCardio(context, date: _selected),
-                  ),
-                ),
-              ],
+            SxButton(
+              label: 'Insert workout',
+              icon: Icons.add_circle_outline,
+              variant: SxButtonVariant.secondary,
+              height: 52,
+              onPressed: isFuture ? null : _logHistoricalLift,
+            ),
+            const SizedBox(height: 8),
+            SxButton(
+              label: 'Backdate cardio',
+              icon: Icons.directions_run,
+              variant: SxButtonVariant.secondary,
+              height: 52,
+              onPressed: isFuture
+                  ? null
+                  : () => AppNav.backdateCardio(context, date: _selected),
             ),
             if (isFuture)
               Text(

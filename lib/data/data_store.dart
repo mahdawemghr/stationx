@@ -17,6 +17,9 @@ abstract class DataStore {
   /// Device-local in-progress workout draft (temporary UI state, never uploaded).
   WorkoutDraftStore get workoutDraft;
 
+  /// Device-local live cardio session (survives the app being closed; never uploaded).
+  CardioDraftStore get cardioDraft;
+
   /// Loads everything of the signed-in user ([userId], [username]) from the server. Throws a
   /// `RemoteException` when it cannot; the read model is then left empty. Stores without a server
   /// ignore it.
@@ -38,6 +41,7 @@ abstract class DataStore {
 /// the Health Connect opt-in. Composed by `OnlineStore`.
 abstract class DeviceStore {
   WorkoutDraftStore get workoutDraft;
+  CardioDraftStore get cardioDraft;
   HealthConsentStore get healthConsent;
 
   /// The account whose draft this device currently holds (null = none). When a different

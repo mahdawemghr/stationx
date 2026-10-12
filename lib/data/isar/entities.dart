@@ -27,6 +27,9 @@ class AppMetaEntity {
   /// JSON of the in-progress workout draft (see WorkoutDraft). Device-local: never uploaded.
   String? workoutDraftJson;
 
+  /// JSON of the live cardio session (see ActiveCardioDraft). Device-local: never uploaded.
+  String? cardioDraftJson;
+
   /// Supabase user id the draft/notice above belong to.
   String? ownerUserId;
 }

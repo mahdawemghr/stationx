@@ -12,6 +12,7 @@ void main() {
 
   testWidgets('library: renders, shot, filters by search + muscle', (t) async {
     await pumpPage(t, const ExerciseLibraryPage());
+    await openLibraryFilters(t);
     await shot(t, 'ex_library');
     // The seed library is large and lazily built: search to bring a known exercise into view.
     await t.enterText(find.byType(TextField), 'barbell bench');
@@ -41,6 +42,7 @@ void main() {
       t.view.devicePixelRatio = 2;
       addTearDown(t.view.reset);
       await pumpPage(t, const ExerciseLibraryPage());
+      await openLibraryFilters(t);
       await t.tap(find.text('Common'));
       await t.pump();
       expect(find.text('Barbell Bench Press'), findsOneWidget);
@@ -86,6 +88,7 @@ void main() {
 
   testWidgets('library: custom exercise is added', (t) async {
     final app = await pumpPage(t, const ExerciseLibraryPage());
+    await openLibraryFilters(t);
     final before = app.exercises.all.length;
     await t.tap(find.text('CUSTOM'));
     await t.pumpAndSettle();

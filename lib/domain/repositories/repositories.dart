@@ -126,3 +126,10 @@ abstract class WorkoutDraftStore implements Listenable {
   Future<void> save(WorkoutDraft draft);
   Future<void> clear();
 }
+
+/// Device-local store for the single live cardio session (same rules as [WorkoutDraftStore]).
+abstract class CardioDraftStore implements Listenable {
+  ActiveCardioDraft? get current;
+  Future<void> save(ActiveCardioDraft draft);
+  Future<void> clear();
+}

@@ -405,6 +405,41 @@ class MemoryWorkoutDraftStore extends ChangeNotifier
   }
 }
 
+class MemoryCardioDraftStore extends ChangeNotifier
+    implements CardioDraftStore {
+  MemoryCardioDraftStore([this._json]);
+  String? _json;
+
+  String? get rawJson => _json;
+
+  static ActiveCardioDraft? decode(String? json) {
+    if (json == null) return null;
+    try {
+      return ActiveCardioDraft.fromJson(
+        (jsonDecode(json) as Map).cast<String, Object?>(),
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  @override
+  ActiveCardioDraft? get current => decode(_json);
+
+  @override
+  Future<void> save(ActiveCardioDraft draft) async {
+    _json = jsonEncode(draft.toJson());
+    notifyListeners();
+  }
+
+  @override
+  Future<void> clear() async {
+    if (_json == null) return;
+    _json = null;
+    notifyListeners();
+  }
+}
+
 class MemoryStore implements DataStore {
   MemoryStore(SeedData seed, {UserProfile profile = const UserProfile()})
     : exercises = MemoryExerciseRepository(seed.exercises),
@@ -412,7 +447,8 @@ class MemoryStore implements DataStore {
       sessions = MemorySessionRepository(seed.sessions),
       cardio = MemoryCardioRepository(seed.cardio, seed.goals),
       profile = MemoryProfileRepository(profile),
-      workoutDraft = MemoryWorkoutDraftStore();
+      workoutDraft = MemoryWorkoutDraftStore(),
+      cardioDraft = MemoryCardioDraftStore();
 
   @override
   final MemoryExerciseRepository exercises;
@@ -426,6 +462,8 @@ class MemoryStore implements DataStore {
   final MemoryProfileRepository profile;
   @override
   final MemoryWorkoutDraftStore workoutDraft;
+  @override
+  final MemoryCardioDraftStore cardioDraft;
 
   /// Replaces all data (tests / previews).
   Future<void> replaceAll(SeedData seed, UserProfile profile) async {
@@ -435,6 +473,7 @@ class MemoryStore implements DataStore {
     cardio.reset(seed.cardio, seed.goals, const []);
     this.profile.reset(profile);
     await workoutDraft.clear();
+    await cardioDraft.clear();
   }
 
   @override

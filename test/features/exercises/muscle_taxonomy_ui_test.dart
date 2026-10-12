@@ -18,6 +18,7 @@ void main() {
       'appear only after choosing a muscle and filter by detailed muscle',
       (t) async {
         await pumpPage(t, const ExerciseLibraryPage());
+        await openLibraryFilters(t);
         expect(find.byKey(const ValueKey('subMuscleChips')), findsNothing);
         await t.tap(chip('Back'));
         await settle(t);
@@ -42,9 +43,12 @@ void main() {
         expect(find.text('No exercises found'), findsOneWidget);
 
         // Back to the broad filter: the exercise is visible again.
-        await t.tap(
-          find.textContaining(RegExp('clear filters', caseSensitive: false)),
+        final clear = find.textContaining(
+          RegExp('clear filters', caseSensitive: false),
         );
+        await t.ensureVisible(clear);
+        await t.pump();
+        await t.tap(clear);
         await settle(t);
         expect(find.byKey(const ValueKey('subMuscleChips')), findsNothing);
       },
@@ -54,6 +58,7 @@ void main() {
       'only leaves that have exercises are offered; changing muscle resets',
       (t) async {
         final app = await pumpPage(t, const ExerciseLibraryPage());
+        await openLibraryFilters(t);
         final chestLeaves = <Muscle>{
           for (final e in app.exercises.all)
             for (final x in MuscleProfiles.of(e).targets)
@@ -86,6 +91,7 @@ void main() {
           size: const Size(320, 568),
           textScale: 1.3,
         );
+        await openLibraryFilters(t);
         await t.tap(chip('Back'));
         await settle(t);
         await t.tap(chip('Lats'));
@@ -158,6 +164,7 @@ void main() {
 
         // Library: custom exercise is under the broad Back filter, but under no detailed one.
         await pumpPage(t, const ExerciseLibraryPage(), controller: app);
+        await openLibraryFilters(t);
         await t.tap(chip('Back'));
         await settle(t);
         await t.enterText(find.byType(TextField), 'My Odd Row');

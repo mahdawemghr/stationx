@@ -36,7 +36,7 @@ class ActiveCardioPage extends StatefulWidget {
 }
 
 class _ActiveCardioPageState extends State<ActiveCardioPage> {
-  final CardioClock _clock = CardioClock();
+  late CardioClock _clock = CardioClock();
   // One 1s heartbeat; only small ValueListenableBuilders rebuild from it.
   final ValueNotifier<int> _tick = ValueNotifier(0);
   Timer? _timer;
@@ -49,10 +49,89 @@ class _ActiveCardioPageState extends State<ActiveCardioPage> {
   double? _incline;
   int? _resistance;
 
+  bool _init = false;
+  bool _persist = true;
+
   @override
   void initState() {
     super.initState();
     _timer = Timer.periodic(const Duration(seconds: 1), (_) => _tick.value++);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_init) return;
+    _init = true;
+    final store = context.app.cardioDraft;
+    final d = store.current;
+    if (d == null) {
+      _save(); // a running session is resumable from its first second
+      return;
+    }
+    final same =
+        d.kind == widget.kind && d.customActivityId == widget.customActivityId;
+    if (same) {
+      _clock = CardioClock.restore(d);
+      _paused = d.paused;
+      _km = d.km;
+      _speed = d.speedKmh;
+      _incline = d.inclinePct;
+      _resistance = d.resistance;
+      _saveId = d.saveId;
+    } else {
+      // Another unfinished session exists: never overwrite it silently.
+      _persist = false;
+      WidgetsBinding.instance.addPostFrameCallback((_) => _resolveConflict(d));
+    }
+  }
+
+  Future<void> _resolveConflict(ActiveCardioDraft old) async {
+    if (!mounted) return;
+    final discard = await showSxConfirm(
+      context,
+      title: 'Unfinished session',
+      message:
+          'Another cardio session is still in progress (${Fmt.clock(old.activeSeconds)}). Starting this one discards it.',
+      confirmLabel: 'Discard and start',
+      cancelLabel: 'Resume it',
+      destructive: true,
+      icon: Icons.history,
+    );
+    if (!mounted) return;
+    if (discard) {
+      await context.app.cardioDraft.clear();
+      _persist = true;
+      _save();
+    } else {
+      _finished = true;
+      AppNav.activeCardio(
+        context,
+        old.kind,
+        targetMinutes: old.targetMinutes,
+        targetKm: old.targetKm,
+        customActivityId: old.customActivityId,
+        replace: true,
+      );
+    }
+  }
+
+  /// Persists the session (best effort) so closing or killing the app does not lose it.
+  void _save() {
+    if (!_persist || _finished || !mounted) return;
+    final store = context.app.cardioDraft;
+    final d = _clock.snapshot(
+      kind: widget.kind,
+      targetMinutes: widget.targetMinutes,
+      targetKm: widget.targetKm,
+      customActivityId: widget.customActivityId,
+      km: _km,
+      speedKmh: _speed,
+      inclinePct: _incline,
+      resistance: _resistance,
+      saveId: _saveId,
+    );
+    store.save(d).catchError((_) {});
   }
 
   @override
@@ -74,10 +153,20 @@ class _ActiveCardioPageState extends State<ActiveCardioPage> {
 
   bool get _dirty => _clock.activeSeconds > 0 || _km != null;
 
+  /// Back never ends the session: it keeps running/paused (saved on this device, shown on every tab).
+  void _minimize() {
+    if (_locked) return;
+    _save();
+    _finished =
+        true; // no further saves from this screen; the stored session stays
+    Navigator.of(context).pop();
+  }
+
   Future<void> _confirmDiscard() async {
     if (_locked) return;
     if (!_dirty) {
       _finished = true;
+      context.app.cardioDraft.clear().catchError((_) {});
       if (mounted) Navigator.of(context).pop();
       return;
     }
@@ -93,6 +182,7 @@ class _ActiveCardioPageState extends State<ActiveCardioPage> {
     );
     if (ok && mounted) {
       _finished = true;
+      context.app.cardioDraft.clear().catchError((_) {});
       Navigator.of(context).pop();
     }
   }
@@ -114,6 +204,7 @@ class _ActiveCardioPageState extends State<ActiveCardioPage> {
     sxHaptic();
     // One id per screen: a retry after a lost response re-sends the SAME session (idempotent upsert).
     final id = _saveId ??= 'cardio_${DateTime.now().microsecondsSinceEpoch}';
+    _save();
     final fields = _fields(repo);
     final ok = await runRemote(
       context,
@@ -143,6 +234,7 @@ class _ActiveCardioPageState extends State<ActiveCardioPage> {
       return; // still on this screen, the recording is intact; Finish tries again
     }
     _finished = true;
+    context.app.cardioDraft.clear().catchError((_) {});
     AppNav.cardioComplete(context, id);
   }
 
@@ -155,6 +247,7 @@ class _ActiveCardioPageState extends State<ActiveCardioPage> {
       }
       _paused = !_paused;
     });
+    _save();
   }
 
   Future<void> _editDistance(bool miles) async {
@@ -169,6 +262,7 @@ class _ActiveCardioPageState extends State<ActiveCardioPage> {
     );
     if (v != null && mounted) {
       setState(() => _km = v <= 0 ? null : (miles ? v / 0.621371 : v));
+      _save();
     }
   }
 
@@ -181,7 +275,10 @@ class _ActiveCardioPageState extends State<ActiveCardioPage> {
       step: 0.5,
       max: 40,
     );
-    if (v != null && mounted) setState(() => _speed = v <= 0 ? null : v);
+    if (v != null && mounted) {
+      setState(() => _speed = v <= 0 ? null : v);
+      _save();
+    }
   }
 
   Future<void> _editIncline() async {
@@ -193,7 +290,10 @@ class _ActiveCardioPageState extends State<ActiveCardioPage> {
       step: 0.5,
       max: 30,
     );
-    if (v != null && mounted) setState(() => _incline = v <= 0 ? null : v);
+    if (v != null && mounted) {
+      setState(() => _incline = v <= 0 ? null : v);
+      _save();
+    }
   }
 
   Future<void> _editResistance() async {
@@ -206,6 +306,7 @@ class _ActiveCardioPageState extends State<ActiveCardioPage> {
     );
     if (v != null && mounted) {
       setState(() => _resistance = v <= 0 ? null : v.round());
+      _save();
     }
   }
 
@@ -228,13 +329,13 @@ class _ActiveCardioPageState extends State<ActiveCardioPage> {
         return PopScope(
           canPop: _finished,
           onPopInvokedWithResult: (didPop, _) {
-            if (!didPop) _confirmDiscard();
+            if (!didPop) _minimize();
           },
           child: SxScaffold(
             topBar: SxTopBar(
               title: 'Active Session',
               subtitle: name.toUpperCase(),
-              onBack: _confirmDiscard,
+              onBack: _minimize,
               actions: const [LiveHeartRateChip()],
               pill: SxSwap(
                 child: StatusPill(

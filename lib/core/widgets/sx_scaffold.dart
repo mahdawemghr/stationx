@@ -298,7 +298,7 @@ class _LocalPill extends StatelessWidget {
           const SizedBox(width: 6),
           Flexible(
             child: Text(
-              'LOCAL',
+              'ONLINE',
               overflow: TextOverflow.ellipsis,
               style: SxText.labelXs.copyWith(color: c.textBody),
             ),

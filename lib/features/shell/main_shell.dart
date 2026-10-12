@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../app/app_scope.dart';
+import '../../app/nav.dart';
+import '../../core/utils/formatters.dart';
 import '../../core/theme/sx_motion.dart';
 import '../../core/theme/sx_theme.dart';
 import '../../core/theme/sx_typography.dart';
@@ -131,6 +133,7 @@ class _MainShellState extends State<MainShell>
         mainAxisSize: MainAxisSize.min,
         children: [
           const _StaleBanner(),
+          const _InProgressBanner(),
           SxBottomNav(index: _index, onChanged: _go),
         ],
       ),
@@ -175,6 +178,102 @@ class _StaleBanner extends StatelessWidget {
               ),
             ),
           ),
+        );
+      },
+    );
+  }
+}
+
+/// A started workout / cardio session stays in progress until finished or discarded. This bar is
+/// visible on every tab so it can always be resumed in one tap.
+class _InProgressBanner extends StatelessWidget {
+  const _InProgressBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    final app = context.app;
+    return ListenableBuilder(
+      listenable: Listenable.merge([app.workoutDraft, app.cardioDraft]),
+      builder: (context, _) {
+        final w = app.workoutDraft.current;
+        final cd = app.cardioDraft.current;
+        if (w == null && cd == null) return const SizedBox.shrink();
+        final c = context.sx;
+        Widget bar({
+          required Key key,
+          required IconData icon,
+          required String title,
+          required String detail,
+          required VoidCallback onTap,
+        }) => Material(
+          key: key,
+          color: c.surface2,
+          child: InkWell(
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              child: Row(
+                children: [
+                  Icon(icon, size: 20, color: c.primary),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: SxText.labelUi.copyWith(color: c.textHigh),
+                        ),
+                        Text(
+                          detail,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: SxText.bodySm.copyWith(color: c.textBody),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Text(
+                    'Resume',
+                    style: SxText.labelUi.copyWith(color: c.primary),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (w != null)
+              bar(
+                key: const Key('in-progress-workout'),
+                icon: Icons.fitness_center,
+                title: 'Workout in progress',
+                detail:
+                    '${app.workouts.byId(w.workoutId)?.name ?? w.workoutName} · ${w.doneSets} of ${w.totalSets} sets done',
+                onTap: () => AppNav.activeWorkout(
+                  context,
+                  w.workoutId,
+                  backdate: w.backdate,
+                ),
+              ),
+            if (cd != null)
+              bar(
+                key: const Key('in-progress-cardio'),
+                icon: Icons.timer_outlined,
+                title: 'Cardio in progress',
+                detail:
+                    '${cd.kind.label} · ${Fmt.clock(cd.activeSeconds)}${cd.paused ? ' · paused' : ''}',
+                onTap: () => AppNav.activeCardio(
+                  context,
+                  cd.kind,
+                  targetMinutes: cd.targetMinutes,
+                  targetKm: cd.targetKm,
+                  customActivityId: cd.customActivityId,
+                ),
+              ),
+          ],
         );
       },
     );

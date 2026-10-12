@@ -486,7 +486,7 @@ class _CompactRow extends StatelessWidget {
                     ),
                     Text(
                       metrics,
-                      maxLines: 1,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: SxText.labelXs.copyWith(color: c.textMuted),
                     ),

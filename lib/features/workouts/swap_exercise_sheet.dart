@@ -90,17 +90,48 @@ class _SwapExerciseBodyState extends State<SwapExerciseBody> {
   final Set<_EquipFilter> _filters = {};
   String? _selectedId;
 
+  /// The "Target: MUSCLE" chip is a toggle: off lists EVERY exercise (not just the same muscle).
+  bool _allMuscles = false;
+  String _query = '';
+
   List<SwapCandidate> get _alts {
     final allowed = _filters.isEmpty
         ? null
         : {for (final f in _filters) ...f.equipment};
-    return ExerciseRecommender.replacements(
+    final same = ExerciseRecommender.replacements(
       current: widget.current,
       catalog: widget.catalog,
       history: widget.history,
       allowedEquipment: allowed,
       excludeIds: widget.excludeIds,
     );
+    if (!_allMuscles) return same;
+    // Same-muscle matches keep their ranking and come first; everything else follows A-Z.
+    final q = _query.trim().toLowerCase();
+    bool hit(Exercise e) =>
+        q.isEmpty ||
+        e.name.toLowerCase().contains(q) ||
+        e.primaryMuscle.label.toLowerCase().contains(q);
+    final ranked = {for (final s in same) s.exercise.id};
+    final rest = [
+      for (final e in widget.catalog)
+        if (e.id != widget.current.id &&
+            !widget.excludeIds.contains(e.id) &&
+            !ranked.contains(e.id) &&
+            (allowed == null || allowed.contains(e.equipment)))
+          e,
+    ]..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+    return [
+      for (final s in same)
+        if (hit(s.exercise)) s,
+      for (final e in rest)
+        if (hit(e))
+          SwapCandidate(
+            exercise: e,
+            matchPercent: 0,
+            reason: '${e.primaryMuscle.label} • ${e.equipment.label}',
+          ),
+    ];
   }
 
   @override
@@ -244,8 +275,12 @@ class _SwapExerciseBodyState extends State<SwapExerciseBody> {
                   children: [
                     SxChip(
                       label: 'Target: ${cur.primaryMuscle.label}',
-                      selected: true,
-                      icon: Icons.check,
+                      selected: !_allMuscles,
+                      icon: _allMuscles ? null : Icons.check,
+                      onTap: () => setState(() {
+                        _allMuscles = !_allMuscles;
+                        _query = '';
+                      }),
                     ),
                     for (final f in _EquipFilter.values) ...[
                       const SizedBox(width: 8),
@@ -263,6 +298,15 @@ class _SwapExerciseBodyState extends State<SwapExerciseBody> {
                   ],
                 ),
               ),
+              if (_allMuscles) ...[
+                const SizedBox(height: SxSpace.sm),
+                SxTextField(
+                  label: 'Search all exercises',
+                  hint: 'Name or muscle',
+                  icon: Icons.search,
+                  onChanged: (v) => setState(() => _query = v),
+                ),
+              ],
               const SizedBox(height: SxSpace.sm),
               SxInset(
                 padding: const EdgeInsets.all(12),
@@ -281,7 +325,7 @@ class _SwapExerciseBodyState extends State<SwapExerciseBody> {
               ),
               const SizedBox(height: SxSpace.md),
               SectionHeader(
-                'Recommended alternatives',
+                _allMuscles ? 'All exercises' : 'Recommended alternatives',
                 trailingText: '${alts.length} available',
               ),
               const SizedBox(height: SxSpace.sm),
@@ -378,7 +422,9 @@ class _AltCard extends StatelessWidget {
     return Semantics(
       button: true,
       selected: selected,
-      label: '${e.name}, ${candidate.matchPercent} percent match',
+      label: candidate.matchPercent > 0
+          ? '${e.name}, ${candidate.matchPercent} percent match'
+          : e.name,
       child: SxCard(
         onTap: onTap,
         color: selected ? c.surface2 : c.surface1,
@@ -402,11 +448,12 @@ class _AltCard extends StatelessWidget {
                     runSpacing: 4,
                     crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
-                      StatusPill(
-                        '${candidate.matchPercent}% match',
-                        icon: Icons.verified_outlined,
-                        color: selected ? c.primary : c.textBody,
-                      ),
+                      if (candidate.matchPercent > 0)
+                        StatusPill(
+                          '${candidate.matchPercent}% match',
+                          icon: Icons.verified_outlined,
+                          color: selected ? c.primary : c.textBody,
+                        ),
                       _MonoTag(e.equipment.label),
                     ],
                   ),

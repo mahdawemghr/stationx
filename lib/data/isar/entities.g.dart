@@ -17,23 +17,28 @@ const AppMetaEntitySchema = CollectionSchema(
   name: r'AppMetaEntity',
   id: 4798171179488078482,
   properties: {
-    r'healthConnected': PropertySchema(
+    r'cardioDraftJson': PropertySchema(
       id: 0,
+      name: r'cardioDraftJson',
+      type: IsarType.string,
+    ),
+    r'healthConnected': PropertySchema(
+      id: 1,
       name: r'healthConnected',
       type: IsarType.bool,
     ),
     r'ownerUserId': PropertySchema(
-      id: 1,
+      id: 2,
       name: r'ownerUserId',
       type: IsarType.string,
     ),
     r'schemaVersion': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'schemaVersion',
       type: IsarType.long,
     ),
     r'workoutDraftJson': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'workoutDraftJson',
       type: IsarType.string,
     ),
@@ -61,6 +66,12 @@ int _appMetaEntityEstimateSize(
 ) {
   var bytesCount = offsets.last;
   {
+    final value = object.cardioDraftJson;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
     final value = object.ownerUserId;
     if (value != null) {
       bytesCount += 3 + value.length * 3;
@@ -81,10 +92,11 @@ void _appMetaEntitySerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeBool(offsets[0], object.healthConnected);
-  writer.writeString(offsets[1], object.ownerUserId);
-  writer.writeLong(offsets[2], object.schemaVersion);
-  writer.writeString(offsets[3], object.workoutDraftJson);
+  writer.writeString(offsets[0], object.cardioDraftJson);
+  writer.writeBool(offsets[1], object.healthConnected);
+  writer.writeString(offsets[2], object.ownerUserId);
+  writer.writeLong(offsets[3], object.schemaVersion);
+  writer.writeString(offsets[4], object.workoutDraftJson);
 }
 
 AppMetaEntity _appMetaEntityDeserialize(
@@ -94,11 +106,12 @@ AppMetaEntity _appMetaEntityDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = AppMetaEntity();
-  object.healthConnected = reader.readBool(offsets[0]);
+  object.cardioDraftJson = reader.readStringOrNull(offsets[0]);
+  object.healthConnected = reader.readBool(offsets[1]);
   object.id = id;
-  object.ownerUserId = reader.readStringOrNull(offsets[1]);
-  object.schemaVersion = reader.readLong(offsets[2]);
-  object.workoutDraftJson = reader.readStringOrNull(offsets[3]);
+  object.ownerUserId = reader.readStringOrNull(offsets[2]);
+  object.schemaVersion = reader.readLong(offsets[3]);
+  object.workoutDraftJson = reader.readStringOrNull(offsets[4]);
   return object;
 }
 
@@ -110,12 +123,14 @@ P _appMetaEntityDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readBool(offset)) as P;
-    case 1:
       return (reader.readStringOrNull(offset)) as P;
+    case 1:
+      return (reader.readBool(offset)) as P;
     case 2:
-      return (reader.readLong(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 3:
+      return (reader.readLong(offset)) as P;
+    case 4:
       return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -224,6 +239,165 @@ extension AppMetaEntityQueryWhere
 
 extension AppMetaEntityQueryFilter
     on QueryBuilder<AppMetaEntity, AppMetaEntity, QFilterCondition> {
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterFilterCondition>
+  cardioDraftJsonIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'cardioDraftJson'),
+      );
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterFilterCondition>
+  cardioDraftJsonIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'cardioDraftJson'),
+      );
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterFilterCondition>
+  cardioDraftJsonEqualTo(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'cardioDraftJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterFilterCondition>
+  cardioDraftJsonGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'cardioDraftJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterFilterCondition>
+  cardioDraftJsonLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'cardioDraftJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterFilterCondition>
+  cardioDraftJsonBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'cardioDraftJson',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterFilterCondition>
+  cardioDraftJsonStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'cardioDraftJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterFilterCondition>
+  cardioDraftJsonEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'cardioDraftJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterFilterCondition>
+  cardioDraftJsonContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'cardioDraftJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterFilterCondition>
+  cardioDraftJsonMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'cardioDraftJson',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterFilterCondition>
+  cardioDraftJsonIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'cardioDraftJson', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterFilterCondition>
+  cardioDraftJsonIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'cardioDraftJson', value: ''),
+      );
+    });
+  }
+
   QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterFilterCondition>
   healthConnectedEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
@@ -673,6 +847,20 @@ extension AppMetaEntityQueryLinks
 extension AppMetaEntityQuerySortBy
     on QueryBuilder<AppMetaEntity, AppMetaEntity, QSortBy> {
   QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterSortBy>
+  sortByCardioDraftJson() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'cardioDraftJson', Sort.asc);
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterSortBy>
+  sortByCardioDraftJsonDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'cardioDraftJson', Sort.desc);
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterSortBy>
   sortByHealthConnected() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'healthConnected', Sort.asc);
@@ -730,6 +918,20 @@ extension AppMetaEntityQuerySortBy
 
 extension AppMetaEntityQuerySortThenBy
     on QueryBuilder<AppMetaEntity, AppMetaEntity, QSortThenBy> {
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterSortBy>
+  thenByCardioDraftJson() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'cardioDraftJson', Sort.asc);
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterSortBy>
+  thenByCardioDraftJsonDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'cardioDraftJson', Sort.desc);
+    });
+  }
+
   QueryBuilder<AppMetaEntity, AppMetaEntity, QAfterSortBy>
   thenByHealthConnected() {
     return QueryBuilder.apply(this, (query) {
@@ -801,6 +1003,16 @@ extension AppMetaEntityQuerySortThenBy
 extension AppMetaEntityQueryWhereDistinct
     on QueryBuilder<AppMetaEntity, AppMetaEntity, QDistinct> {
   QueryBuilder<AppMetaEntity, AppMetaEntity, QDistinct>
+  distinctByCardioDraftJson({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(
+        r'cardioDraftJson',
+        caseSensitive: caseSensitive,
+      );
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, AppMetaEntity, QDistinct>
   distinctByHealthConnected() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'healthConnected');
@@ -838,6 +1050,13 @@ extension AppMetaEntityQueryProperty
   QueryBuilder<AppMetaEntity, int, QQueryOperations> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'id');
+    });
+  }
+
+  QueryBuilder<AppMetaEntity, String?, QQueryOperations>
+  cardioDraftJsonProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'cardioDraftJson');
     });
   }
 

@@ -89,7 +89,9 @@ class CardioProgressView extends StatelessWidget {
                   value: miles ? km * 0.621371 : km,
                   format: Fmt.number,
                   unit: miles ? 'mi' : 'km',
-                  caption: prevKm > 0
+                  caption: km <= 0
+                      ? (prevKm > 0 ? 'Nothing logged yet' : null)
+                      : prevKm > 0
                       ? '${km >= prevKm ? '+' : ''}${PercentChange.rounded(prevKm, km)}% vs previous'
                       : null,
                   height: 104,

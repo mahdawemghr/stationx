@@ -15,7 +15,8 @@ class IsarDeviceStore implements DeviceStore {
   IsarDeviceStore._(this._db, AppMetaEntity meta)
     : _owner = meta.ownerUserId,
       healthConsent = _IsarHealthConsent(_db, meta.healthConnected),
-      workoutDraft = IsarWorkoutDraftStore(_db, meta.workoutDraftJson);
+      workoutDraft = IsarWorkoutDraftStore(_db, meta.workoutDraftJson),
+      cardioDraft = IsarCardioDraftStore(_db, meta.cardioDraftJson);
 
   static const schemas = [AppMetaEntitySchema];
 
@@ -39,6 +40,8 @@ class IsarDeviceStore implements DeviceStore {
   final HealthConsentStore healthConsent;
   @override
   final IsarWorkoutDraftStore workoutDraft;
+  @override
+  final IsarCardioDraftStore cardioDraft;
 
   String? _owner;
 
@@ -62,10 +65,12 @@ class IsarDeviceStore implements DeviceStore {
   Future<void> clearUserScopedState() async {
     await _update((m) {
       m.workoutDraftJson = null;
+      m.cardioDraftJson = null;
       m.ownerUserId = null;
     });
     _owner = null;
     workoutDraft.resetCache();
+    cardioDraft.resetCache();
   }
 
   @override
@@ -129,5 +134,33 @@ class IsarWorkoutDraftStore extends MemoryWorkoutDraftStore {
   }
 
   /// Called after the column was nulled by [IsarDeviceStore.clearUserScopedState].
+  void resetCache() => super.clear();
+}
+
+/// Live cardio session persisted as one JSON string on the AppMeta singleton (same scheme as the
+/// workout draft).
+class IsarCardioDraftStore extends MemoryCardioDraftStore {
+  IsarCardioDraftStore(this._db, String? initial) : super(initial);
+  final Isar _db;
+
+  Future<void> _persist(String? json) => _db.writeTxn(() async {
+    final m = (await _db.appMetaEntitys.get(1)) ?? AppMetaEntity();
+    m.cardioDraftJson = json;
+    await _db.appMetaEntitys.put(m);
+  });
+
+  @override
+  Future<void> save(ActiveCardioDraft draft) async {
+    await _persist(jsonEncode(draft.toJson()));
+    await super.save(draft);
+  }
+
+  @override
+  Future<void> clear() async {
+    if (rawJson == null) return;
+    await _persist(null);
+    await super.clear();
+  }
+
   void resetCache() => super.clear();
 }

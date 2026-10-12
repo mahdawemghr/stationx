@@ -42,6 +42,9 @@ class _ExerciseLibraryPageState extends State<ExerciseLibraryPage> {
   Equipment? _equipment;
   _Mode _mode = _Mode.all;
 
+  /// The muscle / equipment chip rows live in a collapsible panel so results stay on screen.
+  bool _filtersOpen = false;
+
   // Memoized derived data: the catalog has 400 exercises, so PRs are computed lazily per visible row and
   // only re-computed after the sessions/exercises actually change, never on unrelated rebuilds.
   final Map<String, StrengthPr?> _prCache = {};
@@ -375,93 +378,93 @@ class _ExerciseLibraryPageState extends State<ExerciseLibraryPage> {
                     ),
                   ),
                   SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(
-                        SxSpace.md + 4,
-                        SxSpace.md,
-                        SxSpace.md,
-                        8,
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              'TARGET MUSCLE',
-                              style: SxText.labelCaps.copyWith(
-                                color: c.textBody,
+                    child: _FilterToggle(
+                      open: _filtersOpen,
+                      summary: [
+                        if (_muscle != null) _muscle!.label,
+                        if (_sub != null) _subLabel(_sub!),
+                        if (_equipment != null) _equipment!.label,
+                      ].join(' · '),
+                      onTap: () => setState(() => _filtersOpen = !_filtersOpen),
+                    ),
+                  ),
+                  SliverToBoxAdapter(
+                    child: !_filtersOpen
+                        ? const SizedBox(width: double.infinity)
+                        : Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _FilterCaption('Target muscle'),
+                              Semantics(
+                                container: true,
+                                label: 'Target muscle filter',
+                                child: SxChipRow(
+                                  key: const ValueKey('muscleChips'),
+                                  labels: muscleLabels,
+                                  selectedIndex: muscleIndex,
+                                  onSelected: (i) => setState(() {
+                                    _muscle = i == 0
+                                        ? null
+                                        : SectionMuscle.values[i - 1];
+                                    _sub = null;
+                                  }),
+                                ),
                               ),
-                            ),
-                          ),
-                          Text(
-                            '${SectionMuscle.values.length} zones',
-                            style: SxText.bodySm.copyWith(color: c.textBody),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  SliverToBoxAdapter(
-                    child: Semantics(
-                      container: true,
-                      label: 'Target muscle filter',
-                      child: SxChipRow(
-                        key: const ValueKey('muscleChips'),
-                        labels: muscleLabels,
-                        selectedIndex: muscleIndex,
-                        onSelected: (i) => setState(() {
-                          _muscle = i == 0 ? null : SectionMuscle.values[i - 1];
-                          _sub = null;
-                        }),
-                      ),
-                    ),
-                  ),
-                  SliverToBoxAdapter(
-                    child: AnimatedSize(
-                      duration: SxMotion.of(context, SxMotion.short),
-                      curve: SxMotion.enter,
-                      alignment: Alignment.topCenter,
-                      child: subs.length > 1
-                          ? Padding(
-                              padding: const EdgeInsets.only(top: 8),
-                              child: SxSwap(
-                                child: Semantics(
-                                  key: ValueKey('sub_${_muscle!.name}'),
-                                  container: true,
-                                  label:
-                                      'Specific ${_muscle!.label.toLowerCase()} muscle filter',
-                                  child: SxChipRow(
-                                    key: const ValueKey('subMuscleChips'),
-                                    labels: [
-                                      'All ${_muscle!.label.toLowerCase()}',
-                                      ...subs.map(_subLabel),
-                                    ],
-                                    selectedIndex: subIndex < 0 ? 0 : subIndex,
-                                    onSelected: (i) => setState(
-                                      () => _sub = i == 0 ? null : subs[i - 1],
-                                    ),
+                              AnimatedSize(
+                                duration: SxMotion.of(context, SxMotion.short),
+                                curve: SxMotion.enter,
+                                alignment: Alignment.topCenter,
+                                child: subs.length > 1
+                                    ? Padding(
+                                        padding: const EdgeInsets.only(top: 8),
+                                        child: SxSwap(
+                                          child: Semantics(
+                                            key: ValueKey(
+                                              'sub_${_muscle!.name}',
+                                            ),
+                                            container: true,
+                                            label:
+                                                'Specific ${_muscle!.label.toLowerCase()} muscle filter',
+                                            child: SxChipRow(
+                                              key: const ValueKey(
+                                                'subMuscleChips',
+                                              ),
+                                              labels: [
+                                                'All ${_muscle!.label.toLowerCase()}',
+                                                ...subs.map(_subLabel),
+                                              ],
+                                              selectedIndex: subIndex < 0
+                                                  ? 0
+                                                  : subIndex,
+                                              onSelected: (i) => setState(
+                                                () => _sub = i == 0
+                                                    ? null
+                                                    : subs[i - 1],
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      )
+                                    : const SizedBox(width: double.infinity),
+                              ),
+                              const SizedBox(height: 8),
+                              _FilterCaption('Equipment'),
+                              Semantics(
+                                container: true,
+                                label: 'Equipment filter',
+                                child: SxChipRow(
+                                  key: const ValueKey('equipmentChips'),
+                                  labels: eqLabels,
+                                  selectedIndex: eqIndex,
+                                  onSelected: (i) => setState(
+                                    () => _equipment = i == 0
+                                        ? null
+                                        : Equipment.values[i - 1],
                                   ),
                                 ),
                               ),
-                            )
-                          : const SizedBox(width: double.infinity),
-                    ),
-                  ),
-                  const SliverToBoxAdapter(child: SizedBox(height: 8)),
-                  SliverToBoxAdapter(
-                    child: Semantics(
-                      container: true,
-                      label: 'Equipment filter',
-                      child: SxChipRow(
-                        key: const ValueKey('equipmentChips'),
-                        labels: eqLabels,
-                        selectedIndex: eqIndex,
-                        onSelected: (i) => setState(
-                          () => _equipment = i == 0
-                              ? null
-                              : Equipment.values[i - 1],
-                        ),
-                      ),
-                    ),
+                            ],
+                          ),
                   ),
                   SliverToBoxAdapter(
                     child: Padding(
@@ -697,4 +700,91 @@ class _ExerciseRow extends StatelessWidget {
       ),
     );
   }
+}
+
+/// "Muscle & equipment" bar that opens/closes the detailed filter chips and, while closed, summarises
+/// what is active so the user always knows why the list is short.
+class _FilterToggle extends StatelessWidget {
+  const _FilterToggle({
+    required this.open,
+    required this.summary,
+    required this.onTap,
+  });
+  final bool open;
+  final String summary;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.sx;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(SxSpace.md, SxSpace.sm, SxSpace.md, 0),
+      child: Semantics(
+        button: true,
+        expanded: open,
+        label: 'Muscle and equipment filters',
+        excludeSemantics: true,
+        onTap: onTap,
+        child: InkWell(
+          key: const ValueKey('filtersToggle'),
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(SxRadius.md),
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 48),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              color: c.surface1,
+              borderRadius: BorderRadius.circular(SxRadius.md),
+              border: Border.all(
+                color: summary.isEmpty ? c.hairline : c.primaryBorder,
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.tune,
+                  size: 20,
+                  color: summary.isEmpty ? c.textBody : c.primary,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    summary.isEmpty ? 'Muscle & equipment' : summary,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: SxText.bodyMd.copyWith(
+                      color: summary.isEmpty ? c.textBody : c.textHigh,
+                    ),
+                  ),
+                ),
+                Icon(
+                  open ? Icons.expand_less : Icons.expand_more,
+                  color: c.textBody,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FilterCaption extends StatelessWidget {
+  const _FilterCaption(this.text);
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(
+      SxSpace.md + 4,
+      SxSpace.md,
+      SxSpace.md,
+      8,
+    ),
+    child: Text(
+      text.toUpperCase(),
+      style: SxText.labelCaps.copyWith(color: context.sx.textBody),
+    ),
+  );
 }

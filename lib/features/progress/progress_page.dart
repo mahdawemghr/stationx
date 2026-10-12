@@ -229,7 +229,9 @@ class _StrengthView extends StatelessWidget {
                   format: Fmt.number,
                   unit: 't',
                   delay: SxMotion.stagger,
-                  caption: prevVolume > 0
+                  caption: volume <= 0
+                      ? (prevVolume > 0 ? 'Nothing logged yet' : null)
+                      : prevVolume > 0
                       ? '${volume >= prevVolume ? '+' : ''}${PercentChange.rounded(prevVolume, volume)}% vs previous'
                       : null,
                   height: 112,

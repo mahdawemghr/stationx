@@ -68,6 +68,8 @@ class WorkoutDraft {
     this.currentIndex = 0,
     this.notes = '',
     this.backdate,
+    this.cardio,
+    this.cardioRemoved = false,
   });
 
   final String workoutId;
@@ -83,6 +85,12 @@ class WorkoutDraft {
   /// Set for a backdated entry (the rotation is not advanced on finish).
   final DateTime? backdate;
 
+  /// State of the cardio block (kind, targets, entered values, elapsed time as JSON), if any.
+  final Map<String, Object?>? cardio;
+
+  /// The user removed the routine's cardio finisher: do not bring it back on resume.
+  final bool cardioRemoved;
+
   int get totalSets => exercises.fold(0, (a, e) => a + e.sets.length);
   int get doneSets =>
       exercises.fold(0, (a, e) => a + e.sets.where((s) => s.done).length);
@@ -96,6 +104,8 @@ class WorkoutDraft {
     'ci': currentIndex,
     'n': notes,
     if (backdate != null) 'bd': backdate!.toIso8601String(),
+    if (cardio != null) 'cd': cardio,
+    if (cardioRemoved) 'cdx': true,
     'ex': [for (final e in exercises) e.toJson()],
   };
 
@@ -107,6 +117,8 @@ class WorkoutDraft {
     currentIndex: (j['ci'] as num?)?.toInt() ?? 0,
     notes: j['n'] as String? ?? '',
     backdate: j['bd'] == null ? null : DateTime.parse(j['bd'] as String),
+    cardio: (j['cd'] as Map?)?.cast<String, Object?>(),
+    cardioRemoved: j['cdx'] as bool? ?? false,
     exercises: [
       for (final e in (j['ex'] as List? ?? const []))
         DraftExercise.fromJson((e as Map).cast<String, Object?>()),

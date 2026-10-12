@@ -95,6 +95,7 @@ class _TodayPageState extends State<TodayPage> {
         app.profile,
         app.health,
         app.workoutDraft,
+        app.cardioDraft,
         ScheduleSetupPrompt.dismissed,
       ]),
       builder: (context, _) {
@@ -107,6 +108,7 @@ class _TodayPageState extends State<TodayPage> {
         final week = data.week;
         final recent = data.recent;
         final draft = app.workoutDraft.current;
+        final cardioDraft = app.cardioDraft.current;
         final c = context.sx;
 
         return SxScaffold(
@@ -154,6 +156,11 @@ class _TodayPageState extends State<TodayPage> {
                     ],
                   ),
                 ),
+                if (cardioDraft != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: SxSpace.md),
+                    child: ResumeCardioCard(draft: cardioDraft),
+                  ),
                 SxSwap(
                   alignment: Alignment.topCenter,
                   child: workout == null
@@ -185,9 +192,9 @@ class _TodayPageState extends State<TodayPage> {
               children: [
                 Expanded(
                   child: _CountStat(
-                    label: 'Done',
+                    label: 'Sessions',
                     icon: Icons.check_circle_outline,
-                    unit: 'ses',
+                    unit: 'done',
                     value: week.length.toDouble(),
                     format: (v) => '${v.round()}',
                   ),
@@ -585,11 +592,14 @@ class _Pill extends StatelessWidget {
                     style: SxText.metricMd.copyWith(color: c.textHigh),
                   ),
                 ),
-                Text(
-                  label.toUpperCase(),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: SxText.labelXs.copyWith(color: c.textBody),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    label.toUpperCase(),
+                    maxLines: 1,
+                    style: SxText.labelXs.copyWith(color: c.textBody),
+                  ),
                 ),
               ],
             ),
@@ -725,7 +735,7 @@ class _UpNext extends StatelessWidget {
   }
 }
 
-/// Brand header. Local copy of SxBrandBar that drops the "LOCAL" pill on
+/// Brand header. Local copy of SxBrandBar that drops the status pill on
 /// narrow / large-text layouts instead of overflowing (core SxBrandBar's pill
 /// overflows at 320dp × 1.3 text scale).
 class _TodayBar extends StatelessWidget implements PreferredSizeWidget {
@@ -771,7 +781,16 @@ class _TodayBar extends StatelessWidget implements PreferredSizeWidget {
                     ),
                     if (showPill) ...[
                       const SizedBox(width: 12),
-                      const StatusPill('Local', dot: true),
+                      ListenableBuilder(
+                        listenable: context.app,
+                        builder: (context, _) => context.app.refreshFailed
+                            ? StatusPill(
+                                'Offline',
+                                dot: true,
+                                color: c.textBody,
+                              )
+                            : const StatusPill('Online', dot: true),
+                      ),
                       const SizedBox(width: 12),
                     ],
                     Semantics(
@@ -875,6 +894,96 @@ class ResumeWorkoutCard extends StatelessWidget {
                       icon: Icons.delete_forever,
                     );
                     if (ok) await app.workoutDraft.clear();
+                  },
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// "Resume cardio": a live cardio session survived the app being closed or killed. Its clock kept
+/// running (or stayed paused) exactly as left.
+class ResumeCardioCard extends StatelessWidget {
+  const ResumeCardioCard({super.key, required this.draft});
+  final ActiveCardioDraft draft;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.sx;
+    final app = context.app;
+    String name = draft.kind.label;
+    for (final a in app.cardio.customActivities) {
+      if (a.id == draft.customActivityId) name = a.name;
+    }
+    return SxCard(
+      borderColor: c.primaryBorder,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.timer_outlined, color: c.primary),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Resume cardio',
+                      style: SxText.headlineSm.copyWith(color: c.textHigh),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '$name · ${Fmt.clock(draft.activeSeconds)}${draft.paused ? ' · paused' : ''}',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: SxText.bodySm.copyWith(color: c.textBody),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: SxButton(
+                  label: 'Resume',
+                  icon: Icons.play_arrow,
+                  height: 48,
+                  onPressed: () => AppNav.activeCardio(
+                    context,
+                    draft.kind,
+                    targetMinutes: draft.targetMinutes,
+                    targetKm: draft.targetKm,
+                    customActivityId: draft.customActivityId,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: SxButton(
+                  label: 'Discard',
+                  icon: Icons.delete_outline,
+                  variant: SxButtonVariant.secondary,
+                  height: 48,
+                  onPressed: () async {
+                    final ok = await showSxConfirm(
+                      context,
+                      title: 'Discard session?',
+                      message:
+                          'The time and distance of this unfinished cardio session will be lost.',
+                      confirmLabel: 'Discard',
+                      cancelLabel: 'Keep it',
+                      destructive: true,
+                      icon: Icons.delete_forever,
+                    );
+                    if (ok) await app.cardioDraft.clear();
                   },
                 ),
               ),

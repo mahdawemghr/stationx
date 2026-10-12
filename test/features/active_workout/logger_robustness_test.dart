@@ -69,6 +69,8 @@ class FlakyStore implements DataStore {
   @override
   WorkoutDraftStore get workoutDraft => inner.workoutDraft;
   @override
+  CardioDraftStore get cardioDraft => inner.cardioDraft;
+  @override
   Future<void> load({required String userId, required String username}) =>
       inner.load(userId: userId, username: username);
   @override
@@ -160,23 +162,6 @@ void main() {
       c.dispose();
     });
 
-    test('steppers use the unit increment (2.5 kg / 5 lb) and reps +-1', () {
-      final c = makeCtl(app);
-      final d = c.drafts.first;
-      d.sets[0]
-        ..weightKg = 50
-        ..reps = 8;
-      c.stepWeight(d, 0, 1, WeightUnit.kg);
-      expect(d.sets[0].weightKg, 52.5);
-      c.stepWeight(d, 0, -1, WeightUnit.kg);
-      c.stepReps(d, 0, 1);
-      expect(d.sets[0].reps, 9);
-      d.sets[0].weightKg = 100 / 2.2046226218;
-      c.stepWeight(d, 0, 1, WeightUnit.lb);
-      expect(d.sets[0].weightKg * 2.2046226218, closeTo(105, 0.01));
-      c.dispose();
-    });
-
     test('0 kg on weighted equipment is not logged; bodyweight is', () {
       final c = makeCtl(app);
       final d = c.drafts.first;
@@ -254,17 +239,21 @@ void main() {
       },
     );
 
-    test('nothing logged is not worth resuming (draft cleared)', () async {
-      final app = AppController()..startDemo();
-      final c = makeCtl(app);
-      c.toggleSet(c.drafts[0], 0);
-      await c.flushDraft();
-      expect(app.workoutDraft.current, isNotNull);
-      c.toggleSet(c.drafts[0], 0); // undo
-      await c.flushDraft();
-      expect(app.workoutDraft.current, isNull);
-      c.dispose();
-    });
+    test(
+      'a started workout stays resumable even with nothing logged',
+      () async {
+        final app = AppController()..startDemo();
+        final c = makeCtl(app);
+        c.toggleSet(c.drafts[0], 0);
+        await c.flushDraft();
+        expect(app.workoutDraft.current, isNotNull);
+        c.toggleSet(c.drafts[0], 0); // undo
+        await c.flushDraft();
+        expect(app.workoutDraft.current, isNotNull);
+        expect(app.workoutDraft.current!.doneSets, 0);
+        c.dispose();
+      },
+    );
 
     test(
       'a pending change is flushed when the controller is disposed',
@@ -538,32 +527,6 @@ void main() {
         await t.pumpAndSettle();
         expect(store.sessions.sessions.length, n + 1);
         expect(store.workouts.advances, 1);
-      },
-    );
-
-    testWidgets(
-      'inline +/- steppers change reps and weight of the active set',
-      (t) async {
-        final h = t.ensureSemantics();
-        await pumpPage(t, const ActiveWorkoutPage(workoutId: 'w2'));
-        String reps() =>
-            t.getSemantics(find.bySemanticsLabel(RegExp(r'^Reps')).first).label;
-        String weight() => t
-            .getSemantics(find.bySemanticsLabel(RegExp(r'^Weight')).first)
-            .label;
-        await t.ensureVisible(find.bySemanticsLabel('Increase reps'));
-        await t.pump();
-        final r0 = reps(), w0 = weight();
-        await t.tap(find.bySemanticsLabel('Increase reps'));
-        await t.pump();
-        expect(reps(), isNot(r0));
-        await t.tap(find.bySemanticsLabel('Increase weight'));
-        await t.pump();
-        expect(weight(), isNot(w0));
-        await t.tap(find.bySemanticsLabel('Decrease weight'));
-        await t.pump();
-        expect(weight(), w0);
-        h.dispose();
       },
     );
 

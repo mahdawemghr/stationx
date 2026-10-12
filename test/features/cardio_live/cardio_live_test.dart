@@ -15,6 +15,27 @@ import 'package:stationx/features/cardio/select_activity_page.dart';
 
 import '../../helpers/pump.dart';
 
+Future<AppController> pumpPushed(WidgetTester t, Widget page) async {
+  final app = await pumpPage(
+    t,
+    Builder(
+      builder: (c) => Scaffold(
+        body: Center(
+          child: TextButton(
+            onPressed: () => Navigator.of(
+              c,
+            ).push(MaterialPageRoute<void>(builder: (_) => page)),
+            child: const Text('launch'),
+          ),
+        ),
+      ),
+    ),
+  );
+  await t.tap(find.text('launch'));
+  await t.pumpAndSettle();
+  return app;
+}
+
 Future<void> _unmount(WidgetTester t) async {
   await t.pumpWidget(const SizedBox());
 }
@@ -230,10 +251,12 @@ void main() {
       await _unmount(t);
     });
 
-    testWidgets('back asks before discarding a dirty session', (t) async {
+    testWidgets('back keeps the session in progress (nothing is lost)', (
+      t,
+    ) async {
       var now = DateTime(2026, 5, 4, 7, 15);
       cardioNow = () => now;
-      final app = await pumpPage(
+      final app = await pumpPushed(
         t,
         const ActiveCardioPage(kind: CardioKind.outdoorRun),
       );
@@ -242,12 +265,9 @@ void main() {
       await t.pump(const Duration(seconds: 1));
       await t.tap(find.byTooltip('Back'));
       await t.pumpAndSettle();
-      expect(find.text('DISCARD SESSION?'), findsOneWidget);
-      await t.tap(find.text('KEEP GOING'));
-      await t.pumpAndSettle();
-      expect(find.text('DISCARD SESSION?'), findsNothing);
+      expect(find.byType(ActiveCardioPage), findsNothing);
       expect(app.cardio.sessions.length, before);
-      await _unmount(t);
+      expect(app.cardioDraft.current, isNotNull);
     });
 
     testWidgets('lock disables controls', (t) async {

@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 
+import '../../domain/domain.dart';
+
 /// Wall-clock source. Tests replace it to advance time deterministically.
 @visibleForTesting
 DateTime Function() cardioNow = DateTime.now;
@@ -8,13 +10,51 @@ DateTime Function() cardioNow = DateTime.now;
 /// time; paused time is tracked separately. Uses the wall clock (not ticks) so
 /// it stays correct when the UI timer is throttled in the background.
 class CardioClock {
-  CardioClock() : startedAt = cardioNow();
+  CardioClock() : startedAt = cardioNow(), _runningSince = cardioNow();
+
+  /// Rebuilds a clock from a persisted session; time keeps counting across the time the app was closed.
+  CardioClock.restore(ActiveCardioDraft d)
+    : startedAt = d.startedAt,
+      _activeMs = d.activeMs,
+      _pausedMs = d.pausedMs,
+      _runningSince = d.runningSince,
+      _pausedSince = d.pausedSince;
 
   final DateTime startedAt;
   int _activeMs = 0;
   int _pausedMs = 0;
-  DateTime? _runningSince = cardioNow();
+  DateTime? _runningSince;
   DateTime? _pausedSince;
+
+  bool get running => _runningSince != null;
+
+  /// Persistable state of this clock (the page adds the rest of the session).
+  ActiveCardioDraft snapshot({
+    required CardioKind kind,
+    int? targetMinutes,
+    double? targetKm,
+    String? customActivityId,
+    double? km,
+    double? speedKmh,
+    double? inclinePct,
+    int? resistance,
+    String? saveId,
+  }) => ActiveCardioDraft(
+    kind: kind,
+    startedAt: startedAt,
+    activeMs: _activeMs,
+    pausedMs: _pausedMs,
+    runningSince: _runningSince,
+    pausedSince: _pausedSince,
+    targetMinutes: targetMinutes,
+    targetKm: targetKm,
+    customActivityId: customActivityId,
+    km: km,
+    speedKmh: speedKmh,
+    inclinePct: inclinePct,
+    resistance: resistance,
+    saveId: saveId,
+  );
 
   int get activeSeconds {
     final live = _runningSince == null

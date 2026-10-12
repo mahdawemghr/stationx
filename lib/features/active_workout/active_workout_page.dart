@@ -161,15 +161,11 @@ class _ActiveWorkoutPageState extends State<ActiveWorkoutPage>
     if (mounted) _leave();
   }
 
-  /// Back with nothing logged leaves silently; otherwise ask first.
+  /// Back never ends the workout: it stays in progress (saved on this device, shown on every tab
+  /// and on Today) until it is finished or explicitly discarded.
   Future<void> _onBack() async {
-    final ctl = _ctl;
-    if (ctl == null || !ctl.hasLoggedAnything) {
-      await ctl?.discardDraft();
-      if (mounted) _leave();
-      return;
-    }
-    await _confirmDiscard();
+    await _ctl?.flushDraft();
+    if (mounted) _leave();
   }
 
   Future<void> _finish(AppController app) async {
@@ -239,6 +235,19 @@ class _ActiveWorkoutPageState extends State<ActiveWorkoutPage>
     if (next.currentIndex != rot.currentIndex) {
       await app.workouts.setRotation(next);
     }
+  }
+
+  Future<void> _addExercise() async {
+    final ex = await AppNav.exercisePicker(context);
+    if (ex == null || !mounted) return;
+    final ok = _ctl!.addExercise(ex, _app!.sessions);
+    showSxSnack(
+      context,
+      ok
+          ? '${ex.name} added to this workout'
+          : '${ex.name} is already in this workout',
+      icon: ok ? Icons.check_circle_outline : Icons.info_outline,
+    );
   }
 
   Future<void> _addCardio() async {
@@ -413,6 +422,14 @@ class _ActiveWorkoutPageState extends State<ActiveWorkoutPage>
                       ),
                   ],
                 ],
+              SxButton(
+                key: const Key('add-exercise'),
+                label: 'Add exercise',
+                icon: Icons.add,
+                variant: SxButtonVariant.secondary,
+                height: 48,
+                onPressed: _addExercise,
+              ),
               if (!mixed) _UpNext(controller: ctl),
               if (mixed) _CardioHeader(draft: ctl.cardio!),
               if (ctl.cardio != null)

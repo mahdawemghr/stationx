@@ -339,6 +339,8 @@ class MemoryDeviceStore implements DeviceStore {
   @override
   final MemoryWorkoutDraftStore workoutDraft = MemoryWorkoutDraftStore();
   @override
+  final MemoryCardioDraftStore cardioDraft = MemoryCardioDraftStore();
+  @override
   final HealthConsentStore healthConsent = MemoryHealthConsentStore();
   String? _owner;
   @override
@@ -348,6 +350,7 @@ class MemoryDeviceStore implements DeviceStore {
   @override
   Future<void> clearUserScopedState() async {
     await workoutDraft.clear();
+    await cardioDraft.clear();
     _owner = null;
   }
 

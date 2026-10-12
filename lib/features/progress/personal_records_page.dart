@@ -308,55 +308,37 @@ class _PrCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          // Full-width name first; date, muscle and the PR badge wrap underneath.
+          Text(
+            exercise?.name ?? pr.exerciseId,
+            style: SxText.headlineSm.copyWith(color: c.textHigh),
+          ),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 8,
+            runSpacing: 6,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      exercise?.name ?? pr.exerciseId,
-                      style: SxText.headlineSm.copyWith(color: c.textHigh),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Set ${Fmt.dateMedium(pr.date)}',
-                      style: SxText.bodySm.copyWith(color: c.textBody),
-                    ),
-                  ],
-                ),
+              Text(
+                'Set ${Fmt.dateMedium(pr.date)}',
+                style: SxText.bodySm.copyWith(color: c.textBody),
               ),
-              if (exercise != null) ...[
-                const SizedBox(width: 8),
-                Flexible(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: c.surface3,
-                      borderRadius: BorderRadius.circular(SxRadius.sm),
-                    ),
-                    child: Text(
-                      exercise!.primaryMuscle.label.toUpperCase(),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: SxText.labelXs.copyWith(color: c.textBody),
-                    ),
+              if (exercise != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: c.surface3,
+                    borderRadius: BorderRadius.circular(SxRadius.sm),
+                  ),
+                  child: Text(
+                    exercise!.primaryMuscle.label.toUpperCase(),
+                    style: SxText.labelXs.copyWith(color: c.textBody),
                   ),
                 ),
-              ],
-              if (badge != null) ...[
-                const SizedBox(width: 8),
-                Flexible(
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: SxPop(child: PrBadge(badge)),
-                  ),
-                ),
-              ],
+              if (badge != null) SxPop(child: PrBadge(badge)),
             ],
           ),
           const SizedBox(height: 12),

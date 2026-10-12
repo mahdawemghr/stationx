@@ -125,6 +125,9 @@ class AppController extends ChangeNotifier {
   /// Device-local in-progress workout draft (temporary UI state, never uploaded).
   WorkoutDraftStore get workoutDraft => _store.workoutDraft;
 
+  /// Device-local live cardio session (temporary, never uploaded).
+  CardioDraftStore get cardioDraft => _store.cardioDraft;
+
   // ───────────────────────── session lifecycle ─────────────────────────
   late SessionPhase _phase;
   SessionPhase get phase => _phase;
@@ -303,7 +306,8 @@ class AppController extends ChangeNotifier {
   }
 
   /// A saved workout draft exists on this device (logging out discards it).
-  bool get hasUnfinishedWorkout => workoutDraft.current != null;
+  bool get hasUnfinishedWorkout =>
+      workoutDraft.current != null || cardioDraft.current != null;
 
   /// Logs out: nothing of this user stays in memory or on the device afterwards.
   Future<void> signOut() => _endSession(expired: false);

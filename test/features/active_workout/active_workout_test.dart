@@ -192,27 +192,20 @@ void main() {
   });
 
   testWidgets(
-    'back asks to discard; keep stays, discard leaves without saving',
+    'back keeps the workout in progress: it leaves, saves nothing, and the draft stays',
     (t) async {
       final app = await pumpPushed(t, const ActiveWorkoutPage(workoutId: 'w2'));
       final n = app.sessions.sessions.length;
       final idx = app.workouts.rotation.currentIndex;
-      await tapDone(t, 1); // something logged: back must ask
+      await tapDone(t, 1);
       await t.tap(find.byIcon(Icons.arrow_back));
-      await t.pumpAndSettle();
-      expect(find.text('DISCARD WORKOUT?'), findsOneWidget);
-      await t.tap(find.text('KEEP TRAINING'));
-      await t.pumpAndSettle();
-      expect(find.byType(ActiveWorkoutPage), findsOneWidget);
-
-      await t.tap(find.byIcon(Icons.arrow_back));
-      await t.pumpAndSettle();
-      await t.tap(find.text('DISCARD'));
       await t.pumpAndSettle();
       await t.pumpAndSettle();
       expect(find.byType(ActiveWorkoutPage), findsNothing);
       expect(app.sessions.sessions.length, n);
       expect(app.workouts.rotation.currentIndex, idx);
+      expect(app.workoutDraft.current, isNotNull);
+      expect(app.workoutDraft.current!.doneSets, 1);
     },
   );
 

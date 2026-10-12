@@ -10,8 +10,9 @@ import '../../core/theme/sx_typography.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/widgets/widgets.dart';
 import '../../data/import/gym_tracker_import.dart';
+import '../../data/import/stationx_backup.dart';
 
-/// "Import from Gym Tracker": choose the exported file (or paste it) → preview what will happen →
+/// "Import data" (a StationX backup from any account, or a Gym Tracker export): choose the exported file (or paste it) → preview what will happen →
 /// confirm → add. Nothing is changed before the confirmation, and existing data is never modified.
 Future<void> importFromGymTracker(BuildContext context) async {
   final app = context.app;
@@ -49,8 +50,13 @@ Future<void> importFromGymTracker(BuildContext context) async {
     await _showMessage(
       context,
       'Nothing to import',
-      'The clipboard is empty. In Gym Tracker choose Settings › Export Data, then try again.',
+      'The clipboard is empty. Copy the exported data first (StationX: Profile › Export your data › Backup; Gym Tracker: Settings › Export Data), then try again.',
     );
+    return;
+  }
+
+  if (StationXBackup.looksLikeBackup(text)) {
+    await _restoreBackup(context, text);
     return;
   }
 
@@ -137,13 +143,13 @@ class _Confirmed {
 
 String _problemText(ImportProblem p) => switch (p) {
   ImportProblem.tooLarge =>
-    'This file is too large to be a Gym Tracker export (the limit is 10 MB).',
+    'This file is too large to be an export (the limit is 10 MB).',
   ImportProblem.notJson =>
-    'This isn\'t a Gym Tracker export. Choose the .json file made by Gym Tracker › Settings › Export Data.',
+    'This isn\'t an export file. Choose a StationX backup (.json) or the file made by Gym Tracker › Settings › Export Data.',
   ImportProblem.wrongFormat =>
-    'This file was not made by Gym Tracker. Choose the .json file made by Gym Tracker › Settings › Export Data.',
+    'This file was not made by StationX or Gym Tracker. Choose a StationX backup (.json) or the file made by Gym Tracker › Settings › Export Data.',
   ImportProblem.unsupportedVersion =>
-    'This export comes from a newer version of Gym Tracker. Update StationX, then try again.',
+    'This export comes from a newer version of the app that made it. Update StationX, then try again.',
   ImportProblem.nothingToImport => 'This file has no completed workouts.',
 };
 
@@ -178,13 +184,14 @@ class _SourceSheet extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            'IMPORT FROM GYM TRACKER',
+            'IMPORT DATA',
             style: SxText.headlineMd.copyWith(color: c.textHigh),
           ),
           const SizedBox(height: 8),
           Text(
-            'In Gym Tracker open Settings › Export Data and save the file, then choose it here. '
-            'Your completed workouts are added to your history; nothing you already have is changed or removed.',
+            'Choose a StationX backup (Profile › Export your data › Backup, from this or ANOTHER account) '
+            'or the file from Gym Tracker › Settings › Export Data. Everything in it is added to this account; '
+            'nothing you already have is changed or removed, and anything already here is skipped.',
             style: SxText.bodyMd.copyWith(color: c.textBody),
           ),
           const SizedBox(height: SxSpace.md),
@@ -371,3 +378,106 @@ class _PreviewDialogState extends State<_PreviewDialog> {
 String _reviewList(List<String> names) => names.length <= 5
     ? names.join(', ')
     : '${names.take(5).join(', ')} and ${names.length - 5} more';
+
+/// Preview → confirm → restore of a StationX backup. Adds only what this account does not have yet.
+Future<void> _restoreBackup(BuildContext context, String text) async {
+  final app = context.app;
+  final StationXBackupPlan plan;
+  try {
+    plan = StationXBackup.plan(
+      text,
+      exercises: app.exercises,
+      workouts: app.workouts,
+      sessions: app.sessions,
+      cardio: app.cardio,
+    );
+  } on ImportException catch (e) {
+    if (context.mounted) await _showProblem(context, e);
+    return;
+  }
+  if (!context.mounted) return;
+  if (plan.isEmpty) {
+    await _showMessage(
+      context,
+      'Nothing new to restore',
+      plan.skippedExisting > 0
+          ? 'Everything in this backup (${plan.skippedExisting} records) is already in this account.'
+          : 'This backup is empty.',
+    );
+    return;
+  }
+  final ok = await showDialog<bool>(
+    context: context,
+    builder: (ctx) {
+      final c = ctx.sx;
+      String n(int v, String one, String many) =>
+          v == 0 ? '' : '$v ${v == 1 ? one : many}\n';
+      return AlertDialog(
+        title: Text(
+          'RESTORE BACKUP?',
+          style: SxText.headlineMd.copyWith(color: c.textHigh),
+        ),
+        content: SingleChildScrollView(
+          child: Text(
+            '${n(plan.sessions.length, 'workout', 'workouts')}'
+            '${n(plan.cardio.length, 'cardio session', 'cardio sessions')}'
+            '${n(plan.workouts.length, 'routine', 'routines')}'
+            '${n(plan.exercises.length, 'custom exercise', 'custom exercises')}'
+            '${n(plan.goals.length, 'cardio goal', 'cardio goals')}'
+            '${n(plan.activities.length, 'custom activity', 'custom activities')}'
+            '${plan.firstDate == null ? '' : '\n${Fmt.dateMedium(plan.firstDate!.toLocal())} – ${Fmt.dateMedium(plan.lastDate!.toLocal())}\n'}'
+            '${plan.skippedExisting > 0 ? '\n${plan.skippedExisting} already here, skipped.\n' : ''}'
+            '\nThey are added to this account with their original dates. Nothing you have is changed or removed.',
+            style: SxText.bodyMd.copyWith(color: c.textBody),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Restore'),
+          ),
+        ],
+      );
+    },
+  );
+  if (ok != true || !context.mounted) return;
+
+  final nav = Navigator.of(context, rootNavigator: true);
+  unawaited(
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const PopScope(canPop: false, child: _BusyDialog()),
+    ),
+  );
+  final StationXBackupResult result;
+  try {
+    result = await StationXBackup.apply(
+      plan,
+      exercises: app.exercises,
+      workouts: app.workouts,
+      sessions: app.sessions,
+      cardio: app.cardio,
+    );
+  } catch (_) {
+    nav.pop();
+    if (context.mounted) {
+      await _showMessage(
+        context,
+        'Restore didn\'t finish',
+        'Something went wrong (check your connection). Anything already added is safe; run the restore again and what is already here is skipped.',
+      );
+    }
+    return;
+  }
+  nav.pop();
+  if (!context.mounted) return;
+  showSxSnack(
+    context,
+    'Restored ${result.added} record${result.added == 1 ? '' : 's'} from the backup',
+  );
+}

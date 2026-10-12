@@ -843,3 +843,16 @@ text #FFFFFF / #A6B0BA / #8B959F [muted lightened from #606A74 to pass WCAG AA 4
   Epoch ........... counter that invalidates in-flight loads/writes when the user changes
   Publishable key . the public Supabase client key (safe in the app, protected by RLS)
   Health Connect .. Android's health data store (Samsung Health and most watches sync into it)
+
+
+23. IN-PROGRESS SESSIONS AND BACKUPS (2026-10-12)
+-------------------------------------------------
+  * A started strength workout or cardio session stays in progress until finished or explicitly discarded. Back only leaves
+    the screen; the state is saved on the device (Isar AppMeta: workoutDraftJson / cardioDraftJson, incl. the cardio finisher
+    and elapsed time, which keeps counting from wall-clock timestamps). Today shows a Resume card and the main shell shows a
+    "in progress" bar on every tab.
+  * During a workout: "Add exercise" (library picker, lands in its muscle section) and Swap, whose "Target: MUSCLE" chip toggles
+    between same-muscle alternatives and every exercise (with search).
+  * Backup: Profile > Export your data > Backup writes a stationx_backup v1 file (lib/data/import/stationx_backup.dart).
+    Profile > Import data restores it into ANY account (also accepts Gym Tracker exports). Records already present (same id)
+    are skipped; nothing is overwritten. Profile/credentials are not part of a backup.

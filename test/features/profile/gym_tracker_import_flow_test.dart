@@ -53,12 +53,12 @@ Future<AppController> open(
 
 Future<void> startImport(WidgetTester tester, String choice) async {
   await tester.scrollUntilVisible(
-    find.text('IMPORT FROM GYM TRACKER'),
+    find.text('IMPORT DATA'),
     300,
     scrollable: find.byType(Scrollable).first,
   );
   await tester.pumpAndSettle();
-  await tester.tap(find.text('IMPORT FROM GYM TRACKER'));
+  await tester.tap(find.text('IMPORT DATA'));
   await tester.pumpAndSettle();
   await tester.ensureVisible(find.text(choice));
   await tester.pumpAndSettle();
@@ -137,7 +137,10 @@ void main() {
     final app = await open(tester, FakeSource('{"hello": 1}'));
     await startImport(tester, 'CHOOSE FILE');
     expect(find.text('Can\'t import this file'), findsOneWidget);
-    expect(find.textContaining('not made by Gym Tracker'), findsOneWidget);
+    expect(
+      find.textContaining('not made by StationX or Gym Tracker'),
+      findsOneWidget,
+    );
     await tester.tap(find.text('OK'));
     await tester.pumpAndSettle();
     expect(app.sessions.sessions, isEmpty);
