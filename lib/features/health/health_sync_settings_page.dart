@@ -190,6 +190,8 @@ class _HealthSyncSettingsPageState extends State<HealthSyncSettingsPage> {
       'Suggests heart rate and calories for a cardio session (you confirm first), shows average and max heart rate on finished workouts and a recent heart rate while you train, and charts your heart-rate trend.',
     HealthFeature.importWorkouts =>
       'Brings in cardio and strength workouts recorded by your watch or other apps, including older ones. You preview them first and nothing is added until you confirm.',
+    HealthFeature.recovery =>
+      'Shows on Today whether you are ready, should take it easy or need rest, from last night\'s sleep (stages included) and your resting heart rate against your own recent normal. Tap it for the details.',
   };
 }
 

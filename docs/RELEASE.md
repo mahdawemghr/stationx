@@ -77,6 +77,7 @@ Release builds are **refused** without `android/key.properties` (both `flutter b
   |---|---|
   | `WRITE_EXERCISE`, `WRITE_DISTANCE`, `WRITE_TOTAL_CALORIES_BURNED` | "Save workouts": one exercise session per finished workout, with only the distance/calories the user logged |
   | `READ_HEART_RATE`, `READ_ACTIVE_CALORIES_BURNED`, `READ_TOTAL_CALORIES_BURNED` | "Fill in heart rate and calories": user-confirmed suggestion for one cardio session's time window |
+  | `READ_SLEEP`, `READ_RESTING_HEART_RATE` | "Show sleep & recovery on Today": last night's sleep and resting heart rate vs its 7-day average, read on demand |
   | `READ_HEALTH_DATA_HISTORY` | "Import workouts": optional look-back beyond 30 days |
   | `READ_EXERCISE`, `READ_DISTANCE`, `READ_TOTAL_CALORIES_BURNED`, `READ_STEPS` | "Connect" and "Import workouts": list sessions from other apps (e.g. Samsung Health) for a user-confirmed import. `READ_STEPS` is required only because the `health` plugin's workout reader sums steps inside each session; steps are not stored or shown. |
   - Purpose text for each row: *"Core feature, user-initiated and off by default. Data is processed on-device, is not sold or shared, and is not sent to our servers. Imported sessions and accepted values become part of the user's own workout log."* Link the privacy policy (section 3). The rationale activity (`ACTION_SHOW_PERMISSIONS_RATIONALE`) and the Android 14 `VIEW_PERMISSION_USAGE` alias are declared.
@@ -95,13 +96,13 @@ Release builds are **refused** without `android/key.properties` (both `flutter b
 2. Set the bundle id and Team (Signing & Capabilities); confirm **HealthKit** capability is present (entitlement file `ios/Runner/Runner.entitlements` is already wired) and that the hand-edited project loads cleanly.
 3. Test on a real iPhone (permission sheet, reads, denied/empty path).
 4. App Store Connect: privacy nutrition label → **Data Not Collected**; Health usage string is already in `Info.plist`; add the privacy-policy URL; screenshots for required device sizes.
-5. App Review note: *"Training data is saved to the user's private account (username + password). Health access is optional and off by default: saving finished workouts to Apple Health and reading workouts/heart rate to fill in or import sessions. Each is a separate toggle with an explanation; health data is not sent to our servers. StationX does not read sleep or resting heart rate."*
+5. App Review note: *"Training data is saved to the user's private account (username + password). Health access is optional and off by default: saving finished workouts to Apple Health and reading workouts/heart rate to fill in or import sessions. Each is a separate toggle with an explanation; health data is not sent to our servers. Sleep and resting heart rate are read only when the user turns on the separate \"Show sleep & recovery on Today\" switch."*
 
 ## 5. Pre-release verification (🔴 needs devices — nothing below has been done)
 - [ ] Release APK/AAB installs and launches on at least one low-end and one current Android phone (R8/minify can break plugins at runtime — **test the workout draft (Isar) and Health Connect in the *release* build**).
 - [ ] Register → About you → equipment → program review/save; kill the app and relaunch: the same program is there. Log in on a second phone: same program.
 - [ ] A workout draft survives force-stop and reboot; discarding it works.
-- [ ] Health Connect on a real device: permission dialog, real data, deny path, revoke + restart; Samsung Health → Health Connect sharing path, both directions (log cardio in StationX and see it in Samsung Health; record in Samsung Health and import it); also toggle each of the three features on/off, deny each permission sheet, revoke and restart. Apple Health: build on a Mac (iOS path never compiled here), confirm HealthKit write authorization for workouts.
+- [ ] Health Connect on a real device: permission dialog, real data, deny path, revoke + restart; Samsung Health → Health Connect sharing path, both directions (log cardio in StationX and see it in Samsung Health; record in Samsung Health and import it); also toggle each of the three features on/off, deny each permission sheet, revoke and restart. Watch heart rate (verified on a Galaxy phone 2026-10-14): Profile › Health › Connect your watch › Check my connection shows "Heart rate is coming through"; allow heart rate but deny calories and confirm heart rate still works; with heart rate off the check offers "Turn on heart rate". Apple Health: build on a Mac (iOS path never compiled here), confirm HealthKit write authorization for workouts.
 - [ ] Keyboard, safe areas, gesture navigation, text scale 1.3, dark/OLED, orientation lock behaviour.
 - [ ] Performance: scroll the history/calendar with the demo data (Profile › Load demo data); profile with `flutter run --profile` + DevTools (target: no jank on active-workout and lists).
 - [ ] Airplane mode: logging in and saving fail with a clear message and nothing is shown as saved; an in-progress workout keeps its draft; everything works again when back online.
@@ -119,7 +120,7 @@ Release builds are **refused** without `android/key.properties` (both `flutter b
 - `flutter analyze` and `flutter test` must be clean before every release.
 - Device-store tests download the Isar core on first run (gitignored `libisar.so`). Run `dart format lib test` before committing.
 - Release APK is ~71 MB (3 ABIs, no R8); the Play App Bundle delivers per-ABI splits. For direct distribution use `flutter build apk --split-per-abi`.
-- The Android release has the `INTERNET` permission (the app is online-first; it only talks to the StationX Supabase project). Verify the merged manifest before each release: no `READ_SLEEP` / `READ_RESTING_HEART_RATE`.
+- The Android release has the `INTERNET` permission (the app is online-first; it only talks to the StationX Supabase project). Verify the merged manifest before each release: `READ_SLEEP` / `READ_RESTING_HEART_RATE` are present only for the opt-in recovery switch and are declared in the Play Health Connect form.
 
 ## 7. Known gaps relevant to release
 Highlights: no at-rest database encryption; no schema migrations yet (additive changes only); iOS untested; privacy policy placeholders (date, e-mail; hosting via `docs/web`). The applicationId is set (see §0).

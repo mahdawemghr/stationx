@@ -140,6 +140,8 @@ void main() {
         findsOneWidget,
       );
       gw.failWrites = false;
+      await t.ensureVisible(find.text('RETRY NOW'));
+      await t.pump(const Duration(milliseconds: 400));
       await t.tap(find.text('RETRY NOW'));
       await _settle(t);
       expect(svc.pendingCount, 0);

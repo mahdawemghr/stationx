@@ -81,6 +81,7 @@ String healthFeatureTitle(HealthFeature f, HealthProvider p) => switch (f) {
   HealthFeature.writeWorkouts => 'Save my workouts to ${p.label}',
   HealthFeature.enrichCardio => 'Fill heart rate & calories from my watch',
   HealthFeature.importWorkouts => 'Import workouts from other apps',
+  HealthFeature.recovery => 'Show sleep & recovery on Today',
 };
 
 /// What the explanation shown BEFORE the system permission sheet says.
@@ -95,6 +96,9 @@ String healthFeatureExplanation(HealthFeature f, HealthProvider p) {
     HealthFeature.enrichCardio =>
       'StationX can READ heart rate and calories your watch recorded in ${p.label}: it suggests them for a cardio session (you confirm first, only empty fields are filled), '
           'shows your average and max heart rate on finished workouts, a recent heart rate while you train, and heart-rate trends. ${ios ? 'iOS will ask which data to share. ' : ''}$tail',
+    HealthFeature.recovery =>
+      'StationX can READ last night\'s sleep and your resting heart rate from ${p.label} and show them on Today, with your resting heart rate next to its 7-day average. '
+          'It gives a plain verdict (ready, take it easy, or rest) worked out from your own numbers, and shows why. If your watch records no resting heart rate, it is estimated from your heart rate during sleep when the heart-rate switch is on. Everything is read when you open Today and is not stored or sent anywhere. ${ios ? 'iOS will ask which data to share. ' : ''}$tail',
     HealthFeature.importWorkouts =>
       'StationX can READ cardio and strength workouts that other apps (a watch, Samsung Health, ...) saved in ${p.label}, including older ones if you allow it. '
           'You see a preview first and nothing is added until you confirm, unless you also turn on automatic import. Importing again never creates duplicates. $tail',

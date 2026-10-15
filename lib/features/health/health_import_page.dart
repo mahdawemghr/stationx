@@ -261,12 +261,37 @@ class _HealthImportPageState extends State<HealthImportPage> {
                 actionLabel: 'Check again',
                 onAction: _load,
               ),
+              if (context.app.healthSync.provider ==
+                  HealthProvider.healthConnect)
+                const _OlderWorkoutsNote(),
               _Counts(plan: plan),
             ],
           );
         }
         return _Preview(plan: plan);
     }
+  }
+}
+
+/// Why old Samsung workouts may be missing, and the way to keep them. Not something StationX can
+/// fix: Samsung Health only writes workouts recorded after sharing was switched on.
+class _OlderWorkoutsNote extends StatelessWidget {
+  const _OlderWorkoutsNote();
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.sx;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: SxSpace.md),
+      child: SxCard(
+        child: Text(
+          'Missing older workouts? Samsung Health only shares workouts recorded after sharing was switched on and does not copy older ones into Health Connect, so StationX cannot see them. '
+          'Check Health Connect › Data and access › Exercise to see which apps provide workouts. '
+          'Your older Samsung Health workouts stay in Samsung Health (Settings › Download personal data).',
+          style: SxText.bodySm.copyWith(color: c.textBody),
+        ),
+      ),
+    );
   }
 }
 
@@ -283,6 +308,11 @@ class _Counts extends StatelessWidget {
       ('Saved by StationX (skipped)', plan.skippedOwn),
       ('Unsupported type (skipped)', plan.skippedUnsupported),
     ];
+    // Which types were skipped, e.g. "Yoga 2 · Other 5", so a missing watch workout is explainable.
+    final skippedNames = [
+      for (final e in plan.unsupportedTypes.entries)
+        '${_prettyType(e.key)} ${e.value}',
+    ].join(' · ');
     return SxCard(
       child: Column(
         children: [
@@ -305,10 +335,26 @@ class _Counts extends StatelessWidget {
               ],
             ),
           ],
+          if (skippedNames.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Skipped types: $skippedNames',
+                style: SxText.bodySm.copyWith(color: c.textBody),
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
+}
+
+String _prettyType(String raw) {
+  final words = raw.toLowerCase().split('_').where((w) => w.isNotEmpty);
+  final text = words.join(' ');
+  return text.isEmpty ? 'Unknown' : text[0].toUpperCase() + text.substring(1);
 }
 
 class _Preview extends StatelessWidget {

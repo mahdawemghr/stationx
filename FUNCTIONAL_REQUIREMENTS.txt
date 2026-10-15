@@ -264,9 +264,13 @@ FR-IMP-05 [IMPL]  The companion Gym Tracker app has an "Export Data" button prod
                   "gym_tracker_export" v1 (separate repository).
 
 4.10 HEALTH-APP INTEGRATION (opt-in, default OFF)
-FR-HLT-01 [REMOVED] Recovery card / sleep / resting heart rate: removed on 2026-10-11. Connecting Health Connect /
-                  Apple Health (after an explanation screen and system permission; disconnect at any time) only reads
-                  exercise sessions; sleep and resting heart rate are never read.
+FR-HLT-01 [IMPL*] Sleep & recovery (opt-in switch, default OFF; removed 2026-10-11, restored 2026-10-15 at the owner's
+                  request): Today shows a verdict (ready / take it easy / need rest) from last night's sleep stages, the
+                  resting heart rate vs the user's own 7-night normal (estimated from sleep heart rate when none is
+                  recorded) and recent sleep debt; tap for details (stages, reasons, 7 nights). The training-log calendar marks days
+                  with recorded sleep (moon) and shows that night's sleep card (tap for the same details). Read on demand,
+                  never stored or uploaded; rules in ReadinessEngine, no hidden model. Connecting
+                  alone only reads exercise sessions; sleep/resting HR need this separate switch + permission.
 FR-HLT-02 [IMPL*] "Save my workouts" : each completed cardio/strength session is written ONCE to the health app
                   (type, start/end, distance and calories only if the user logged them; never heart rate);
                   edit updates, delete removes only what StationX wrote; failures never block local saving and

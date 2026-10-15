@@ -29,7 +29,7 @@ class PrivacyPage extends StatelessWidget {
     ),
     (
       'Optional health data',
-      'If you choose to connect Health Connect (Android) or Apple Health (iOS), StationX READS the workouts recorded there (and, if you turn it on, heart rate during them) so you can import them. It never writes to those apps unless you turn that on, keeps the values only in memory while the app is running, and never shares them. StationX does not read your sleep or resting heart rate. You can disconnect at any time.',
+      'If you choose to connect Health Connect (Android) or Apple Health (iOS), StationX READS the workouts recorded there (and, if you turn it on, heart rate during them) so you can import them. It never writes to those apps unless you turn that on, keeps the values only in memory while the app is running, and never shares them. Sleep and resting heart rate are read only if you turn on the separate "Show sleep & recovery on Today" switch; they are shown on Today, not stored and never shared. You can disconnect at any time.',
     ),
     (
       'Export and sharing',

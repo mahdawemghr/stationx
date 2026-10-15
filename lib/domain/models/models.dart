@@ -6,6 +6,7 @@ export 'health.dart';
 export 'muscle.dart';
 export 'section_muscle.dart';
 export 'profile.dart';
+export 'recovery.dart';
 export 'records.dart';
 export 'sync_meta.dart';
 export 'workout.dart';

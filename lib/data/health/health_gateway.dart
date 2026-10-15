@@ -58,6 +58,19 @@ abstract class HealthGateway {
   Future<List<BpmPoint>> heartRateSamples(DateTime from, DateTime to) async =>
       const [];
 
+  /// Sleep stage intervals (deep, light, REM, generic asleep, awake) within [from, to), from any
+  /// source. Empty on failure.
+  Future<List<StageSpan>> sleepStages(DateTime from, DateTime to) async =>
+      const [];
+
+  /// Whole sleep sessions (fallback when a device wrote no stage data). Empty on failure.
+  Future<List<TimeSpan>> sleepSessions(DateTime from, DateTime to) async =>
+      const [];
+
+  /// Timestamped resting heart rate values within [from, to). Empty on failure.
+  Future<List<BpmPoint>> restingHeartRate(DateTime from, DateTime to) async =>
+      const [];
+
   /// Whether data older than ~30 days before the first grant can be read (Android needs a
   /// separate permission; iOS always can).
   Future<HealthHistoryAccess> historyAccess() async =>

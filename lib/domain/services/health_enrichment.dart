@@ -50,6 +50,8 @@ abstract final class HealthEnrichmentService {
     required bool permissionsGranted,
     required Iterable<HealthWorkout> recentWorkouts,
     required int recentHeartRateSamples,
+    bool heartRateEnabled = false,
+    bool workoutsChecked = false,
     required Set<String> ownSourceIds,
     Map<String, String> knownSources = const {},
   }) {
@@ -66,8 +68,17 @@ abstract final class HealthEnrichmentService {
     if (foreign.isEmpty && recentHeartRateSamples == 0) {
       return const WatchDiagnosis(step: WatchSetupStep.noRecentData);
     }
+    final own = recentWorkouts.length - foreign.length;
     return WatchDiagnosis(
       step: WatchSetupStep.ok,
+      workoutsChecked: workoutsChecked,
+      watchWorkouts: foreign.length,
+      ownWorkouts: own,
+      heartRate: !heartRateEnabled
+          ? WatchHeartRate.off
+          : (recentHeartRateSamples > 0
+                ? WatchHeartRate.found
+                : WatchHeartRate.noSamples),
       sources: {
         for (final w in foreign)
           if (knownSources[w.sourceName] != null) knownSources[w.sourceName]!,

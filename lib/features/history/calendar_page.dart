@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../cardio/cardio_pace.dart';
+import '../health/recovery_card.dart';
 import '../../app/app_controller.dart';
 import '../../app/app_scope.dart';
 import '../../app/nav.dart';
@@ -35,20 +36,46 @@ class _CalendarPageState extends State<CalendarPage> {
   late DateTime _selected = _dateOnly(DateTime.now());
   int _filter = 0; // 0 all, 1 strength only, 2 cardio only, 3 mixed
 
-  void _shiftMonth(int d) => setState(() {
-    _month = DateTime(_month.year, _month.month + d);
-    final today = _dateOnly(DateTime.now());
-    // Keep the selection inside the visible month.
-    _selected = (today.year == _month.year && today.month == _month.month)
-        ? today
-        : DateTime(_month.year, _month.month, 1);
-  });
+  /// Minutes slept per wake-up day of the visible month (empty unless sleep & recovery is on).
+  Map<DateTime, int> _sleep = const {};
+  int _sleepToken = 0;
 
-  void _goToday() => setState(() {
-    final t = DateTime.now();
-    _month = DateTime(t.year, t.month);
-    _selected = _dateOnly(t);
-  });
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadSleep());
+  }
+
+  Future<void> _loadSleep() async {
+    if (!mounted) return;
+    final token = ++_sleepToken;
+    final days = await context.app.healthSync.sleepDays(_month);
+    if (!mounted || token != _sleepToken) return;
+    setState(() => _sleep = days);
+  }
+
+  void _shiftMonth(int d) {
+    setState(() {
+      _month = DateTime(_month.year, _month.month + d);
+      _sleep = const {};
+      final today = _dateOnly(DateTime.now());
+      // Keep the selection inside the visible month.
+      _selected = (today.year == _month.year && today.month == _month.month)
+          ? today
+          : DateTime(_month.year, _month.month, 1);
+    });
+    _loadSleep();
+  }
+
+  void _goToday() {
+    setState(() {
+      final t = DateTime.now();
+      _month = DateTime(t.year, t.month);
+      _selected = _dateOnly(t);
+      _sleep = const {};
+    });
+    _loadSleep();
+  }
 
   Map<DateTime, _DayData> _collect(AppController app) {
     final out = <DateTime, _DayData>{};
@@ -238,6 +265,7 @@ class _CalendarPageState extends State<CalendarPage> {
                 selected: _selected,
                 today: today,
                 data: data,
+                sleep: _sleep,
                 filter: _filter,
                 onSelect: (d) => setState(() => _selected = d),
               ),
@@ -291,6 +319,14 @@ class _CalendarPageState extends State<CalendarPage> {
                     seconds: totalSeconds,
                   ),
                   const SizedBox(height: SxSpace.md),
+                  if (_sleep.containsKey(_selected)) ...[
+                    _SleepDayCard(
+                      key: ValueKey('sleep-$_selected'),
+                      day: _selected,
+                      sessionMinutes: _sleep[_selected]!,
+                    ),
+                    const SizedBox(height: SxSpace.md),
+                  ],
                   if (sessionCount == 0)
                     SxCard(
                       child: Column(
@@ -527,6 +563,7 @@ class _MonthGrid extends StatelessWidget {
     required this.selected,
     required this.today,
     required this.data,
+    required this.sleep,
     required this.filter,
     required this.onSelect,
   });
@@ -534,6 +571,7 @@ class _MonthGrid extends StatelessWidget {
   final DateTime selected;
   final DateTime today;
   final Map<DateTime, _DayData> data;
+  final Map<DateTime, int> sleep;
   final int filter;
   final ValueChanged<DateTime> onSelect;
 
@@ -582,6 +620,7 @@ class _MonthGrid extends StatelessWidget {
                             isToday: d == today,
                             future: d.isAfter(today),
                             info: data[d],
+                            sleepMinutes: sleep[d],
                             filter: filter,
                             onTap: () => onSelect(d),
                           );
@@ -600,6 +639,18 @@ class _MonthGrid extends StatelessWidget {
               _Legend(color: c.primary, label: 'Cardio'),
               _Legend(color: c.textHigh, label: 'Strength'),
               _Legend(color: c.primary, second: c.textHigh, label: 'Mixed'),
+              if (sleep.isNotEmpty)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.bedtime, size: 10, color: c.textBody),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Sleep',
+                      style: SxText.labelXs.copyWith(color: c.textBody),
+                    ),
+                  ],
+                ),
             ],
           ),
         ],
@@ -643,6 +694,7 @@ class _DayCell extends StatelessWidget {
     required this.isToday,
     required this.future,
     required this.info,
+    required this.sleepMinutes,
     required this.filter,
     required this.onTap,
   });
@@ -651,6 +703,9 @@ class _DayCell extends StatelessWidget {
   final bool isToday;
   final bool future;
   final _DayData? info;
+
+  /// Minutes slept the night that ended on this day, when sleep & recovery is on and recorded.
+  final int? sleepMinutes;
   final int filter;
   final VoidCallback onTap;
 
@@ -670,7 +725,8 @@ class _DayCell extends StatelessWidget {
       if (showCardio || showMixed) c.primary,
     ];
     final label =
-        '${Fmt.dateLong(day)}${dots.isEmpty ? '' : ', activity logged'}';
+        '${Fmt.dateLong(day)}${dots.isEmpty ? '' : ', activity logged'}'
+        '${sleepMinutes == null ? '' : ', slept ${Fmt.durationShort(sleepMinutes! * 60)}'}';
     return Semantics(
       button: true,
       selected: selected,
@@ -687,6 +743,7 @@ class _DayCell extends StatelessWidget {
             customBorder: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(SxRadius.md),
             ),
+            key: ValueKey('cal-day-${day.year}-${day.month}-${day.day}'),
             onTap: onTap,
             // Fixed 48dp cell: cap text scaling like other fixed-height bars (a 2x digit would not fit).
             child: MediaQuery.withClampedTextScaling(
@@ -709,13 +766,24 @@ class _DayCell extends StatelessWidget {
                     ),
                     const SizedBox(height: 3),
                     SizedBox(
-                      height: 6,
+                      height: 8,
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           for (var i = 0; i < dots.length; i++) ...[
                             if (i > 0) const SizedBox(width: 3),
                             _Dot(dots[i]),
+                          ],
+                          if (sleepMinutes != null) ...[
+                            if (dots.isNotEmpty) const SizedBox(width: 3),
+                            Icon(
+                              Icons.bedtime,
+                              key: ValueKey(
+                                'sleep-dot-${day.year}-${day.month}-${day.day}',
+                              ),
+                              size: 8,
+                              color: c.textBody,
+                            ),
                           ],
                         ],
                       ),
@@ -725,6 +793,91 @@ class _DayCell extends StatelessWidget {
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The night that ended on the selected day: asleep time, quality and a tap for the details.
+class _SleepDayCard extends StatefulWidget {
+  const _SleepDayCard({
+    super.key,
+    required this.day,
+    required this.sessionMinutes,
+  });
+  final DateTime day;
+
+  /// Total session length for the day, shown until the full report (with stages) has loaded.
+  final int sessionMinutes;
+
+  @override
+  State<_SleepDayCard> createState() => _SleepDayCardState();
+}
+
+class _SleepDayCardState extends State<_SleepDayCard> {
+  RecoveryReport? _report;
+  bool _started = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_started) return;
+    _started = true;
+    _load();
+  }
+
+  Future<void> _load() async {
+    final r = await context.app.healthSync.recoveryReport(day: widget.day);
+    if (!mounted) return;
+    setState(() => _report = r);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.sx;
+    final r = _report;
+    final n = r?.night;
+    final minutes = n?.asleepMinutes ?? widget.sessionMinutes;
+    final summary = [
+      '${Fmt.durationShort(minutes * 60)} asleep',
+      if (r?.quality != null) sleepQualityLabel(r!.quality!),
+      if (n?.deepMinutes != null)
+        'Deep ${Fmt.durationShort(n!.deepMinutes! * 60)}',
+    ].join(' · ');
+    final tappable = n != null;
+    return SxCard(
+      onTap: tappable ? () => AppNav.recoveryDetails(context, r!) : null,
+      child: Semantics(
+        button: tappable,
+        container: true,
+        label: 'Sleep. $summary',
+        excludeSemantics: true,
+        child: Row(
+          children: [
+            Icon(Icons.bedtime_outlined, color: c.textHigh, size: 28),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'SLEEP',
+                    style: SxText.labelCaps.copyWith(color: c.textBody),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    summary,
+                    style: SxText.bodyLg.copyWith(
+                      color: c.textHigh,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (tappable) Icon(Icons.chevron_right, color: c.textMuted),
+          ],
         ),
       ),
     );

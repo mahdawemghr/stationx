@@ -47,11 +47,12 @@ StationX never talks to Samsung Health directly and uses no Samsung SDK.
   If the health store is unavailable, the save is queued on the device and retried; it never blocks logging.
 - **Fill in heart rate and calories (read):** after a cardio session StationX can read heart-rate samples and calories from the health store for the
   session's time window and **suggest** an average heart rate and calories. Nothing is applied unless you confirm, and values you typed are never overwritten.
-- **Connecting (read):** connecting lets StationX read exercise sessions that other apps or a watch recorded. StationX does **not** read your sleep or resting heart rate.
+- **Connecting (read):** connecting lets StationX read exercise sessions that other apps or a watch recorded. Sleep and resting heart rate are read only if you turn on the separate sleep-and-recovery feature below.
 - **Import workouts (read):** StationX lists exercise sessions recorded by other apps or a watch (the last 30 days by default; up to all available history if you
   allow the separate "read older data" permission), shows a preview, and adds only the ones you confirm: cardio sessions as cardio, and watch strength sessions as
   strength sessions with duration and calories only (no exercises or sets; marked "Imported from Health Connect"). If you also turn on **automatic import**, new
   workouts are added without a preview when the app opens. Existing sessions are never changed.
+- **Sleep and recovery (read):** with the sleep-and-recovery feature on, StationX reads last night's sleep and your resting heart rate (the last 7 days) from the health store (including deep, light and REM stages) and shows them on the Today screen with a plain verdict (ready, take it easy, or rest) worked out on your device from your own numbers, plus the reasons. If no resting heart rate was recorded and the heart-rate feature is on, it is estimated from your heart rate during sleep. These values are read when you open Today, are kept in memory for a few minutes, are not stored, not uploaded and never written back.
 - **Heart rate on workouts (read):** with the heart-rate feature on, StationX reads heart-rate samples to show your average and max heart rate on a finished workout,
   a recent heart rate while you train, and a heart-rate trend. Averages and max values are kept in the local choices file (see below), are not uploaded, and are
   never written back to the health store. Trend charts are read on demand and not stored.

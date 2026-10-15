@@ -6,6 +6,7 @@ import '../../core/theme/sx_theme.dart';
 import '../../core/theme/sx_typography.dart';
 import '../../core/widgets/widgets.dart';
 import '../../domain/domain.dart';
+import 'health_actions.dart';
 
 /// "Connect your watch": how data gets from a watch to StationX, plus a check that finds the
 /// first step that is not working (read-only, last 7 days).
@@ -28,6 +29,11 @@ class _WatchSetupPageState extends State<WatchSetupPage> {
       _result = r;
       _checking = false;
     });
+  }
+
+  Future<void> _turnOnHeartRate() async {
+    final on = await enableHealthFeature(context, HealthFeature.enrichCardio);
+    if (on && mounted) await _check();
   }
 
   @override
@@ -109,7 +115,26 @@ class _WatchSetupPageState extends State<WatchSetupPage> {
         if (_result != null)
           SxStagger(
             index: 4,
-            child: _Result(result: _result!, store: store, ios: ios),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _Result(result: _result!, store: store, ios: ios),
+                if (_result!.step == WatchSetupStep.ok &&
+                    _result!.workoutsChecked &&
+                    _result!.watchWorkouts == 0) ...[
+                  const SizedBox(height: SxSpace.md),
+                  _NoWatchWorkouts(own: _result!.ownWorkouts, ios: ios),
+                ],
+                if (_result!.step == WatchSetupStep.ok) ...[
+                  const SizedBox(height: SxSpace.md),
+                  _HeartRateStatus(
+                    state: _result!.heartRate,
+                    ios: ios,
+                    onTurnOn: _turnOnHeartRate,
+                  ),
+                ],
+              ],
+            ),
           ),
       ],
     );
@@ -225,6 +250,140 @@ class _Result extends StatelessWidget {
                     headline,
                     style: SxText.bodyLg.copyWith(
                       color: color,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    detail,
+                    style: SxText.bodySm.copyWith(color: c.textBody),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Heart rate is a separate switch from workout import, so "connected" can still mean "no heart
+/// rate". Says which of the three cases this is and what to do.
+class _HeartRateStatus extends StatelessWidget {
+  const _HeartRateStatus({
+    required this.state,
+    required this.ios,
+    required this.onTurnOn,
+  });
+  final WatchHeartRate state;
+  final bool ios;
+  final VoidCallback onTurnOn;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.sx;
+    final (String headline, String detail, IconData icon) = switch (state) {
+      WatchHeartRate.off => (
+        'Heart rate is turned off',
+        'Workouts can import, but StationX is not reading heart rate yet. Turn it on and allow heart rate when asked.',
+        Icons.favorite_border,
+      ),
+      WatchHeartRate.noSamples => (
+        'No heart rate in the last 7 days',
+        ios
+            ? 'Heart rate is on, but Apple Health has none. Check that your watch writes heart rate to Apple Health.'
+            : 'Heart rate is on, but Health Connect has none. In Samsung Health open Settings › Connected services › Health Connect and allow heart rate, then sync the watch. Also check Health Connect › App permissions › StationX shows heart rate as allowed.',
+        Icons.heart_broken_outlined,
+      ),
+      WatchHeartRate.found => (
+        'Heart rate is coming through',
+        'It appears on finished workouts and in the heart rate trend.',
+        Icons.favorite,
+      ),
+    };
+    return SxCard(
+      child: Semantics(
+        liveRegion: true,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  icon,
+                  color: state == WatchHeartRate.found ? c.primary : c.textHigh,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        headline,
+                        style: SxText.bodyLg.copyWith(
+                          color: c.textHigh,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        detail,
+                        style: SxText.bodySm.copyWith(color: c.textBody),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            if (state == WatchHeartRate.off) ...[
+              const SizedBox(height: SxSpace.md),
+              SxButton(label: 'Turn on heart rate', onPressed: onTurnOn),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Workout import is on and the store is readable, but nothing in it came from the watch. The
+/// usual cause is outside StationX: the watch app only shares NEW workouts, and only after
+/// "Exercise" sharing is switched on.
+class _NoWatchWorkouts extends StatelessWidget {
+  const _NoWatchWorkouts({required this.own, required this.ios});
+  final int own;
+  final bool ios;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.sx;
+    final mine = own == 0
+        ? ''
+        : (own == 1
+              ? 'The only workout found was saved by StationX itself. '
+              : 'The only workouts found ($own) were saved by StationX itself. ');
+    final detail = ios
+        ? '${mine}None came from your watch in the last 7 days. Check that the watch app is allowed to write workouts to Apple Health, then record one and check again.'
+        : '${mine}None came from your watch in the last 7 days. Samsung Health only shares workouts recorded after sharing is on, and does not copy older ones. '
+              'In Samsung Health open Settings › Connected services › Health Connect, allow Exercise, record a workout on the watch, open Samsung Health to sync, then check again.';
+    return SxCard(
+      child: Semantics(
+        liveRegion: true,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(Icons.watch_off_outlined, color: c.textHigh),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'No workouts from your watch yet',
+                    style: SxText.bodyLg.copyWith(
+                      color: c.textHigh,
                       fontWeight: FontWeight.w600,
                     ),
                   ),

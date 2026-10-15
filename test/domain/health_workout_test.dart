@@ -364,6 +364,16 @@ void main() {
       expect(p.skippedUnsupported, 1);
       expect(p.skippedInvalid, 5); // future, short, long, old, repeated id
     });
+    test('skipped unsupported types are reported by name', () {
+      final p = plan([
+        hw('y1', type: 'YOGA'),
+        hw('y2', type: 'YOGA'),
+        hw('o', type: 'OTHER'),
+        hw('run'),
+      ]);
+      expect(p.skippedUnsupported, 3);
+      expect(p.unsupportedTypes, {'YOGA': 2, 'OTHER': 1});
+    });
     test('hostile numbers are dropped, not imported', () {
       final p = plan([
         hw('speed', m: 900000), // absurd speed

@@ -321,6 +321,42 @@ void main() {
       );
     });
 
+    testWidgets(
+      'a whole muscle section can be moved up/down and saves in that order',
+      (t) async {
+        final app = await open(t, 'w2'); // Back, then Triceps
+        final before = app.workouts.byId('w2')!.exercises;
+        await t.ensureVisible(find.byTooltip('Move Back down'));
+        await t.pump();
+        await t.tap(find.byTooltip('Move Back down'));
+        await settle(t);
+        await t.scrollUntilVisible(
+          find.text('SAVE WORKOUT STRUCTURE'),
+          200,
+          scrollable: find.byType(Scrollable).first,
+        );
+        await t.tap(find.text('SAVE WORKOUT STRUCTURE'));
+        await settle(t);
+        final after = app.workouts.byId('w2')!.exercises;
+        expect(after.length, before.length);
+        // Triceps now leads; every exercise is still there, order inside each muscle is unchanged.
+        expect(after.first.exerciseId, isNot(before.first.exerciseId));
+        expect(after.map((e) => e.exerciseId).toSet(), {
+          for (final e in before) e.exerciseId,
+        });
+        // The Back block now sits after the Triceps block, its own order intact.
+        final ids = after.map((e) => e.exerciseId).toList();
+        expect(
+          ids.indexOf(before[0].exerciseId),
+          greaterThan(ids.indexOf(before[3].exerciseId)),
+        );
+        expect(
+          ids.indexOf(before[0].exerciseId) < ids.indexOf(before[1].exerciseId),
+          isTrue,
+        );
+      },
+    );
+
     testWidgets('small screen, large text: no exception', (t) async {
       await open(t, 'w2', size: const Size(320, 568), scale: 1.3);
       expect(t.takeException(), isNull);

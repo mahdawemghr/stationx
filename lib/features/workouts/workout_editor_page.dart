@@ -205,6 +205,53 @@ class _WorkoutEditorPageState extends State<WorkoutEditorPage> {
     });
   }
 
+  int _sectionLastEnd() {
+    final r = _sectionRanges();
+    return r.isEmpty ? -1 : r.last.end;
+  }
+
+  /// The contiguous index ranges of the muscle sections, in display order.
+  List<_Range> _sectionRanges() {
+    final out = <_Range>[];
+    for (final s in WorkoutSections.groupContiguous(
+      _items,
+      _app.exercises.all,
+    )) {
+      out.add(_Range(s.startIndex, s.startIndex + s.items.length - 1));
+    }
+    return out;
+  }
+
+  /// Moves a whole muscle section (e.g. Legs) one place up or down, keeping the order inside it.
+  /// The saved workout, the preview and the active workout all follow this muscle order.
+  void _moveSection(_Range range, int delta) {
+    final ranges = _sectionRanges();
+    final from = ranges.indexWhere((r) => r == range);
+    final to = from + delta;
+    if (from < 0 || to < 0 || to >= ranges.length) return;
+    final moved = ranges.removeAt(from);
+    final order = [...ranges]..insert(to, moved);
+    final items = <RoutineExercise>[];
+    final ids = <int>[];
+    for (final r in order) {
+      for (var k = r.start; k <= r.end; k++) {
+        items.add(_items[k]);
+        ids.add(_ids[k]);
+      }
+    }
+    final covered = order.fold<int>(0, (a, r) => a + r.end - r.start + 1);
+    // Rows the grouping skipped (unknown exercises) stay at the end.
+    for (var k = covered; k < _items.length; k++) {
+      items.add(_items[k]);
+      ids.add(_ids[k]);
+    }
+    if (items.length != _items.length) return; // defensive: never lose rows
+    _mutate(() {
+      _items = items;
+      _ids = ids;
+    });
+  }
+
   void _editExercise(int i) {
     final re = _items[i];
     final ex = _app.exercises.byId(re.exerciseId);
@@ -456,10 +503,34 @@ class _WorkoutEditorPageState extends State<WorkoutEditorPage> {
                   itemBuilder: (context, k) {
                     final e = entries[k];
                     if (e.section != null) {
+                      final first = e.range.start == 0;
+                      final last = e.range.end == _sectionLastEnd();
                       return Padding(
                         key: ValueKey('hdr_${e.section!.muscle.name}'),
                         padding: const EdgeInsets.only(bottom: SxSpace.xs),
-                        child: WorkoutSectionHeader(section: e.section!),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: WorkoutSectionHeader(section: e.section!),
+                            ),
+                            SxIconButton(
+                              icon: Icons.arrow_upward,
+                              tooltip: 'Move ${e.section!.label} up',
+                              size: 48,
+                              onPressed: first
+                                  ? null
+                                  : () => _moveSection(e.range, -1),
+                            ),
+                            SxIconButton(
+                              icon: Icons.arrow_downward,
+                              tooltip: 'Move ${e.section!.label} down',
+                              size: 48,
+                              onPressed: last
+                                  ? null
+                                  : () => _moveSection(e.range, 1),
+                            ),
+                          ],
+                        ),
                       );
                     }
                     if (e.subLabel != null) {

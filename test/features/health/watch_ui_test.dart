@@ -146,6 +146,67 @@ void main() {
     });
   });
 
+  group('WatchSetupPage heart rate', () {
+    testWidgets('workouts import but heart rate is off: says so, turns it on', (
+      t,
+    ) async {
+      await svc.enable(HealthFeature.importWorkouts);
+      final day = DateTime.now().subtract(const Duration(days: 1));
+      gw.external.add(
+        HealthWorkout(
+          id: 'a',
+          activityName: 'RUNNING',
+          start: day,
+          end: day.add(const Duration(minutes: 30)),
+          sourceName: 'com.sec.android.app.shealth',
+        ),
+      );
+      await pumpPage(t, const WatchSetupPage(), controller: app);
+      await _settle(t);
+      await t.ensureVisible(find.text('CHECK MY CONNECTION'));
+      await t.tap(find.text('CHECK MY CONNECTION'));
+      await _settle(t);
+      expect(find.text('Heart rate is turned off'), findsOneWidget);
+      await t.ensureVisible(find.text('TURN ON HEART RATE'));
+      await t.pump(const Duration(milliseconds: 400));
+      await t.tap(find.text('TURN ON HEART RATE'));
+      await t.pump(const Duration(milliseconds: 400));
+      await t.tap(find.text('CONTINUE')); // explanation dialog
+      await _settle(t);
+      expect(svc.isEnabled(HealthFeature.enrichCardio), isTrue);
+      expect(find.text('Heart rate is turned off'), findsNothing);
+    });
+  });
+
+  group('WatchSetupPage missing watch workouts', () {
+    testWidgets(
+      'only StationX workouts in the store: explains the real cause',
+      (t) async {
+        await svc.enable(HealthFeature.importWorkouts);
+        await svc.enable(HealthFeature.enrichCardio);
+        final day = DateTime.now().subtract(const Duration(days: 1));
+        gw.hr = [(at: day, bpm: 90)];
+        gw.external.add(
+          HealthWorkout(
+            id: 'own',
+            activityName: 'RUNNING',
+            start: day,
+            end: day.add(const Duration(minutes: 30)),
+            sourceName: 'dev.mahdi_haji.stationx',
+          ),
+        );
+        await pumpPage(t, const WatchSetupPage(), controller: app);
+        await _settle(t);
+        await t.ensureVisible(find.text('CHECK MY CONNECTION'));
+        await t.tap(find.text('CHECK MY CONNECTION'));
+        await _settle(t);
+        expect(find.text('No workouts from your watch yet'), findsOneWidget);
+        expect(find.textContaining('saved by StationX itself'), findsOneWidget);
+        expect(find.text('Heart rate is coming through'), findsOneWidget);
+      },
+    );
+  });
+
   group('import page', () {
     testWidgets('offers 1 year / All and previews a watch strength session', (
       t,

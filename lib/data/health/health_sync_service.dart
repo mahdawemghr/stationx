@@ -63,6 +63,9 @@ class HealthSyncService extends ChangeNotifier {
       return false;
     }
     _state.enabled.add(f);
+    _reports.clear();
+    _sleepMonths.clear();
+    _hrDays.clear();
     await _persist();
     _issue = HealthSyncIssue.none;
     notifyListeners();
@@ -74,6 +77,9 @@ class HealthSyncService extends ChangeNotifier {
   /// Already-saved health records are left alone; the user can delete them in the health app.
   Future<void> disable(HealthFeature f) async {
     _state.enabled.remove(f);
+    _reports.clear();
+    _sleepMonths.clear();
+    _hrDays.clear();
     if (f == HealthFeature.writeWorkouts) {
       _state.pending.removeWhere((_, o) => !o.isDelete);
     }
@@ -496,6 +502,8 @@ class HealthSyncService extends ChangeNotifier {
     }
   }
 
+  final _hrDays = <DateTime, ({double sum, int count, DateTime at})>{};
+
   /// Average heart rate per day for the last [days] days (oldest first). Needs the heart-rate
   /// permission ([HealthFeature.enrichCardio]).
   Future<List<HeartRateDay>> heartRateTrend(int days) async {
@@ -510,9 +518,17 @@ class HealthSyncService extends ChangeNotifier {
                 HealthFeature.enrichCardio,
               ))) {
         // One day at a time keeps each platform call small (a watch writes a sample per minute).
+        // Finished days are remembered for a while, so reopening the card or switching 7 / 14 / 30
+        // days only reads what is new; today is always read fresh.
         for (var i = 0; i < days; i++) {
           final d0 = first.add(Duration(days: i));
-          final d1 = i == days - 1 ? now : first.add(Duration(days: i + 1));
+          final isToday = i == days - 1;
+          final hit = _hrDays[d0];
+          if (!isToday && hit != null && now.difference(hit.at) < _pastTtl) {
+            if (hit.count > 0) sums[d0] = (hit.sum, hit.count);
+            continue;
+          }
+          final d1 = isToday ? now : first.add(Duration(days: i + 1));
           final pts = await _gateway.heartRateSamples(d0, d1);
           final ok = [
             for (final p in pts)
@@ -520,7 +536,9 @@ class HealthSyncService extends ChangeNotifier {
                   p.bpm <= HealthEnrichmentService.maxBpm)
                 p.bpm,
           ];
-          if (ok.isNotEmpty) sums[d0] = (ok.reduce((a, b) => a + b), ok.length);
+          final sum = ok.fold<double>(0, (a, b) => a + b);
+          if (!isToday) _hrDays[d0] = (sum: sum, count: ok.length, at: now);
+          if (ok.isNotEmpty) sums[d0] = (sum, ok.length);
         }
       }
       return [
@@ -537,6 +555,176 @@ class HealthSyncService extends ChangeNotifier {
     } catch (_) {
       return const [];
     }
+  }
+
+  // ───────────────────────── recovery (sleep + resting heart rate) ─────────────────────────
+
+  final _reports = <DateTime, ({RecoveryReport report, DateTime at})>{};
+  final _sleepMonths = <DateTime, ({Map<DateTime, int> days, DateTime at})>{};
+  static const _reportTtl = Duration(minutes: 5);
+  static const _pastTtl = Duration(minutes: 30);
+
+  static DateTime _dayOnly(DateTime d) => DateTime(d.year, d.month, d.day);
+
+  /// Total sleep per wake-up day of [month] (first of the month), for the calendar markers. Empty
+  /// when the feature is off, not permitted, or the store has nothing for that month.
+  Future<Map<DateTime, int>> sleepDays(DateTime month) async {
+    if (!isEnabled(HealthFeature.recovery)) return const {};
+    final first = DateTime(month.year, month.month);
+    final now = _clock();
+    final hit = _sleepMonths[first];
+    if (hit != null && now.difference(hit.at) < _pastTtl) return hit.days;
+    try {
+      if (_gateway.canQueryPermissions &&
+          !await _gateway.hasFeaturePermissions(HealthFeature.recovery)) {
+        return const {};
+      }
+      final next = DateTime(first.year, first.month + 1);
+      final sessions = await _gateway.sleepSessions(
+        first.subtract(const Duration(hours: 12)),
+        next,
+      );
+      final days = {
+        for (final n in HealthSummary.nightHistory(sessions, nights: 62))
+          if (n.day.year == first.year && n.day.month == first.month)
+            n.day: n.minutes,
+      };
+      _sleepMonths[first] = (days: days, at: now);
+      return days;
+    } catch (_) {
+      return const {};
+    }
+  }
+
+  /// Last night's sleep (with stages), the resting heart rate against the user's own recent normal
+  /// and the last nights, turned into a plain verdict. Null when the feature is off, not
+  /// permitted, or a read failed; a `noData` report when the store simply has nothing yet. Read on
+  /// demand, kept in memory for a few minutes, never stored.
+  ///
+  /// With [day] (a past calendar day) it describes the night that ended on that day instead.
+  Future<RecoveryReport?> recoveryReport({
+    bool force = false,
+    DateTime? day,
+  }) async {
+    if (!isEnabled(HealthFeature.recovery)) return null;
+    final clock = _clock();
+    final key = _dayOnly(day ?? clock);
+    final isToday = key == _dayOnly(clock);
+    // For a past day the "present" is that day at noon, so the night window, the 8-day history and
+    // the 48 h resting-heart-rate rule all look back from there.
+    final now = isToday ? clock : DateTime(key.year, key.month, key.day, 12);
+    final cached = _reports[key];
+    if (!force &&
+        cached != null &&
+        clock.difference(cached.at) < (isToday ? _reportTtl : _pastTtl)) {
+      return cached.report;
+    }
+    try {
+      if (_gateway.canQueryPermissions &&
+          !await _gateway.hasFeaturePermissions(HealthFeature.recovery)) {
+        return null;
+      }
+      final win = HealthSummary.lastNightWindow(now);
+      final sessionsAll = await _gateway.sleepSessions(
+        now.subtract(const Duration(days: 8)),
+        now.add(const Duration(minutes: 1)),
+      );
+      final nightSessions = [
+        for (final s in sessionsAll)
+          if (!s.to.isBefore(win.from) && !s.to.isAfter(win.to)) s,
+      ];
+      final stages = await _gateway.sleepStages(
+        win.from.subtract(const Duration(hours: 3)),
+        win.to,
+      );
+      final night = HealthSummary.sleepNight(
+        stages: stages,
+        sessions: nightSessions,
+      );
+      final history = HealthSummary.nightHistory(sessionsAll);
+      final lastDay = night == null
+          ? null
+          : DateTime(night.wake.year, night.wake.month, night.wake.day);
+      final prior = [
+        for (final h in history.reversed)
+          if (h.day != lastDay) h,
+      ];
+      final rhr = night == null
+          ? null
+          : await _restingHeartRate(now, night, sessionsAll);
+      final report = ReadinessEngine.evaluate(
+        night: night,
+        priorNights: prior,
+        restingHr: rhr?.value,
+        restingBaseline: rhr?.baseline,
+        restingSource: rhr?.source,
+        history: history,
+      );
+      _reports[key] = (report: report, at: clock);
+      return report;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Resting heart rate for last night and the average of the earlier nights. A value the watch
+  /// recorded wins; otherwise it is estimated from the heart rate during sleep (needs the
+  /// heart-rate switch, because Samsung Health often writes no resting value).
+  Future<({int value, int? baseline, RestingHrSource source})?>
+  _restingHeartRate(
+    DateTime now,
+    SleepNight night,
+    List<TimeSpan> sessions,
+  ) async {
+    final recorded = await _gateway.restingHeartRate(
+      now.subtract(const Duration(days: 8)),
+      now.add(const Duration(minutes: 1)),
+    );
+    final valid = [
+      for (final p in recorded)
+        if (p.bpm > 20 && p.bpm < 220) p,
+    ]..sort((a, b) => a.at.compareTo(b.at));
+    if (valid.isNotEmpty &&
+        now.difference(valid.last.at) < const Duration(hours: 48)) {
+      final earlier = [for (final p in valid.take(valid.length - 1)) p.bpm];
+      return (
+        value: valid.last.bpm.round(),
+        baseline: earlier.length >= 3
+            ? (earlier.reduce((a, b) => a + b) / earlier.length).round()
+            : null,
+        source: RestingHrSource.recorded,
+      );
+    }
+    if (!isEnabled(HealthFeature.enrichCardio)) return null;
+    if (_gateway.canQueryPermissions &&
+        !await _gateway.hasFeaturePermissions(HealthFeature.enrichCardio)) {
+      return null;
+    }
+    final tonight = HealthSummary.restingFromSleepHr(
+      await _gateway.heartRateSamples(night.bedtime, night.wake),
+      from: night.bedtime,
+      to: night.wake,
+    );
+    if (tonight == null) return null;
+    final lastDay = DateTime(night.wake.year, night.wake.month, night.wake.day);
+    final earlier = <int>[];
+    for (final s in HealthSummary.mainSessionPerDay(sessions)) {
+      if (s.day == lastDay) continue;
+      final v = HealthSummary.restingFromSleepHr(
+        await _gateway.heartRateSamples(s.from, s.to),
+        from: s.from,
+        to: s.to,
+      );
+      if (v != null) earlier.add(v);
+      if (earlier.length >= 6) break;
+    }
+    return (
+      value: tonight,
+      baseline: earlier.length >= 3
+          ? (earlier.reduce((a, b) => a + b) / earlier.length).round()
+          : null,
+      source: RestingHrSource.estimated,
+    );
   }
 
   // ───────────────────────── setup check ─────────────────────────
@@ -579,6 +767,8 @@ class HealthSyncService extends ChangeNotifier {
         permissionsGranted: true,
         recentWorkouts: workouts,
         recentHeartRateSamples: hr,
+        heartRateEnabled: isEnabled(HealthFeature.enrichCardio),
+        workoutsChecked: isEnabled(HealthFeature.importWorkouts),
         ownSourceIds: _gateway.ownSourceIds,
         knownSources: HealthImport.knownSources,
       );

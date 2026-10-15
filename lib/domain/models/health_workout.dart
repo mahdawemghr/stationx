@@ -8,6 +8,9 @@ enum HealthFeature {
 
   /// Import exercise sessions recorded by other apps (Samsung Health, a watch, ...) (read).
   importWorkouts,
+
+  /// Read last night's sleep and the resting heart rate for the Today recovery card (read).
+  recovery,
 }
 
 /// Platform-neutral activity type. The gateway turns it into the platform enum; the mapping from
@@ -233,9 +236,30 @@ class HeartRateDay {
 /// The first thing that stops watch data from reaching StationX (drives the setup checklist).
 enum WatchSetupStep { storeMissing, permissions, noRecentData, ok }
 
+/// Whether heart rate is flowing, independent of [WatchSetupStep] (workouts can import while
+/// heart rate is off or the watch shares none).
+enum WatchHeartRate { off, noSamples, found }
+
 class WatchDiagnosis {
-  const WatchDiagnosis({required this.step, this.sources = const {}});
+  const WatchDiagnosis({
+    required this.step,
+    this.sources = const {},
+    this.heartRate = WatchHeartRate.off,
+    this.workoutsChecked = false,
+    this.watchWorkouts = 0,
+    this.ownWorkouts = 0,
+  });
   final WatchSetupStep step;
+  final WatchHeartRate heartRate;
+
+  /// True when workout import is on, so [watchWorkouts] / [ownWorkouts] mean something.
+  final bool workoutsChecked;
+
+  /// Workouts from other apps / the watch in the checked window.
+  final int watchWorkouts;
+
+  /// Workouts StationX itself saved to the health store in the window (not watch data).
+  final int ownWorkouts;
 
   /// Friendly names of apps that wrote data in the checked window.
   final Set<String> sources;

@@ -42,7 +42,7 @@ class FakeGateway extends HealthGateway {
 
 void main() {
   test(
-    'the health gateway has no sleep or resting-heart-rate reads any more',
+    'the base connection never reads sleep or resting heart rate (only the recovery switch does)',
     () {
       // Compile-time guarantee: FakeGateway implements the whole abstract gateway without them.
       expect(FakeGateway().canQueryPermissions, isTrue);

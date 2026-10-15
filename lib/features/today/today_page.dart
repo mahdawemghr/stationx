@@ -9,6 +9,7 @@ import '../../core/theme/sx_typography.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/widgets/widgets.dart';
 import '../../domain/domain.dart';
+import '../health/recovery_card.dart';
 import '../onboarding/schedule_setup_entry.dart';
 
 /// Today tab (Stitch: today_home). The hero is the *next workout in the
@@ -244,7 +245,8 @@ class _TodayPageState extends State<TodayPage> {
                 onTap: () => AppNav.workoutPreview(context, next.id),
               ),
             ],
-            // Only where Health Connect can exist (Android); hidden elsewhere.
+            // Opt-in sleep & recovery (Profile › Health & workouts); renders nothing while off.
+            const RecoveryCard(),
           ],
         );
       },

@@ -8,6 +8,8 @@ export 'services/exercise_recommender.dart';
 export 'services/formulas.dart';
 export 'services/health_enrichment.dart';
 export 'services/health_import.dart';
+export 'services/health_summary.dart';
+export 'services/readiness.dart';
 export 'services/health_workout_mapping.dart';
 export 'services/percent_change.dart';
 export 'services/plate_calculator.dart';

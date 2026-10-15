@@ -116,6 +116,13 @@ class PluginHealthGateway implements HealthGateway {
       HealthDataType.ACTIVE_ENERGY_BURNED,
       if (!_ios) HealthDataType.TOTAL_CALORIES_BURNED,
     ],
+    // Android: SLEEP_ASLEEP and SLEEP_SESSION share READ_SLEEP. iOS has no session type; "in bed"
+    // is its closest equivalent and is only a fallback.
+    HealthFeature.recovery => [
+      HealthDataType.SLEEP_ASLEEP,
+      if (_ios) HealthDataType.SLEEP_IN_BED else HealthDataType.SLEEP_SESSION,
+      HealthDataType.RESTING_HEART_RATE,
+    ],
     HealthFeature.importWorkouts => [
       HealthDataType.WORKOUT,
       // The plugin's Android workout reader also sums distance, energy and steps in the window.
@@ -132,12 +139,20 @@ class PluginHealthGateway implements HealthGateway {
       ? HealthDataAccess.WRITE
       : HealthDataAccess.READ;
 
+  // Heart rate is the point of "enrichCardio"; calories are a bonus. Samsung's permission sheet
+  // lets the user allow one and deny the other, and that must not switch heart rate off.
+  List<HealthDataType> _requiredTypes(HealthFeature f) =>
+      f == HealthFeature.enrichCardio
+      ? [HealthDataType.HEART_RATE]
+      : _featureTypes(f);
+
   @override
   Future<bool> hasFeaturePermissions(HealthFeature feature) async {
     if (_ios) return false;
     try {
       await _ensureConfigured();
-      final t = _featureTypes(feature);
+      if (feature == HealthFeature.recovery) return await _hasAnyRecovery();
+      final t = _requiredTypes(feature);
       return await _health.hasPermissions(
             t,
             permissions: List.filled(t.length, _featureAccess(feature)),
@@ -148,15 +163,37 @@ class PluginHealthGateway implements HealthGateway {
     }
   }
 
+  // Sleep and resting heart rate are independent on the permission sheet (and many watches write
+  // only one of them). Either one is enough to turn the recovery card on.
+  Future<bool> _hasAnyRecovery() async {
+    for (final t in [
+      HealthDataType.SLEEP_SESSION,
+      HealthDataType.RESTING_HEART_RATE,
+    ]) {
+      if (await _health.hasPermissions(
+            [t],
+            permissions: [HealthDataAccess.READ],
+          ) ??
+          false) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   @override
   Future<bool> requestFeaturePermissions(HealthFeature feature) async {
     try {
       await _ensureConfigured();
       final t = _featureTypes(feature);
-      return await _health.requestAuthorization(
+      final all = await _health.requestAuthorization(
         t,
         permissions: List.filled(t.length, _featureAccess(feature)),
       );
+      if (all || _ios || feature != HealthFeature.enrichCardio) return all;
+      return await hasFeaturePermissions(
+        feature,
+      ); // heart rate allowed, calories denied
     } catch (_) {
       return false;
     }
@@ -346,51 +383,67 @@ class PluginHealthGateway implements HealthGateway {
     return out;
   }
 
-  @override
-  Future<HealthMetrics?> readMetrics(DateTime from, DateTime to) async {
+  Future<List<HealthDataPoint>?> _readOrNull(
+    List<HealthDataType> types,
+    DateTime from,
+    DateTime to,
+  ) async {
     try {
       await _ensureConfigured();
-      final points = await _health.getHealthDataFromTypes(
-        types: [
-          HealthDataType.HEART_RATE,
-          HealthDataType.ACTIVE_ENERGY_BURNED,
-          if (!_ios) HealthDataType.TOTAL_CALORIES_BURNED,
-        ],
+      return await _health.getHealthDataFromTypes(
+        types: types,
         startTime: from,
         endTime: to,
       );
-      final hr = <double>[];
-      double active = 0, total = 0;
-      var hasActive = false, hasTotal = false;
-      for (final p in points) {
-        if (ownSourceIds.contains(p.sourceName) ||
-            ownSourceIds.contains(p.sourceId)) {
-          continue;
-        }
-        final v = p.value;
-        if (v is! NumericHealthValue) continue;
-        final n = v.numericValue.toDouble();
-        switch (p.type) {
-          case HealthDataType.HEART_RATE:
-            hr.add(n);
-          case HealthDataType.ACTIVE_ENERGY_BURNED:
-            active += n;
-            hasActive = true;
-          case HealthDataType.TOTAL_CALORIES_BURNED:
-            total += n;
-            hasTotal = true;
-          default:
-        }
-      }
-      return HealthMetrics(
-        heartRates: hr,
-        activeKcal: hasActive ? active : null,
-        totalKcal: hasTotal ? total : null,
-      );
     } catch (e) {
-      debugPrint('HealthGateway.readMetrics failed: ${e.runtimeType}');
+      debugPrint(
+        'HealthGateway.read ${types.first.name} failed: ${e.runtimeType}',
+      );
       return null;
     }
+  }
+
+  @override
+  Future<HealthMetrics?> readMetrics(DateTime from, DateTime to) async {
+    // Separate reads: if calories are not permitted, heart rate must still come through.
+    final hrPoints = await _readOrNull([HealthDataType.HEART_RATE], from, to);
+    final kcalPoints = await _readOrNull(
+      [
+        HealthDataType.ACTIVE_ENERGY_BURNED,
+        if (!_ios) HealthDataType.TOTAL_CALORIES_BURNED,
+      ],
+      from,
+      to,
+    );
+    if (hrPoints == null && kcalPoints == null) return null;
+    final hr = <double>[];
+    double active = 0, total = 0;
+    var hasActive = false, hasTotal = false;
+    for (final p in [...?hrPoints, ...?kcalPoints]) {
+      if (ownSourceIds.contains(p.sourceName) ||
+          ownSourceIds.contains(p.sourceId)) {
+        continue;
+      }
+      final v = p.value;
+      if (v is! NumericHealthValue) continue;
+      final n = v.numericValue.toDouble();
+      switch (p.type) {
+        case HealthDataType.HEART_RATE:
+          hr.add(n);
+        case HealthDataType.ACTIVE_ENERGY_BURNED:
+          active += n;
+          hasActive = true;
+        case HealthDataType.TOTAL_CALORIES_BURNED:
+          total += n;
+          hasTotal = true;
+        default:
+      }
+    }
+    return HealthMetrics(
+      heartRates: hr,
+      activeKcal: hasActive ? active : null,
+      totalKcal: hasTotal ? total : null,
+    );
   }
 
   @override
@@ -401,6 +454,48 @@ class PluginHealthGateway implements HealthGateway {
           ownSourceIds.contains(p.sourceId)) {
         continue;
       }
+      final v = p.value;
+      if (v is NumericHealthValue) {
+        out.add((at: p.dateTo, bpm: v.numericValue.toDouble()));
+      }
+    }
+    return out;
+  }
+
+  // One read per stage type (the plugin returns the matching stage intervals of each session).
+  static const _stageTypes = {
+    HealthDataType.SLEEP_DEEP: SleepStage.deep,
+    HealthDataType.SLEEP_LIGHT: SleepStage.light,
+    HealthDataType.SLEEP_REM: SleepStage.rem,
+    HealthDataType.SLEEP_ASLEEP: SleepStage.asleep,
+    HealthDataType.SLEEP_AWAKE: SleepStage.awake,
+  };
+
+  @override
+  Future<List<StageSpan>> sleepStages(DateTime from, DateTime to) async {
+    final out = <StageSpan>[];
+    for (final e in _stageTypes.entries) {
+      for (final p in await _read(e.key, from, to)) {
+        out.add((from: p.dateFrom, to: p.dateTo, stage: e.value));
+      }
+    }
+    return out;
+  }
+
+  @override
+  Future<List<TimeSpan>> sleepSessions(DateTime from, DateTime to) async => [
+    for (final p in await _read(
+      _ios ? HealthDataType.SLEEP_IN_BED : HealthDataType.SLEEP_SESSION,
+      from,
+      to,
+    ))
+      (from: p.dateFrom, to: p.dateTo),
+  ];
+
+  @override
+  Future<List<BpmPoint>> restingHeartRate(DateTime from, DateTime to) async {
+    final out = <BpmPoint>[];
+    for (final p in await _read(HealthDataType.RESTING_HEART_RATE, from, to)) {
       final v = p.value;
       if (v is NumericHealthValue) {
         out.add((at: p.dateTo, bpm: v.numericValue.toDouble()));

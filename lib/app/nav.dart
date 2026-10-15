@@ -24,6 +24,7 @@ import '../features/exercises/exercise_details_page.dart';
 import '../features/exercises/exercise_history_page.dart';
 import '../features/exercises/exercise_library_page.dart';
 import '../features/health/health_import_page.dart';
+import '../features/health/recovery_detail_page.dart';
 import '../features/health/watch_setup_page.dart';
 import '../features/health/health_sync_settings_page.dart';
 import '../features/history/calendar_page.dart';
@@ -103,6 +104,8 @@ abstract final class AppNav {
       _push(c, const HealthImportPage());
   static Future<void> watchSetup(BuildContext c) =>
       _push(c, const WatchSetupPage());
+  static Future<void> recoveryDetails(BuildContext c, RecoveryReport r) =>
+      _push(c, RecoveryDetailPage(report: r));
   static Future<void> workoutPreview(BuildContext c, String workoutId) =>
       _push(c, WorkoutPreviewPage(workoutId: workoutId));
   static Future<void> workoutEditor(BuildContext c, String workoutId) =>

@@ -14,6 +14,7 @@ class HealthImportPlan {
     required this.skippedUnsupported,
     required this.skippedInvalid,
     required this.sourceLabels,
+    this.unsupportedTypes = const {},
   });
 
   /// Cardio sessions to add (oldest first).
@@ -32,6 +33,10 @@ class HealthImportPlan {
   final int skippedAlreadyImported;
   final int skippedUnsupported;
   final int skippedInvalid;
+
+  /// Skipped activity types (raw platform names) and how many of each, so "unsupported" is
+  /// explainable instead of a bare number.
+  final Map<String, int> unsupportedTypes;
 
   /// Friendly origin names found among the sessions (e.g. `Samsung Health`).
   final Set<String> sourceLabels;
@@ -102,6 +107,7 @@ abstract final class HealthImport {
     final strength = <HealthWorkout>[];
     final seen = <String>{};
     var own = 0, dup = 0, unsupported = 0, invalid = 0;
+    final unsupportedTypes = <String, int>{};
     for (final w in candidates) {
       if (w.id.isEmpty || w.id.length > 200 || !seen.add(w.id)) {
         invalid++;
@@ -122,6 +128,8 @@ abstract final class HealthImport {
       final kind = WorkoutMapping.cardioKindFor(activity);
       if (kind == null && activity != HealthActivity.strength) {
         unsupported++;
+        final n = w.activityName.toUpperCase();
+        unsupportedTypes[n] = (unsupportedTypes[n] ?? 0) + 1;
         continue;
       }
       final d = w.end.difference(w.start);
@@ -218,6 +226,7 @@ abstract final class HealthImport {
       skippedOwn: own,
       skippedAlreadyImported: dup,
       skippedUnsupported: unsupported,
+      unsupportedTypes: unsupportedTypes,
       skippedInvalid: invalid,
       sourceLabels: labels,
     );

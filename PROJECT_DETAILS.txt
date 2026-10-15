@@ -36,7 +36,7 @@ IMPORTANT — the app is ONLINE-FIRST (it used to be local-first; that was repla
   * The only things kept on the phone are temporary/device-level state: the workout you are recording right
     now (a draft that survives the app being killed), the Health Connect opt-in and the Health Connect work queue.
   * Optional, off by default: Health Connect (Android) / Apple Health (iOS) integration (saving workouts there,
-    importing workouts from a watch, heart-rate info). Sleep / resting heart rate / the "recovery" summary were REMOVED.
+    importing workouts from a watch, heart-rate info). Sleep / resting heart rate / the Today "recovery" card were removed on 2026-10-11 and RESTORED on 2026-10-15 as a separate opt-in switch (HealthFeature.recovery).
   * PROGRAM RULES (2026-10-11): the training program is generated ONCE (onboarding) or when the user explicitly asks
     to regenerate (with a confirmation). It never changes on login, restart, refresh, workout completion or rotation
     advance. New accounts start with NO routines. Generation, the weekly goal (training days + rest days = 7) and the
@@ -652,8 +652,9 @@ because the plugin's workout reader sums steps per session; steps are neither st
 READ_HEALTH_DATA_HISTORY (optional older data). The permissions-rationale activity and the Android 14
 VIEW_PERMISSION_USAGE alias are declared.
   Features
-  1. (removed) The recovery summary (sleep / resting heart rate) no longer exists; the base "connect" permission
-     now only reads exercise sessions.
+  1. Sleep & recovery (HealthFeature.recovery, restored 2026-10-15): READ_SLEEP + READ_RESTING_HEART_RATE, either one is
+     enough to turn it on; RecoveryCard (verdict) + RecoveryDetailPage on Today; HealthSyncService.recoveryReport(); ReadinessEngine (domain). The base "connect" permission
+     still only reads exercise sessions.
   2. Save workouts (write, HealthFeature.writeWorkouts): each finished cardio/strength session becomes ONE exercise
      session (type, title, start/duration, ONLY the distance/calories the user logged — no heart rate, sets, reps
      or weights). Edits replace StationX's own record, deletes remove it; StationX only ever deletes records it

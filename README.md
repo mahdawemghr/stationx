@@ -50,7 +50,7 @@ Rules worth knowing:
 - **The saved program never changes on its own.** Generation (onboarding / explicit regeneration), the weekly training/rest-day goal (always 7 together) and the rotation pointer are three separate things.
 - Use theme tokens (`context.sx`, `SxText`, `SxSpace`); avoid raw colours.
 
-Optional wearable data (workout import, heart rate on workouts, write-back) is opt-in: Health Connect on Android, Apple Health on iOS (iOS path untested). Samsung Health and most fitness wearables sync into those two stores. StationX does not read sleep or resting heart rate.
+Optional wearable data (workout import, heart rate on workouts, write-back) is opt-in: Health Connect on Android, Apple Health on iOS (iOS path untested). Samsung Health and most fitness wearables sync into those two stores. Sleep and resting heart rate (the Today recovery card) are read only if you switch on the separate sleep-and-recovery option.
 
 Backend (Supabase schema, RLS, functions, auth settings, tests): `supabase/README.md`.
 
